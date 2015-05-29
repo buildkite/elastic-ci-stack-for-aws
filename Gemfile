@@ -1,0 +1,2 @@
+gem "cfoo"
+gem "rake"

@@ -1,0 +1,20 @@
+GEM
+  specs:
+    blankslate (2.1.2.4)
+    cfoo (0.0.5)
+      json
+      parslet (~> 1.5.0)
+    json (1.8.2)
+    parslet (1.5.0)
+      blankslate (~> 2.0)
+    rake (10.4.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  cfoo
+  rake
+
+BUNDLED WITH
+   1.10.0

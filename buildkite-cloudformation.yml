@@ -1,0 +1,54 @@
+
+Parameters:
+  KeyName:
+    Description: The ssh keypair used to access the buildkite instances
+    Type: AWS::EC2::KeyPair::KeyName
+  InstanceType:
+    Description: The EC2 instance type used for buildkite instances
+    Type: String
+    Default: m3.medium
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      SecurityGroups: [ $(InstanceSecurityGroup) ]
+      KeyName : $(KeyName)
+      InstanceType: $(InstanceType)
+      ImageId : ami-5ccae734 # Amazon Linux 2015.03
+      Metadata:
+        AWS::CloudFormation::Init:
+          config:
+            packages:
+              yum: docker
+      UserData: !Base64 |
+        #!/bin/bash -v
+        yum update -y && \
+        cfn-init -s $(AWS::StackId) -r EC2Instance --region $(AWS::Region)
+        cfn-signal -e \$? -r "cfn-init completed" '$(WaitHandle)'
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to SSH
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: EC2Instance
+    Properties:
+      Handle: $(WaitHandle)
+      Count : 1
+      Timeout: 600
+
+Outputs:
+  PublicDNS:
+    Description: Public DNSName of the newly created EC2 instance
+    Value: !GetAtt [ EC2Instance, PublicDnsName ]

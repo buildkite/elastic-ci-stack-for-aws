@@ -1,0 +1,103 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "KeyName": {
+      "Description": "The ssh keypair used to access the buildkite instances",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "InstanceType": {
+      "Description": "The EC2 instance type used for buildkite instances",
+      "Type": "String",
+      "Default": "m3.medium"
+    }
+  },
+  "Resources": {
+    "EC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "SecurityGroups": [
+          {
+            "Ref": "InstanceSecurityGroup"
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "ImageId": "ami-5ccae734",
+        "Metadata": {
+          "AWS::CloudFormation::Init": {
+            "config": {
+              "packages": {
+                "yum": "docker"
+              }
+            }
+          }
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -v\nyum update -y && \\\ncfn-init -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r EC2Instance --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\ncfn-signal -e $? -r \"cfn-init completed\" '",
+                {
+                  "Ref": "WaitHandle"
+                },
+                "'\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "InstanceSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable access to SSH",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "WaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "WaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "EC2Instance",
+      "Properties": {
+        "Handle": {
+          "Ref": "WaitHandle"
+        },
+        "Count": 1,
+        "Timeout": 600
+      }
+    }
+  },
+  "Outputs": {
+    "PublicDNS": {
+      "Description": "Public DNSName of the newly created EC2 instance",
+      "Value": {
+        "Fn::GetAtt": [
+          "EC2Instance",
+          "PublicDnsName"
+        ]
+      }
+    }
+  }
+}
