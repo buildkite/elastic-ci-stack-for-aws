@@ -9,58 +9,281 @@
       "Description": "The EC2 instance type used for buildkite instances",
       "Type": "String",
       "Default": "m3.medium"
+    },
+    "BuildkiteOrgSlug": {
+      "Description": "Your Buildkite organization slug",
+      "Type": "String"
+    },
+    "BuildkiteAgentToken": {
+      "Description": "Your Buildkite agent token from Buildkite.com",
+      "Type": "String",
+      "NoEcho": "true"
+    },
+    "BuildkiteApiToken": {
+      "Description": "Your Buildkite api token from",
+      "Type": "String",
+      "NoEcho": "true"
     }
   },
   "Resources": {
-    "EC2Instance": {
+    "IAMRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+    "IAMPolicies": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "MetricInstancePolicy",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cloudwatch:PutMetricData"
+              ],
+              "Resource": "*"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "IAMRole"
+          }
+        ]
+      }
+    },
+    "IAMInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "IAMRole"
+          }
+        ]
+      }
+    },
+    "MetricInstance": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "SecurityGroups": [
           {
-            "Ref": "InstanceSecurityGroup"
+            "Ref": "SecurityGroup"
           }
         ],
         "KeyName": {
           "Ref": "KeyName"
         },
-        "InstanceType": {
-          "Ref": "InstanceType"
+        "IamInstanceProfile": {
+          "Ref": "IAMInstanceProfile"
         },
-        "ImageId": "ami-5ccae734",
-        "Metadata": {
-          "AWS::CloudFormation::Init": {
-            "config": {
-              "packages": {
-                "yum": "docker"
-              }
-            }
-          }
-        },
+        "InstanceType": "t1.micro",
+        "ImageId": "ami-1ccae774",
         "UserData": {
           "Fn::Base64": {
             "Fn::Join": [
               "",
               [
-                "#!/bin/bash -v\nyum update -y && \\\ncfn-init -s ",
+                "#!/bin/bash -xv\nexec &>/home/ec2-user/boot.log\ntail -F /var/log/cfn-init.log &\nyum update -y && \\\ngroupadd docker && \\\ngpasswd -a ec2-user docker && \\\n/opt/aws/bin/cfn-init -s ",
                 {
                   "Ref": "AWS::StackId"
                 },
-                " -r EC2Instance --region ",
+                " -r MetricInstance --region ",
                 {
                   "Ref": "AWS::Region"
                 },
-                "\ncfn-signal -e $? -r \"cfn-init completed\" '",
+                " && \\\ndocker run -d --env-file=/etc/buildkite-metrics.env buildkite/cloudwatch-metrics-provider && \\\n/opt/aws/bin/cfn-signal -e $? -r 'cfn-init finished' '",
                 {
-                  "Ref": "WaitHandle"
+                  "Ref": "MetricWaitHandle"
                 },
                 "'\n"
               ]
             ]
           }
         }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "packages": {
+              "yum": {
+                "docker": [
+                  "1.6.0"
+                ]
+              }
+            },
+            "files": {
+              "/etc/sysconfig/docker": {
+                "content": "OPTIONS=\"-G docker\"\n",
+                "mode": 420,
+                "owner": "root",
+                "group": "root"
+              },
+              "/etc/buildkite-metrics.env": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "BUILDKITE_ORG_SLUG=",
+                      {
+                        "Ref": "BuildkiteOrgSlug"
+                      },
+                      "\nBUILDKITE_API_ACCESS_TOKEN=",
+                      {
+                        "Ref": "BuildkiteApiToken"
+                      },
+                      "\n"
+                    ]
+                  ]
+                },
+                "mode": 420,
+                "owner": "root",
+                "group": "root"
+              }
+            },
+            "services": {
+              "sysvinit": {
+                "docker": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "packages": {
+                    "yum": [
+                      "docker"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
-    "InstanceSecurityGroup": {
+    "AgentLaunchConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "SecurityGroups": [
+          {
+            "Ref": "SecurityGroup"
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "IamInstanceProfile": {
+          "Ref": "IAMInstanceProfile"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "ImageId": "ami-5ccae734",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xv\nexec &>/home/ec2-user/boot.log\ntail -F /var/log/cfn-init.log &\nyum update -y && \\\ngroupadd docker && \\\ngpasswd -a ec2-user docker && \\\n/opt/aws/bin/cfn-init -s ",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                " -r AgentLaunchConfiguration --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                " && \\\ndocker run -d --env-file=/etc/buildkite.env buildkite/agent && \\\n/opt/aws/bin/cfn-signal -e $? -r 'cfn-init finished' '",
+                {
+                  "Ref": "AgentWaitHandle"
+                },
+                "'\n"
+              ]
+            ]
+          }
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "packages": {
+              "yum": {
+                "docker": [
+                  "1.6.0"
+                ]
+              }
+            },
+            "files": {
+              "/etc/sysconfig/docker": {
+                "content": "OPTIONS=\"-G docker\"\n",
+                "mode": 420,
+                "owner": "root",
+                "group": "root"
+              },
+              "/etc/buildkite.env": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "BUILDKITE_AGENT_TOKEN=",
+                      {
+                        "Ref": "BuildkiteAgentToken"
+                      },
+                      "\nBUILDKITE_AGENT_META_DATA=queue=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n"
+                    ]
+                  ]
+                },
+                "mode": 420,
+                "owner": "root",
+                "group": "root"
+              }
+            },
+            "services": {
+              "sysvinit": {
+                "docker": {
+                  "enabled": "true",
+                  "ensureRunning": "true",
+                  "packages": {
+                    "yum": [
+                      "docker"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "AgentAutoScaleGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        },
+        "LaunchConfigurationName": {
+          "Ref": "AgentLaunchConfiguration"
+        },
+        "MinSize": 1,
+        "MaxSize": 1
+      }
+    },
+    "SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Enable access to SSH",
@@ -74,29 +297,32 @@
         ]
       }
     },
-    "WaitHandle": {
+    "MetricWaitHandle": {
       "Type": "AWS::CloudFormation::WaitConditionHandle"
     },
-    "WaitCondition": {
+    "MetricWaitCondition": {
       "Type": "AWS::CloudFormation::WaitCondition",
-      "DependsOn": "EC2Instance",
+      "DependsOn": "AgentAutoScaleGroup",
       "Properties": {
         "Handle": {
-          "Ref": "WaitHandle"
+          "Ref": "MetricWaitHandle"
         },
         "Count": 1,
         "Timeout": 600
       }
-    }
-  },
-  "Outputs": {
-    "PublicDNS": {
-      "Description": "Public DNSName of the newly created EC2 instance",
-      "Value": {
-        "Fn::GetAtt": [
-          "EC2Instance",
-          "PublicDnsName"
-        ]
+    },
+    "AgentWaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "AgentWaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "AgentAutoScaleGroup",
+      "Properties": {
+        "Handle": {
+          "Ref": "AgentWaitHandle"
+        },
+        "Count": 1,
+        "Timeout": 600
       }
     }
   }

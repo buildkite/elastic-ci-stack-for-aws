@@ -7,27 +7,151 @@ Parameters:
     Description: The EC2 instance type used for buildkite instances
     Type: String
     Default: m3.medium
+  BuildkiteOrgSlug:
+    Description: Your Buildkite organization slug
+    Type: String
+  BuildkiteAgentToken:
+    Description: Your Buildkite agent token from Buildkite.com
+    Type: String
+    NoEcho: true
+  BuildkiteApiToken:
+    Description: Your Buildkite api token from
+    Type: String
+    NoEcho: true
 
 Resources:
-  EC2Instance:
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ec2.amazonaws.com ]
+            Action: sts:AssumeRole
+      Path: /
+
+  IAMPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: MetricInstancePolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - cloudwatch:PutMetricData
+            Resource: "*"
+      Roles:
+        - $(IAMRole)
+
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [ $(IAMRole) ]
+
+  MetricInstance:
     Type: AWS::EC2::Instance
     Properties:
-      SecurityGroups: [ $(InstanceSecurityGroup) ]
+      SecurityGroups: [ $(SecurityGroup) ]
       KeyName : $(KeyName)
+      IamInstanceProfile: $(IAMInstanceProfile)
+      InstanceType: t1.micro
+      ImageId : ami-1ccae774 # Amazon Linux 2015.03
+      UserData: !Base64 |
+        #!/bin/bash -xv
+        exec &>/home/ec2-user/boot.log
+        tail -F /var/log/cfn-init.log &
+        yum update -y && \
+        groupadd docker && \
+        gpasswd -a ec2-user docker && \
+        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r MetricInstance --region $(AWS::Region) && \
+        docker run -d --env-file=/etc/buildkite-metrics.env buildkite/cloudwatch-metrics-provider && \
+        /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(MetricWaitHandle)'
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              docker: [ 1.6.0 ]
+          files:
+            "/etc/sysconfig/docker":
+              content: |
+                OPTIONS="-G docker"
+              mode: 000644
+              owner: root
+              group: root
+            "/etc/buildkite-metrics.env":
+              content: |
+                BUILDKITE_ORG_SLUG=$(BuildkiteOrgSlug)
+                BUILDKITE_API_ACCESS_TOKEN=$(BuildkiteApiToken)
+                AWS_DEFAULT_REGION=$(AWS::Region)
+              mode: 000644
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              docker:
+                enabled: true
+                ensureRunning: true
+                packages:
+                  yum: [ "docker" ]
+
+  AgentLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      SecurityGroups: [ $(SecurityGroup) ]
+      KeyName : $(KeyName)
+      IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
       ImageId : ami-5ccae734 # Amazon Linux 2015.03
-      Metadata:
-        AWS::CloudFormation::Init:
-          config:
-            packages:
-              yum: docker
       UserData: !Base64 |
-        #!/bin/bash -v
+        #!/bin/bash -xv
+        exec &>/home/ec2-user/boot.log
+        tail -F /var/log/cfn-init.log &
         yum update -y && \
-        cfn-init -s $(AWS::StackId) -r EC2Instance --region $(AWS::Region)
-        cfn-signal -e \$? -r "cfn-init completed" '$(WaitHandle)'
+        groupadd docker && \
+        gpasswd -a ec2-user docker && \
+        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region) && \
+        docker run -d --env-file=/etc/buildkite.env buildkite/agent && \
+        /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(AgentWaitHandle)'
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              docker: [ 1.6.0 ]
+          files:
+            "/etc/sysconfig/docker":
+              content: |
+                OPTIONS="-G docker"
+              mode: 000644
+              owner: root
+              group: root
+            "/etc/buildkite.env":
+              content: |
+                BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
+                BUILDKITE_AGENT_META_DATA=queue=$(AWS::StackName)
+              mode: 000644
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              docker:
+                enabled: true
+                ensureRunning: true
+                packages:
+                  yum: [ "docker" ]
 
-  InstanceSecurityGroup:
+  AgentAutoScaleGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones: !GetAZs ""
+      LaunchConfigurationName: $(AgentLaunchConfiguration)
+      MinSize: 1
+      MaxSize: 1
+
+  SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Enable access to SSH
@@ -37,18 +161,24 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
 
-  WaitHandle:
+  MetricWaitHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
 
-  WaitCondition:
+  MetricWaitCondition:
     Type: AWS::CloudFormation::WaitCondition
-    DependsOn: EC2Instance
+    DependsOn: AgentAutoScaleGroup
     Properties:
-      Handle: $(WaitHandle)
+      Handle: $(MetricWaitHandle)
       Count : 1
       Timeout: 600
 
-Outputs:
-  PublicDNS:
-    Description: Public DNSName of the newly created EC2 instance
-    Value: !GetAtt [ EC2Instance, PublicDnsName ]
+  AgentWaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  AgentWaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: AgentAutoScaleGroup
+    Properties:
+      Handle: $(AgentWaitHandle)
+      Count : 1
+      Timeout: 600
