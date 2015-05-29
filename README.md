@@ -7,12 +7,13 @@ building Docker based projects.
 Installing
 ----------
 
-This assumes you have `awscli` installed and configured, and your Buildkite token
-in a `$BUILDKITE_TOKEN` env variable.
+This assumes you have `awscli` installed and configured, `brew install awscli` will do the trick on OSX.
 
 ```bash
-scripts/create-stack.sh $BUILDKITE_TOKEN
+scripts/create-stack.sh <buildkite org slug> <buildkite agent token> <buildkite api token>
 ```
+
+For the [api token](https://buildkite.com/user/api-access-tokens) you need one with the `read_projects` permission.
 
 This will light up the cloud infrastructure. Now you can configure your projects.
 
