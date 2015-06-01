@@ -1,4 +1,3 @@
-
 Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
@@ -18,6 +17,12 @@ Parameters:
     Description: Your Buildkite api token from
     Type: String
     NoEcho: true
+  ProvisionBucket:
+    Description: An s3 bucket containing a provision tarball and github keys
+    Type: String
+  ProvisionTarball:
+    Description: A tarball of provision scripts in an S3 bucket
+    Type: String
 
 Resources:
   IAMRole:
@@ -34,13 +39,21 @@ Resources:
   IAMPolicies:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: MetricInstancePolicy
+      PolicyName: InstancePolicy
       PolicyDocument:
         Statement:
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
+              - cloudformation:DescribeStackResource
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:ListBucketVersions
+            Resource: "arn:aws:s3:::$(ProvisionBucket)/*"
       Roles:
         - $(IAMRole)
 
@@ -62,25 +75,23 @@ Resources:
         #!/bin/bash -xv
         exec &>/home/ec2-user/boot.log
         tail -F /var/log/cfn-init.log &
-        yum update -y && \
-        groupadd docker && \
-        gpasswd -a ec2-user docker && \
-        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r MetricInstance --region $(AWS::Region) && \
-        docker run -d --env-file=/etc/buildkite-metrics.env buildkite/cloudwatch-metrics-provider && \
+        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r MetricInstance --region $(AWS::Region)
         /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(MetricWaitHandle)'
+      Tags:
+        - Key: Name
+          Value: buildkite-metrics
+
     Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: $(IAMRole)
+          buckets: $(ProvisionBucket)
       AWS::CloudFormation::Init:
         config:
-          packages:
-            yum:
-              docker: [ 1.6.0 ]
+          sources:
+            "/root/provision": https://s3.amazonaws.com/$(ProvisionBucket)/$(ProvisionTarball)
           files:
-            "/etc/sysconfig/docker":
-              content: |
-                OPTIONS="-G docker"
-              mode: 000644
-              owner: root
-              group: root
             "/etc/buildkite-metrics.env":
               content: |
                 BUILDKITE_ORG_SLUG=$(BuildkiteOrgSlug)
@@ -89,13 +100,11 @@ Resources:
               mode: 000644
               owner: root
               group: root
-          services:
-            sysvinit:
-              docker:
-                enabled: true
-                ensureRunning: true
-                packages:
-                  yum: [ "docker" ]
+          commands:
+            provision:
+              command: /root/provision/provision-metrics
+              env:
+                 PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -109,39 +118,31 @@ Resources:
         #!/bin/bash -xv
         exec &>/home/ec2-user/boot.log
         tail -F /var/log/cfn-init.log &
-        yum update -y && \
-        groupadd docker && \
-        gpasswd -a ec2-user docker && \
-        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region) && \
-        docker run -d --env-file=/etc/buildkite.env buildkite/agent && \
+        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
         /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(AgentWaitHandle)'
     Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: $(IAMRole)
+          buckets: $(ProvisionBucket)
       AWS::CloudFormation::Init:
         config:
-          packages:
-            yum:
-              docker: [ 1.6.0 ]
+          sources:
+            "/root/provision": https://s3.amazonaws.com/$(ProvisionBucket)/$(ProvisionTarball)
           files:
-            "/etc/sysconfig/docker":
-              content: |
-                OPTIONS="-G docker"
-              mode: 000644
-              owner: root
-              group: root
-            "/etc/buildkite.env":
-              content: |
-                BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                BUILDKITE_AGENT_META_DATA=queue=$(AWS::StackName)
-              mode: 000644
-              owner: root
-              group: root
-          services:
-            sysvinit:
-              docker:
-                enabled: true
-                ensureRunning: true
-                packages:
-                  yum: [ "docker" ]
+            "/root/provision/id_rsa_buildkite":
+              source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
+              mode: "000600"
+              owner: ec2-user
+              group: ec2-user
+              authentication: S3AccessCreds
+          commands:
+            provision:
+              command: /root/provision/provision-agent
+              env:
+                 BUILDKITE_AGENT_TOKEN: $(BuildkiteAgentToken)
+                 PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -150,6 +151,10 @@ Resources:
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: 1
       MaxSize: 1
+      Tags:
+        - Key: Name
+          Value: buildkite-agent
+          PropagateAtLaunch: true
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -166,7 +171,6 @@ Resources:
 
   MetricWaitCondition:
     Type: AWS::CloudFormation::WaitCondition
-    DependsOn: AgentAutoScaleGroup
     Properties:
       Handle: $(MetricWaitHandle)
       Count : 1
@@ -177,7 +181,6 @@ Resources:
 
   AgentWaitCondition:
     Type: AWS::CloudFormation::WaitCondition
-    DependsOn: AgentAutoScaleGroup
     Properties:
       Handle: $(AgentWaitHandle)
       Count : 1

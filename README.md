@@ -10,7 +10,7 @@ Installing
 This assumes you have `awscli` installed and configured, `brew install awscli` will do the trick on OSX.
 
 ```bash
-scripts/create-stack.sh <buildkite org slug> <buildkite agent token> <buildkite api token>
+create-stack.sh <buildkite org slug> <buildkite agent token> <buildkite api token>
 ```
 
 For the [api token](https://buildkite.com/user/api-access-tokens) you need one with the `read_projects` permission.

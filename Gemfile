@@ -1,2 +1,1 @@
 gem "cfoo"
-gem "rake"
