@@ -1,1 +1,2 @@
-*.json
+cloudformation.json
+provision.tar.gz

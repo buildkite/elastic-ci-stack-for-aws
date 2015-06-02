@@ -2,10 +2,6 @@ Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
     Type: AWS::EC2::KeyPair::KeyName
-  InstanceType:
-    Description: The EC2 instance type used for buildkite instances
-    Type: String
-    Default: m3.medium
   BuildkiteOrgSlug:
     Description: Your Buildkite organization slug
     Type: String
@@ -18,10 +14,7 @@ Parameters:
     Type: String
     NoEcho: true
   ProvisionBucket:
-    Description: An s3 bucket containing a provision tarball and github keys
-    Type: String
-  ProvisionTarball:
-    Description: A tarball of provision scripts in an S3 bucket
+    Description: An s3 bucket containing dockercfg and id_rsa_buildkite
     Type: String
 
 Resources:
@@ -63,63 +56,22 @@ Resources:
       Path: /
       Roles: [ $(IAMRole) ]
 
-  MetricInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      SecurityGroups: [ $(SecurityGroup) ]
-      KeyName : $(KeyName)
-      IamInstanceProfile: $(IAMInstanceProfile)
-      InstanceType: t1.micro
-      ImageId : ami-1ccae774 # Amazon Linux 2015.03
-      UserData: !Base64 |
-        #!/bin/bash -xv
-        exec &>/home/ec2-user/boot.log
-        tail -F /var/log/cfn-init.log &
-        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r MetricInstance --region $(AWS::Region)
-        /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(MetricWaitHandle)'
-      Tags:
-        - Key: Name
-          Value: buildkite-metrics
-
-    Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: $(IAMRole)
-          buckets: $(ProvisionBucket)
-      AWS::CloudFormation::Init:
-        config:
-          sources:
-            "/root/provision": https://s3.amazonaws.com/$(ProvisionBucket)/$(ProvisionTarball)
-          files:
-            "/etc/buildkite-metrics.env":
-              content: |
-                BUILDKITE_ORG_SLUG=$(BuildkiteOrgSlug)
-                BUILDKITE_API_ACCESS_TOKEN=$(BuildkiteApiToken)
-                AWS_DEFAULT_REGION=$(AWS::Region)
-              mode: 000644
-              owner: root
-              group: root
-          commands:
-            provision:
-              command: /root/provision/provision-metrics
-              env:
-                 PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       SecurityGroups: [ $(SecurityGroup) ]
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
-      InstanceType: $(InstanceType)
-      ImageId : ami-5ccae734 # Amazon Linux 2015.03
+      InstanceType: m3.medium
+      ImageId : ami-cf09e8a4 # Ubuntu 15.04, HVM
       UserData: !Base64 |
         #!/bin/bash -xv
-        exec &>/home/ec2-user/boot.log
-        tail -F /var/log/cfn-init.log &
-        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
-        /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(AgentWaitHandle)'
+        exec &>/home/ubuntu/boot.log
+        tail -F /var/log/cfn-init.log /var/log/cfn-init-cmd.log &
+        apt-get -y install python-setuptools && \
+        easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz && \
+        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
+        /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(AgentWaitHandle)'
     Metadata:
       AWS::CloudFormation::Authentication:
         S3AccessCreds:
@@ -128,21 +80,49 @@ Resources:
           buckets: $(ProvisionBucket)
       AWS::CloudFormation::Init:
         config:
-          sources:
-            "/root/provision": https://s3.amazonaws.com/$(ProvisionBucket)/$(ProvisionTarball)
           files:
-            "/root/provision/id_rsa_buildkite":
+            "/home/ubuntu/id_rsa":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
-              mode: "000600"
-              owner: ec2-user
-              group: ec2-user
+              mode: '000400'
+              owner: ubuntu
+              group: ubuntu
               authentication: S3AccessCreds
+            "/home/ubuntu/.dockercfg":
+              source: "https://s3.amazonaws.com/$(ProvisionBucket)/dockercfg"
+              mode: '000400'
+              owner: ubuntu
+              group: ubuntu
+              authentication: S3AccessCreds
+            "/home/ubuntu/docker-compose.yml":
+              content: |
+                buildkite:
+                  image: buildkite/agent:dind
+                  privileged: true
+                  environment:
+                    - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
+                    - BUILDKITE_AGENT_META_DATA="queue=elastic"
+                    - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
+                  volumes:
+                    - /home/ubuntu/.ssh:/root/.ssh
+                    - /home/ubuntu/.dockercfg:/root/.dockercfg
+                  restart: always
+              mode: '000400'
+              owner: ubuntu
+              group: ubuntu
           commands:
-            provision:
-              command: /root/provision/provision-agent
-              env:
-                 BUILDKITE_AGENT_TOKEN: $(BuildkiteAgentToken)
-                 PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            01-install-docker:
+              command: |
+                curl -sSL https://get.docker.com/ | sh
+                usermod -aG docker ubuntu
+                systemctl enable docker
+                systemctl start docker
+            02-install-docker-compose:
+              command: |
+                curl -L https://github.com/docker/compose/releases/download/1.2.0/docker-compose-Linux-x86_64 > /usr/local/bin/docker-compose
+                chmod +x /usr/local/bin/docker-compose
+            03-install-buildkite:
+              command: |
+                docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -165,16 +145,6 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
-
-  MetricWaitHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-
-  MetricWaitCondition:
-    Type: AWS::CloudFormation::WaitCondition
-    Properties:
-      Handle: $(MetricWaitHandle)
-      Count : 1
-      Timeout: 600
 
   AgentWaitHandle:
     Type: AWS::CloudFormation::WaitConditionHandle

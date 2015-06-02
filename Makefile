@@ -1,4 +1,5 @@
-CFOO=cfoo
+
+all: cloudformation.json
 
 cloudformation.json: templates/buildkite-elastic.yml
 	cfoo $^ > $@

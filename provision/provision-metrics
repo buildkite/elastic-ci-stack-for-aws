@@ -1,7 +1,0 @@
-#!/bin/bash -eux
-
-cd $(dirname $0)
-scripts/configure-host.sh
-scripts/install-docker.sh
-
-docker run -d --env-file=/etc/buildkite-metrics.env buildkite/cloudwatch-metrics-provider
