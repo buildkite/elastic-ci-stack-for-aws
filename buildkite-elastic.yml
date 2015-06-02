@@ -81,7 +81,7 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           files:
-            "/home/ubuntu/id_rsa":
+            "/home/ubuntu/.ssh/id_rsa":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
               mode: '000400'
               owner: ubuntu
@@ -100,13 +100,13 @@ Resources:
                   privileged: true
                   environment:
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA="queue=elastic"
+                    - BUILDKITE_AGENT_META_DATA=queue=elastic
                     - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
                   volumes:
                     - /home/ubuntu/.ssh:/root/.ssh
                     - /home/ubuntu/.dockercfg:/root/.dockercfg
                   restart: always
-              mode: '000400'
+              mode: '000600'
               owner: ubuntu
               group: ubuntu
           commands:
