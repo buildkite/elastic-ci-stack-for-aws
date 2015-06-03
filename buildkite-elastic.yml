@@ -62,7 +62,7 @@ Resources:
       SecurityGroups: [ $(SecurityGroup) ]
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
-      InstanceType: m3.medium
+      InstanceType: c3.xlarge
       ImageId : ami-cf09e8a4 # Ubuntu 15.04, HVM
       UserData: !Base64 |
         #!/bin/bash -xv
@@ -129,8 +129,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ""
       LaunchConfigurationName: $(AgentLaunchConfiguration)
-      MinSize: 1
-      MaxSize: 1
+      MinSize: 2
+      MaxSize: 6
       Tags:
         - Key: Name
           Value: buildkite-agent
