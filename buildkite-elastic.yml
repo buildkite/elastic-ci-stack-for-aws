@@ -209,7 +209,7 @@ Resources:
                 echo deb https://apt.buildkite.com/buildkite-agent unstable main > /etc/apt/sources.list.d/buildkite-agent.list
                 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198
                 apt-get update && apt-get install -y buildkite-agent
-                systemctl daemon-restart && systemctl enable buildkite-agent && systemctl start buildkite-agent
+                systemctl daemon-reload && systemctl enable buildkite-agent && systemctl start buildkite-agent
             04-fetch-authorized-users:
               command: /etc/cron.hourly/authorized_keys
 
