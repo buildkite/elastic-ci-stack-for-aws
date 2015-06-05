@@ -2,8 +2,9 @@
 
 build_parameters() {
   for k in "$@" ; do
-    value=${k#*=}
-    printf "ParameterKey=%s,ParameterValue=%s " ${k%=*} ${value//,/\\,}
+    key=$(echo $k | cut -f1 -d=)
+    value=${k#*$key=}
+    printf "ParameterKey=%s,ParameterValue=%s " $key ${value//,/\\,}
   done
 }
 
