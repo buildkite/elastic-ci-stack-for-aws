@@ -1,41 +1,88 @@
+
+## Provides the infrastructure for a scalable buildkite cluster
+
 Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
     Type: AWS::EC2::KeyPair::KeyName
+
   BuildkiteOrgSlug:
     Description: Your Buildkite organization slug
     Type: String
+
   BuildkiteAgentToken:
     Description: Your Buildkite agent token from Buildkite.com
     Type: String
     NoEcho: true
-  BuildkiteApiToken:
-    Description: Your Buildkite api token from
-    Type: String
-    NoEcho: true
+
   BuildkiteAgentMetadata:
     Description: The metadata to register the agent with
     Type: String
     Default: queue=elastic
+
   ProvisionBucket:
     Description: An s3 bucket containing dockercfg and id_rsa_buildkite
     Type: String
+
   AuthorizedUsersUrl:
     Description: An optional url to periodically download ssh authorized_keys from
     Type: String
+
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: VpcId of your existing Virtual Private Cloud (VPC).
+
   Subnets:
     Type: List<AWS::EC2::Subnet::Id>
     Description: The list of SubnetIds where the instances will be launched
+
   InstanceType:
     Description: The type of instance to use for the agent
     Type: String
     Default: m3.medium
+    AllowedValues:
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+
+  NotificationEmail:
+    Description: EMail address to notify if there are any scaling operations
+    Type: String
+
+  MaxSize:
+    Description: The maximum number of agents to launch
+    Type: Number
+    Default: 6
+
+  MinSize:
+    Description: The minumum number of agents to launch
+    Type: Number
+    Default: 1
 
 
 Resources:
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: $(NotificationEmail)
+          Protocol: email
+
+  # Allow ec2 instances to assume a role and be granted the IAMPolicies
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [ $(IAMRole) ]
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
@@ -47,6 +94,7 @@ Resources:
             Action: sts:AssumeRole
       Path: /
 
+  # Policies for the agent instances
   IAMPolicies:
     Type: AWS::IAM::Policy
     Properties:
@@ -57,6 +105,7 @@ Resources:
             Action:
               - cloudwatch:PutMetricData
               - cloudformation:DescribeStackResource
+              - ec2:DescribeTags
             Resource: "*"
           - Effect: Allow
             Action:
@@ -67,12 +116,6 @@ Resources:
             Resource: "arn:aws:s3:::$(ProvisionBucket)/*"
       Roles:
         - $(IAMRole)
-
-  IAMInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: /
-      Roles: [ $(IAMRole) ]
 
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -90,7 +133,9 @@ Resources:
         easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz && \
         /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region) && \
         systemctl is-active buildkite-agent docker
-        /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(AgentWaitHandle)'
+        /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' \
+          --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
+
     Metadata:
       AWS::CloudFormation::Authentication:
         S3AccessCreds:
@@ -118,14 +163,13 @@ Resources:
                 name="elastic-%hostname-%n"
                 meta-data="$(BuildkiteAgentMetadata)"
                 meta-data-ec2-tags=true
-                debug=true
                 bootstrap-script="/usr/share/buildkite-agent/bootstrap.sh"
                 build-path="/var/buildkite-agent/builds"
                 hooks-path="/etc/buildkite-agent/hooks"
               mode: '000600'
               owner: root
               group: root
-            "/etc/systemd/system/buildkite-agent.d/environment.conf":
+            "/etc/systemd/system/buildkite-agent.service.d/environment.conf":
               content: |
                 [Service]
                 Environment=HOME=/root
@@ -144,6 +188,7 @@ Resources:
                 curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
                 mv /tmp/authorized_keys /home/ubuntu/.ssh/authorized_keys
                 chmod 600 /home/ubuntu/.ssh/authorized_keys
+                chown ubuntu: /home/ubuntu/.ssh/authorized_keys
               mode: '000700'
               owner: root
               group: root
@@ -164,7 +209,7 @@ Resources:
                 echo deb https://apt.buildkite.com/buildkite-agent unstable main > /etc/apt/sources.list.d/buildkite-agent.list
                 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198
                 apt-get update && apt-get install -y buildkite-agent
-                systemctl enable buildkite-agent && systemctl start buildkite-agent
+                systemctl daemon-restart && systemctl enable buildkite-agent && systemctl start buildkite-agent
             04-fetch-authorized-users:
               command: /etc/cron.hourly/authorized_keys
 
@@ -173,10 +218,76 @@ Resources:
     Properties:
       VPCZoneIdentifier: $(Subnets)
       LaunchConfigurationName: $(AgentLaunchConfiguration)
-      MinSize: 2
-      MaxSize: 6
+      MinSize: $(MinSize)
+      MaxSize: $(MaxSize)
+      NotificationConfigurations:
+        - TopicARN: $(NotificationTopic)
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
         - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+        Count: $(MinSize)
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: $(MinSize)
+        MaxBatchSize: 1
+        PauseTime: PT15M
+        WaitOnResourceSignals: true
+
+
+  AgentScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: $(AgentAutoScaleGroup)
+      Cooldown: 60
+      ScalingAdjustment: 1
+
+  AgentScaleDownPolicy:
+    Type : AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: $(AgentAutoScaleGroup)
+      Cooldown : 60
+      ScalingAdjustment : -1
+
+  CPUAlarmHigh:
+   Type: AWS::CloudWatch::Alarm
+   Properties:
+      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 90
+      AlarmActions: [ $(AgentScaleUpPolicy) ]
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: $(AgentAutoScaleGroup)
+      ComparisonOperator: GreaterThanThreshold
+
+  CPUAlarmLow:
+   Type: AWS::CloudWatch::Alarm
+   Properties:
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 70
+      AlarmActions: [ $(AgentScaleDownPolicy) ]
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: $(AgentAutoScaleGroup)
+      ComparisonOperator: LessThanThreshold
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -189,12 +300,3 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
 
-  AgentWaitHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-
-  AgentWaitCondition:
-    Type: AWS::CloudFormation::WaitCondition
-    Properties:
-      Handle: $(AgentWaitHandle)
-      Count : 1
-      Timeout: 600
