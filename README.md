@@ -20,10 +20,19 @@ Running
 The `create-stack.sh` script will launch the cloudformation stack that powers your buildkite agents.
 
 ```bash
-create-stack.sh <buildkite org slug> <buildkite agent token> <buildkite api token>
+./create-stack.sh \
+  BuildkiteOrgSlug=99designs \
+  BuildkiteAgentToken=6a50625146693c3cef2a50f013bc3ed562a2ddba \
+  KeyName=default \
+  VpcId=vpc-ff95a89a \
+  Subnets=subnet-1ac7a743,subnet-b8226dcf,subnet-f01c25ca \
+  InstanceType=c4.2xlarge \
+  BuildkiteAgentMetadata=queue=loxtest \
+  AuthorizedUsersUrl=https://example.org/authorized_keys \
+  NotificationEmail=lachlan@example.org
 ```
 
-For the [api token](https://buildkite.com/user/api-access-tokens) you need one with the `read_projects` permission.
+Check out `buildkite-elastic.yml` for what parameters are available. You can alternately upload the `cloudformation.json` file via the CloudFormation web interface.
 
 Project Configuration
 ---------------------

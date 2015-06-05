@@ -9,27 +9,27 @@ build_parameters() {
 }
 
 if [[ $# -lt 3 ]] ; then
-  echo "usage: $0 <org-slug> <api-token> <agent-token> [... Key=Val]"
+  echo "usage: $0 [... Key=Val]"
   exit 1
 fi
 
-ORG_SLUG=$1
-API_TOKEN=$2
-AGENT_TOKEN=$3
-shift 3
+# grab the org slug to generate the provision bucket default
+if [[ "$*" =~ BuildkiteOrgSlug=([0-9a-zA-Z_\-]+) ]]; then
+  ORG_SLUG=${BASH_REMATCH[1]}
+elif [[ -z $PROVISION_BUCKET ]]; then
+  echo "Must provide either BuildkiteOrgSlug parameter or set a PROVISION_BUCKET env"
+  exit 1
+fi
 
+PROVISION_BUCKET=${PROVISION_BUCKET:-${ORG_SLUG}-buildkite}
 STACK_NAME=${STACK_NAME:-buildkite-$(date +%Y-%m-%d-%H-%M)}
 STACK_TEMPLATE="$(dirname $0)/cloudformation.json"
-PROVISION_BUCKET=${PROVISION_BUCKET:-${ORG_SLUG}-buildkite}
 
 cd $(dirname $0)
 make all
 
 PARAMS=$(build_parameters "$@")
 PARAMS+=" ParameterKey=ProvisionBucket,ParameterValue=$PROVISION_BUCKET"
-PARAMS+=" ParameterKey=BuildkiteOrgSlug,ParameterValue=$ORG_SLUG"
-PARAMS+=" ParameterKey=BuildkiteApiToken,ParameterValue=$API_TOKEN"
-PARAMS+=" ParameterKey=BuildkiteAgentToken,ParameterValue=$AGENT_TOKEN"
 
 # http://docs.aws.amazon.com/cli/latest/reference/cloudformation/create-stack.html
 echo "Creating cfn stack ${STACK_NAME}"
