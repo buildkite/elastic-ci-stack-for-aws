@@ -13,6 +13,10 @@ Parameters:
     Description: Your Buildkite api token from
     Type: String
     NoEcho: true
+  BuildkiteAgentMetadata:
+    Description: The metadata to register the agent with
+    Type: String
+    Default: queue=elastic
   ProvisionBucket:
     Description: An s3 bucket containing dockercfg and id_rsa_buildkite
     Type: String
@@ -29,6 +33,7 @@ Parameters:
     Description: The type of instance to use for the agent
     Type: String
     Default: m3.medium
+
 
 Resources:
   IAMRole:
@@ -111,7 +116,7 @@ Resources:
               content: |
                 token="$(BuildkiteAgentToken)"
                 name="elastic-%hostname-%n"
-                meta-data="queue=elastic"
+                meta-data="$(BuildkiteAgentMetadata)"
                 meta-data-ec2-tags=true
                 debug=true
                 bootstrap-script="/usr/share/buildkite-agent/bootstrap.sh"
