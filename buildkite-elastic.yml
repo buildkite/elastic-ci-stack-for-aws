@@ -16,6 +16,19 @@ Parameters:
   ProvisionBucket:
     Description: An s3 bucket containing dockercfg and id_rsa_buildkite
     Type: String
+  AuthorizedUsersUrl:
+    Description: An optional url to periodically download ssh authorized_keys from
+    Type: String
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VpcId of your existing Virtual Private Cloud (VPC).
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: The list of SubnetIds where the instances will be launched
+  InstanceType:
+    Description: The type of instance to use for the agent
+    Type: String
+    Default: m3.medium
 
 Resources:
   IAMRole:
@@ -62,15 +75,16 @@ Resources:
       SecurityGroups: [ $(SecurityGroup) ]
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
-      InstanceType: c3.xlarge
-      ImageId : ami-cf09e8a4 # Ubuntu 15.04, HVM
+      InstanceType: $(InstanceType)
+      ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
       UserData: !Base64 |
         #!/bin/bash -xv
         exec &>/home/ubuntu/boot.log
-        tail -F /var/log/cfn-init.log /var/log/cfn-init-cmd.log &
+        tail -qF /var/log/cfn-init.log /var/log/cfn-init-cmd.log &
         apt-get -y install python-setuptools && \
         easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz && \
-        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
+        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region) && \
+        systemctl is-active buildkite-agent docker
         /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' '$(AgentWaitHandle)'
     Metadata:
       AWS::CloudFormation::Authentication:
@@ -81,34 +95,54 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           files:
-            "/home/ubuntu/.ssh/id_rsa":
+            "/root/.ssh/id_rsa":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
               mode: '000400'
               owner: ubuntu
               group: ubuntu
               authentication: S3AccessCreds
-            "/home/ubuntu/.dockercfg":
+            "/root/.dockercfg":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/dockercfg"
               mode: '000400'
-              owner: ubuntu
-              group: ubuntu
+              owner: root
+              group: root
               authentication: S3AccessCreds
-            "/home/ubuntu/docker-compose.yml":
+            "/etc/buildkite-agent/buildkite-agent.cfg":
               content: |
-                buildkite:
-                  image: buildkite/agent:dind
-                  privileged: true
-                  environment:
-                    - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA=queue=elastic
-                    - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
-                  volumes:
-                    - /home/ubuntu/.ssh:/root/.ssh
-                    - /home/ubuntu/.dockercfg:/root/.dockercfg
-                  restart: always
+                token="$(BuildkiteAgentToken)"
+                name="elastic-%hostname-%n"
+                meta-data="queue=elastic"
+                meta-data-ec2-tags=true
+                debug=true
+                bootstrap-script="/usr/share/buildkite-agent/bootstrap.sh"
+                build-path="/var/buildkite-agent/builds"
+                hooks-path="/etc/buildkite-agent/hooks"
               mode: '000600'
-              owner: ubuntu
-              group: ubuntu
+              owner: root
+              group: root
+            "/etc/systemd/system/buildkite-agent.d/environment.conf":
+              content: |
+                [Service]
+                Environment=HOME=/root
+              mode: '000600'
+              owner: root
+              group: root
+            "/etc/cron.daily/docker-gc":
+              source: "https://raw.githubusercontent.com/spotify/docker-gc/master/docker-gc"
+              mode: '000700'
+              owner: root
+              group: root
+            "/etc/cron.hourly/authorized_keys":
+              content: |
+                #!/bin/bash -e
+                test -z "$(AuthorizedUsersUrl)" && exit 0
+                curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
+                mv /tmp/authorized_keys /home/ubuntu/.ssh/authorized_keys
+                chmod 600 /home/ubuntu/.ssh/authorized_keys
+              mode: '000700'
+              owner: root
+              group: root
+
           commands:
             01-install-docker:
               command: |
@@ -122,24 +156,26 @@ Resources:
                 chmod +x /usr/local/bin/docker-compose
             03-install-buildkite:
               command: |
-                docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
+                echo deb https://apt.buildkite.com/buildkite-agent unstable main > /etc/apt/sources.list.d/buildkite-agent.list
+                apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198
+                apt-get update && apt-get install -y buildkite-agent
+                systemctl enable buildkite-agent && systemctl start buildkite-agent
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      AvailabilityZones: !GetAZs ""
+      VPCZoneIdentifier: $(Subnets)
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: 2
       MaxSize: 6
       Tags:
-        - Key: Name
-          Value: buildkite-agent
-          PropagateAtLaunch: true
+        - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Enable access to SSH
+      VpcId: $(VpcId)
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22

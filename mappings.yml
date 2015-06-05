@@ -1,0 +1,20 @@
+Mappings:
+
+  # http://aws.amazon.com/amazon-linux-ami/instance-type-matrix/
+  AWSInstanceType2Arch:
+    c4.large      : { Arch: HVM64EBS }
+    c4.xlarge     : { Arch: HVM64EBS }
+    c4.2xlarge    : { Arch: HVM64EBS }
+    c4.4xlarge    : { Arch: HVM64EBS }
+    c4.8xlarge    : { Arch: HVM64EBS }
+    t2.micro      : { Arch: HVM64EBS }
+    t2.small      : { Arch: HVM64EBS }
+    t2.medium     : { Arch: HVM64EBS }
+    m3.medium     : { Arch: HVM64IS }
+    m3.large      : { Arch: HVM64IS }
+    m3.xlarge     : { Arch: HVM64IS }
+    m3.2xlarge    : { Arch: HVM64IS }
+
+  # Ubuntu 15.04
+  AWSArch2AMI:
+    us-east-1     : { HVM64EBS: ami-cf09e8a4, HVM64IS: ami-4d3fde26 }
