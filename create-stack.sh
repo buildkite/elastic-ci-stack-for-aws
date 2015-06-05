@@ -2,7 +2,8 @@
 
 build_parameters() {
   for k in "$@" ; do
-    printf "ParameterKey=%s,ParameterValue=%s " ${k%=*} ${k#*=}
+    value=${k#*=}
+    printf "ParameterKey=%s,ParameterValue=%s " ${k%=*} ${value//,/\\,}
   done
 }
 
