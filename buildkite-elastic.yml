@@ -68,6 +68,10 @@ Parameters:
     Type: Number
     Default: 1
 
+  AgentsPerHost:
+    Description: The number of buildkite agents to run per host
+    Type: Number
+    Default: 6
 
 Resources:
   NotificationTopic:
@@ -125,11 +129,15 @@ Resources:
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdf
+          Ebs: { VolumeSize: 30 }
+      # the aim is to keep this as brief as possible, commands should be done in Metadata
       UserData: !Base64 |
         #!/bin/bash -xv
         exec &>/home/ubuntu/boot.log
         tail -qF /var/log/cfn-init.log /var/log/cfn-init-cmd.log &
-        apt-get update && apt-get -y install python-setuptools && \
+        apt-get update && apt-get -y install python-setuptools btrfs-tools unzip libwww-perl libdatetime-perl && \
         easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz && \
         /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
         /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' \
@@ -141,41 +149,43 @@ Resources:
           type: S3
           roleName: $(IAMRole)
           buckets: $(ProvisionBucket)
+
+      # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
+          sources:
+            "/usr/local": http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip
+
           files:
-            "/root/.ssh/id_rsa":
+            "/home/ubuntu/.ssh/id_rsa":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
               mode: '000400'
               owner: ubuntu
               group: ubuntu
               authentication: S3AccessCreds
-            "/root/.dockercfg":
+            "/home/ubuntu/.dockercfg":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/dockercfg"
               mode: '000400'
-              owner: root
-              group: root
+              owner: ubuntu
+              group: ubuntu
               authentication: S3AccessCreds
-            "/etc/buildkite-agent/buildkite-agent.cfg":
+            "/home/ubuntu/docker-compose.yml":
               content: |
-                token="$(BuildkiteAgentToken)"
-                name="elastic-%hostname-%n"
-                meta-data="$(BuildkiteAgentMetadata)"
-                meta-data-ec2-tags=true
-                bootstrap-script="/usr/share/buildkite-agent/bootstrap.sh"
-                build-path="/var/buildkite-agent/builds"
-                hooks-path="/etc/buildkite-agent/hooks"
+                buildkite:
+                  image: buildkite/agent:dind
+                  privileged: true
+                  environment:
+                    - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
+                    - BUILDKITE_AGENT_META_DATA="$(BuildkiteAgentMetadata)"
+                    - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
+                  volumes:
+                    - /home/ubuntu/.ssh:/root/.ssh
+                    - /home/ubuntu/.dockercfg:/root/.dockercfg
+                  restart: always
               mode: '000600'
-              owner: root
-              group: root
-            "/etc/systemd/system/buildkite-agent.service.d/environment.conf":
-              content: |
-                [Service]
-                Environment=HOME=/root
-              mode: '000600'
-              owner: root
-              group: root
-            "/etc/cron.daily/docker-gc":
+              owner: ubuntu
+              group: ubuntu
+            "/etc/cron.hourly/docker-gc":
               source: "https://raw.githubusercontent.com/spotify/docker-gc/master/docker-gc"
               mode: '000700'
               owner: root
@@ -191,29 +201,38 @@ Resources:
               mode: '000700'
               owner: root
               group: root
+            "/etc/cron.d/cloudwatch":
+              content: |
+                */2 * * * * root perl /usr/local/aws-scripts-mon/mon-put-instance-data.pl --mem-util --disk-space-util --disk-path=/ --disk-path=/var/lib/docker --from-cron
+              mode: '000700'
+              owner: root
+              group: root
 
           commands:
-            01-install-docker:
+            01-mount-docker-volume:
+              command: |
+                printf 'LABEL=docker %s\t%s\tauto\tdefaults,noatime\t0 0\n' /dev/xvdf /var/lib/docker >> /etc/fstab
+                mkfs.btrfs /dev/xvdf
+                mkdir -p /var/lib/docker
+                mount /dev/xvdf /var/lib/docker
+            02-install-docker:
               command: |
                 curl -sSL https://get.docker.com/ | sh
                 usermod -aG docker ubuntu
+                sed -e "s#ExecStart=.*#ExecStart=/usr/bin/docker -d -s btrfs -H fd:// #" -i /lib/systemd/system/docker.service
+                systemctl daemon-reload
                 systemctl enable docker
                 systemctl start docker
-            02-install-docker-compose:
+            03-install-docker-compose:
               command: |
                 curl -L https://github.com/docker/compose/releases/download/1.2.0/docker-compose-Linux-x86_64 > /usr/local/bin/docker-compose
                 chmod +x /usr/local/bin/docker-compose
-            03-install-buildkite:
+            04-install-buildkite:
               command: |
-                echo deb https://apt.buildkite.com/buildkite-agent unstable main > /etc/apt/sources.list.d/buildkite-agent.list
-                apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198
-                apt-get update && apt-get install -y buildkite-agent
-                systemctl daemon-reload && systemctl enable buildkite-agent && systemctl start buildkite-agent
-            04-fetch-authorized-users:
+                docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
+                docker-compose -f /home/ubuntu/docker-compose.yml scale buildkite=$(AgentsPerHost)
+            05-fetch-authorized-users:
               command: /etc/cron.hourly/authorized_keys
-            05-check-systemd:
-              command: |
-                systemctl is-active buildkite-agent docker
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -233,7 +252,7 @@ Resources:
         - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
         Count: $(MinSize)
     UpdatePolicy:
       AutoScalingRollingUpdate:
