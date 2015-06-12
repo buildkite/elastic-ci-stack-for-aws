@@ -176,7 +176,7 @@ Resources:
                   privileged: true
                   environment:
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA="$(BuildkiteAgentMetadata)"
+                    - BUILDKITE_AGENT_META_DATA=$(BuildkiteAgentMetadata)
                     - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
                   volumes:
                     - /home/ubuntu/.ssh:/root/.ssh
