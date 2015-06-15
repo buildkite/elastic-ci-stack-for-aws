@@ -1,0 +1,3 @@
+
+# Use DOCKER_OPTS to modify the daemon startup options.
+DOCKER_OPTS="-G docker --dns 8.8.8.8 --dns 8.8.4.4"
