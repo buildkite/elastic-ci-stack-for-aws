@@ -129,16 +129,8 @@ Resources:
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
-      BlockDeviceMappings:
-        - DeviceName: /dev/sdf
-          Ebs: { VolumeSize: 30 }
-      # the aim is to keep this as brief as possible, commands should be done in Metadata
       UserData: !Base64 |
         #!/bin/bash -xv
-        exec &>/home/ubuntu/boot.log
-        tail -qF /var/log/cfn-init.log /var/log/cfn-init-cmd.log &
-        apt-get update && apt-get -y install python-setuptools btrfs-tools unzip libwww-perl libdatetime-perl && \
-        easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz && \
         /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
         /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' \
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
@@ -153,9 +145,6 @@ Resources:
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
-          sources:
-            "/usr/local": http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip
-
           files:
             "/home/ubuntu/.ssh/id_rsa":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
@@ -182,17 +171,13 @@ Resources:
                     - /home/ubuntu/.ssh:/root/.ssh
                     - /home/ubuntu/.dockercfg:/root/.dockercfg
                   restart: always
+                  log_driver: syslog
               mode: '000600'
               owner: ubuntu
               group: ubuntu
-            "/etc/cron.hourly/docker-gc":
-              source: "https://raw.githubusercontent.com/spotify/docker-gc/master/docker-gc"
-              mode: '000700'
-              owner: root
-              group: root
             "/etc/cron.hourly/authorized_keys":
               content: |
-                #!/bin/bash -e
+                #!/bin/bash -eu
                 test -z "$(AuthorizedUsersUrl)" && exit 0
                 curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
                 mv /tmp/authorized_keys /home/ubuntu/.ssh/authorized_keys
@@ -209,29 +194,11 @@ Resources:
               group: root
 
           commands:
-            01-mount-docker-volume:
-              command: |
-                printf 'LABEL=docker %s\t%s\tauto\tdefaults,noatime\t0 0\n' /dev/xvdf /var/lib/docker >> /etc/fstab
-                mkfs.btrfs /dev/xvdf
-                mkdir -p /var/lib/docker
-                mount /dev/xvdf /var/lib/docker
-            02-install-docker:
-              command: |
-                curl -sSL https://get.docker.com/ | sh
-                usermod -aG docker ubuntu
-                sed -e "s#ExecStart=.*#ExecStart=/usr/bin/docker -d -s btrfs -H fd:// #" -i /lib/systemd/system/docker.service
-                systemctl daemon-reload
-                systemctl enable docker
-                systemctl start docker
-            03-install-docker-compose:
-              command: |
-                curl -L https://github.com/docker/compose/releases/download/1.2.0/docker-compose-Linux-x86_64 > /usr/local/bin/docker-compose
-                chmod +x /usr/local/bin/docker-compose
-            04-install-buildkite:
+            01-install-buildkite:
               command: |
                 docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
                 docker-compose -f /home/ubuntu/docker-compose.yml scale buildkite=$(AgentsPerHost)
-            05-fetch-authorized-users:
+            02-fetch-authorized-users:
               command: /etc/cron.hourly/authorized_keys
 
   AgentAutoScaleGroup:
