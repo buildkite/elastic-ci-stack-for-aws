@@ -5,10 +5,18 @@
       "region": "us-east-1",
       "source_ami": "ami-cf09e8a4",
       "instance_type": "m3.medium",
-      "spot_price": "auto",
-      "spot_price_auto_product": "Linux/UNIX",
       "ssh_username": "ubuntu",
-      "ami_name": "ubuntu-15.04-docker-{{isotime | clean_ami_name}}",
+      "ami_name": "buildkite-{{isotime | clean_ami_name}}",
+      "ami_description": "A docker host image based on Ubuntu 15.04 for buildkite-elastic",
+      "ami_block_device_mappings": [{
+        "device_name": "/dev/sdf",
+        "volume_size": 30,
+        "volume_type": "gp2"
+      }],
+      "launch_block_device_mappings": [{
+        "device_name": "/dev/sdf",
+        "volume_size": 30
+      }],
       "tags": {
         "Release": "15.04 LTS",
         "Docker": "1.6.2",
@@ -16,7 +24,6 @@
       }
     }
   ],
-
   "provisioners": [
     {
       "type": "file",
