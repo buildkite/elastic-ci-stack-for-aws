@@ -54,6 +54,10 @@ Parameters:
       - m3.xlarge
       - m3.2xlarge
 
+  SpotPrice:
+    Description: An optional spot price to use for the agents
+    Type: String
+
   NotificationEmail:
     Description: EMail address to notify if there are any scaling operations
     Type: String
@@ -128,6 +132,7 @@ Resources:
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
+      SpotPrice: $(SpotPrice)
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
       UserData: !Base64 |
         #!/bin/bash -xv
