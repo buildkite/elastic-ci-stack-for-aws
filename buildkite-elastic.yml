@@ -203,6 +203,7 @@ Resources:
           commands:
             01-install-buildkite:
               command: |
+                docker-compose -f /home/ubuntu/docker-compose.yml pull
                 docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
                 docker-compose -f /home/ubuntu/docker-compose.yml scale buildkite=$(AgentsPerHost)
             02-fetch-authorized-users:
