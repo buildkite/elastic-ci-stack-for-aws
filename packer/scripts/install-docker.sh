@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# setup btrfs on /dev/xvdf
-sudo apt-get install -y btrfs-tools
-printf 'LABEL=docker %s\t%s\tauto\tdefaults,noatime\t0 0\n' /dev/xvdf /var/lib/docker >> /etc/fstab
-mkfs.btrfs /dev/xvdf
-mkdir -p /var/lib/docker
-mount /dev/xvdf /var/lib/docker
-
 # installs docker
 curl -sSL https://get.docker.com/ | sudo sh
 sudo usermod -aG docker ubuntu

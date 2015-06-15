@@ -134,13 +134,14 @@ Resources:
       InstanceType: $(InstanceType)
       SpotPrice: $(SpotPrice)
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs: { VolumeSize: 80, VolumeType: gp2 }
       UserData: !Base64 |
-        #cloud-config
-        mounts:
-          - [ xvdf, /var/lib/docker, auto, "defaults,noatime" ]
-        runcmd:
-          - /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
-          - /usr/local/bin/cfn-signal -e \$? -s $(AWS::StackName) -r 'AgentAutoScaleGroup' --region $(AWS::Region)
+        #!/bin/bash
+        resize2fs /dev/sda1 && \
+        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region) && \
+        /usr/local/bin/cfn-signal -e \$? -s $(AWS::StackName) -r AgentAutoScaleGroup --region $(AWS::Region)
 
     Metadata:
       AWS::CloudFormation::Authentication:

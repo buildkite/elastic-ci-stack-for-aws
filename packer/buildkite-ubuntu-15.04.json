@@ -7,16 +7,7 @@
       "instance_type": "m3.medium",
       "ssh_username": "ubuntu",
       "ami_name": "buildkite-{{isotime | clean_ami_name}}",
-      "ami_description": "A docker host image based on Ubuntu 15.04 for buildkite-elastic",
-      "ami_block_device_mappings": [{
-        "device_name": "/dev/sdf",
-        "volume_size": 30,
-        "volume_type": "gp2"
-      }],
-      "launch_block_device_mappings": [{
-        "device_name": "/dev/sdf",
-        "volume_size": 30
-      }],
+      "ami_description": "A docker host image based on Ubuntu 15.04",
       "tags": {
         "Release": "15.04 LTS",
         "Docker": "1.6.2",
@@ -37,10 +28,6 @@
     {
       "type": "shell",
       "script": "scripts/install-docker.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-buildkite.sh"
     }
   ]
 }
