@@ -135,10 +135,12 @@ Resources:
       SpotPrice: $(SpotPrice)
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
       UserData: !Base64 |
-        #!/bin/bash -xv
-        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
-        /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' \
-          --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
+        #cloud-config
+        mounts:
+          - [ xvdf, /var/lib/docker, auto, "defaults,noatime" ]
+        runcmd:
+          - /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
+          - /usr/local/bin/cfn-signal -e \$? -s $(AWS::StackName) -r 'AgentAutoScaleGroup' --region $(AWS::Region)
 
     Metadata:
       AWS::CloudFormation::Authentication:
