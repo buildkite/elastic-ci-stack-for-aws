@@ -57,10 +57,7 @@ Parameters:
   SpotPrice:
     Description: An optional spot price to use for the agents
     Type: String
-
-  NotificationEmail:
-    Description: EMail address to notify if there are any scaling operations
-    Type: String
+    Default: 0
 
   MaxSize:
     Description: The maximum number of agents to launch
@@ -77,14 +74,11 @@ Parameters:
     Type: Number
     Default: 6
 
-Resources:
-  NotificationTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      Subscription:
-        - Endpoint: $(NotificationEmail)
-          Protocol: email
+Conditions:
+    UseSpotInstances:
+      !Not [ !Equals [ $(SpotPrice), 0 ] ]
 
+Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
   IAMInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -132,16 +126,16 @@ Resources:
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
-      SpotPrice: $(SpotPrice)
+      SpotPrice: !If [ "UseSpotInstances", $(SpotPrice), '$(AWS::NoValue)' ]
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs: { VolumeSize: 80, VolumeType: gp2 }
       UserData: !Base64 |
-        #!/bin/bash
-        resize2fs /dev/sda1 && \
-        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region) && \
-        /usr/local/bin/cfn-signal -e \$? -s $(AWS::StackName) -r AgentAutoScaleGroup --region $(AWS::Region)
+        #!/bin/bash -xv
+        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
+        /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' \
+          --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
 
     Metadata:
       AWS::CloudFormation::Authentication:
@@ -217,13 +211,6 @@ Resources:
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
-      NotificationConfigurations:
-        - TopicARN: $(NotificationTopic)
-          NotificationTypes:
-            - autoscaling:EC2_INSTANCE_LAUNCH
-            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-            - autoscaling:EC2_INSTANCE_TERMINATE
-            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
         - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
     CreationPolicy:
