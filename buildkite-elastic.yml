@@ -148,11 +148,11 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           files:
-            "/home/ubuntu/.ssh/id_rsa":
+            "/root/.ssh/id_rsa":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
               mode: '000400'
-              owner: ubuntu
-              group: ubuntu
+              owner: root
+              group: root
               authentication: S3AccessCreds
             "/home/ubuntu/.dockercfg":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/dockercfg"
@@ -160,6 +160,20 @@ Resources:
               owner: ubuntu
               group: ubuntu
               authentication: S3AccessCreds
+            "/lib/systemd/system/ssh-agent.service":
+              content: |
+                [Unit]
+                Description=ssh-agent
+                Before=docker.service
+                [Service]
+                Environment="SSH_AUTH_SOCK=/ssh-agent"
+                ExecStart=/usr/bin/ssh-agent -a /ssh-agent
+                ExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa
+                [Install]
+                WantedBy=multi-user.target
+              mode: '000400'
+              owner: root
+              group: root
             "/home/ubuntu/docker-compose.yml":
               content: |
                 buildkite:
@@ -169,8 +183,9 @@ Resources:
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
                     - BUILDKITE_AGENT_META_DATA=$(BuildkiteAgentMetadata)
                     - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
+                    - SSH_AUTH_SOCK=/ssh-agent
                   volumes:
-                    - /home/ubuntu/.ssh:/root/.ssh
+                    - /ssh-agent:/ssh-agent
                     - /home/ubuntu/.dockercfg:/root/.dockercfg
                   restart: always
                   log_driver: syslog
@@ -196,13 +211,19 @@ Resources:
               group: root
 
           commands:
-            01-install-buildkite:
+            01-enable-ssh-agent-systemd:
+              command: |
+                systemctl daemon-reload
+                systemctl enable ssh-agent
+                systemctl start ssh-agent
+            02-install-buildkite:
               command: |
                 docker-compose -f /home/ubuntu/docker-compose.yml pull
                 docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
                 docker-compose -f /home/ubuntu/docker-compose.yml scale buildkite=$(AgentsPerHost)
-            02-fetch-authorized-users:
+            03-fetch-authorized-users:
               command: /etc/cron.hourly/authorized_keys
+
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
