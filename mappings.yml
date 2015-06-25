@@ -17,4 +17,4 @@ Mappings:
 
   # Ubuntu 15.04
   AWSArch2AMI:
-    us-east-1     : { HVM64EBS: ami-fd966696 }
+    us-east-1     : { HVM64EBS: ami-7788731c }
