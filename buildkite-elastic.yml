@@ -18,7 +18,7 @@ Parameters:
   BuildkiteAgentMetadata:
     Description: The metadata to register the agent with
     Type: String
-    Default: queue=elastic
+    Default: queue=elastic docker=true dockercompose=true
 
   ProvisionBucket:
     Description: An s3 bucket containing dockercfg and id_rsa_buildkite
@@ -178,8 +178,8 @@ Resources:
               content: |
                 #!/bin/bash -eu
                 echo "~~~ Stopping existing docker containers"
-                if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
-                  docker stop $(docker ps -q)
+                if [[ \$(docker ps -q | wc -l) -gt 0 ]] ; then
+                  docker stop \$(docker ps -q)
                 fi
               mode: '000700'
               owner: ubuntu
