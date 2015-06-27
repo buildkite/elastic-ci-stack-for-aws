@@ -166,11 +166,12 @@ Resources:
                 Description=ssh-agent
                 Before=docker.service
                 [Service]
-                Environment="SSH_AUTH_SOCK=/ssh-agent"
-                ExecStart=/usr/bin/ssh-agent -a /ssh-agent
+                Type=forking
+                Environment=SSH_AUTH_SOCK=/ssh-agent
+                ExecStart=/usr/bin/ssh-agent -a $SSH_AUTH_SOCK
                 ExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa
                 [Install]
-                WantedBy=multi-user.target
+                WantedBy=default.target
               mode: '000400'
               owner: root
               group: root
