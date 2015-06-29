@@ -168,7 +168,7 @@ Resources:
                 [Service]
                 Type=forking
                 Environment=SSH_AUTH_SOCK=/ssh-agent
-                ExecStart=/usr/bin/ssh-agent -a $SSH_AUTH_SOCK
+                ExecStart=/usr/bin/ssh-agent -a \$SSH_AUTH_SOCK
                 ExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa
                 [Install]
                 WantedBy=default.target
