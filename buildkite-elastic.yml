@@ -18,7 +18,7 @@ Parameters:
   BuildkiteAgentMetadata:
     Description: The metadata to register the agent with
     Type: String
-    Default: queue=elastic docker=true dockercompose=true
+    Default: queue=elastic docker=1.6 dockercompose=1.3
 
   ProvisionBucket:
     Description: An s3 bucket containing dockercfg and id_rsa_buildkite
