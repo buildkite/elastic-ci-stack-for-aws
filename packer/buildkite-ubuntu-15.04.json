@@ -10,8 +10,8 @@
       "ami_description": "A docker host image based on Ubuntu 15.04",
       "tags": {
         "Release": "15.04 LTS",
-        "Docker": "1.7.0",
-        "Docker-Compose": "1.3.0"
+        "Docker": "1.6.2",
+        "Docker-Compose": "1.3.1"
       }
     }
   ],

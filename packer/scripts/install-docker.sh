@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/bin/bash -eu
 
-# installs docker
-curl -sSL https://get.docker.com/ | sudo sh
+# Install Docker daemon.
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
+echo 'deb https://get.docker.com/ubuntu docker main' | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt-get update -q
+sudo apt-get install -q -y linux-image-extra-`uname -r`
+sudo apt-get install -q -y lxc-docker-1.6.2
 sudo usermod -aG docker ubuntu
 sudo mv /tmp/conf/docker.defaults /etc/default/docker
 sudo chown root: /etc/default/docker
