@@ -15,6 +15,6 @@ Mappings:
     m3.xlarge     : { Arch: HVM64EBS }
     m3.2xlarge    : { Arch: HVM64EBS }
 
-  # Ubuntu 15.04
+  # Ubuntu 15.04, Buildkite, Docker, Docker-Compose
   AWSArch2AMI:
-    us-east-1     : { HVM64EBS: ami-97fc24fc }
+    us-east-1     : { HVM64EBS: ami-956fa9fe }

@@ -14,6 +14,10 @@ sudo chown root: /lib/systemd/system/docker.service
 sudo systemctl daemon-reload
 sudo systemctl enable docker
 
+# Install ssh-agent service
+sudo mv /tmp/conf/ssh-agent.service /lib/systemd/system/ssh-agent.service
+sudo chown root: /lib/systemd/system/ssh-agent.service
+
 # installs docker-compose
 sudo curl -o /usr/local/bin/docker-compose -L https://github.com/docker/compose/releases/download/1.3.0/docker-compose-Linux-x86_64
 sudo chmod +x /usr/local/bin/docker-compose

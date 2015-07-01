@@ -1,0 +1,17 @@
+[Unit]
+Description=Buildkite Agent %I
+Documentation=https://buildkite.com/agent
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+Environment=HOME=/var/lib/buildkite-agent
+Environment=BUILDKITE_AGENT_NAME=elastic-%H-%i
+ExecStart=/usr/bin/buildkite-agent start
+RestartSec=5
+Restart=on-failure
+TimeoutSec=10
+
+[Install]
+WantedBy=multi-user.target

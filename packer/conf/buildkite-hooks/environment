@@ -1,0 +1,9 @@
+#!/bin/bash -eu
+echo "~~~ Stopping existing docker containers"
+if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
+  docker stop $(docker ps -q)
+fi
+
+# https://github.com/docker/docker/issues/7015
+# https://github.com/docker/docker/issues/13802
+systemctl stop docker-* &> /dev/null || true

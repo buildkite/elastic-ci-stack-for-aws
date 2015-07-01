@@ -166,50 +166,17 @@ Resources:
               owner: ubuntu
               group: ubuntu
               authentication: S3AccessCreds
-            "/lib/systemd/system/ssh-agent.service":
+            "/etc/buildkite-agent/buildkite-agent.cfg":
               content: |
-                [Unit]
-                Description=ssh-agent
-                Before=docker.service
-                [Service]
-                Type=forking
-                Environment=SSH_AUTH_SOCK=/ssh-agent
-                ExecStart=/usr/bin/ssh-agent -a \$SSH_AUTH_SOCK
-                ExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa
-                [Install]
-                WantedBy=default.target
-              mode: '000400'
+                token="$(BuildkiteAgentToken)"
+                name="elastic-%hostname-%n"
+                meta-data="$(BuildkiteAgentMetadata)"
+                bootstrap-script="/usr/share/buildkite-agent/bootstrap.sh"
+                build-path="/var/lib/buildkite-agent/builds"
+                hooks-path="/etc/buildkite-agent/hooks"
+              mode: '000600'
               owner: root
               group: root
-            "/home/ubuntu/buildkite/hooks/environment":
-              content: |
-                #!/bin/bash -eu
-                echo "~~~ Stopping existing docker containers"
-                if [[ \$(docker ps -q | wc -l) -gt 0 ]] ; then
-                  docker stop \$(docker ps -q)
-                fi
-              mode: '000700'
-              owner: ubuntu
-              group: ubuntu
-            "/home/ubuntu/docker-compose.yml":
-              content: |
-                buildkite:
-                  image: buildkite/agent:dind-1.6
-                  privileged: true
-                  environment:
-                    - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA=$(BuildkiteAgentMetadata)
-                    - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
-                    - SSH_AUTH_SOCK=/ssh-agent
-                  volumes:
-                    - /ssh-agent:/ssh-agent
-                    - /home/ubuntu/.dockercfg:/root/.dockercfg
-                    - /home/ubuntu/buildkite/hooks:/buildkite/hooks
-                  restart: always
-                  log_driver: syslog
-              mode: '000600'
-              owner: ubuntu
-              group: ubuntu
             "/etc/cron.hourly/authorized_keys":
               content: |
                 #!/bin/bash -eu
@@ -227,21 +194,18 @@ Resources:
               mode: '000700'
               owner: root
               group: root
-
           commands:
             01-enable-ssh-agent-systemd:
               command: |
                 systemctl daemon-reload
                 systemctl enable ssh-agent
                 systemctl start ssh-agent
-            02-install-buildkite:
+            02-enable-buildkite-systemd:
               command: |
-                docker-compose -f /home/ubuntu/docker-compose.yml pull
-                docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
-                docker-compose -f /home/ubuntu/docker-compose.yml scale buildkite=$(AgentsPerHost)
+                bash -c 'seq 1 $(AgentsPerHost) | xargs -n1 -I {} systemctl enable buildkite-agent@{}.service'
+                bash -c 'seq 1 $(AgentsPerHost) | xargs -n1 -I {} systemctl start buildkite-agent@{}.service'
             03-fetch-authorized-users:
               command: /etc/cron.hourly/authorized_keys
-
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -262,7 +226,6 @@ Resources:
         MaxBatchSize: 1
         PauseTime: PT15M
         WaitOnResourceSignals: true
-
 
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -322,4 +285,3 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
-
