@@ -28,8 +28,7 @@ The `create-stack.sh` script will launch the cloudformation stack that powers yo
   Subnets=subnet-1ac7a743,subnet-b8226dcf,subnet-f01c25ca \
   InstanceType=c4.2xlarge \
   BuildkiteAgentMetadata=queue=loxtest \
-  AuthorizedUsersUrl=https://example.org/authorized_keys \
-  NotificationEmail=lachlan@example.org
+  AuthorizedUsersUrl=https://example.org/authorized_keys
 ```
 
 Check out `buildkite-elastic.yml` for what parameters are available. You can alternately upload the `cloudformation.json` file via the CloudFormation web interface.
