@@ -122,6 +122,7 @@ Resources:
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
+      AssociatePublicIpAddress: true
       SecurityGroups: [ $(SecurityGroup) ]
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
