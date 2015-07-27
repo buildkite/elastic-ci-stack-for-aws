@@ -74,6 +74,11 @@ Parameters:
     Type: Number
     Default: 6
 
+  RootVolumeSize:
+    Description: Size of EBS volume for root filesystem in GB.
+    Type: Number
+    Default: 80
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -131,7 +136,7 @@ Resources:
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
-          Ebs: { VolumeSize: 80, VolumeType: gp2 }
+          Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
       UserData: !Base64 |
         #!/bin/bash -xv
         /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
