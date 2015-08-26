@@ -72,12 +72,12 @@ Parameters:
   AgentsPerHost:
     Description: The number of buildkite agents to run per host
     Type: Number
-    Default: 6
+    Default: 10
 
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.
     Type: Number
-    Default: 80
+    Default: 200
 
 Conditions:
     UseSpotInstances:
