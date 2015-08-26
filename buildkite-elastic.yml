@@ -154,17 +154,17 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           files:
-            "/root/.ssh/id_rsa":
+            "/var/lib/buildkite-agent/.ssh/id_rsa":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
               mode: '000400'
-              owner: root
-              group: root
+              owner: buildkite-agent
+              group: buildkite-agent
               authentication: S3AccessCreds
-            "/home/ubuntu/.dockercfg":
+            "/var/lib/buildkite-agent/.dockercfg":
               source: "https://s3.amazonaws.com/$(ProvisionBucket)/dockercfg"
               mode: '000400'
-              owner: ubuntu
-              group: ubuntu
+              owner: buildkite-agent
+              group: buildkite-agent
               authentication: S3AccessCreds
             "/etc/buildkite-agent/buildkite-agent.cfg":
               content: |
@@ -175,8 +175,8 @@ Resources:
                 build-path="/var/lib/buildkite-agent/builds"
                 hooks-path="/etc/buildkite-agent/hooks"
               mode: '000600'
-              owner: root
-              group: root
+              owner: buildkite-agent
+              group: buildkite-agent
             "/etc/cron.hourly/authorized_keys":
               content: |
                 #!/bin/bash -eu

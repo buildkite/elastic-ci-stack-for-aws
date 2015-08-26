@@ -9,4 +9,5 @@ sudo chown root: /lib/systemd/system/buildkite-agent@.service
 sudo systemctl daemon-reload
 
 sudo mv /tmp/conf/buildkite-hooks/* /etc/buildkite-agent/hooks/
-sudo mkdir -p /var/lib/buildkite-agent
+sudo chown buildkite-agent: /etc/buildkite-agent/hooks/*
+sudo usermod -aG docker ubuntu

@@ -6,6 +6,7 @@ After=network.target
 
 [Service]
 Type=simple
+User=buildkite-agent
 Environment=HOME=/var/lib/buildkite-agent
 Environment=BUILDKITE_AGENT_NAME=elastic-%H-%i
 ExecStart=/usr/bin/buildkite-agent start

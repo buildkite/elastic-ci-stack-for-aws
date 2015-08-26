@@ -7,7 +7,7 @@
       "instance_type": "m3.medium",
       "ssh_username": "ubuntu",
       "ami_name": "buildkite-{{isotime | clean_ami_name}}",
-      "ami_description": "A buildkite agent and docker host based off Ubuntu 15.04",
+      "ami_description": "A buildkite agent and docker host based on Ubuntu 15.04",
       "ami_groups": ["all"]
     }
   ],
@@ -16,6 +16,10 @@
       "type": "file",
       "source": "conf",
       "destination": "/tmp"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-system.sh"
     },
     {
       "type": "shell",
