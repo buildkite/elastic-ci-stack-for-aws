@@ -194,7 +194,7 @@ Resources:
             "/home/ubuntu/docker-compose.yml":
               content: |
                 buildkite:
-                  image: lox24/buildkite-agent:dind-1.6
+                  image: buildkite/agent:dind-1.6
                   privileged: true
                   environment:
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
