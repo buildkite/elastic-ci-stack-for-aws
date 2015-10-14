@@ -184,6 +184,10 @@ Resources:
             "/home/ubuntu/buildkite/hooks/environment":
               content: |
                 #!/bin/bash -eu
+                if [[ -n $DOCKER_HUB_AUTH ]] ; then
+                  echo "~~~ Overwriting /root/.dockercfg"
+                  echo $DOCKER_HUB_AUTH > /root/.dockercfg
+                fi
                 echo "~~~ Stopping existing docker containers"
                 if [[ \$(docker ps -q | wc -l) -gt 0 ]] ; then
                   docker stop \$(docker ps -q)
