@@ -1,5 +1,5 @@
-Buildkite Elastic
-=================
+Buildkite AWS Stack
+===================
 
 A generic, auto-scaling group of buildkite instances that are capable of running any project where there is a Dockerfile or a docker-compose.yml present.
 
