@@ -25,7 +25,7 @@ Parameters:
     Type: String
 
   AuthorizedUsersUrl:
-    Description: An optional url to periodically download ssh authorized_keys from
+    Description: An url to periodically download ssh authorized_keys from
     Type: String
 
   VpcId:
