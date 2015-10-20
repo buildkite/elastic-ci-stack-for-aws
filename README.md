@@ -13,6 +13,7 @@ Prerequisites
   * An S3 bucket with the following files in it:
     * `id_rsa_buildkite` - A github [machine key](https://developer.github.com/guides/managing-deploy-keys/#machine-users) for checking out code
     * `dockercfg` - Authentication details for the docker indexes you will be using
+  * `cfoo` - `gem install cfoo`
 
 Running
 --------
