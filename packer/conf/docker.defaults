@@ -1,3 +1,0 @@
-
-# Use DOCKER_OPTS to modify the daemon startup options.
-DOCKER_OPTS="-G docker"

@@ -1,21 +1,20 @@
 #!/bin/bash -eu
 
-# Install Docker daemon.
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
-echo 'deb https://get.docker.com/ubuntu docker main' | sudo tee /etc/apt/sources.list.d/docker.list
-sudo apt-get update -q
-sudo apt-get install -q -y linux-image-extra-`uname -r`
-sudo apt-get install -q -y lxc-docker-1.6.2
+# install Docker engine
+sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+echo 'deb https://apt.dockerproject.org/repo ubuntu-vivid main' | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt-get update -qq
+sudo apt-get install -y docker-engine=1.8*
 sudo usermod -aG docker ubuntu
-sudo mv /tmp/conf/docker.defaults /etc/default/docker
-sudo chown root: /etc/default/docker
-sudo mv /tmp/conf/docker.service /lib/systemd/system/docker.service
-sudo chown root: /lib/systemd/system/docker.service
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo mv /tmp/conf/docker.override.conf /etc/systemd/system/docker.service.d/override.conf
+sudo chown -R root: /etc/systemd/system/docker.service.d
 sudo systemctl daemon-reload
 sudo systemctl enable docker
+sudo systemctl is-active docker
 
 # installs docker-compose
-sudo curl -o /usr/local/bin/docker-compose -L https://github.com/docker/compose/releases/download/1.3.0/docker-compose-Linux-x86_64
+sudo curl -o /usr/local/bin/docker-compose -L https://github.com/docker/compose/releases/download/1.4.2/docker-compose-Linux-x86_64
 sudo chmod +x /usr/local/bin/docker-compose
 
 # install docker-gc
