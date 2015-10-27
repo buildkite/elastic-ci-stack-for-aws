@@ -28,6 +28,12 @@ STACK_TEMPLATE="$(dirname $0)/cloudformation.json"
 cd $(dirname $0)
 make all
 
+# sometimes cfoo returns success but errors
+if [[ ! -s $STACK_TEMPLATE ]] ; then
+  echo $STACK_TEMPLATE is empty
+  exit 1
+fi
+
 PARAMS=$(build_parameters "$@")
 PARAMS+=" ParameterKey=ProvisionBucket,ParameterValue=$PROVISION_BUCKET"
 
