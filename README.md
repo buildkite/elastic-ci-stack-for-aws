@@ -33,7 +33,7 @@ Check out `buildkite-elastic.yml` for what parameters are available. You can alt
 
 Your project needs to target whatever queue you setup with `BuildkiteQueue` in the stack creation, the default is `elastic`, so your agent metadata requirements would include `queue=elastic`.
 
-If you have specific docker requirements, you can add in `docker=1.6`, which is currently what is supported. This allows for new docker versions to be incrementally added, so it's a good idea to include it.
+If you have specific docker requirements, you can add in `docker=1.8`, which is currently what is supported. This allows for new docker versions to be incrementally added, so it's a good idea to include it.
 
 ### Isolating Builds with Docker
 
