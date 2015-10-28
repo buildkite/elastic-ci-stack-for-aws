@@ -20,6 +20,11 @@ Parameters:
     Type: String
     Default: elastic
 
+  DockerVersion:
+    Description: The docker version to run, depends on a matching tag on the buildkite-agent image
+    Type: String
+    Default: "1.8"
+
   ProvisionBucket:
     Description: An s3 bucket containing id_rsa_buildkite
     Type: String
@@ -163,9 +168,13 @@ Resources:
             "/home/ubuntu/buildkite/hooks/environment":
               content: |
                 #!/bin/bash -eu
-                if [[ -n \$DOCKER_HUB_AUTH ]] ; then
+                if [[ -n "\${DOCKER_HUB_AUTH:-}" ]] ; then
                   echo "~~~ Overwriting /root/.dockercfg"
                   echo \$DOCKER_HUB_AUTH > /root/.dockercfg
+                fi
+                if [[ -n "\${DOCKER_HUB_USER:-}" && -n "\${DOCKER_HUB_PASSWORD:-}" && -n "\${DOCKER_HUB_EMAIL:-}" ]] ; then
+                  echo "~~~ Authenticating with docker hub as \$DOCKER_HUB_USER"
+                  docker login --username="\$DOCKER_HUB_USER" --password="\$DOCKER_HUB_PASSWORD" --email="\$DOCKER_HUB_EMAIL"
                 fi
                 echo "~~~ Stopping existing docker containers"
                 if [[ \$(docker ps -q | wc -l) -gt 0 ]] ; then
@@ -177,16 +186,15 @@ Resources:
             "/home/ubuntu/docker-compose.yml":
               content: |
                 buildkite:
-                  image: buildkite/agent:dind-1.6
-                  privileged: true
+                  image: buildkite/agent:dind-$(DockerVersion)
                   environment:
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=1.6
+                    - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=$(DockerVersion)
                     - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
                   volumes:
                     - /home/ubuntu/buildkite/hooks:/buildkite/hooks
+                    - /root/.ssh:/root/.ssh
                   restart: always
-                  log_driver: syslog
               mode: '000600'
               owner: ubuntu
               group: ubuntu
