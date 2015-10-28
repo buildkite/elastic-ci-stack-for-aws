@@ -187,6 +187,7 @@ Resources:
               content: |
                 buildkite:
                   image: buildkite/agent:dind-$(DockerVersion)
+                  privileged: true
                   environment:
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
                     - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=$(DockerVersion)
