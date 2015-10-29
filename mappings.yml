@@ -17,4 +17,4 @@ Mappings:
 
   # Ubuntu 15.04, Docker 1.8.3, Docker-Compose 1.4.2
   AWSArch2AMI:
-    us-east-1     : { HVM64EBS: ami-5fed9b35 }
+    us-east-1     : { HVM64EBS: ami-ed700087 }

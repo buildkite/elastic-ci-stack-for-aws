@@ -84,6 +84,11 @@ Parameters:
     Type: Number
     Default: 80
 
+  RootVolumeIops:
+    Description: Provisioned IOPS for the root volume. You get 3 free for each GB
+    Type: Number
+    Default: 300
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -141,7 +146,7 @@ Resources:
       ImageId : $(AWSArch2AMI[$(AWS::Region)][$(AWSInstanceType2Arch[$(InstanceType)][Arch])])
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
-          Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
+          Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
       UserData: !Base64 |
         #!/bin/bash -xv
         /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
@@ -192,6 +197,7 @@ Resources:
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
                     - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=$(DockerVersion)
                     - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
+                    - DOCKER_STORAGE_DRIVER=aufs
                   volumes:
                     - /home/ubuntu/buildkite/hooks:/buildkite/hooks
                     - /root/.ssh:/root/.ssh
