@@ -155,13 +155,13 @@ Resources:
         config:
           files:
             "/root/.ssh/id_rsa":
-              source: "https://s3.amazonaws.com/$(ProvisionBucket)/id_rsa_buildkite"
+              source: "https://$(ProvisionBucket).s3.amazonaws.com/id_rsa_buildkite"
               mode: '000400'
               owner: root
               group: root
               authentication: S3AccessCreds
             "/home/ubuntu/.dockercfg":
-              source: "https://s3.amazonaws.com/$(ProvisionBucket)/dockercfg"
+              source: "https://$(ProvisionBucket).s3.amazonaws.com/dockercfg"
               mode: '000400'
               owner: ubuntu
               group: ubuntu
