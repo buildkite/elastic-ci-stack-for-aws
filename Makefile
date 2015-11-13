@@ -1,8 +1,9 @@
 
-all: cloudformation.json
+all: build/cloudformation.json
 
 clean:
 	-rm cloudformation.json
 
-cloudformation.json: buildkite-elastic.yml mappings.yml
+build/cloudformation.json: buildkite-elastic.yml mappings.yml
+	-mkdir -p build/
 	cfoo $^ > $@
