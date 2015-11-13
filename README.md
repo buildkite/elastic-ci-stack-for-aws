@@ -7,7 +7,6 @@ This provides a way to run [isolated builds](https://buildkite.com/docs/guides/d
   * An AWS account with EC2 and CloudFormation
   * [Amazon Commandline Interface](http://aws.amazon.com/cli/) installed and working
   * A git ssh key for checking out code called `id_rsa_buildkite` in an s3 bucket.
-  * `cfoo` - `gem install cfoo`
 
 ## Creating a stack
 

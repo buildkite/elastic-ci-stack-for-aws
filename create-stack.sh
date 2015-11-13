@@ -23,7 +23,7 @@ fi
 
 PROVISION_BUCKET=${PROVISION_BUCKET:-${ORG_SLUG}-buildkite}
 STACK_NAME=${STACK_NAME:-buildkite-$(date +%Y-%m-%d-%H-%M)}
-STACK_TEMPLATE="$(dirname $0)/cloudformation.json"
+STACK_TEMPLATE="$(dirname $0)/build/cloudformation.json"
 
 cd $(dirname $0)
 make all
