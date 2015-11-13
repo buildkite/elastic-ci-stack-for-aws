@@ -29,16 +29,24 @@
       "Type": "String"
     },
     "AuthorizedUsersUrl": {
-      "Description": "An url to periodically download ssh authorized_keys from",
-      "Type": "String"
+      "Description": "Optional - An url to periodically download ssh authorized_keys from",
+      "Type": "String",
+      "Default": ""
     },
     "VpcId": {
-      "Type": "AWS::EC2::VPC::Id",
-      "Description": "VpcId of your existing Virtual Private Cloud (VPC)."
+      "Type": "String",
+      "Description": "Optional - VPC Id of existing VPC. Leave blank to have a new VPC created",
+      "Default": ""
     },
     "Subnets": {
-      "Type": "List<AWS::EC2::Subnet::Id>",
-      "Description": "The list of SubnetIds where the instances will be launched"
+      "Type": "CommaDelimitedList",
+      "Description": "Optional - Comma separated list of three existing VPC Subnet Ids where ECS instances will run.  Required if setting VpcId.",
+      "Default": ""
+    },
+    "AvailabilityZones": {
+      "Type": "CommaDelimitedList",
+      "Description": "Optional - Comma-delimited list of VPC availability zones in which to create subnets.  Required if setting VpcId.",
+      "Default": ""
     },
     "InstanceType": {
       "Description": "The type of instance to use for the agent",
@@ -60,7 +68,7 @@
       ]
     },
     "SpotPrice": {
-      "Description": "An optional spot price to use for the agents",
+      "Description": "An optional spot price to use for the agents, if 0 normal instances are used",
       "Type": "String",
       "Default": 0
     },
@@ -82,12 +90,17 @@
     "RootVolumeSize": {
       "Description": "Size of EBS volume for root filesystem in GB.",
       "Type": "Number",
-      "Default": 80
+      "Default": 250
     },
     "RootVolumeIops": {
       "Description": "Provisioned IOPS for the root volume. You get 3 free for each GB",
       "Type": "Number",
-      "Default": 300
+      "Default": 750
+    },
+    "SecurityGroupId": {
+      "Type": "String",
+      "Description": "Optional - Existing security group to associate the container instances. Creates one by default.",
+      "Default": ""
     }
   },
   "Conditions": {
@@ -99,6 +112,39 @@
               "Ref": "SpotPrice"
             },
             0
+          ]
+        }
+      ]
+    },
+    "CreateVpcResources": {
+      "Fn::Equals": [
+        {
+          "Ref": "VpcId"
+        },
+        ""
+      ]
+    },
+    "CreateSecurityGroup": {
+      "Fn::Equals": [
+        {
+          "Ref": "SecurityGroupId"
+        },
+        ""
+      ]
+    },
+    "UseSpecifiedAvailabilityZones": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Join": [
+                "",
+                {
+                  "Ref": "AvailabilityZones"
+                }
+              ]
+            },
+            ""
           ]
         }
       ]
@@ -186,7 +232,15 @@
         "AssociatePublicIpAddress": "true",
         "SecurityGroups": [
           {
-            "Ref": "SecurityGroup"
+            "Fn::If": [
+              "CreateSecurityGroup",
+              {
+                "Ref": "SecurityGroup"
+              },
+              {
+                "Ref": "SecurityGroupId"
+              }
+            ]
           }
         ],
         "KeyName": {
@@ -390,7 +444,23 @@
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
         "VPCZoneIdentifier": {
-          "Ref": "Subnets"
+          "Fn::If": [
+            "CreateVpcResources",
+            [
+              {
+                "Ref": "Subnet0"
+              },
+              {
+                "Ref": "Subnet1"
+              },
+              {
+                "Ref": "Subnet2"
+              }
+            ],
+            {
+              "Ref": "Subnets"
+            }
+          ]
         },
         "LaunchConfigurationName": {
           "Ref": "AgentLaunchConfiguration"
@@ -504,10 +574,19 @@
     },
     "SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
+      "Condition": "CreateSecurityGroup",
       "Properties": {
         "GroupDescription": "Enable access to SSH",
         "VpcId": {
-          "Ref": "VpcId"
+          "Fn::If": [
+            "CreateVpcResources",
+            {
+              "Ref": "Vpc"
+            },
+            {
+              "Ref": "VpcId"
+            }
+          ]
         },
         "SecurityGroupIngress": [
           {
@@ -517,6 +596,197 @@
             "CidrIp": "0.0.0.0/0"
           }
         ]
+      }
+    },
+    "Vpc": {
+      "Type": "AWS::EC2::VPC",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          }
+        ]
+      }
+    },
+    "Gateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+      }
+    },
+    "GatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "Gateway"
+        },
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "Subnet0": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::If": [
+            "UseSpecifiedAvailabilityZones",
+            {
+              "Fn::Select": [
+                0,
+                {
+                  "Ref": "AvailabilityZones"
+                }
+              ]
+            },
+            {
+              "Fn::Select": [
+                0,
+                {
+                  "Fn::GetAZs": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "CidrBlock": "10.0.1.0/24",
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "Subnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::If": [
+            "UseSpecifiedAvailabilityZones",
+            {
+              "Fn::Select": [
+                1,
+                {
+                  "Ref": "AvailabilityZones"
+                }
+              ]
+            },
+            {
+              "Fn::Select": [
+                1,
+                {
+                  "Fn::GetAZs": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "CidrBlock": "10.0.2.0/24",
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "Subnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::If": [
+            "UseSpecifiedAvailabilityZones",
+            {
+              "Fn::Select": [
+                2,
+                {
+                  "Ref": "AvailabilityZones"
+                }
+              ]
+            },
+            {
+              "Fn::Select": [
+                2,
+                {
+                  "Fn::GetAZs": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "CidrBlock": "10.0.3.0/24",
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "Routes": {
+      "Type": "AWS::EC2::RouteTable",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "RouteDefault": {
+      "Type": "AWS::EC2::Route",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "Gateway"
+        },
+        "RouteTableId": {
+          "Ref": "Routes"
+        }
+      }
+    },
+    "Subnet0Routes": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet0"
+        },
+        "RouteTableId": {
+          "Ref": "Routes"
+        }
+      }
+    },
+    "Subnet1Routes": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet1"
+        },
+        "RouteTableId": {
+          "Ref": "Routes"
+        }
+      }
+    },
+    "Subnet2Routes": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "CreateVpcResources",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet2"
+        },
+        "RouteTableId": {
+          "Ref": "Routes"
+        }
       }
     }
   },
