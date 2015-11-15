@@ -1,6 +1,12 @@
 # Buildkite AWS Stack
 
-This provides a way to run [isolated builds](https://buildkite.com/docs/guides/docker-containerized-builds) across a number of projects on the same servers, allowing large instances and more cost-saving strategies like spot instances to be employed.
+This provides a way to run [isolated builds](https://buildkite.com/docs/guides/docker-containerized-builds) across a number of projects on the same AWS instances, allowing large instance sizes and auto-scaling for better utilization and cost-efficiency.
+
+## Status
+
+Experimental. Still being actively developed, but under heavy use at 99designs.
+
+Feel free to drop me an email at lachlan@99designs.com with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
 
 ## Prerequisites
 
@@ -14,17 +20,15 @@ The `create-stack.sh` script will launch the cloudformation stack that powers yo
 
 ```bash
 ./create-stack.sh \
-  BuildkiteOrgSlug=99designs \
-  BuildkiteAgentToken=6a50625146693c3cef2a50f013bc3ed562a2ddba \
+  BuildkiteOrgSlug=myorg \
+  BuildkiteAgentToken=mytokengoeshere \
   KeyName=default \
-  VpcId=vpc-ff95a89a \
-  Subnets=subnet-1ac7a743,subnet-b8226dcf,subnet-f01c25ca \
   InstanceType=c4.2xlarge \
-  BuildkiteQueue=loxtest \
+  BuildkiteQueue=test \
   AuthorizedUsersUrl=https://example.org/authorized_keys
 ```
 
-Check out `buildkite-elastic.yml` for what parameters are available. You can alternately upload the `cloudformation.json` file via the CloudFormation web interface.
+Check out `buildkite-elastic.yml` for what parameters are available. You can alternately upload the `build/cloudformation.json` file via the CloudFormation web interface.
 
 ## Project Configuration
 
@@ -52,4 +56,6 @@ BUILDKITE_DOCKER=true
 
 ### Passing in Credentials
 
-The best way to get credentials such as Docker Hub login/pass to your builds is to pass them as environmental variables. If you provide `DOCKER_HUB_AUTH` as an env with the contents of your `~/.dockercfg` file, it will be written out before your build.
+The best way to get credentials such as Docker Hub login/pass to your builds is to pass them as environmental variables.
+
+For Docker Hub credentials specifically, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL`. The older `DOCKER_HUB_AUTH` with a `dockercfg` format in it is still supported too.
