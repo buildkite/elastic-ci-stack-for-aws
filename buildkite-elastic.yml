@@ -30,16 +30,24 @@ Parameters:
     Type: String
 
   AuthorizedUsersUrl:
-    Description: An url to periodically download ssh authorized_keys from
+    Description: Optional - An url to periodically download ssh authorized_keys from
     Type: String
+    Default: ""
 
   VpcId:
-    Type: AWS::EC2::VPC::Id
-    Description: VpcId of your existing Virtual Private Cloud (VPC).
+    Type: String
+    Description: Optional - VPC Id of existing VPC. Leave blank to have a new VPC created
+    Default: ""
 
   Subnets:
-    Type: List<AWS::EC2::Subnet::Id>
-    Description: The list of SubnetIds where the instances will be launched
+    Type: CommaDelimitedList
+    Description: Optional - Comma separated list of three existing VPC Subnet Ids where ECS instances will run.  Required if setting VpcId.
+    Default: ""
+
+  AvailabilityZones:
+    Type: CommaDelimitedList
+    Description: Optional - Comma-delimited list of VPC availability zones in which to create subnets.  Required if setting VpcId.
+    Default: ""
 
   InstanceType:
     Description: The type of instance to use for the agent
@@ -60,7 +68,7 @@ Parameters:
       - m3.2xlarge
 
   SpotPrice:
-    Description: An optional spot price to use for the agents
+    Description: An optional spot price to use for the agents, if 0 normal instances are used
     Type: String
     Default: 0
 
@@ -82,16 +90,30 @@ Parameters:
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.
     Type: Number
-    Default: 80
+    Default: 250
 
   RootVolumeIops:
     Description: Provisioned IOPS for the root volume. You get 3 free for each GB
     Type: Number
-    Default: 300
+    Default: 750
+
+  SecurityGroupId:
+    Type: String
+    Description: Optional - Existing security group to associate the container instances. Creates one by default.
+    Default: ""
 
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
+
+    CreateVpcResources:
+      !Equals [ $(VpcId), "" ]
+
+    CreateSecurityGroup:
+      !Equals [ $(SecurityGroupId), "" ]
+
+    UseSpecifiedAvailabilityZones:
+      !Not [ !Equals [ !Join [ "", $(AvailabilityZones) ], "" ]  ]
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
@@ -138,7 +160,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       AssociatePublicIpAddress: true
-      SecurityGroups: [ $(SecurityGroup) ]
+      SecurityGroups: [ !If [ "CreateSecurityGroup", $(SecurityGroup), $(SecurityGroupId) ] ]
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
@@ -236,7 +258,11 @@ Resources:
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: $(Subnets)
+      VPCZoneIdentifier: !If [
+        "CreateVpcResources",
+        [ $(Subnet0), $(Subnet1), $(Subnet2) ],
+        $(Subnets)
+      ]
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
@@ -252,7 +278,6 @@ Resources:
         MaxBatchSize: 1
         PauseTime: PT15M
         WaitOnResourceSignals: true
-
 
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -304,12 +329,105 @@ Resources:
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    Condition: CreateSecurityGroup
     Properties:
       GroupDescription: Enable access to SSH
-      VpcId: $(VpcId)
+      VpcId: !If [ "CreateVpcResources", $(Vpc), $(VpcId) ]
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
 
+  Vpc:
+    Type: AWS::EC2::VPC
+    Condition: CreateVpcResources
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: $(AWS::StackName)
+
+  Gateway:
+    Type: AWS::EC2::InternetGateway
+    Condition: CreateVpcResources
+    Properties: {}
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Condition: CreateVpcResources
+    Properties:
+      InternetGatewayId: $(Gateway)
+      VpcId: $(Vpc)
+
+  Subnet0:
+    Type: AWS::EC2::Subnet
+    Condition: CreateVpcResources
+    Properties:
+      AvailabilityZone: !If [
+        "UseSpecifiedAvailabilityZones",
+        !Select [ 0, $(AvailabilityZones) ],
+        !Select [ 0, !GetAZs '$(AWS::Region)' ]
+      ]
+      CidrBlock: 10.0.1.0/24
+      VpcId: $(Vpc)
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Condition: CreateVpcResources
+    Properties:
+      AvailabilityZone: !If [
+        "UseSpecifiedAvailabilityZones",
+        !Select [ 1, $(AvailabilityZones) ],
+        !Select [ 1, !GetAZs '$(AWS::Region)' ]
+      ]
+      CidrBlock: 10.0.2.0/24
+      VpcId: $(Vpc)
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Condition: CreateVpcResources
+    Properties:
+      AvailabilityZone: !If [
+        "UseSpecifiedAvailabilityZones",
+        !Select [ 2, $(AvailabilityZones) ],
+        !Select [ 2, !GetAZs '$(AWS::Region)' ]
+      ]
+      CidrBlock: 10.0.3.0/24
+      VpcId: $(Vpc)
+
+  Routes:
+    Type: AWS::EC2::RouteTable
+    Condition: CreateVpcResources
+    Properties:
+      VpcId: $(Vpc)
+
+  RouteDefault:
+    Type: AWS::EC2::Route
+    Condition: CreateVpcResources
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: $(Gateway)
+      RouteTableId: $(Routes)
+
+  Subnet0Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVpcResources
+    Properties:
+      SubnetId: $(Subnet0)
+      RouteTableId: $(Routes)
+
+  Subnet1Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVpcResources
+    Properties:
+      SubnetId: $(Subnet1)
+      RouteTableId: $(Routes)
+
+  Subnet2Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVpcResources
+    Properties:
+      SubnetId: $(Subnet2)
+      RouteTableId: $(Routes)
