@@ -195,11 +195,13 @@ Resources:
             "/home/ubuntu/buildkite/hooks/environment":
               content: |
                 #!/bin/bash -eu
-                if [[ -n "\${DOCKER_HUB_AUTH:-}" ]] ; then
-                  echo "~~~ Overwriting /root/.dockercfg"
-                  echo \$DOCKER_HUB_AUTH > /root/.dockercfg
+                if [[ -f ~/.docker/config.json || -f ~/.dockercfg ]] ; then
+                  docker logout
                 fi
-                if [[ -n "\${DOCKER_HUB_USER:-}" && -n "\${DOCKER_HUB_PASSWORD:-}" && -n "\${DOCKER_HUB_EMAIL:-}" ]] ; then
+                if [[ -n "\${DOCKER_HUB_AUTH:-}" ]] ; then
+                  echo "DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL."
+                  exit 1
+                elif [[ -n "\${DOCKER_HUB_USER:-}" && -n "\${DOCKER_HUB_PASSWORD:-}" && -n "\${DOCKER_HUB_EMAIL:-}" ]] ; then
                   echo "~~~ Authenticating with docker hub as \$DOCKER_HUB_USER"
                   docker login --username="\$DOCKER_HUB_USER" --password="\$DOCKER_HUB_PASSWORD" --email="\$DOCKER_HUB_EMAIL"
                 fi
