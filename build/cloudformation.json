@@ -22,7 +22,7 @@
     "DockerVersion": {
       "Description": "The docker version to run, depends on a matching tag on the buildkite-agent image",
       "Type": "String",
-      "Default": "1.8"
+      "Default": "1.9"
     },
     "ProvisionBucket": {
       "Description": "An s3 bucket containing id_rsa_buildkite",
@@ -355,7 +355,7 @@
                 "authentication": "S3AccessCreds"
               },
               "/home/ubuntu/buildkite/hooks/environment": {
-                "content": "#!/bin/bash -eu\nif [[ -n \"${DOCKER_HUB_AUTH:-}\" ]] ; then\n  echo \"~~~ Overwriting /root/.dockercfg\"\n  echo $DOCKER_HUB_AUTH > /root/.dockercfg\nfi\nif [[ -n \"${DOCKER_HUB_USER:-}\" && -n \"${DOCKER_HUB_PASSWORD:-}\" && -n \"${DOCKER_HUB_EMAIL:-}\" ]] ; then\n  echo \"~~~ Authenticating with docker hub as $DOCKER_HUB_USER\"\n  docker login --username=\"$DOCKER_HUB_USER\" --password=\"$DOCKER_HUB_PASSWORD\" --email=\"$DOCKER_HUB_EMAIL\"\nfi\necho \"~~~ Stopping existing docker containers\"\nif [[ $(docker ps -q | wc -l) -gt 0 ]] ; then\n  docker stop $(docker ps -q)\nfi\n",
+                "content": "#!/bin/bash -eu\nif [[ -f ~/.docker/config.json || -f ~/.dockercfg ]] ; then\n  docker logout\nfi\nif [[ -n \"${DOCKER_HUB_AUTH:-}\" ]] ; then\n  echo \"DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL.\"\n  exit 1\nelif [[ -n \"${DOCKER_HUB_USER:-}\" && -n \"${DOCKER_HUB_PASSWORD:-}\" && -n \"${DOCKER_HUB_EMAIL:-}\" ]] ; then\n  echo \"~~~ Authenticating with docker hub as $DOCKER_HUB_USER\"\n  docker login --username=\"$DOCKER_HUB_USER\" --password=\"$DOCKER_HUB_PASSWORD\" --email=\"$DOCKER_HUB_EMAIL\"\nfi\necho \"~~~ Stopping existing docker containers\"\nif [[ $(docker ps -q | wc -l) -gt 0 ]] ; then\n  docker stop $(docker ps -q)\nfi\n",
                 "mode": "000700",
                 "owner": "ubuntu",
                 "group": "ubuntu"
