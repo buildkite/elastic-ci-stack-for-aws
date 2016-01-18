@@ -12,9 +12,3 @@ wget http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScript
 sudo unzip CloudWatchMonitoringScripts-1.2.1.zip -d /usr/local
 sudo chmod +x /usr/local/aws-scripts-mon/*.pl
 rm CloudWatchMonitoringScripts-1.2.1.zip
-
-# cloudwatch logs setup
-wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py
-sudo mv awslogs-agent-setup.py /usr/local/bin/awslogs-agent-setup.py
-sudo chmod +x /usr/local/bin/awslogs-agent-setup.py
-sudo /usr/local/bin/awslogs-agent-setup.py -n -r $EC2_REGION -c /tmp/conf/awslogs.conf
