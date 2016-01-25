@@ -2,4 +2,4 @@ steps:
   - command: test.sh
     name: "Testing spinning up a stack"
     agents:
-      queue: docker-builder
+      queue: aws-stack
