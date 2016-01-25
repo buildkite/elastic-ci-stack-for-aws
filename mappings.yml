@@ -7,6 +7,7 @@ Mappings:
     c4.2xlarge    : { Arch: HVM64EBS }
     c4.4xlarge    : { Arch: HVM64EBS }
     c4.8xlarge    : { Arch: HVM64EBS }
+    t2.nano       : { Arch: HVM64EBS }
     t2.micro      : { Arch: HVM64EBS }
     t2.small      : { Arch: HVM64EBS }
     t2.medium     : { Arch: HVM64EBS }
