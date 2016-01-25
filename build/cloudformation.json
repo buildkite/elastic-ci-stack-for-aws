@@ -22,11 +22,7 @@
     "DockerVersion": {
       "Description": "The docker version to run, depends on a matching tag on the buildkite-agent image",
       "Type": "String",
-      "Default": "1.8"
-    },
-    "ProvisionBucket": {
-      "Description": "An s3 bucket containing id_rsa_buildkite",
-      "Type": "String"
+      "Default": "1.9"
     },
     "AuthorizedUsersUrl": {
       "Description": "Optional - An url to periodically download ssh authorized_keys from",
@@ -58,6 +54,7 @@
         "c4.2xlarge",
         "c4.4xlarge",
         "c4.8xlarge",
+        "t2.nano",
         "t2.micro",
         "t2.small",
         "t2.medium",
@@ -195,27 +192,6 @@
                 "ec2:DescribeTags"
               ],
               "Resource": "*"
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "s3:GetObject",
-                "s3:GetObjectVersion",
-                "s3:ListBucket",
-                "s3:ListBucketVersions"
-              ],
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:s3:::",
-                    {
-                      "Ref": "ProvisionBucket"
-                    },
-                    "/*"
-                  ]
-                ]
-              }
             }
           ]
         },
@@ -322,46 +298,17 @@
         }
       },
       "Metadata": {
-        "AWS::CloudFormation::Authentication": {
-          "S3AccessCreds": {
-            "type": "S3",
-            "roleName": {
-              "Ref": "IAMRole"
-            },
-            "buckets": {
-              "Ref": "ProvisionBucket"
-            }
-          }
-        },
         "AWS::CloudFormation::Init": {
           "config": {
             "files": {
-              "/root/.ssh/id_rsa": {
-                "source": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "https://",
-                      {
-                        "Ref": "ProvisionBucket"
-                      },
-                      ".s3.amazonaws.com/id_rsa_buildkite"
-                    ]
-                  ]
-                },
-                "mode": "000400",
-                "owner": "root",
-                "group": "root",
-                "authentication": "S3AccessCreds"
-              },
               "/home/ubuntu/buildkite/hooks/environment": {
-                "content": "#!/bin/bash -eu\nif [[ -n \"${DOCKER_HUB_AUTH:-}\" ]] ; then\n  echo \"~~~ Overwriting /root/.dockercfg\"\n  echo $DOCKER_HUB_AUTH > /root/.dockercfg\nfi\nif [[ -n \"${DOCKER_HUB_USER:-}\" && -n \"${DOCKER_HUB_PASSWORD:-}\" && -n \"${DOCKER_HUB_EMAIL:-}\" ]] ; then\n  echo \"~~~ Authenticating with docker hub as $DOCKER_HUB_USER\"\n  docker login --username=\"$DOCKER_HUB_USER\" --password=\"$DOCKER_HUB_PASSWORD\" --email=\"$DOCKER_HUB_EMAIL\"\nfi\necho \"~~~ Stopping existing docker containers\"\nif [[ $(docker ps -q | wc -l) -gt 0 ]] ; then\n  docker stop $(docker ps -q)\nfi\n",
+                "content": "#!/bin/bash -eu\nif [[ -f ~/.docker/config.json || -f ~/.dockercfg ]] ; then\n  docker logout\nfi\nif [[ -n \"${DOCKER_HUB_AUTH:-}\" ]] ; then\n  echo \"DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL.\"\n  exit 1\nelif [[ -n \"${DOCKER_HUB_USER:-}\" && -n \"${DOCKER_HUB_PASSWORD:-}\" && -n \"${DOCKER_HUB_EMAIL:-}\" ]] ; then\n  echo \"~~~ Authenticating with docker hub as $DOCKER_HUB_USER\"\n  docker login --username=\"$DOCKER_HUB_USER\" --password=\"$DOCKER_HUB_PASSWORD\" --email=\"$DOCKER_HUB_EMAIL\"\nfi\necho \"~~~ Stopping existing docker containers\"\nif [[ $(docker ps -q | wc -l) -gt 0 ]] ; then\n  docker stop $(docker ps -q)\nfi\n",
                 "mode": "000700",
                 "owner": "ubuntu",
                 "group": "ubuntu"
               },
               "/lib/systemd/system/ssh-agent.service": {
-                "content": "[Unit]\nDescription=ssh-agent\nBefore=docker.service\n[Service]\nType=forking\nEnvironment=SSH_AUTH_SOCK=/ssh-agent\nExecStart=/usr/bin/ssh-agent -a $SSH_AUTH_SOCK\nExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa\n[Install]\nWantedBy=default.target\n",
+                "content": "[Unit]\nDescription=ssh-agent\nBefore=docker.service\n[Service]\nType=forking\nEnvironment=SSH_AUTH_SOCK=/ssh-agent\nExecStart=/usr/bin/ssh-agent -a $SSH_AUTH_SOCK\n[Install]\nWantedBy=default.target\n",
                 "mode": "000400",
                 "owner": "root",
                 "group": "root"
@@ -371,11 +318,11 @@
                   "Fn::Join": [
                     "",
                     [
-                      "buildkite:\n  image: buildkite/agent:dind-",
+                      "buildkite:\n  image: buildkite/agent:beta-ubuntu-docker-",
                       {
                         "Ref": "DockerVersion"
                       },
-                      "\n  privileged: true\n  environment:\n    - BUILDKITE_AGENT_TOKEN=",
+                      "\n  privileged: true\n  environment:\n    - DIND=true\n    - BUILDKITE_AGENT_TOKEN=",
                       {
                         "Ref": "BuildkiteAgentToken"
                       },
@@ -387,7 +334,15 @@
                       {
                         "Ref": "DockerVersion"
                       },
-                      "\n    - BUILDKITE_AGENT_NAME=elastic-%hostname-%n\n    - DOCKER_STORAGE_DRIVER=aufs\n    - SSH_AUTH_SOCK=/ssh-agent\n  volumes:\n    - /home/ubuntu/buildkite/hooks:/buildkite/hooks\n    - /ssh-agent:/ssh-agent\n  restart: always\n"
+                      ",stack=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "\n    - BUILDKITE_AGENT_NAME=",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "-%n\n    - DOCKER_STORAGE_DRIVER=aufs\n    - SSH_AUTH_SOCK=/ssh-agent\n  volumes:\n    - /home/ubuntu/buildkite/hooks:/buildkite/hooks\n    - /ssh-agent:/ssh-agent\n  restart: always\n"
                     ]
                   ]
                 },
@@ -814,6 +769,9 @@
         "Arch": "HVM64EBS"
       },
       "c4.8xlarge": {
+        "Arch": "HVM64EBS"
+      },
+      "t2.nano": {
         "Arch": "HVM64EBS"
       },
       "t2.micro": {

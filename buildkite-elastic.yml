@@ -23,11 +23,7 @@ Parameters:
   DockerVersion:
     Description: The docker version to run, depends on a matching tag on the buildkite-agent image
     Type: String
-    Default: "1.8"
-
-  ProvisionBucket:
-    Description: An s3 bucket containing id_rsa_buildkite
-    Type: String
+    Default: "1.9"
 
   AuthorizedUsersUrl:
     Description: Optional - An url to periodically download ssh authorized_keys from
@@ -59,6 +55,7 @@ Parameters:
       - c4.2xlarge
       - c4.4xlarge
       - c4.8xlarge
+      - t2.nano
       - t2.micro
       - t2.small
       - t2.medium
@@ -146,13 +143,6 @@ Resources:
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
             Resource: "*"
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-              - s3:ListBucket
-              - s3:ListBucketVersions
-            Resource: "arn:aws:s3:::$(ProvisionBucket)/*"
       Roles:
         - $(IAMRole)
 
@@ -176,30 +166,20 @@ Resources:
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
 
     Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: $(IAMRole)
-          buckets: $(ProvisionBucket)
-
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
           files:
-            "/root/.ssh/id_rsa":
-              source: "https://$(ProvisionBucket).s3.amazonaws.com/id_rsa_buildkite"
-              mode: '000400'
-              owner: root
-              group: root
-              authentication: S3AccessCreds
             "/home/ubuntu/buildkite/hooks/environment":
               content: |
                 #!/bin/bash -eu
-                if [[ -n "\${DOCKER_HUB_AUTH:-}" ]] ; then
-                  echo "~~~ Overwriting /root/.dockercfg"
-                  echo \$DOCKER_HUB_AUTH > /root/.dockercfg
+                if [[ -f ~/.docker/config.json || -f ~/.dockercfg ]] ; then
+                  docker logout
                 fi
-                if [[ -n "\${DOCKER_HUB_USER:-}" && -n "\${DOCKER_HUB_PASSWORD:-}" && -n "\${DOCKER_HUB_EMAIL:-}" ]] ; then
+                if [[ -n "\${DOCKER_HUB_AUTH:-}" ]] ; then
+                  echo "DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL."
+                  exit 1
+                elif [[ -n "\${DOCKER_HUB_USER:-}" && -n "\${DOCKER_HUB_PASSWORD:-}" && -n "\${DOCKER_HUB_EMAIL:-}" ]] ; then
                   echo "~~~ Authenticating with docker hub as \$DOCKER_HUB_USER"
                   docker login --username="\$DOCKER_HUB_USER" --password="\$DOCKER_HUB_PASSWORD" --email="\$DOCKER_HUB_EMAIL"
                 fi
@@ -219,7 +199,6 @@ Resources:
                 Type=forking
                 Environment=SSH_AUTH_SOCK=/ssh-agent
                 ExecStart=/usr/bin/ssh-agent -a \$SSH_AUTH_SOCK
-                ExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa
                 [Install]
                 WantedBy=default.target
               mode: '000400'
@@ -228,12 +207,13 @@ Resources:
             "/home/ubuntu/docker-compose.yml":
               content: |
                 buildkite:
-                  image: buildkite/agent:dind-$(DockerVersion)
+                  image: buildkite/agent:beta-ubuntu-docker-$(DockerVersion)
                   privileged: true
                   environment:
+                    - DIND=true
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=$(DockerVersion)
-                    - BUILDKITE_AGENT_NAME=elastic-%hostname-%n
+                    - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=$(DockerVersion),stack=$(AWS::StackName)
+                    - BUILDKITE_AGENT_NAME=$(AWS::StackName)-%n
                     - DOCKER_STORAGE_DRIVER=aufs
                     - SSH_AUTH_SOCK=/ssh-agent
                   volumes:
