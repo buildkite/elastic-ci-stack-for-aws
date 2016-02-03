@@ -43,7 +43,7 @@ stack_delete() {
 export STACK_NAME="buildkite-aws-stack-test-$$"
 
 if [[ -n "${1:-}" ]] ; then
-  echo ">> Following previously created stack $1"
+  echo "--- Following previously created stack $1"
   STACK_NAME="$1"
 else
   ./create-stack.sh \
@@ -53,21 +53,23 @@ else
     InstanceType=t2.nano \
     BuildkiteQueue="testqueue-$$"
 
-  echo ">> Waiting for stack to complete"
-  #trap "stack_delete $STACK_NAME" EXIT
+  echo "--- Waiting for stack to complete"
 fi
 
 stack_follow "$STACK_NAME"
 
 echo
-echo ">> Waiting for agents to start"
-sleep 30
+echo "--- Waiting for agents to start"
+sleep10
 
 echo
-echo ">> Checking agent has registered correctly"
+echo "--- Checking agent has registered correctly"
 if ! query_bk_agent_api "?name=${STACK_NAME}-1" | grep -C 20 --color=always '"connection_state": "connected"' ; then
   echo -e "\033[33;31mAgent failed to connect to buildkite\033[0m"
   exit 1
 else
   echo -e "\033[33;32mAgent connected successfully\033[0m"
+
+  echo "--- Deleting stack"
+  stack_delete "${STACK_NAME}"
 fi
