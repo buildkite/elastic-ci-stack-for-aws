@@ -36,6 +36,10 @@ query_bk_agent_api() {
     "https://api.buildkite.com/v1/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/agents$*"
 }
 
+stack_delete() {
+  aws cloudformation delete-stack --stack-name "$1"
+}
+
 export STACK_NAME="buildkite-aws-stack-test-$$"
 
 if [[ -n "${1:-}" ]] ; then
@@ -50,9 +54,15 @@ else
     BuildkiteQueue="testqueue-$$"
 
   echo ">> Waiting for stack to complete"
+  #trap "stack_delete $STACK_NAME" EXIT
 fi
 
 stack_follow "$STACK_NAME"
+
+echo
+echo ">> Waiting for agents to start"
+sleep 30
+
 echo
 echo ">> Checking agent has registered correctly"
 if ! query_bk_agent_api "?name=${STACK_NAME}-1" | grep -C 20 --color=always '"connection_state": "connected"' ; then
