@@ -1,5 +1,5 @@
 steps:
   - command: ci/test.sh
-    name: "Test :aws: stack"
+    name: "Test :cloudformation: stack"
     agents:
       queue: aws-stack
