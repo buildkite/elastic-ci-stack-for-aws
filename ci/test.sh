@@ -48,7 +48,7 @@ if [[ -n "${1:-}" ]] ; then
 else
   ./create-stack.sh \
     BuildkiteOrgSlug="$BUILDKITE_AWS_STACK_ORG_SLUG" \
-    BuildkiteAgentToken="$BUILDKITE_AWS_STACK_ORG_SLUG" \
+    BuildkiteAgentToken="$BUILDKITE_AWS_STACK_AGENT_TOKEN" \
     KeyName=${AWS_KEYPAIR:-default} \
     InstanceType=t2.nano \
     BuildkiteQueue="testqueue-$$"
