@@ -31,8 +31,8 @@ stack_follow() {
 }
 
 query_bk_agent_api() {
-  curl --silent -f -H "Authorization: Bearer $BUILDKITE_DOCKER_INTEGRATION_TEST_API_TOKEN" \
-    "https://api.buildkite.com/v1/organizations/$BUILDKITE_DOCKER_INTEGRATION_TEST_ORG_SLUG/agents$*"
+  curl --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+    "https://api.buildkite.com/v1/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/agents$*"
 }
 
 export STACK_NAME="buildkite-aws-stack-test-$$"
@@ -42,8 +42,8 @@ if [[ -n "${1:-}" ]] ; then
   STACK_NAME="$1"
 else
   ./create-stack.sh \
-    BuildkiteOrgSlug="$BUILDKITE_DOCKER_INTEGRATION_TEST_ORG_SLUG" \
-    BuildkiteAgentToken="$BUILDKITE_DOCKER_INTEGRATION_TEST_AGENT_TOKEN" \
+    BuildkiteOrgSlug="$BUILDKITE_AWS_STACK_ORG_SLUG" \
+    BuildkiteAgentToken="$BUILDKITE_AWS_STACK_ORG_SLUG" \
     KeyName=${AWS_KEYPAIR:-default} \
     InstanceType=t2.nano \
     BuildkiteQueue="testqueue-$$"
