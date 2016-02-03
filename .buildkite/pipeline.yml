@@ -1,5 +1,5 @@
 steps:
   - command: ci/test.sh
-    name: "Testing spinning up a stack"
+    name: "Test :aws: stack"
     agents:
       queue: aws-stack
