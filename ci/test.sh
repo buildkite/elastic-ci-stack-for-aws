@@ -60,7 +60,7 @@ stack_follow "$STACK_NAME"
 
 echo
 echo "--- Waiting for agents to start"
-sleep10
+sleep 10
 
 echo
 echo "--- Checking agent has registered correctly"
