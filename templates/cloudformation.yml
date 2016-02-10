@@ -20,10 +20,10 @@ Parameters:
     Type: String
     Default: elastic
 
-  DockerVersion:
-    Description: The docker version to run, depends on a matching tag on the buildkite-agent image
-    Type: String
-    Default: "1.9"
+  DockerVersions:
+    Description: A list of docker versions to run agents for
+    Type: CommaDelimitedList
+    Default: "1.6,1.8,1.9"
 
   AuthorizedUsersUrl:
     Description: Optional - An url to periodically download ssh authorized_keys from
@@ -65,24 +65,24 @@ Parameters:
       - m3.2xlarge
 
   SpotPrice:
-    Description: An optional spot price to use for the agents, if 0 normal instances are used
+    Description: An optional spot price to use for the instances, if 0 then regular instances are used
     Type: String
     Default: 0
 
   MaxSize:
-    Description: The maximum number of agents to launch
+    Description: The maximum number of instances to launch
     Type: Number
     Default: 6
 
   MinSize:
-    Description: The minumum number of agents to launch
+    Description: The minumum number of instances to launch
     Type: Number
     Default: 1
 
   AgentsPerHost:
-    Description: The number of buildkite agents to run per host
+    Description: The number of buildkite agents (per docker version) to run on each instance
     Type: Number
-    Default: 6
+    Default: 4
 
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.
@@ -205,14 +205,17 @@ Resources:
               owner: root
               group: root
             "/home/ubuntu/docker-compose.yml":
+              context:
+                docker_versions: $(DockerVersions)
               content: |
-                buildkite:
-                  image: buildkite/agent:beta-ubuntu-docker-$(DockerVersion)
+                {{#docker_versions}}
+                docker-{{.}}:
+                  image: buildkite/agent:beta-ubuntu-docker-{{.}}
                   privileged: true
                   environment:
                     - DIND=true
                     - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=$(DockerVersion),stack=$(AWS::StackName)
+                    - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker={{.}},stack=$(AWS::StackName)
                     - BUILDKITE_AGENT_NAME=$(AWS::StackName)-%n
                     - DOCKER_STORAGE_DRIVER=aufs
                     - SSH_AUTH_SOCK=/ssh-agent
@@ -220,7 +223,21 @@ Resources:
                     - /home/ubuntu/buildkite/hooks:/buildkite/hooks
                     - /ssh-agent:/ssh-agent
                   restart: always
+                  {{/docker_versions}}
               mode: '000600'
+              owner: ubuntu
+              group: ubuntu
+            "/home/ubuntu/start.sh":
+              context:
+                docker_versions: $(DockerVersions)
+              content: |
+                #!/bin/bash -eu
+                docker-compose -f /home/ubuntu/docker-compose.yml pull
+                docker-compose -f /home/ubuntu/docker-compose.yml up -d
+                {{#docker_versions}}
+                docker-compose -f /home/ubuntu/docker-compose.yml scale docker-{{.}}=$(AgentsPerHost)
+                {{/docker_versions}}
+              mode: '000700'
               owner: ubuntu
               group: ubuntu
             "/etc/cron.hourly/authorized_keys":
@@ -247,11 +264,8 @@ Resources:
                 systemctl daemon-reload
                 systemctl enable ssh-agent
                 systemctl start ssh-agent
-            02-install-buildkite:
-              command: |
-                docker-compose -f /home/ubuntu/docker-compose.yml pull
-                docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
-                docker-compose -f /home/ubuntu/docker-compose.yml scale buildkite=$(AgentsPerHost)
+            02-start-buildkite:
+              command: /home/ubuntu/start.sh
             03-fetch-authorized-users:
               command: /etc/cron.hourly/authorized_keys
 
