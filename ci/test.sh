@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
 
 stack_status() {
   aws cloudformation describe-stacks --stack-name "$1" --output text --query 'Stacks[].StackStatus'
@@ -40,15 +40,6 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
-setup_environment() {
-  sudo apt-get install -y rubygems
-  sudo gem install cfoo
-  make build/aws-stack.json
-}
-
-echo "--- Setting up build environment"
-setup_environment
-
 cat << EOF > config.json
 [
   {
@@ -75,6 +66,8 @@ cat << EOF > config.json
 EOF
 
 export STACK_NAME="buildkite-aws-stack-test-$$"
+rm -f build/
+make build/aws-stack.json
 
 echo "--- Creating stack $STACK_NAME"
 aws cloudformation create-stack \
@@ -83,7 +76,7 @@ aws cloudformation create-stack \
   --disable-rollback \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM \
-  --parameters "$(cat config.json)"
+  --parameters <(cat config.json)"
 
 echo "--- Waiting for stack to complete"
 
