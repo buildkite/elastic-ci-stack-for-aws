@@ -10,7 +10,7 @@ sudo apt-get update -qq
 sudo mkdir -p /etc/systemd/system/docker.service.d
 sudo mv /tmp/conf/docker.override.conf /etc/systemd/system/docker.service.d/override.conf
 sudo chown -R root: /etc/systemd/system/docker.service.d
-sudo apt-get install -y docker-engine=1.8*
+sudo apt-get install -y docker-engine
 sudo usermod -aG docker ubuntu
 sudo systemctl daemon-reload
 sudo systemctl enable docker
@@ -18,7 +18,7 @@ sudo systemctl is-active docker
 sudo systemctl status docker
 
 # installs docker-compose
-sudo curl -o /usr/local/bin/docker-compose -L https://github.com/docker/compose/releases/download/1.4.2/docker-compose-Linux-x86_64
+sudo curl -o /usr/local/bin/docker-compose -L https://github.com/docker/compose/releases/download/1.6.0/docker-compose-Linux-x86_64
 sudo chmod +x /usr/local/bin/docker-compose
 
 # install docker-gc
