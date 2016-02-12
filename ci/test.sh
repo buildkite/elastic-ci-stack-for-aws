@@ -67,7 +67,9 @@ EOF
 
 export STACK_NAME="buildkite-aws-stack-test-$$"
 
+gem install cfoo
 make build/aws-stack.json
+
 aws cloudformation create-stack \
   --output text \
   --stack-name "$STACK_NAME" \
