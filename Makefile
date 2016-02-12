@@ -8,6 +8,9 @@ build/aws-stack.json: templates/cloudformation.yml templates/mappings.yml
 	-mkdir -p build/
 	cfoo $^ > $@
 
+build-ami:
+	cd packer/; packer build buildkite-ubuntu-15.04.json
+
 upload: build/aws-stack.json
 	aws s3 sync --acl public-read build s3://buildkite-aws-stack/
 
