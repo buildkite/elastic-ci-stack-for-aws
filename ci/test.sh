@@ -40,6 +40,15 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
+setup_environment() {
+  sudo apt-get install -y rubygems
+  sudo gem install cfoo
+  make build/aws-stack.json
+}
+
+echo "--- Setting up build environment"
+setup_environment
+
 cat << EOF > config.json
 [
   {
@@ -67,9 +76,7 @@ EOF
 
 export STACK_NAME="buildkite-aws-stack-test-$$"
 
-gem install cfoo
-make build/aws-stack.json
-
+echo "--- Creating stack $STACK_NAME"
 aws cloudformation create-stack \
   --output text \
   --stack-name "$STACK_NAME" \
