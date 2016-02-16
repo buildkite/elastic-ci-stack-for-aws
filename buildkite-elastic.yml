@@ -25,6 +25,10 @@ Parameters:
     Type: String
     Default: "1.9"
 
+  ProvisionBucket:
+    Description: An s3 bucket containing id_rsa_buildkite
+    Type: String
+
   AuthorizedUsersUrl:
     Description: Optional - An url to periodically download ssh authorized_keys from
     Type: String
@@ -143,6 +147,13 @@ Resources:
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:ListBucketVersions
+            Resource: "arn:aws:s3:::$(ProvisionBucket)/*"
       Roles:
         - $(IAMRole)
 
@@ -166,10 +177,22 @@ Resources:
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
 
     Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: $(IAMRole)
+          buckets: $(ProvisionBucket)
+
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
           files:
+            "/root/.ssh/id_rsa":
+              source: "https://$(ProvisionBucket).s3.amazonaws.com/id_rsa_buildkite"
+              mode: '000400'
+              owner: root
+              group: root
+              authentication: S3AccessCreds
             "/home/ubuntu/buildkite/hooks/environment":
               content: |
                 #!/bin/bash -eu
@@ -199,6 +222,7 @@ Resources:
                 Type=forking
                 Environment=SSH_AUTH_SOCK=/ssh-agent
                 ExecStart=/usr/bin/ssh-agent -a \$SSH_AUTH_SOCK
+                ExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa
                 [Install]
                 WantedBy=default.target
               mode: '000400'
