@@ -5,7 +5,7 @@ all: build
 
 build: build/aws-stack.json
 
-build/aws-stack.json: templates/buildkite-elastic.yml templates/mappings.yml
+build/aws-stack.json: templates/buildkite-elastic.yml templates/mappings.yml templates/autoscale.yml templates/vpc.yml
 	-mkdir -p build/
 	cfoo $^ > $@
 

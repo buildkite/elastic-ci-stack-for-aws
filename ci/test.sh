@@ -66,8 +66,7 @@ cat << EOF > config.json
 EOF
 
 export STACK_NAME="buildkite-aws-stack-test-$$"
-rm -f build/
-make setup template
+make setup clean build
 
 echo "--- Creating stack $STACK_NAME"
 aws cloudformation create-stack \
