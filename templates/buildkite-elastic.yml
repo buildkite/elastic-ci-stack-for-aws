@@ -28,7 +28,6 @@ Parameters:
   ProvisionBucket:
     Description: An s3 bucket containing id_rsa_buildkite
     Type: String
-    Default: ""
 
   AuthorizedUsersUrl:
     Description: Optional - An url to periodically download ssh authorized_keys from
@@ -117,9 +116,6 @@ Conditions:
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", $(AvailabilityZones) ], "" ]  ]
 
-    UseProvisionBucket:
-      !Equals [ $(ProvisionBucket), "" ]
-
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
   IAMInstanceProfile:
@@ -167,7 +163,7 @@ Resources:
               - s3:GetObjectVersion
               - s3:ListBucket
               - s3:ListBucketVersions
-            Resource: "arn:aws:s3:::$(ProvisionBucket)/*"
+            Resource: "arn:aws:s3:::$(ProvisionBucket)/id_rsa_buildkite"
       Roles:
         - $(IAMRole)
 
