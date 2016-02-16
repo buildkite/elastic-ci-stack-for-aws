@@ -11,7 +11,7 @@ build/aws-stack.json: templates/buildkite-elastic.yml templates/mappings.yml tem
 
 setup:
 	which bundle || gem install bundler --no-ri --no-rdoc
-	bundle install
+	bundle install --path vendor/bundle
 
 clean:
 	-rm build/*
