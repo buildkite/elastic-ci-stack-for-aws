@@ -1,20 +1,3 @@
 Mappings:
-
-  # http://aws.amazon.com/amazon-linux-ami/instance-type-matrix/
-  AWSInstanceType2Arch:
-    c4.large      : { Arch: HVM64EBS }
-    c4.xlarge     : { Arch: HVM64EBS }
-    c4.2xlarge    : { Arch: HVM64EBS }
-    c4.4xlarge    : { Arch: HVM64EBS }
-    c4.8xlarge    : { Arch: HVM64EBS }
-    t2.nano       : { Arch: HVM64EBS }
-    t2.micro      : { Arch: HVM64EBS }
-    t2.small      : { Arch: HVM64EBS }
-    t2.medium     : { Arch: HVM64EBS }
-    m3.medium     : { Arch: HVM64EBS }
-    m3.large      : { Arch: HVM64EBS }
-    m3.xlarge     : { Arch: HVM64EBS }
-    m3.2xlarge    : { Arch: HVM64EBS }
-
-  AWSArch2AMI:
-    us-east-1     : { HVM64EBS: ami-94b681fe }
+  AWSRegion2AMI:
+    us-east-1     : { AMI: ami-94b681fe }
