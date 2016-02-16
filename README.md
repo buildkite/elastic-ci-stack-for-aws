@@ -22,7 +22,7 @@ make setup clean build
 
 ## Creating a stack
 
-Copy over `config.json.example` to `config.json` and then run the below command to create a new stack.
+Copy over [`config.json.example`](config.json.example) to `config.json` and then run the below command to create a new stack.
 
 ```bash
 aws cloudformation create-stack \
@@ -33,7 +33,7 @@ aws cloudformation create-stack \
   --parameters <(cat config.json)
 ```
 
-Check out `[buildkite-elastic.yml][templates/buildkite-elastic.yml]` for what parameters are available.
+Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for what parameters are available.
 
 ## Project Configuration
 
