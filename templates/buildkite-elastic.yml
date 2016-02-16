@@ -28,6 +28,7 @@ Parameters:
   ProvisionBucket:
     Description: An s3 bucket containing id_rsa_buildkite
     Type: String
+    Default: ""
 
   AuthorizedUsersUrl:
     Description: Optional - An url to periodically download ssh authorized_keys from
@@ -52,7 +53,7 @@ Parameters:
   InstanceType:
     Description: The type of instance to use for the agent
     Type: String
-    Default: m3.medium
+    Default: t2.micro
     AllowedValues:
       - c4.large
       - c4.xlarge
@@ -115,6 +116,9 @@ Conditions:
 
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", $(AvailabilityZones) ], "" ]  ]
+
+    UseProvisionBucket:
+      !Not [ !Equals [ $(ProvisionBucket), "" ] ]
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
@@ -187,22 +191,10 @@ Resources:
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
 
     Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: $(IAMRole)
-          buckets: $(ProvisionBucket)
-
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
           files:
-            "/root/.ssh/id_rsa":
-              source: "https://$(ProvisionBucket).s3.amazonaws.com/id_rsa_buildkite"
-              mode: '000400'
-              owner: root
-              group: root
-              authentication: S3AccessCreds
             "/home/ubuntu/buildkite/hooks/environment":
               content: |
                 #!/bin/bash -eu
@@ -276,6 +268,11 @@ Resources:
               group: root
 
           commands:
+            01-download-github-key:
+              test: test -n "$(ProvisionBucket)"
+              command: |
+                aws s3 cp s3://$(ProvisionBucket)/id_rsa_buildkite /root/.ssh/id_rsa
+                chmod 0600 /root/.ssh/id_rsa
             01-enable-ssh-agent-systemd:
               command: |
                 systemctl daemon-reload

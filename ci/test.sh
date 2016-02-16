@@ -61,6 +61,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "InstanceType",
     "ParameterValue": "t2.nano"
+  },
+  {
+    "ParameterKey": "ProvisionBucket",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_BUCKET}"
   }
 ]
 EOF
