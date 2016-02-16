@@ -10,7 +10,7 @@ build/aws-stack.json: templates/buildkite-elastic.yml templates/mappings.yml tem
 	cfoo $^ > $@
 
 setup:
-	gem install bundler --no-ri --no-rdoc
+	which bundle || gem install bundler --no-ri --no-rdoc
 	bundle install
 
 clean:

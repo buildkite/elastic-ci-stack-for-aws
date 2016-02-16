@@ -78,7 +78,6 @@ aws cloudformation create-stack \
   --parameters <(cat config.json)
 
 echo "--- Waiting for stack to complete"
-
 stack_follow "$STACK_NAME"
 
 echo
