@@ -30,7 +30,7 @@ aws cloudformation create-stack \
   --stack-name buildkite-aws-stack \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM \
-  --parameters "$(cat config.json)"
+  --parameters <(cat config.json)
 ```
 
 Check out `[buildkite-elastic.yml][templates/buildkite-elastic.yml]` for what parameters are available.
