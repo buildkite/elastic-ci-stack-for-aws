@@ -53,7 +53,7 @@ Parameters:
   InstanceType:
     Description: The type of instance to use for the agent
     Type: String
-    Default: m3.medium
+    Default: t2.micro
     AllowedValues:
       - c4.large
       - c4.xlarge
@@ -118,7 +118,7 @@ Conditions:
       !Not [ !Equals [ !Join [ "", $(AvailabilityZones) ], "" ]  ]
 
     UseProvisionBucket:
-      !Equals [ $(ProvisionBucket), "" ]
+      !Not [ !Equals [ $(ProvisionBucket), "" ] ]
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
@@ -167,7 +167,7 @@ Resources:
               - s3:GetObjectVersion
               - s3:ListBucket
               - s3:ListBucketVersions
-            Resource: "arn:aws:s3:::$(ProvisionBucket)/*"
+            Resource: "arn:aws:s3:::$(ProvisionBucket)/id_rsa_buildkite"
       Roles:
         - $(IAMRole)
 
@@ -191,22 +191,10 @@ Resources:
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
 
     Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: $(IAMRole)
-          buckets: $(ProvisionBucket)
-
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
           files:
-            "/root/.ssh/id_rsa":
-              source: "https://$(ProvisionBucket).s3.amazonaws.com/id_rsa_buildkite"
-              mode: '000400'
-              owner: root
-              group: root
-              authentication: S3AccessCreds
             "/home/ubuntu/buildkite/hooks/environment":
               content: |
                 #!/bin/bash -eu
@@ -280,6 +268,11 @@ Resources:
               group: root
 
           commands:
+            01-download-github-key:
+              test: test -n "$(ProvisionBucket)"
+              command: |
+                aws s3 cp s3://$(ProvisionBucket)/id_rsa_buildkite /root/.ssh/id_rsa
+                chmod 0600 /root/.ssh/id_rsa
             01-enable-ssh-agent-systemd:
               command: |
                 systemctl daemon-reload
@@ -318,54 +311,6 @@ Resources:
         PauseTime: PT15M
         WaitOnResourceSignals: true
 
-  AgentScaleUpPolicy:
-    Type: AWS::AutoScaling::ScalingPolicy
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown: 60
-      ScalingAdjustment: 1
-
-  AgentScaleDownPolicy:
-    Type : AWS::AutoScaling::ScalingPolicy
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown : 60
-      ScalingAdjustment : -1
-
-  CPUAlarmHigh:
-   Type: AWS::CloudWatch::Alarm
-   Properties:
-      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: 300
-      EvaluationPeriods: 2
-      Threshold: 90
-      AlarmActions: [ $(AgentScaleUpPolicy) ]
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: $(AgentAutoScaleGroup)
-      ComparisonOperator: GreaterThanThreshold
-
-  CPUAlarmLow:
-   Type: AWS::CloudWatch::Alarm
-   Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: 300
-      EvaluationPeriods: 2
-      Threshold: 70
-      AlarmActions: [ $(AgentScaleDownPolicy) ]
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: $(AgentAutoScaleGroup)
-      ComparisonOperator: LessThanThreshold
-
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Condition: CreateSecurityGroup
@@ -378,95 +323,3 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
 
-  Vpc:
-    Type: AWS::EC2::VPC
-    Condition: CreateVpcResources
-    Properties:
-      CidrBlock: 10.0.0.0/16
-      InstanceTenancy: default
-      Tags:
-        - Key: Name
-          Value: $(AWS::StackName)
-
-  Gateway:
-    Type: AWS::EC2::InternetGateway
-    Condition: CreateVpcResources
-    Properties: {}
-
-  GatewayAttachment:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Condition: CreateVpcResources
-    Properties:
-      InternetGatewayId: $(Gateway)
-      VpcId: $(Vpc)
-
-  Subnet0:
-    Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
-    Properties:
-      AvailabilityZone: !If [
-        "UseSpecifiedAvailabilityZones",
-        !Select [ 0, $(AvailabilityZones) ],
-        !Select [ 0, !GetAZs '$(AWS::Region)' ]
-      ]
-      CidrBlock: 10.0.1.0/24
-      VpcId: $(Vpc)
-
-  Subnet1:
-    Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
-    Properties:
-      AvailabilityZone: !If [
-        "UseSpecifiedAvailabilityZones",
-        !Select [ 1, $(AvailabilityZones) ],
-        !Select [ 1, !GetAZs '$(AWS::Region)' ]
-      ]
-      CidrBlock: 10.0.2.0/24
-      VpcId: $(Vpc)
-
-  Subnet2:
-    Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
-    Properties:
-      AvailabilityZone: !If [
-        "UseSpecifiedAvailabilityZones",
-        !Select [ 2, $(AvailabilityZones) ],
-        !Select [ 2, !GetAZs '$(AWS::Region)' ]
-      ]
-      CidrBlock: 10.0.3.0/24
-      VpcId: $(Vpc)
-
-  Routes:
-    Type: AWS::EC2::RouteTable
-    Condition: CreateVpcResources
-    Properties:
-      VpcId: $(Vpc)
-
-  RouteDefault:
-    Type: AWS::EC2::Route
-    Condition: CreateVpcResources
-    Properties:
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: $(Gateway)
-      RouteTableId: $(Routes)
-
-  Subnet0Routes:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
-    Properties:
-      SubnetId: $(Subnet0)
-      RouteTableId: $(Routes)
-
-  Subnet1Routes:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
-    Properties:
-      SubnetId: $(Subnet1)
-      RouteTableId: $(Routes)
-
-  Subnet2Routes:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
-    Properties:
-      SubnetId: $(Subnet2)
-      RouteTableId: $(Routes)

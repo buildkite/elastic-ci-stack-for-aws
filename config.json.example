@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "BuildkiteOrgSlug",
+    "ParameterValue": "MyOrg"
+  },
+  {
+    "ParameterKey": "BuildkiteAgentToken",
+    "ParameterValue": "TokenGoesHere"
+  }
+]

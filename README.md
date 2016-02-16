@@ -12,23 +12,28 @@ Feel free to drop me an email at lachlan@99designs.com with questions, or checko
 
   * An AWS account with EC2 and CloudFormation
   * [Amazon Commandline Interface](http://aws.amazon.com/cli/) installed and working
-  * A git ssh key for checking out code called `id_rsa_buildkite` in an s3 bucket.
+  * A git ssh key for checking out code called `id_rsa_buildkite` in a s3 bucket.
+
+## Install
+
+```
+make setup clean build
+```
 
 ## Creating a stack
 
-The `create-stack.sh` script will launch the cloudformation stack that powers your generic buildkite agents.
+Copy over `config.json.example` to `config.json` and then run the below command to create a new stack.
 
 ```bash
-./create-stack.sh \
-  BuildkiteOrgSlug=myorg \
-  BuildkiteAgentToken=mytokengoeshere \
-  KeyName=default \
-  InstanceType=c4.2xlarge \
-  BuildkiteQueue=test \
-  AuthorizedUsersUrl=https://example.org/authorized_keys
+aws cloudformation create-stack \
+  --output text \
+  --stack-name buildkite-aws-stack \
+  --template-body "file://${PWD}/build/aws-stack.json" \
+  --capabilities CAPABILITY_IAM \
+  --parameters <(cat config.json)
 ```
 
-Check out `buildkite-elastic.yml` for what parameters are available. You can alternately upload the `build/cloudformation.json` file via the CloudFormation web interface.
+Check out `[buildkite-elastic.yml][templates/buildkite-elastic.yml]` for what parameters are available.
 
 ## Project Configuration
 

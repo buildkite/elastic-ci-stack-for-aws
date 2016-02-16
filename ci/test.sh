@@ -40,22 +40,48 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
+cat << EOF > config.json
+[
+  {
+    "ParameterKey": "BuildkiteOrgSlug",
+    "ParameterValue": "$BUILDKITE_AWS_STACK_ORG_SLUG"
+  },
+  {
+    "ParameterKey": "BuildkiteAgentToken",
+    "ParameterValue": "$BUILDKITE_AWS_STACK_AGENT_TOKEN"
+  },
+  {
+    "ParameterKey": "BuildkiteQueue",
+    "ParameterValue": "testqueue-$$"
+  },
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "${AWS_KEYPAIR:-default}"
+  },
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.nano"
+  },
+  {
+    "ParameterKey": "ProvisionBucket",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_BUCKET}"
+  }
+]
+EOF
+
 export STACK_NAME="buildkite-aws-stack-test-$$"
+make setup clean build
 
-if [[ -n "${1:-}" ]] ; then
-  echo "--- Following previously created stack $1"
-  STACK_NAME="$1"
-else
-  ./create-stack.sh \
-    BuildkiteOrgSlug="$BUILDKITE_AWS_STACK_ORG_SLUG" \
-    BuildkiteAgentToken="$BUILDKITE_AWS_STACK_AGENT_TOKEN" \
-    KeyName=${AWS_KEYPAIR:-default} \
-    InstanceType=t2.nano \
-    BuildkiteQueue="testqueue-$$"
+echo "--- Creating stack $STACK_NAME"
+aws cloudformation create-stack \
+  --output text \
+  --stack-name "$STACK_NAME" \
+  --disable-rollback \
+  --template-body "file://${PWD}/build/aws-stack.json" \
+  --capabilities CAPABILITY_IAM \
+  --parameters "$(cat config.json)"
 
-  echo "--- Waiting for stack to complete"
-fi
-
+echo "--- Waiting for stack to complete"
 stack_follow "$STACK_NAME"
 
 echo

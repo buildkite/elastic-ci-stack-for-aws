@@ -3,11 +3,11 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "source_ami": "ami-cf09e8a4",
+      "source_ami": "ami-370c225d",
       "instance_type": "m3.medium",
       "ssh_username": "ubuntu",
       "ami_name": "buildkite-{{isotime | clean_ami_name}}",
-      "ami_description": "A docker host image based on Ubuntu 15.04",
+      "ami_description": "A basic ubuntu image with a Buildkite agent running",
       "ami_groups": ["all"]
     }
   ],
@@ -19,7 +19,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-cfn-tools.sh"
+      "script": "scripts/install-aws-tools.sh"
     },
     {
       "type": "shell",
