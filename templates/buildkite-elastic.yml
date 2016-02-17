@@ -104,6 +104,11 @@ Parameters:
     Description: Optional - Existing security group to associate the container instances. Creates one by default.
     Default: ""
 
+  ImageId:
+    Type: AWS::EC2::Image::Id
+    Description: The AMI to use, otherwise uses the mapping built in
+    Default: $(AWSRegion2AMI[$(AWS::Region)][AMI])
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -180,7 +185,7 @@ Resources:
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
       SpotPrice: !If [ "UseSpotInstances", $(SpotPrice), '$(AWS::NoValue)' ]
-      ImageId : $(AWSRegion2AMI[$(AWS::Region)][AMI])
+      ImageId : $(ImageId)
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }

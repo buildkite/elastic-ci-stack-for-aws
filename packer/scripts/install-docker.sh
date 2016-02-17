@@ -1,6 +1,5 @@
 #!/bin/bash -eu
 
-sudo apt-get update -yyq
 sudo apt-get install -yy linux-image-extra-$(uname -r) linux-image-extra-virtual aufs-tools
 
 # install Docker engine
