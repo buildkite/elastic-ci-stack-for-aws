@@ -97,7 +97,7 @@ Parameters:
   ImageId:
     Type: AWS::EC2::Image::Id
     Description: The AMI to use, otherwise uses the mapping built in
-    Default: $(AWSRegion2AMI[$(AWS::Region)][AMI])
+    Default: ""
 
 Conditions:
     UseSpotInstances:
@@ -114,6 +114,9 @@ Conditions:
 
     UseProvisionBucket:
       !Not [ !Equals [ $(ProvisionBucket), "" ] ]
+
+    UseDefaultAMI:
+      !Equals [ $(ImageId), "" ]
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
@@ -175,7 +178,11 @@ Resources:
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
       SpotPrice: !If [ "UseSpotInstances", $(SpotPrice), '$(AWS::NoValue)' ]
-      ImageId : $(ImageId)
+      ImageId : !If [
+        "UseDefaultAMI",
+        "$(AWSRegion2AMI[$(AWS::Region)][AMI])",
+        $(ImageId)
+      ]
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
