@@ -6,8 +6,8 @@ sudo apt-get update -yq
 sudo apt-get install -y buildkite-agent
 
 # move custom hooks into place
-chmod +x /tmp/hooks/*
-cp -a /tmp/hooks/* /var/lib/buildkite/hooks
+chmod +x /tmp/conf/hooks/*
+cp -a /tmp/conf/hooks/* /var/lib/buildkite/hooks
 
 # install ssh-agent systemd config
-cp -a /tmp/ssh-agent.conf /etc/systemd/system/
+cp -a /tmp/conf/ssh-agent.conf /etc/systemd/system/
