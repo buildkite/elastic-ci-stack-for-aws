@@ -20,11 +20,6 @@ Parameters:
     Type: String
     Default: elastic
 
-  DockerVersion:
-    Description: The docker version to run, depends on a matching tag on the buildkite-agent image
-    Type: String
-    Default: "1.9"
-
   ProvisionBucket:
     Description: An s3 bucket containing id_rsa_buildkite
     Type: String
@@ -83,11 +78,6 @@ Parameters:
     Description: The minumum number of agents to launch
     Type: Number
     Default: 1
-
-  AgentsPerHost:
-    Description: The number of buildkite agents to run per host
-    Type: Number
-    Default: 6
 
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.
@@ -199,79 +189,6 @@ Resources:
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
-          files:
-            "/home/ubuntu/buildkite/hooks/environment":
-              content: |
-                #!/bin/bash -eu
-                if [[ -f ~/.docker/config.json || -f ~/.dockercfg ]] ; then
-                  docker logout
-                fi
-                if [[ -n "\${DOCKER_HUB_AUTH:-}" ]] ; then
-                  echo "DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL."
-                  exit 1
-                elif [[ -n "\${DOCKER_HUB_USER:-}" && -n "\${DOCKER_HUB_PASSWORD:-}" && -n "\${DOCKER_HUB_EMAIL:-}" ]] ; then
-                  echo "~~~ Authenticating with docker hub as \$DOCKER_HUB_USER"
-                  docker login --username="\$DOCKER_HUB_USER" --password="\$DOCKER_HUB_PASSWORD" --email="\$DOCKER_HUB_EMAIL"
-                fi
-                echo "~~~ Stopping existing docker containers"
-                if [[ \$(docker ps -q | wc -l) -gt 0 ]] ; then
-                  docker stop \$(docker ps -q)
-                fi
-              mode: '000700'
-              owner: ubuntu
-              group: ubuntu
-            "/lib/systemd/system/ssh-agent.service":
-              content: |
-                [Unit]
-                Description=ssh-agent
-                Before=docker.service
-                [Service]
-                Type=forking
-                Environment=SSH_AUTH_SOCK=/ssh-agent
-                ExecStart=/usr/bin/ssh-agent -a \$SSH_AUTH_SOCK
-                ExecStartPost=/usr/bin/ssh-add /root/.ssh/id_rsa
-                [Install]
-                WantedBy=default.target
-              mode: '000400'
-              owner: root
-              group: root
-            "/home/ubuntu/docker-compose.yml":
-              content: |
-                buildkite:
-                  image: buildkite/agent:beta-ubuntu-docker-$(DockerVersion)
-                  privileged: true
-                  environment:
-                    - DIND=true
-                    - BUILDKITE_AGENT_TOKEN=$(BuildkiteAgentToken)
-                    - BUILDKITE_AGENT_META_DATA=queue=$(BuildkiteQueue),docker=$(DockerVersion),stack=$(AWS::StackName)
-                    - BUILDKITE_AGENT_NAME=$(AWS::StackName)-%n
-                    - DOCKER_STORAGE_DRIVER=aufs
-                    - SSH_AUTH_SOCK=/ssh-agent
-                  volumes:
-                    - /home/ubuntu/buildkite/hooks:/buildkite/hooks
-                    - /ssh-agent:/ssh-agent
-                  restart: always
-              mode: '000600'
-              owner: ubuntu
-              group: ubuntu
-            "/etc/cron.hourly/authorized_keys":
-              content: |
-                #!/bin/bash -eu
-                test -z "$(AuthorizedUsersUrl)" && exit 0
-                curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
-                mv /tmp/authorized_keys /home/ubuntu/.ssh/authorized_keys
-                chmod 600 /home/ubuntu/.ssh/authorized_keys
-                chown ubuntu: /home/ubuntu/.ssh/authorized_keys
-              mode: '000700'
-              owner: root
-              group: root
-            "/etc/cron.d/cloudwatch":
-              content: |
-                */2 * * * * root perl /usr/local/aws-scripts-mon/mon-put-instance-data.pl --mem-util --disk-space-util --disk-path=/ --disk-path=/var/lib/docker --from-cron
-              mode: '000700'
-              owner: root
-              group: root
-
           commands:
             01-download-github-key:
               test: test -n "$(ProvisionBucket)"
@@ -285,12 +202,20 @@ Resources:
                 systemctl start ssh-agent
             02-install-buildkite:
               command: |
-                docker-compose -f /home/ubuntu/docker-compose.yml pull
-                docker-compose -f /home/ubuntu/docker-compose.yml up -d buildkite
-                docker-compose -f /home/ubuntu/docker-compose.yml scale buildkite=$(AgentsPerHost)
+                sed -i "s/$(BuildkiteAgentToken)/INSERT-YOUR-AGENT-TOKEN-HERE/g" /etc/buildkite-agent/buildkite-agent.cfg
+                systemctl enable buildkite-agent
+                systemctl start buildkite-agent
             03-fetch-authorized-users:
-              command: /etc/cron.hourly/authorized_keys
-
+              test: test -z "$(AuthorizedUsersUrl)" && exit 0
+              command: |
+                cat << EOF > /etc/cron.hourly/authorized_keys
+                curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
+                mv /tmp/authorized_keys /home/ubuntu/.ssh/authorized_keys
+                chmod 600 /home/ubuntu/.ssh/authorized_keys
+                chown ubuntu: /home/ubuntu/.ssh/authorized_keys
+                EOF
+                chmod +x /etc/cron.hourly/authorized_keys
+                /etc/cron.hourly/authorized_keys
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup

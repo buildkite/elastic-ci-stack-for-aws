@@ -17,3 +17,10 @@ wget http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScript
 sudo unzip CloudWatchMonitoringScripts-1.2.1.zip -d /usr/local
 sudo chmod +x /usr/local/aws-scripts-mon/*.pl
 rm CloudWatchMonitoringScripts-1.2.1.zip
+
+# add cloudwatch to cron
+cat << EOF | sudo tee /etc/cron.d/cloudwatch
+*/2 * * * * root perl /usr/local/aws-scripts-mon/mon-put-instance-data.pl --mem-util --disk-space-util --disk-path=/ --disk-path=/var/lib/docker --from-cron
+EOF
+
+sudo chmod +x /etc/cron.d/cloudwatch
