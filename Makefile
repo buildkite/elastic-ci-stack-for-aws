@@ -7,7 +7,7 @@ build: build/aws-stack.json
 
 build/aws-stack.json: templates/buildkite-elastic.yml templates/mappings.yml templates/autoscale.yml templates/vpc.yml
 	-mkdir -p build/
-	cfoo $^ > $@
+	bundle exec cfoo $^ > $@
 
 setup:
 	which bundle || gem install bundler --no-ri --no-rdoc
