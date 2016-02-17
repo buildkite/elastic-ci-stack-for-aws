@@ -40,7 +40,7 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
-buildkite-agent artifact download packer.output
+buildkite-agent artifact download packer.output .
 image_id=$(grep -Eo "us-east-1: (ami-.+)$" "packer.output" | awk '{print $2}')
 
 cat << EOF > config.json
