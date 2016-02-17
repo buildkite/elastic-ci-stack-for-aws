@@ -30,3 +30,9 @@ create-stack: build/aws-stack.json
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
 	--parameters '$(shell cat config.json)'
+
+validate: build/aws-stack.json
+	aws cloudformation validate-template \
+	--output table \
+	--template-body "file://${PWD}/build/aws-stack.json"
+
