@@ -206,7 +206,7 @@ Resources:
                 chmod 0600 /root/.ssh/id_rsa
             02-install-buildkite:
               command: |
-                sed -i -r 's/^(name)=.*/\1="$(AWS::StackName)-%hostname-%n"/' /etc/buildkite-agent/buildkite-agent.cfg
+                sed -i -r 's/^(name)=.*/\1="$(AWS::StackName)-%n"/' /etc/buildkite-agent/buildkite-agent.cfg
                 sed -i -r 's/^(token)=.*/\1="$(BuildkiteAgentToken)"/' /etc/buildkite-agent/buildkite-agent.cfg
                 sed -i -r 's/^(# )?(meta-data)=.*/\2="queue=$(BuildkiteQueue),docker=1.9.1,stack=$(AWS::StackName)"/' /etc/buildkite-agent/buildkite-agent.cfg
                 service buildkite-agent start
