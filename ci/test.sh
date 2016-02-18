@@ -40,7 +40,7 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
-packer_hash=$(cd packer; tar c . | md5sum | awk '{print $1}')
+packer_hash=$(find packer -type f -print0 | xargs -0 sha1sum | cut -b-40 | sort | sha1sum | awk '{print $1}')
 packer_file="packer-${packer_hash}.output"
 
 buildkite-agent artifact download "$packer_file" .
