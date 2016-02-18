@@ -185,9 +185,9 @@ Resources:
         "$(AWSRegion2AMI[$(AWS::Region)][AMI])",
         $(ImageId)
       ]
-      BlockDeviceMappings:
-        - DeviceName: /dev/sda1
-          Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
+      # BlockDeviceMappings:
+      #   - DeviceName: /dev/sda1
+      #     Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
       UserData: !Base64 |
         #!/bin/bash -xv
         exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
