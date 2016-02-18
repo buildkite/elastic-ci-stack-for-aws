@@ -188,35 +188,36 @@ Resources:
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
       UserData: !Base64 |
         #!/bin/bash -xv
+        exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
         cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
         cfn-signal -e \$? -r 'cfn-init finished' \
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
 
-    Metadata:
+    # Metadata:
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
-      AWS::CloudFormation::Init:
-        config:
-          commands:
-            01-download-github-key:
-              test: test -n "$(ProvisionBucket)"
-              command: |
-                aws s3 cp s3://$(ProvisionBucket)/id_rsa_buildkite /root/.ssh/id_rsa
-                chmod 0600 /root/.ssh/id_rsa
-            02-install-buildkite:
-              command: |
-                sed -i "s/$(BuildkiteAgentToken)/INSERT-YOUR-AGENT-TOKEN-HERE/g" /etc/buildkite-agent/buildkite-agent.cfg
-                service buildkite-agent start
-            03-fetch-authorized-users:
-              test: test -z "$(AuthorizedUsersUrl)" && exit 0
-              command: |
-                cat << EOF > /etc/cron.hourly/authorized_keys
-                curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
-                mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
-                chmod 600 /home/ec2-user/.ssh/authorized_keys
-                chown ec2-user: /home/ec2-user/.ssh/authorized_keys
-                EOF
-                chmod +x /etc/cron.hourly/authorized_keys
-                /etc/cron.hourly/authorized_keys
+      # AWS::CloudFormation::Init:
+        # config:
+          # commands:
+            # 01-download-github-key:
+            #   test: test -n "$(ProvisionBucket)"
+            #   command: |
+            #     aws s3 cp s3://$(ProvisionBucket)/id_rsa_buildkite /root/.ssh/id_rsa
+            #     chmod 0600 /root/.ssh/id_rsa
+            # 02-install-buildkite:
+            #   command: |
+            #     sed -i "s/$(BuildkiteAgentToken)/INSERT-YOUR-AGENT-TOKEN-HERE/g" /etc/buildkite-agent/buildkite-agent.cfg
+            #     service buildkite-agent start
+            # 03-fetch-authorized-users:
+            #   test: test -z "$(AuthorizedUsersUrl)" && exit 0
+            #   command: |
+            #     cat << EOF > /etc/cron.hourly/authorized_keys
+            #     curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
+            #     mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
+            #     chmod 600 /home/ec2-user/.ssh/authorized_keys
+            #     chown ec2-user: /home/ec2-user/.ssh/authorized_keys
+            #     EOF
+            #     chmod +x /etc/cron.hourly/authorized_keys
+            #     /etc/cron.hourly/authorized_keys
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -233,7 +234,7 @@ Resources:
         - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT20M
+        Timeout: PT5M
         Count: $(MinSize)
     UpdatePolicy:
       AutoScalingRollingUpdate:
