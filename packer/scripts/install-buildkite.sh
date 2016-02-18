@@ -12,6 +12,10 @@ EOF
 sudo yum -y install buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
+# https://github.com/buildkite/agent/issues/234
+sudo rm /etc/init/buildkite-agent.conf
+sudo cp /usr/share/buildkite-agent/lsb/buildkite-agent.sh /etc/init.d/buildkite-agent
+
 # move custom hooks into place
 chmod +x /tmp/conf/hooks/*
 sudo cp -a /tmp/conf/hooks/* /etc/buildkite-agent/hooks

@@ -42,6 +42,7 @@ stack_delete() {
 
 buildkite-agent artifact download packer.output .
 image_id=$(grep -Eo "us-east-1: (ami-.+)$" "packer.output" | awk '{print $2}')
+echo "Using AMI $image_id"
 
 cat << EOF > config.json
 [

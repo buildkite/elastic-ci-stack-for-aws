@@ -188,8 +188,8 @@ Resources:
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
       UserData: !Base64 |
         #!/bin/bash -xv
-        /usr/local/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
-        /usr/local/bin/cfn-signal -e \$? -r 'cfn-init finished' \
+        cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
+        cfn-signal -e \$? -r 'cfn-init finished' \
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
 
     Metadata:
@@ -202,16 +202,10 @@ Resources:
               command: |
                 aws s3 cp s3://$(ProvisionBucket)/id_rsa_buildkite /root/.ssh/id_rsa
                 chmod 0600 /root/.ssh/id_rsa
-            01-enable-ssh-agent-systemd:
-              command: |
-                systemctl daemon-reload
-                systemctl enable ssh-agent
-                systemctl start ssh-agent
             02-install-buildkite:
               command: |
                 sed -i "s/$(BuildkiteAgentToken)/INSERT-YOUR-AGENT-TOKEN-HERE/g" /etc/buildkite-agent/buildkite-agent.cfg
-                systemctl enable buildkite-agent
-                systemctl start buildkite-agent
+                service buildkite-agent start
             03-fetch-authorized-users:
               test: test -z "$(AuthorizedUsersUrl)" && exit 0
               command: |
