@@ -165,7 +165,9 @@ Resources:
               - s3:GetObjectVersion
               - s3:ListBucket
               - s3:ListBucketVersions
-            Resource: "arn:aws:s3:::$(ProvisionBucket)/id_rsa_buildkite"
+            Resource:
+              - "arn:aws:s3:::$(ProvisionBucket)/id_rsa_buildkite"
+              - "arn:aws:s3:::$(ProvisionBucket)/*.packer"
       Roles:
         - $(IAMRole)
 

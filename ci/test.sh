@@ -41,11 +41,9 @@ stack_delete() {
 }
 
 packer_hash=$(find packer -type f -print0 | xargs -0 sha1sum | cut -b-40 | sort | sha1sum | awk '{print $1}')
-packer_file="packer-${packer_hash}.output"
+packer_file="${packer_hash}.packer"
 
-buildkite-agent artifact download "$packer_file" .
-
-if [[ ! -f "$packer_file" ]] ; then
+if ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
   echo "Failed to find an image id to use"
   exit 1
 fi
