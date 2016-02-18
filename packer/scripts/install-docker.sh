@@ -3,7 +3,7 @@
 sudo yum update -yq
 sudo yum install -yq docker
 sudo usermod -a -G docker ec2-user
-#sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
+sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
 
 sudo service docker start
 sudo docker info
