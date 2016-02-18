@@ -17,7 +17,7 @@ clean:
 	-rm build/*
 
 build-ami:
-	cd packer/; packer build buildkite-ubuntu-15.04.json
+	cd packer/; packer build buildkite-ami.json
 
 upload: build/aws-stack.json
 	aws s3 sync --acl public-read build s3://buildkite-aws-stack/

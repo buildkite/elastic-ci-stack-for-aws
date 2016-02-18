@@ -3,11 +3,12 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "source_ami": "ami-370c225d",
-      "instance_type": "m3.medium",
-      "ssh_username": "ubuntu",
+      "source_ami": "ami-8fcee4e5",
+      "region": "us-east-1",
+      "instance_type": "c4.large",
+      "ssh_username": "ec2-user",
       "ami_name": "buildkite-{{isotime | clean_ami_name}}",
-      "ami_description": "A basic ubuntu image with a Buildkite agent running",
+      "ami_description": "A basic image with a Buildkite agent running",
       "ami_groups": ["all"]
     }
   ],
@@ -16,10 +17,6 @@
       "type": "file",
       "source": "conf",
       "destination": "/tmp"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-aws-tools.sh"
     },
     {
       "type": "shell",
