@@ -40,9 +40,18 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
-buildkite-agent artifact download packer.output .
-image_id=$(grep -Eo "us-east-1: (ami-.+)$" "packer.output" | awk '{print $2}')
-echo "Using AMI $image_id"
+packer_hash=$(tar c . | md5sum | awk '{print $1}')
+packer_file="packer-${packer_hash}.output"
+
+buildkite-agent artifact download "$packer_file" .
+image_id=$(grep -Eo "us-east-1: (ami-.+)$" "$packer_file" | awk '{print $2}')
+
+if [[ -z "$image_id" ]] ; then
+  echo "Failed to find an image id to use"
+  exit 1
+fi
+
+echo "Using AMI $image_id (via $packer_file)"
 
 cat << EOF > config.json
 [
