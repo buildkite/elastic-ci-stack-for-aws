@@ -208,7 +208,7 @@ Resources:
               command: |
                 sed -i -r 's/^(name)=.*/\1="$(AWS::StackName)-%hostname-%n"/' /etc/buildkite-agent/buildkite-agent.cfg
                 sed -i -r 's/^(token)=.*/\1="$(BuildkiteAgentToken)"/' /etc/buildkite-agent/buildkite-agent.cfg
-                sed -i -r 's/^(# )?(meta-data)=.*/\2="queue=$(BuildkiteQueue),docker=$(DockerVersion),stack=$(AWS::StackName)"/' /etc/buildkite-agent/buildkite-agent.cfg
+                sed -i -r 's/^(# )?(meta-data)=.*/\2="queue=$(BuildkiteQueue),docker=1.9.1,stack=$(AWS::StackName)"/' /etc/buildkite-agent/buildkite-agent.cfg
                 service buildkite-agent start
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
