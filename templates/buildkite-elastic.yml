@@ -95,7 +95,7 @@ Parameters:
     Default: ""
 
   ImageId:
-    Type: AWS::EC2::Image::Id
+    Type: String
     Description: The AMI to use, otherwise uses the mapping built in
     Default: ""
 
