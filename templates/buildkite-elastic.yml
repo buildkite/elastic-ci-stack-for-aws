@@ -185,12 +185,11 @@ Resources:
         "$(AWSRegion2AMI[$(AWS::Region)][AMI])",
         $(ImageId)
       ]
-      # BlockDeviceMappings:
-      #   - DeviceName: /dev/sda1
-      #     Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
       UserData: !Base64 |
         #!/bin/bash -xv
-        exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
         /opt/aws/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
         /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' \
           --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
@@ -207,10 +206,10 @@ Resources:
                 chmod 0600 /root/.ssh/id_rsa
             02-install-buildkite:
               command: |
-                sed -i "s/$(BuildkiteAgentToken)/INSERT-YOUR-AGENT-TOKEN-HERE/g" /etc/buildkite-agent/buildkite-agent.cfg
+                sed -i "s/xxx/$(BuildkiteAgentToken)/g" /etc/buildkite-agent/buildkite-agent.cfg
                 service buildkite-agent start
             03-fetch-authorized-users:
-              test: test -z "$(AuthorizedUsersUrl)" && exit 0
+              test: test -n "$(AuthorizedUsersUrl)"
               command: |
                 cat << EOF > /etc/cron.hourly/authorized_keys
                 curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
