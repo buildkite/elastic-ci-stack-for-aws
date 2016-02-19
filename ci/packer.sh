@@ -13,4 +13,11 @@ if ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
   packer validate buildkite-ami.json
   packer build buildkite-ami.json | tee "$packer_file"
   aws s3 cp "${packer_file}" "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}"
+else
+  echo "Skipping packer build, no changes"
 fi
+
+image_id=$(grep -Eo "us-east-1: (ami-.+)$" "$packer_file" | awk '{print $2}')
+echo "AMI for us-east-1 is $image_id"
+
+buildkite-agent meta-data set image_id "$image_id"
