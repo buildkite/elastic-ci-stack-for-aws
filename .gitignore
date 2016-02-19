@@ -1,2 +1,4 @@
 build/
+packer/packer.output
 config.json
+templates/mappings.yml

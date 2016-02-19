@@ -1,3 +1,0 @@
-Mappings:
-  AWSRegion2AMI:
-    us-east-1     : { AMI: ami-94b681fe }

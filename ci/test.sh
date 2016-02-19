@@ -1,4 +1,5 @@
-#!/bin/bash -eu
+#!/bin/bash
+set -eu
 
 stack_status() {
   aws cloudformation describe-stacks --stack-name "$1" --output text --query 'Stacks[].StackStatus'
@@ -40,6 +41,15 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
+
+vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
+subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
+subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+
+image_id=$(buildkite-agent meta-data get image_id)
+echo "Using AMI $image_id"
+
 cat << EOF > config.json
 [
   {
@@ -60,17 +70,33 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "InstanceType",
-    "ParameterValue": "t2.nano"
+    "ParameterValue": "t2.micro"
   },
   {
     "ParameterKey": "ProvisionBucket",
     "ParameterValue": "${BUILDKITE_AWS_STACK_BUCKET}"
+  },
+  {
+    "ParameterKey": "ImageId",
+    "ParameterValue": "${image_id}"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "${vpc_id}"
+  },
+  {
+    "ParameterKey": "Subnets",
+    "ParameterValue": "${subnet_ids}"
+  },
+  {
+    "ParameterKey": "AvailabilityZones",
+    "ParameterValue": "${az_ids}"
   }
 ]
 EOF
 
 export STACK_NAME="buildkite-aws-stack-test-$$"
-make setup clean build
+make setup clean build validate
 
 echo "--- Creating stack $STACK_NAME"
 aws cloudformation create-stack \
