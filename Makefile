@@ -25,7 +25,7 @@ upload: build/aws-stack.json
 create-stack: build/aws-stack.json
 	aws cloudformation create-stack \
 	--output text \
-	--stack-name bk-aws-stack-$(shell date +%Y-%m-%d-%H-%M) \
+	--stack-name buildkite-$(shell date +%Y-%m-%d-%H-%M) \
 	--disable-rollback \
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \

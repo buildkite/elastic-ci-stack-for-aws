@@ -11,7 +11,7 @@ if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
   echo "DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL."
   exit 1
 elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" && -n "${DOCKER_HUB_EMAIL:-}" ]] ; then
-  echo "~~~ Authenticating with docker hub as ${DOCKER_HUB_USER}"
+  echo "~~~ Authenticating with :docker: as ${DOCKER_HUB_USER}"
   docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}" --email="${DOCKER_HUB_EMAIL}"
 elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
   echo "Missing DOCKER_HUB_EMAIL."
@@ -22,7 +22,7 @@ eval `ssh-agent -s`
 
 # startup an ssh-agent with the ssh-key
 if [[ -n "${SSH_KEY_URL:-}" ]] ; then
-  echo "~~~ Downloading github ssh key"
+  echo "~~~ Downloading :github: ssh key"
   TMPKEY=$(mktemp /tmp/buildkite.XXXXXXXXXX)
   trap "rm $TMPKEY" exit
   env -i aws s3 cp ${SSH_KEY_URL:-} $TMPKEY
@@ -30,6 +30,6 @@ if [[ -n "${SSH_KEY_URL:-}" ]] ; then
 fi
 
 if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
-  echo "~~~ Stopping existing docker containers"
+  echo "~~~ Stopping existing :docker: containers"
   docker stop $(docker ps -q)
 fi
