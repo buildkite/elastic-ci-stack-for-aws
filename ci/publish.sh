@@ -9,6 +9,6 @@ Mappings:
     us-east-1     : { AMI: $image_id }
 EOF
 
-make build
+make setup build
 aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
 aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
