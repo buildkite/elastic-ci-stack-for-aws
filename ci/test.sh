@@ -1,4 +1,5 @@
-#!/bin/bash -eu
+#!/bin/bash
+set -eu
 
 stack_status() {
   aws cloudformation describe-stacks --stack-name "$1" --output text --query 'Stacks[].StackStatus'
@@ -43,8 +44,8 @@ stack_delete() {
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
-subnet_ids=$(awk "{print $1}" <<< "$subnets" | tr ' ' ',')
-az_ids=$(awk "{print $2}" <<< "$subnets" | tr ' ' ',')
+subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 
 image_id=$(buildkite-agent meta-data get image_id)
 echo "Using AMI $image_id"

@@ -1,5 +1,5 @@
-#!/bin/bash -eu
-
+#!/bin/bash
+set -eu
 set -o pipefail
 
 cd $(dirname $0)/../packer/
