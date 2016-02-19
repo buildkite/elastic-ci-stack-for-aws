@@ -21,7 +21,7 @@ Parameters:
     Default: elastic
 
   ProvisionBucket:
-    Description: An s3 bucket containing id_rsa_buildkite
+    Description: An s3 bucket containing provisioning files
     Type: String
     Default: ""
 
@@ -48,7 +48,7 @@ Parameters:
   InstanceType:
     Description: The type of instance to use for the agent
     Type: String
-    Default: t2.micro
+    Default: t2.nano
 
   SpotPrice:
     Description: An optional spot price to use for the agents, if 0 normal instances are used
