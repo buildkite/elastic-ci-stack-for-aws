@@ -42,7 +42,7 @@ stack_delete() {
 
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
-subnets=$(aws-vault exec bk-sandbox -- aws ec2 describe-subnets --filters "Name=$vpc_id,Values=vpc-932864f7" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
+subnets=$(aws ec2 describe-subnets --filters "Name=$vpc_id,Values=vpc-932864f7" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk "{print $1}" <<< "$subnets" | tr ' ' ',')
 az_ids=$(awk "{print $2}" <<< "$subnets" | tr ' ' ',')
 
