@@ -12,7 +12,6 @@ Feel free to drop me an email at lachlan@99designs.com with questions, or checko
 
   * An AWS account with EC2 and CloudFormation
   * [Amazon Commandline Interface](http://aws.amazon.com/cli/) installed and working
-  * A git ssh key for checking out code called `id_rsa_buildkite` in a s3 bucket.
 
 ## Install
 
