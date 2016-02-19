@@ -40,6 +40,12 @@ stack_delete() {
   aws cloudformation delete-stack --stack-name "$1"
 }
 
+
+vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
+subnets=$(aws-vault exec bk-sandbox -- aws ec2 describe-subnets --filters "Name=$vpc_id,Values=vpc-932864f7" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
+subnet_ids=$(awk "{print $1}" <<< "$subnets" | tr ' ' ',')
+az_ids=$(awk "{print $2}" <<< "$subnets" | tr ' ' ',')
+
 image_id=$(buildkite-agent meta-data get image_id)
 echo "Using AMI $image_id"
 
@@ -72,6 +78,18 @@ cat << EOF > config.json
   {
     "ParameterKey": "ImageId",
     "ParameterValue": "${image_id}"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "${vpc_id}"
+  },
+  {
+    "ParameterKey": "Subnets",
+    "ParameterValue": "${subnet_ids}"
+  },
+  {
+    "ParameterKey": "AvailabilityZones",
+    "ParameterValue": "${az_ids}"
   }
 ]
 EOF
