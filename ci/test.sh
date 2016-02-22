@@ -73,7 +73,7 @@ cat << EOF > config.json
     "ParameterValue": "t2.micro"
   },
   {
-    "ParameterKey": "ProvisionBucket",
+    "ParameterKey": "SecretsBucket",
     "ParameterValue": "${BUILDKITE_AWS_STACK_BUCKET}"
   },
   {
