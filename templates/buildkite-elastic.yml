@@ -184,11 +184,13 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           commands:
-            01-download-github-key:
-              test: test -n "$(SecretsBucket)"
+            01-write-buildkite-env:
               command: |
-                aws s3 cp s3://$(SecretsBucket)/id_rsa_buildkite /root/.ssh/id_rsa
-                chmod 0600 /root/.ssh/id_rsa
+                cat << EOF > /var/lib/buildkite-agent/cfn-env
+                BUILDKITE_STACK_NAME=$(AWS::StackName)
+                BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
+                EOF
+                chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
             02-install-buildkite:
               command: |
                 sed -i -r 's/^(name)=.*/\1="$(AWS::StackName)-%n"/' /etc/buildkite-agent/buildkite-agent.cfg

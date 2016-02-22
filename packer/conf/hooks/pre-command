@@ -1,0 +1,19 @@
+#!/bin/bash
+set -eu
+
+echo '+++ :docker: Authenticating to Docker Hub'
+
+[[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
+[[ -f ~/.dockercfg ]] && rm ~/.dockercfg
+
+ # handle docker hub authentication
+if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
+  echo "DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL."
+  exit 1
+elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" && -n "${DOCKER_HUB_EMAIL:-}" ]] ; then
+  echo "~~~ Authenticating with docker hub as ${DOCKER_HUB_USER}"
+  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}" --email="${DOCKER_HUB_EMAIL}"
+elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
+  echo "Missing DOCKER_HUB_EMAIL."
+  exit 1
+fi
