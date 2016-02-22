@@ -49,7 +49,7 @@ Two files are specifically looked for, `id_rsa_github`, for checking out your gi
 ### Uploading your Secrets
 
 ```bash
-PASSPHRASE=$(date +%s%N | sha256sum | base64 | head -c 32 ; echo) # generates a 32 character randomish password, use gdate for MacOS
+PASSPHRASE=$(head -c 24  /dev/urandom | base64)
 aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" my_id_rsa_key "s3://my-provision-bucket/myproject/id_rsa_github"
 ```
 
