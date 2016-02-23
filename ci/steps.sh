@@ -13,7 +13,7 @@ steps:
   - wait
 
   - command: ci/test.sh
-    name: "Test :cloudformation: stack"
+    name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack
 
@@ -22,6 +22,8 @@ steps:
   - command: sleep 5
     name: "Running a command on :buildkite: agent"
     timeout_in_minutes: 5
+    env:
+      BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
     agents:
       stack: $stack_name
       queue: $queue_name
