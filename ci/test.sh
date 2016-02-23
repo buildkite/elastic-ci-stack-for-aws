@@ -53,9 +53,12 @@ create_bk_build() {
 bk_build_status() {
   local pipeline="$1"
   local build="$2"
-  curl --show-error --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines/$pipeline/builds/$build" \
-    | awk '/state/ {print $2}' | head -n1 | cut -d\" -f2
+  if ! build_json=$(curl --show-error --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+      "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines/$pipeline/builds/$build") ; then
+    echo $build_json >&2
+    return 1
+  fi
+  awk '/state/ {print $2}' <<< "$build_json" | head -n1 | cut -d\" -f2
 }
 
 bk_build_follow() {
@@ -165,7 +168,7 @@ create_bk_pipeline_body=$(cat << EOF
       "type": "script",
       "name": "Sleep",
       "command": "sleep 10",
-      "agent_query_rules": ["stack_name=${stack_name}"]
+      "agent_query_rules": ["queue=testqueue-$$","stack_name=${stack_name}"]
     }
   ]
 }
