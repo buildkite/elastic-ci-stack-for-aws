@@ -38,7 +38,7 @@ query_bk_agent_api() {
 }
 
 create_bk_pipeline() {
-  curl -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+  curl --silent -f -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
   "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
   -d @-
 }
@@ -124,21 +124,21 @@ else
   echo -e "\033[33;32mAgent connected successfully\033[0m"
 fi
 
-
-cat << REQUEST_BODY |
+echo
+echo "--- Creating buildkite pipeline"
+cat << REQUEST_BODY | create_bk_pipeline
 {
-  "name": "Test Pipeline for $stack_name",
+  "name": "Test Pipeline for ${STACK_NAME}",
   "repository": "git@github.com:buildkite/buildkite-aws-stack.git",
   "steps": [
     {
       "type": "script",
       "name": "Test :rocket:",
       "command": "script/release.sh",
-      "agent_query_rules": ["stack_name=$stack_name"]
+      "agent_query_rules": ["stack_name=${STACK_NAME}"]
     }
   ]
 }
 REQUEST_BODY
-create_bk_pipeline
 
 buildkite-agent meta-data set stack_name "$STACK_NAME"
