@@ -39,8 +39,8 @@ query_bk_agent_api() {
 
 create_bk_pipeline() {
   curl --silent -f -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-  "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
-  -d @-
+    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
+    -d @-
 }
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
@@ -126,9 +126,8 @@ fi
 
 echo
 echo "--- Creating buildkite pipeline"
-set -x
 
-read -r -d '' create_bk_pipeline_body << EOF
+create_bk_pipeline_body=$(cat << EOF
 {
   "name": "${stack_name}",
   "repository": "git@github.com:buildkite/buildkite-aws-stack.git",
@@ -142,6 +141,7 @@ read -r -d '' create_bk_pipeline_body << EOF
   ]
 }
 EOF
+)
 
 if ! pipeline_json=$(create_bk_pipeline <<< "$create_bk_pipeline_body") ; then
   echo -e "\033[33;31mFailed to create buildkite pipeline\033[0m"
