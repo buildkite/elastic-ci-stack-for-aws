@@ -153,5 +153,7 @@ if ! pipeline_slug=$(awk '/slug/ {print $2}' <<< "$pipeline_json" | cut -d\" -f2
   exit 1
 fi
 
+echo "$pipeline_json"
+
 buildkite-agent meta-data set bk_pipeline_slug "$pipeline_slug"
 buildkite-agent meta-data set stack_name "$stack_name"

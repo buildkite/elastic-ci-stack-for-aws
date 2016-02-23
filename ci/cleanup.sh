@@ -1,5 +1,6 @@
 #!/bin/bash
 set -eu
+set -x
 
 stack_name=$(buildkite-agent meta-data get stack_name)
 bk_pipeline_slug=$(buildkite-agent meta-data get bk_pipeline_slug)
