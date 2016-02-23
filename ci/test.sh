@@ -207,6 +207,8 @@ fi
 
 echo "$build_json"
 
+set -x
+
 echo "--- Waiting for build to complete"
 bk_build_follow "$pipeline_slug" "1"
 
