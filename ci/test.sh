@@ -33,12 +33,12 @@ stack_follow() {
 }
 
 query_bk_agent_api() {
-  curl --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+  curl --show-error --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
     "https://api.buildkite.com/v1/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/agents$*"
 }
 
 create_bk_pipeline() {
-  curl --silent -f -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+  curl --show-error --silent -f -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
     "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
     -d @-
 }
@@ -126,7 +126,6 @@ fi
 
 echo
 echo "--- Creating buildkite pipeline"
-set -x
 
 create_bk_pipeline_body=$(cat << EOF
 {
@@ -145,7 +144,6 @@ EOF
 )
 
 if ! pipeline_json=$(create_bk_pipeline <<< "$create_bk_pipeline_body") ; then
-  echo $pipeline_json
   echo -e "\033[33;31mFailed to create buildkite pipeline\033[0m"
   exit 1
 fi
