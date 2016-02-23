@@ -18,3 +18,10 @@ steps:
     branches: master
     agents:
       queue: aws-stack
+
+  - wait
+
+  - command: ci/cleanup.sh
+    name: "Cleanup"
+    agents:
+      queue: aws-stack

@@ -37,10 +37,29 @@ query_bk_agent_api() {
     "https://api.buildkite.com/v1/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/agents$*"
 }
 
-stack_delete() {
-  aws cloudformation delete-stack --stack-name "$1"
-}
+create_bk_stack() {
+  local stack_name="$1"
+  curl -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
+    -d '{
+      "name": "Test Pipeline",
+      "repository": "git@github.com:buildkite/buildkite-aws-stack.git",
+      "steps": [
+        {
+          "type": "script",
+          "name": "Load test :rocket:",
+          "command": "script/release.sh",
+          "branch_configuration": "master",
+          "env": {
+            "AMAZON_S3_BUCKET_NAME": "my-pipeline-releases"
+          },
+          "timeout_in_minutes": 10,
+          "agent_query_rules": ["aws=true"]
+        }
+      ]
+    }'
 
+}
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
@@ -121,7 +140,6 @@ if ! query_bk_agent_api "?name=${STACK_NAME}-1" | grep -C 20 --color=always '"co
   exit 1
 else
   echo -e "\033[33;32mAgent connected successfully\033[0m"
-
-  echo "--- Deleting stack"
-  stack_delete "${STACK_NAME}"
 fi
+
+buildkite-agent meta-data set stack_name "$STACK_NAME"
