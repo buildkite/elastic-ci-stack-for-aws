@@ -4,7 +4,7 @@ set -eu
 download_github_key() {
   local key_url="s3://${BUILDKITE_SECRETS_BUCKET}/$1"
   echo "~~~ Downloading encrypted github ssh key from $key_url" >&2
-  if ! env -i aws s3 cp --sse-c --sse-c-key "$BUILDKITE_SECRETS_KEY" "$key_url" - l ; then
+  if ! env -i aws s3 cp --sse-c AES256 --sse-c-key "$BUILDKITE_SECRETS_KEY" "$key_url" /dev/stdout ; then
     echo "Failed to download and decrypt $key_url"  >&2
     return 1
   fi

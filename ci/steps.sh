@@ -20,7 +20,7 @@ steps:
   - wait
 
   - command: sleep 5
-    name: "Running a command on :buildkite: agent"
+    name: "Run a command on :buildkite: agent"
     timeout_in_minutes: 5
     env:
       BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
