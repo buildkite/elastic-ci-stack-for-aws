@@ -124,6 +124,10 @@ else
   echo -e "\033[33;32mAgent connected successfully\033[0m"
 fi
 
+echo
+echo "--- Creating buildkite pipeline"
+set -x
+
 read -r -d '' create_bk_pipeline_body << EOF
 {
   "name": "${stack_name}",
@@ -139,8 +143,6 @@ read -r -d '' create_bk_pipeline_body << EOF
 }
 EOF
 
-echo
-echo "--- Creating buildkite pipeline"
 if ! pipeline_json=$(create_bk_pipeline <<< "$create_bk_pipeline_body") ; then
   echo -e "\033[33;31mFailed to create buildkite pipeline\033[0m"
   exit 1
