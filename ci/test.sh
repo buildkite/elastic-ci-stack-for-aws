@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu
 
+## -------------------------------------------------
+## functions
+
 stack_status() {
   aws cloudformation describe-stacks --stack-name "$1" --output text --query 'Stacks[].StackStatus'
 }
@@ -32,15 +35,11 @@ stack_follow() {
   fi
 }
 
-query_bk_agent_api() {
-  curl --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-    "https://api.buildkite.com/v1/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/agents$*"
-}
+## -------------------------------------------------
+## read metadata
 
-stack_delete() {
-  aws cloudformation delete-stack --stack-name "$1"
-}
-
+stack_name=$(buildkite-agent meta-data get stack_name)
+queue_name=$(buildkite-agent meta-data get queue_name)
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
@@ -62,7 +61,7 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "BuildkiteQueue",
-    "ParameterValue": "testqueue-$$"
+    "ParameterValue": "${queue_name}"
   },
   {
     "ParameterKey": "KeyName",
@@ -73,7 +72,7 @@ cat << EOF > config.json
     "ParameterValue": "t2.micro"
   },
   {
-    "ParameterKey": "ProvisionBucket",
+    "ParameterKey": "SecretsBucket",
     "ParameterValue": "${BUILDKITE_AWS_STACK_BUCKET}"
   },
   {
@@ -95,33 +94,16 @@ cat << EOF > config.json
 ]
 EOF
 
-export STACK_NAME="buildkite-aws-stack-test-$$"
 make setup clean build validate
 
-echo "--- Creating stack $STACK_NAME"
+echo "--- Creating stack $stack_name"
 aws cloudformation create-stack \
   --output text \
-  --stack-name "$STACK_NAME" \
+  --stack-name "$stack_name" \
   --disable-rollback \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM \
   --parameters "$(cat config.json)"
 
 echo "--- Waiting for stack to complete"
-stack_follow "$STACK_NAME"
-
-echo
-echo "--- Waiting for agents to start"
-sleep 10
-
-echo
-echo "--- Checking agent has registered correctly"
-if ! query_bk_agent_api "?name=${STACK_NAME}-1" | grep -C 20 --color=always '"connection_state": "connected"' ; then
-  echo -e "\033[33;31mAgent failed to connect to buildkite\033[0m"
-  exit 1
-else
-  echo -e "\033[33;32mAgent connected successfully\033[0m"
-
-  echo "--- Deleting stack"
-  stack_delete "${STACK_NAME}"
-fi
+stack_follow "$stack_name"

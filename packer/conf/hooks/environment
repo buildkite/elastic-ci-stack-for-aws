@@ -1,33 +1,29 @@
 #!/bin/bash
 set -eu
 
+download_github_key() {
+  local key_url="s3://${BUILDKITE_SECRETS_BUCKET}/$1"
+  echo "~~~ Downloading encrypted github ssh key from $key_url" >&2
+  if ! env -i aws s3 cp --sse-c AES256 --sse-c-key "$BUILDKITE_SECRETS_KEY" --quiet "$key_url" /dev/stdout ; then
+    echo "Failed to download and decrypt $key_url"  >&2
+    return 1
+  fi
+}
+
 echo '+++ :house_with_garden: Setting up the environment'
 
-[[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
-[[ -f ~/.dockercfg ]] && rm ~/.dockercfg
+source ~/cfn-env
 
- # handle docker hub authentication
-if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
-  echo "DOCKER_HUB_AUTH is no longer supported, use DOCKER_HUB_USER, DOCKER_HUB_PASSWORD and DOCKER_HUB_EMAIL."
-  exit 1
-elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" && -n "${DOCKER_HUB_EMAIL:-}" ]] ; then
-  echo "~~~ Authenticating with :docker: as ${DOCKER_HUB_USER}"
-  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}" --email="${DOCKER_HUB_EMAIL}"
-elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
-  echo "Missing DOCKER_HUB_EMAIL."
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] && [[ -z "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
+  echo "A SecretsBucket was provided, but no encryption key via BUILDKITE_SECRETS_KEY."
   exit 1
 fi
 
-eval `ssh-agent -s`
+SSH_KEY_NAME="${SSH_KEY_NAME:-id_rsa_github}"
 
 # startup an ssh-agent with the ssh-key
-if [[ -n "${SSH_KEY_URL:-}" ]] ; then
-  echo "~~~ Downloading :github: ssh key"
-  TMPKEY=$(mktemp /tmp/buildkite.XXXXXXXXXX)
-  trap "rm $TMPKEY" exit
-  env -i aws s3 cp ${SSH_KEY_URL:-} $TMPKEY
-  ssh-add $TMPKEY
-fi
+eval "$(ssh-agent -s)"
+ssh-add <(download_github_key "$SSH_KEY_NAME")
 
 if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
   echo "~~~ Stopping existing :docker: containers"

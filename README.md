@@ -27,7 +27,7 @@ aws cloudformation create-stack \
 | BuildkiteOrgSlug             | Your Buildkite Organization slug (e.g 99designs)                     |                 |
 | BuildkiteAgentToken          | Your Buildkite Agent Token                                           |                 |
 | BuildkiteQueue               | The Buildkite queue to give the agents                               | elastic         |
-| ProvisionBucket              | An S3 bucket and prefix that contains your credentials/keys          |                 |
+| SecretsBucket                | An S3 bucket (and optional prefix) that contains secrets             |                 |
 | InstanceType                 | The EC2 instance size to launch                                      | t2.nano         |
 | MinSize                      | The minimum number of instances to launch                            | 1               |
 | MaxSize                      | The maximum number of instances to launch                            | 1               |
@@ -38,19 +38,28 @@ Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for more de
 
 Set your [Agent Query Rules](https://buildkite.com/docs/agent/agent-meta-data) to `queue=elastic`, or to whatever `BuildkiteQueue` you provided to your stack.
 
-## Credentials
+## Secrets
 
-Your stack has access to the `ProvisionBucket` parameter you passed in, you can use this to get a GitHub SSH key to the build and soon will be able to use it to get generic credentials there too.
+Your stack has access to the `SecretsBucket` parameter you passed in. This should be used in combination with strong encryption to ensure that your CI secrets (such as Github credentials) are reasonably secure. See the Security section for more details.
 
-For now, upload your GitHub key to the bucket, which should be private by default.
+You provide a key via an environment var in your Buildkite config called `BUILDKITE_SECRETS_KEY` which will be used to decrypt all the files found in the secrets bucket.
 
-For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL`.
+Two files are specifically looked for, `id_rsa_github`, for checking out your git code and optionally `env`, which contains environment variables to expose to the job command.
+
+### Uploading your Secrets
 
 ```bash
-aws s3 cp --acl private my_id_rsa_key "s3://my-provision-bucket/id_rsa_github"
+PASSPHRASE=$(head -c 24  /dev/urandom | base64)
+aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" my_id_rsa_key "s3://my-provision-bucket/myproject/id_rsa_github"
 ```
 
-Then in your Buildkite environment variables, set `SSH_KEY_URL` to `s3://my-provision-bucket/id_rsa_github`.
+For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL` in your `env` file.
+
+## Security
+
+This repository hasn't been reviewed by security researchers, so exercise caution and careful thought with what credentials you make available to your builds. At present anyone with access to your CI machines or commit access to your codebase (including third-party pull-requests) will theoretically have access to your encrypted secrets. Anyone with access to your Buildkite Project Configuration will be able to retrieve the encryption key used to decrypt these. In combination, the attacker would have access to your decrypted secrets.
+
+Presently the EC2 Metadata instance is available via HTTP request from builds, which means that builds have the same IAM access as the basic build host does.
 
 ## Questions?
 

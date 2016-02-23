@@ -20,7 +20,7 @@ Parameters:
     Type: String
     Default: elastic
 
-  ProvisionBucket:
+  SecretsBucket:
     Description: An s3 bucket containing provisioning files
     Type: String
     Default: ""
@@ -98,8 +98,8 @@ Conditions:
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", $(AvailabilityZones) ], "" ]  ]
 
-    UseProvisionBucket:
-      !Not [ !Equals [ $(ProvisionBucket), "" ] ]
+    UseSecretsBucket:
+      !Not [ !Equals [ $(SecretsBucket), "" ] ]
 
     UseDefaultAMI:
       !Equals [ $(ImageId), "" ]
@@ -138,11 +138,11 @@ Resources:
       Roles:
         - $(IAMRole)
 
-  ProvisionBucketPolicies:
+  SecretsBucketPolicies:
     Type: AWS::IAM::Policy
-    Condition: UseProvisionBucket
+    Condition: UseSecretsBucket
     Properties:
-      PolicyName: ProvisionBucketPolicy
+      PolicyName: SecretsBucketPolicy
       PolicyDocument:
         Statement:
           - Effect: Allow
@@ -152,7 +152,7 @@ Resources:
               - s3:ListBucket
               - s3:ListBucketVersions
             Resource:
-              - "arn:aws:s3:::$(ProvisionBucket)/*"
+              - "arn:aws:s3:::$(SecretsBucket)/*"
       Roles:
         - $(IAMRole)
 
@@ -184,11 +184,13 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           commands:
-            01-download-github-key:
-              test: test -n "$(ProvisionBucket)"
+            01-write-buildkite-env:
               command: |
-                aws s3 cp s3://$(ProvisionBucket)/id_rsa_buildkite /root/.ssh/id_rsa
-                chmod 0600 /root/.ssh/id_rsa
+                cat << EOF > /var/lib/buildkite-agent/cfn-env
+                BUILDKITE_STACK_NAME=$(AWS::StackName)
+                BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
+                EOF
+                chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
             02-install-buildkite:
               command: |
                 sed -i -r 's/^(name)=.*/\1="$(AWS::StackName)-%n"/' /etc/buildkite-agent/buildkite-agent.cfg
