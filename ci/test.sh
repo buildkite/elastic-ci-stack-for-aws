@@ -148,7 +148,10 @@ if ! pipeline_json=$(create_bk_pipeline <<< "$create_bk_pipeline_body") ; then
   exit 1
 fi
 
-pipeline_slug=$(awk '/slug/ {print $2}' <<< "$pipeline_json" | sed 's/"//g')
+if ! pipeline_slug=$(awk '/slug/ {print $2}' <<< "$pipeline_json" | cut -d\" -f2) ; then
+  echo -e "\033[33;31mFailed to find a pipeline slug\033[0m"
+  exit 1
+fi
 
 buildkite-agent meta-data set bk_pipeline_slug "$pipeline_slug"
 buildkite-agent meta-data set stack_name "$stack_name"
