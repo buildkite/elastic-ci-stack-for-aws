@@ -207,6 +207,8 @@ fi
 echo "$build_json"
 
 echo "--- Waiting for build to complete"
+
+set -x
 bk_build_follow "$pipeline_slug" "1"
 
 buildkite-agent meta-data set bk_pipeline_slug "$pipeline_slug"
