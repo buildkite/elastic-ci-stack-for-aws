@@ -37,28 +37,10 @@ query_bk_agent_api() {
     "https://api.buildkite.com/v1/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/agents$*"
 }
 
-create_bk_stack() {
-  local stack_name="$1"
+create_bk_pipeline() {
   curl -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
-    -d '{
-      "name": "Test Pipeline",
-      "repository": "git@github.com:buildkite/buildkite-aws-stack.git",
-      "steps": [
-        {
-          "type": "script",
-          "name": "Load test :rocket:",
-          "command": "script/release.sh",
-          "branch_configuration": "master",
-          "env": {
-            "AMAZON_S3_BUCKET_NAME": "my-pipeline-releases"
-          },
-          "timeout_in_minutes": 10,
-          "agent_query_rules": ["aws=true"]
-        }
-      ]
-    }'
-
+  "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
+  -d @-
 }
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
@@ -141,5 +123,22 @@ if ! query_bk_agent_api "?name=${STACK_NAME}-1" | grep -C 20 --color=always '"co
 else
   echo -e "\033[33;32mAgent connected successfully\033[0m"
 fi
+
+
+cat << REQUEST_BODY |
+{
+  "name": "Test Pipeline for $stack_name",
+  "repository": "git@github.com:buildkite/buildkite-aws-stack.git",
+  "steps": [
+    {
+      "type": "script",
+      "name": "Test :rocket:",
+      "command": "script/release.sh",
+      "agent_query_rules": ["stack_name=$stack_name"]
+    }
+  ]
+}
+REQUEST_BODY
+create_bk_pipeline
 
 buildkite-agent meta-data set stack_name "$STACK_NAME"
