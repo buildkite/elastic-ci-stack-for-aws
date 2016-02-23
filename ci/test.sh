@@ -43,6 +43,38 @@ create_bk_pipeline() {
     -d @-
 }
 
+create_bk_build() {
+  local pipeline="$1"
+  curl --show-error --silent -f -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines/$pipeline/builds" \
+    -d @-
+}
+
+bk_build_status() {
+  local pipeline="$1"
+  local build="$2"
+  curl --show-error --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
+    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines/$pipeline/builds/$build" \
+    | awk '/state/ {print $2}' | head -n1 | cut -d\" -f2
+}
+
+bk_build_follow() {
+  local pipeline="$1"
+  local build="$2"
+
+  until status=$(bk_build_status "$pipeline" "$build"); [[ $status =~ (scheduled|running) ]] ; do
+    echo "Build status is $status, continuing to poll"
+    sleep 20
+  done
+  if [[ $status =~ failed ]] ; then
+    stack_events "$1"
+    echo -e "\033[33;31mBuild failed!\033[0m"
+    return 1
+  else
+    echo -e "\033[33;32mBuild completed successfully\033[0m"
+  fi
+}
+
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
@@ -151,6 +183,29 @@ if ! pipeline_slug=$(awk '/slug/ {print $2}' <<< "$pipeline_json" | cut -d\" -f2
 fi
 
 echo "$pipeline_json"
+
+echo "--- Creating buildkite build in $pipeline_slug"
+create_bk_build_body=$(cat << EOF
+{
+  "commit": "${BUILDKITE_COMMIT}",
+  "branch": "${BUILDKITE_BRANCH}",
+  "message": "Testing all the things :rocket:",
+  "env": {
+    "MY_ENV_VAR": "some_value"
+  }
+}
+EOF
+)
+
+if ! build_json=$(create_bk_build "$pipeline_slug" <<< "$create_bk_build_body") ; then
+  echo -e "\033[33;31mFailed to create buildkite build\033[0m"
+  exit 1
+fi
+
+echo "$build_json"
+
+echo "--- Waiting for build to complete"
+bk_build_follow "$pipeline_slug" "1"
 
 buildkite-agent meta-data set bk_pipeline_slug "$pipeline_slug"
 buildkite-agent meta-data set stack_name "$stack_name"
