@@ -10,13 +10,14 @@ if [[ -n "$BUILDKITE_SECRETS_BUCKET" ]] && [[ -z "$BUILDKITE_SECRETS_KEY" ]] ; t
   exit 1
 fi
 
-SSH_KEY_URL="${SSH_KEY_URL:-s3://${BUILDKITE_SECRETS_BUCKET}/id_rsa_github}"
+SSH_KEY_NAME="${SSH_KEY_NAME:-id_rsa_github}"
+SSH_KEY_URL="s3://${BUILDKITE_SECRETS_BUCKET}/$SSH_KEY_NAME"
 
 if ! github_ssh_key=$(env -i aws s3 cp --sse-c --sse-c-key "$BUILDKITE_SECRETS_KEY" "$SSH_KEY_URL") ; then
   echo "Failed to download and decrypt $SSH_KEY_URL"
 fi
 
-eval `ssh-agent -s`
+eval "$(ssh-agent -s)"
 
 # startup an ssh-agent with the ssh-key
 if [[ -n "${SSH_KEY_URL:-}" ]] ; then
