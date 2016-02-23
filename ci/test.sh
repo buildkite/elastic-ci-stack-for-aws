@@ -96,20 +96,20 @@ cat << EOF > config.json
 ]
 EOF
 
-export STACK_NAME="buildkite-aws-stack-test-$$"
+export stack_name="buildkite-aws-stack-test-$$"
 make setup clean build validate
 
-echo "--- Creating stack $STACK_NAME"
+echo "--- Creating stack $stack_name"
 aws cloudformation create-stack \
   --output text \
-  --stack-name "$STACK_NAME" \
+  --stack-name "$stack_name" \
   --disable-rollback \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM \
   --parameters "$(cat config.json)"
 
 echo "--- Waiting for stack to complete"
-stack_follow "$STACK_NAME"
+stack_follow "$stack_name"
 
 echo
 echo "--- Waiting for agents to start"
@@ -117,28 +117,36 @@ sleep 10
 
 echo
 echo "--- Checking agent has registered correctly"
-if ! query_bk_agent_api "?name=${STACK_NAME}-1" | grep -C 20 --color=always '"connection_state": "connected"' ; then
+if ! query_bk_agent_api "?name=${stack_name}-1" | grep -C 20 --color=always '"connection_state": "connected"' ; then
   echo -e "\033[33;31mAgent failed to connect to buildkite\033[0m"
   exit 1
 else
   echo -e "\033[33;32mAgent connected successfully\033[0m"
 fi
 
-echo
-echo "--- Creating buildkite pipeline"
-cat << REQUEST_BODY | create_bk_pipeline
+read -r -d '' create_bk_pipeline_body << EOF
 {
-  "name": "Test Pipeline for ${STACK_NAME}",
+  "name": "${stack_name}",
   "repository": "git@github.com:buildkite/buildkite-aws-stack.git",
   "steps": [
     {
       "type": "script",
       "name": "Test :rocket:",
       "command": "script/release.sh",
-      "agent_query_rules": ["stack_name=${STACK_NAME}"]
+      "agent_query_rules": ["stack_name=${stack_name}"]
     }
   ]
 }
-REQUEST_BODY
+EOF
 
-buildkite-agent meta-data set stack_name "$STACK_NAME"
+echo
+echo "--- Creating buildkite pipeline"
+if ! pipeline_json=$(create_bk_pipeline <<< "$create_bk_pipeline_body") ; then
+  echo -e "\033[33;31mFailed to create buildkite pipeline\033[0m"
+  exit 1
+fi
+
+pipeline_slug=$(awk '/slug/ {print $2}' <<< "$pipeline_json" | sed 's/"//g')
+
+buildkite-agent meta-data set bk_pipeline_slug "$pipeline_slug"
+buildkite-agent meta-data set stack_name "$stack_name"
