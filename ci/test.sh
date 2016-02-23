@@ -126,6 +126,7 @@ fi
 
 echo
 echo "--- Creating buildkite pipeline"
+set -x
 
 create_bk_pipeline_body=$(cat << EOF
 {
@@ -144,6 +145,7 @@ EOF
 )
 
 if ! pipeline_json=$(create_bk_pipeline <<< "$create_bk_pipeline_body") ; then
+  echo $pipeline_json
   echo -e "\033[33;31mFailed to create buildkite pipeline\033[0m"
   exit 1
 fi
