@@ -65,16 +65,15 @@ bk_build_follow() {
   local pipeline="$1"
   local build="$2"
 
-  until status=$(bk_build_status "$pipeline" "$build"); [[ $status =~ (scheduled|running) ]] ; do
+  until status=$(bk_build_status "$pipeline" "$build"); [[ $status =~ (passed|failed|canceled|skipped|not_run) ]] ; do
     echo "Build status is $status, continuing to poll"
     sleep 20
   done
-  if [[ $status =~ failed ]] ; then
-    stack_events "$1"
-    echo -e "\033[33;31mBuild failed!\033[0m"
-    return 1
-  else
+  if [[ $status =~ passed ]] ; then
     echo -e "\033[33;32mBuild completed successfully\033[0m"
+  else
+    echo -e "\033[33;31mBuild $status!\033[0m"
+    return 1
   fi
 }
 
@@ -168,7 +167,7 @@ create_bk_pipeline_body=$(cat << EOF
       "type": "script",
       "name": "Sleep",
       "command": "sleep 10",
-      "agent_query_rules": ["queue=testqueue-$$","stack_name=${stack_name}"]
+      "agent_query_rules": ["queue=testqueue-$$","stack=${stack_name}"]
     }
   ]
 }
@@ -206,8 +205,6 @@ if ! build_json=$(create_bk_build "$pipeline_slug" <<< "$create_bk_build_body") 
 fi
 
 echo "$build_json"
-
-set -x
 
 echo "--- Waiting for build to complete"
 bk_build_follow "$pipeline_slug" "1"
