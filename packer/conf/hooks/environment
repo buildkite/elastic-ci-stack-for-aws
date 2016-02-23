@@ -14,7 +14,7 @@ echo '+++ :house_with_garden: Setting up the environment'
 
 source ~/cfn-env
 
-if [[ -n "$BUILDKITE_SECRETS_BUCKET" ]] && [[ -z "$BUILDKITE_SECRETS_KEY" ]] ; then
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] && [[ -z "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
   echo "A SecretsBucket was provided, but no encryption key via BUILDKITE_SECRETS_KEY."
   exit 1
 fi

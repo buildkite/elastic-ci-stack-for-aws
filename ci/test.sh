@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu
 
+## -------------------------------------------------
+## functions
+
 stack_status() {
   aws cloudformation describe-stacks --stack-name "$1" --output text --query 'Stacks[].StackStatus'
 }
@@ -32,50 +35,11 @@ stack_follow() {
   fi
 }
 
-query_bk_agent_api() {
-  curl --show-error --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-    "https://api.buildkite.com/v1/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/agents$*"
-}
+## -------------------------------------------------
+## read metadata
 
-create_bk_pipeline() {
-  curl --show-error --silent -f -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines" \
-    -d @-
-}
-
-create_bk_build() {
-  local pipeline="$1"
-  curl --show-error --silent -f -X POST -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-    "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines/$pipeline/builds" \
-    -d @-
-}
-
-bk_build_status() {
-  local pipeline="$1"
-  local build="$2"
-  if ! build_json=$(curl --show-error --silent -f -H "Authorization: Bearer $BUILDKITE_AWS_STACK_API_TOKEN" \
-      "https://api.buildkite.com/v2/organizations/$BUILDKITE_AWS_STACK_ORG_SLUG/pipelines/$pipeline/builds/$build") ; then
-    echo $build_json >&2
-    return 1
-  fi
-  awk '/state/ {print $2}' <<< "$build_json" | head -n1 | cut -d\" -f2
-}
-
-bk_build_follow() {
-  local pipeline="$1"
-  local build="$2"
-
-  until status=$(bk_build_status "$pipeline" "$build"); [[ $status =~ (passed|failed|canceled|skipped|not_run) ]] ; do
-    echo "Build status is $status, continuing to poll"
-    sleep 20
-  done
-  if [[ $status =~ passed ]] ; then
-    echo -e "\033[33;32mBuild completed successfully\033[0m"
-  else
-    echo -e "\033[33;31mBuild $status!\033[0m"
-    return 1
-  fi
-}
+stack_name=$(buildkite-agent meta-data get stack_name)
+queue_name=$(buildkite-agent meta-data get queue_name)
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
@@ -97,7 +61,7 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "BuildkiteQueue",
-    "ParameterValue": "testqueue-$$"
+    "ParameterValue": "${queue_name}"
   },
   {
     "ParameterKey": "KeyName",
@@ -130,7 +94,6 @@ cat << EOF > config.json
 ]
 EOF
 
-export stack_name="buildkite-aws-stack-test-$$"
 make setup clean build validate
 
 echo "--- Creating stack $stack_name"
@@ -144,72 +107,3 @@ aws cloudformation create-stack \
 
 echo "--- Waiting for stack to complete"
 stack_follow "$stack_name"
-
-echo
-echo "--- Waiting for agents to start"
-sleep 10
-
-echo "--- Checking agent has registered correctly"
-if ! query_bk_agent_api "?name=${stack_name}-1" | grep -C 20 --color=always '"connection_state": "connected"' ; then
-  echo -e "\033[33;31mAgent failed to connect to buildkite\033[0m"
-  exit 1
-else
-  echo -e "\033[33;32mAgent connected successfully\033[0m"
-fi
-
-echo "--- Creating buildkite pipeline"
-create_bk_pipeline_body=$(cat << EOF
-{
-  "name": "${stack_name}",
-  "repository": "git@github.com:buildkite/buildkite-aws-stack.git",
-  "steps": [
-    {
-      "type": "script",
-      "name": "Sleep",
-      "command": "sleep 10",
-      "agent_query_rules": ["queue=testqueue-$$","stack=${stack_name}"]
-    }
-  ]
-}
-EOF
-)
-
-if ! pipeline_json=$(create_bk_pipeline <<< "$create_bk_pipeline_body") ; then
-  echo -e "\033[33;31mFailed to create buildkite pipeline\033[0m"
-  exit 1
-fi
-
-if ! pipeline_slug=$(awk '/slug/ {print $2}' <<< "$pipeline_json" | cut -d\" -f2) ; then
-  echo -e "\033[33;31mFailed to find a pipeline slug\033[0m"
-  exit 1
-fi
-
-echo "$pipeline_json"
-
-echo "--- Creating buildkite build in $pipeline_slug"
-create_bk_build_body=$(cat << EOF
-{
-  "commit": "${BUILDKITE_COMMIT}",
-  "branch": "${BUILDKITE_BRANCH}",
-  "message": "Testing all the things :rocket:",
-  "env": {
-    "MY_ENV_VAR": "some_value"
-  }
-}
-EOF
-)
-
-if ! build_json=$(create_bk_build "$pipeline_slug" <<< "$create_bk_build_body") ; then
-  echo -e "\033[33;31mFailed to create buildkite build\033[0m"
-  exit 1
-fi
-
-echo "$build_json"
-
-echo "--- Waiting for build to complete"
-
-set -x
-bk_build_follow "$pipeline_slug" "1"
-
-buildkite-agent meta-data set bk_pipeline_slug "$pipeline_slug"
-buildkite-agent meta-data set stack_name "$stack_name"
