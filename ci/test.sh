@@ -115,7 +115,6 @@ echo
 echo "--- Waiting for agents to start"
 sleep 10
 
-echo
 echo "--- Checking agent has registered correctly"
 if ! query_bk_agent_api "?name=${stack_name}-1" | grep -C 20 --color=always '"connection_state": "connected"' ; then
   echo -e "\033[33;31mAgent failed to connect to buildkite\033[0m"
@@ -124,9 +123,7 @@ else
   echo -e "\033[33;32mAgent connected successfully\033[0m"
 fi
 
-echo
 echo "--- Creating buildkite pipeline"
-
 create_bk_pipeline_body=$(cat << EOF
 {
   "name": "${stack_name}",
@@ -134,8 +131,8 @@ create_bk_pipeline_body=$(cat << EOF
   "steps": [
     {
       "type": "script",
-      "name": "Test :rocket:",
-      "command": "script/release.sh",
+      "name": "Sleep",
+      "command": "sleep 10",
       "agent_query_rules": ["stack_name=${stack_name}"]
     }
   ]
