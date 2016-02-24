@@ -1,6 +1,8 @@
 # Buildkite AWS Stack
 
-An Amazon CloudFormation stack for running an auto-scaling group of EC2 instances with Buildkite agents on them. Designed to support multiple different projects sharing a single stack and isolated builds of third-party pull-requests.
+[![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
+
+Create an auto-scaling build cluster on AWS/VPC in under 10 minutes. Designed to support multiple different projects sharing a single stack and isolated builds of third-party pull-requests.
 
 ## Getting Started
 
@@ -66,3 +68,4 @@ Presently the EC2 Metadata instance is available via HTTP request from builds, w
 This is experimental and still being actively developed, but under heavy use at 99designs.
 
 Feel free to drop me an email at lachlan@99designs.com with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
+
