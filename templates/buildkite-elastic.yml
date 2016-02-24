@@ -157,7 +157,7 @@ Resources:
             Action:
               - s3:ListObjects
             Resource:
-              - "arn:aws:s3:::$(SecretsBucket)"
+              - "arn:aws:s3:::$(SecretsBucket)/"
       Roles:
         - $(IAMRole)
 
