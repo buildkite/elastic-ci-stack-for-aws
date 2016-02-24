@@ -152,7 +152,7 @@ Resources:
               - s3:List*
             Resource:
               - "arn:aws:s3:::$(SecretsBucket)/*"
-              - "arn:aws:s3:::$(SecretsBucket)/"
+              - "arn:aws:s3:::$(SecretsBucket)"
       Roles:
         - $(IAMRole)
 
