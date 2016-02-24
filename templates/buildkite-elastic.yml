@@ -153,6 +153,11 @@ Resources:
               - s3:ListBucketVersions
             Resource:
               - "arn:aws:s3:::$(SecretsBucket)/*"
+          - Effect: Allow
+            Action:
+              - s3:ListObjects
+            Resource:
+              - "arn:aws:s3:::$(SecretsBucket)"
       Roles:
         - $(IAMRole)
 
