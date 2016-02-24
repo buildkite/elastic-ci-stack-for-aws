@@ -85,6 +85,14 @@ Parameters:
     Description: The AMI to use, otherwise uses the mapping built in
     Default: ""
 
+  AutoscaleStrategy:
+    Type: String
+    Description: The strategy to use for autoscaling
+    Default: cpu
+    AllowedValues:
+      - cpu
+      - scheduledjobs
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -103,6 +111,13 @@ Conditions:
 
     UseDefaultAMI:
       !Equals [ $(ImageId), "" ]
+
+    ScaleOnScheduledJobs:
+      !Equals [ $(AutoscaleStrategy), "scheduledjobs" ]
+
+    ScaleOnCPU:
+      !Equals [ $(AutoscaleStrategy), "cpu" ]
+
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies

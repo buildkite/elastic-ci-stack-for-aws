@@ -5,7 +5,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown: 60
+      Cooldown: 10
       ScalingAdjustment: 1
 
   AgentScaleDownPolicy:
@@ -13,19 +13,20 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown : 60
+      Cooldown : 10
       ScalingAdjustment : -1
 
   CPUAlarmHigh:
    Type: AWS::CloudWatch::Alarm
+   Condition: ScaleOnCPU
    Properties:
-      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      AlarmDescription: Scale-up if CPU > 40% for 5 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
       Period: 300
       EvaluationPeriods: 2
-      Threshold: 90
+      Threshold: 40
       AlarmActions: [ $(AgentScaleUpPolicy) ]
       Dimensions:
         - Name: AutoScalingGroupName
@@ -34,16 +35,52 @@ Resources:
 
   CPUAlarmLow:
    Type: AWS::CloudWatch::Alarm
+   Condition: ScaleOnCPU
    Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-down if CPU < 5% for 5 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
       Period: 300
       EvaluationPeriods: 2
-      Threshold: 70
+      Threshold: 5
       AlarmActions: [ $(AgentScaleDownPolicy) ]
       Dimensions:
         - Name: AutoScalingGroupName
           Value: $(AgentAutoScaleGroup)
+      ComparisonOperator: LessThanThreshold
+
+
+  ScheduledJobsAlarmHigh:
+   Type: AWS::CloudWatch::Alarm
+   Condition: ScaleOnScheduledJobs
+   Properties:
+      AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
+      MetricName: ScheduledJobsCount
+      Namespace: Buildkite
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      AlarmActions: [ $(AgentScaleUpPolicy) ]
+      Dimensions:
+        - Name: Queue
+          Value: $(BuildkiteQueue)
+      ComparisonOperator: GreaterThanThreshold
+
+  ScheduledJobsAlarmLow:
+   Type: AWS::CloudWatch::Alarm
+   Condition: ScaleOnScheduledJobs
+   Properties:
+      AlarmDescription: Scale-down if ScheduledJobs == 0 for 1 minute
+      MetricName: ScheduledJobsCount
+      Namespace: Buildkite
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      AlarmActions: [ $(AgentScaleDownPolicy) ]
+      Dimensions:
+        - Name: Queue
+          Value: $(BuildkiteQueue)
       ComparisonOperator: LessThanThreshold
