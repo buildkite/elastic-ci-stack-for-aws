@@ -1,15 +1,6 @@
 #!/bin/bash
 set -eu
 
-download_github_key() {
-  local key_url="s3://${BUILDKITE_SECRETS_BUCKET}/$1"
-  echo "~~~ Downloading encrypted github ssh key from $key_url" >&2
-  if ! env -i aws s3 cp --sse-c AES256 --sse-c-key "$BUILDKITE_SECRETS_KEY" --quiet "$key_url" /dev/stdout ; then
-    echo "Failed to download and decrypt $key_url"  >&2
-    return 1
-  fi
-}
-
 echo '+++ :house_with_garden: Setting up the environment'
 
 source ~/cfn-env
@@ -19,11 +10,20 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] && [[ -z "${BUILDKITE_SECRETS_KEY:-}
   exit 1
 fi
 
-SSH_KEY_NAME="${SSH_KEY_NAME:-id_rsa_github}"
-
-# startup an ssh-agent with the ssh-key
 eval "$(ssh-agent -s)"
-ssh-add <(download_github_key "$SSH_KEY_NAME")
+
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
+  [[ -d ~/secrets ]] || mkdir -p ~/secrets
+
+  echo "+++ Downloading secrets from $BUILDKITE_SECRETS_BUCKET"
+  env -i aws s3 sync --delete --sse-c AES256 --sse-c-key "${BUILDKITE_SECRETS_KEY}" "s3://${BUILDKITE_SECRETS_BUCKET}" ~/secrets/
+
+  ssh_key_file="$HOME/secrets/${SSH_KEY_NAME:-id_rsa_github}"
+  [[ -f $ssh_key_file ]] && ssh-add "$ssh_key_file"
+
+  env_file="$HOME/secrets/env"
+  [[ -f $env_file ]] && eval "$(cat "$env_file")"
+fi
 
 if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
   echo "~~~ Stopping existing :docker: containers"
