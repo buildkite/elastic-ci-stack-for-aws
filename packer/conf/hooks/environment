@@ -1,6 +1,10 @@
 #!/bin/bash
 set -eu
 
+s3_download() {
+  env -i aws s3 cp --sse-c AES256 --sse-c-key "${BUILDKITE_SECRETS_KEY}" "${BUILDKITE_SECRETS_BUCKET}/$1" $2
+}
+
 echo '+++ :house_with_garden: Setting up the environment'
 
 source ~/cfn-env
@@ -15,14 +19,15 @@ eval "$(ssh-agent -s)"
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   [[ -d ~/secrets ]] || mkdir -p ~/secrets
 
-  echo "+++ Downloading secrets from $BUILDKITE_SECRETS_BUCKET"
-  env -i aws s3 sync --delete --sse-c AES256 --sse-c-key "${BUILDKITE_SECRETS_KEY}" "s3://${BUILDKITE_SECRETS_BUCKET}" ~/secrets/
+  echo "Downloading ssh key from $BUILDKITE_SECRETS_BUCKET"
+  if s3_download "${SSH_KEY_NAME:-id_rsa_github}" ~/secrets/id_rsa_github ; then
+    ssh-add ~/secrets/id_rsa_github
+  fi
 
-  ssh_key_file="$HOME/secrets/${SSH_KEY_NAME:-id_rsa_github}"
-  [[ -f $ssh_key_file ]] && ssh-add "$ssh_key_file"
-
-  env_file="$HOME/secrets/env"
-  [[ -f $env_file ]] && eval "$(cat "$env_file")"
+  echo "Downloading env from $BUILDKITE_SECRETS_BUCKET"
+  if s3_download "env" ~/secrets/env ; then
+    source ~/secrets/env
+  fi
 fi
 
 if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
