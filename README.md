@@ -33,6 +33,9 @@ aws cloudformation create-stack \
 | InstanceType                 | The EC2 instance size to launch                                      | t2.nano         |
 | MinSize                      | The minimum number of instances to launch                            | 1               |
 | MaxSize                      | The maximum number of instances to launch                            | 1               |
+| SpotPrice                    | An optional price to bid for spot instances (0 means non-spot)       | 0               |
+| AutoscalingStrategy          | Either cpu or scheduledjobs (see [Autoscaling](#autoscaling))        | cpu             |
+
 
 Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for more details.
 
@@ -42,7 +45,7 @@ Set your [Agent Query Rules](https://buildkite.com/docs/agent/agent-meta-data) t
 
 ## Secrets
 
-Your stack has access to the `SecretsBucket` parameter you passed in. This should be used in combination with strong encryption to ensure that your CI secrets (such as Github credentials) are reasonably secure. See the Security section for more details.
+Your stack has access to the `SecretsBucket` parameter you passed in. This should be used in combination with strong encryption to ensure that your CI secrets (such as Github credentials) are reasonably secure. See the [Security](#security) section for more details.
 
 You provide a key via an environment var in your Buildkite config called `BUILDKITE_SECRETS_KEY` which will be used to decrypt all the files found in the secrets bucket.
 
@@ -56,6 +59,12 @@ aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" my_id_rsa_key "s3://my
 ```
 
 For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL` in your `env` file.
+
+## Autoscaling
+
+Autoscaling behaviour is determined by a number of stack parameters. By default your stack will have between 1 and 6 instances and scale based on the CPU load of the instances. The threshold for CPU scaling is [40% cpu load for 5 minutes](templates/autoscale.yml), which at present isn't customizable.
+
+If you want to get fancy, you can set up the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) which publishes custom CloudWatch metrics every 5 minutes. If you set the stack param `AutoscalingStrategy` to `scheduledjobs` then your stack will be scaled based on the number of scheduled jobs in it's queue (determined by `BuildkiteQueue`). You can even set the `MinSize` to 0 if you want to keep costs down, but be mindful of the 5 minute lag time on a new instance spinning up to run your build.
 
 ## Security
 
