@@ -1,4 +1,3 @@
 #!/bin/bash
 
 ssh-agent -k
-[[ -d ~/secrets ]] || rm -rf ~/secrets
