@@ -2,11 +2,11 @@
 set -eu
 
 s3_exists() {
-  env -i aws s3 ls "${BUILDKITE_SECRETS_BUCKET}/$1" "$2" &>/dev/null
+  env -i aws s3 ls "s3://${BUILDKITE_SECRETS_BUCKET}/$1" "$2" &>/dev/null
 }
 
 s3_download() {
-  env -i aws s3 cp --quiet --sse-c AES256 --sse-c-key "${BUILDKITE_SECRETS_KEY}" "${BUILDKITE_SECRETS_BUCKET}/$1" /dev/stdout
+  env -i aws s3 cp --quiet --sse-c AES256 --sse-c-key "${BUILDKITE_SECRETS_KEY}" "s3://${BUILDKITE_SECRETS_BUCKET}/$1" /dev/stdout
 }
 
 echo '+++ :house_with_garden: Setting up the environment'
