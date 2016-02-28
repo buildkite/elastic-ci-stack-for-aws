@@ -2,7 +2,7 @@
 set -eu
 
 s3_exists() {
-  env -i aws s3 ls "s3://${BUILDKITE_SECRETS_BUCKET}/$1" "$2" &>/dev/null
+  env -i aws s3 ls "s3://${BUILDKITE_SECRETS_BUCKET}/$1" &>/dev/null
 }
 
 s3_download() {
