@@ -162,12 +162,12 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - s3:GetObject
-              - s3:GetObjectVersion
-              - s3:ListBucket
-              - s3:ListBucketVersions
+              - s3:Get*
+              - s3:Get
+              - s3:List*
             Resource:
               - "arn:aws:s3:::$(SecretsBucket)/*"
+              - "arn:aws:s3:::$(SecretsBucket)"
       Roles:
         - $(IAMRole)
 
