@@ -1,33 +1,44 @@
 #!/bin/bash
-set -eu
+set -eux
 
 s3_exists() {
-  env -i aws s3 ls "s3://${BUILDKITE_SECRETS_BUCKET}/$1" &>/dev/null
+  env -i aws s3 ls "$1" &>/dev/null
 }
 
 s3_download() {
-  env -i aws s3 cp --quiet --sse-c AES256 --sse-c-key "${BUILDKITE_SECRETS_KEY}" "s3://${BUILDKITE_SECRETS_BUCKET}/$1" /dev/stdout
+  local aws_s3_args=("--quiet")
+
+  if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
+    aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
+  fi
+
+  echo env -i aws s3 cp ${aws_s3_args[@]} "$1" /dev/stdout
 }
 
 echo '+++ :house_with_garden: Setting up the environment'
 
-source ~/cfn-env
-
-if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] && [[ -z "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
-  echo "A SecretsBucket was provided, but no encryption key via BUILDKITE_SECRETS_KEY."
-  exit 1
-fi
-
+eval "$(cat ~/cfn-env)"
 eval "$(ssh-agent -s)"
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
 
-  echo "Downloading ssh key from $BUILDKITE_SECRETS_BUCKET"
-  ssh-add <(s3_download "${SSH_KEY_NAME:-id_rsa_github}")
+  # allow env to override paths
+  secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
+  secrets_url_base="s3://${BUILDKITE_SECRETS_BUCKET}/${secrets_prefix}"
+  ssh_key_url="${secrets_url_base}/${SSH_KEY_NAME:-id_rsa_github}"
+  env_url="${secrets_url_base}/env"
 
-  if s3_exists "env" ; then
-     echo "Downloading env from $BUILDKITE_SECRETS_BUCKET"
-    eval "$(s3_download env)"
+  if ! s3_exists "$ssh_key_url" ; then
+    echo "Failed to download $ssh_key_url"
+    exit 1
+  fi
+
+  echo "Downloading ssh key from $ssh_key_url"
+  ssh-add <(s3_download "$ssh_key_url")
+
+  if s3_exists "$env_url" ; then
+    echo "Downloading env from $env_url"
+    eval "$(s3_download $env_url)"
   fi
 fi
 
