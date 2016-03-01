@@ -45,11 +45,13 @@ Set your [Agent Query Rules](https://buildkite.com/docs/agent/agent-meta-data) t
 
 ## Secrets
 
-Your stack has access to the `SecretsBucket` parameter you passed in. This should be used in combination with strong encryption to ensure that your CI secrets (such as Github credentials) are reasonably secure. See the [Security](#security) section for more details.
-
-You provide a key via an environment var in your Buildkite config called `BUILDKITE_SECRETS_KEY` which will be used to decrypt all the files found in the secrets bucket.
+Your stack has access to the `SecretsBucket` parameter you passed in. This should be used in combination with server-side object encryption to ensure that your CI secrets (such as Github credentials) are reasonably secure. See the [Security](#security) section for more details.
 
 Two files are specifically looked for, `id_rsa_github`, for checking out your git code and optionally `env`, which contains environment variables to expose to the job command.
+
+By default, builds will look for `s3://{SecretsBucket}/{PipelineSlug}/filename`.  You can override the `{PipelineSlug}` part with the `BUILDKITE_SECRETS_PREFIX` environment variable.
+
+You should encrypt your objects with a project-specific key and provide it in `BUILDKITE_SECRETS_KEY` which will be used to decrypt all the files found in the secrets bucket.
 
 ### Uploading your Secrets
 
