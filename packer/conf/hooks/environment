@@ -1,8 +1,8 @@
 #!/bin/bash
-set -eux
+set -eu
 
 s3_exists() {
-  env -i aws s3 ls "$1" &>/dev/null
+  env -i aws s3 ls "$1" --summarize --human-readable
 }
 
 s3_download() {
