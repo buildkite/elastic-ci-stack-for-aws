@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 
 s3_exists() {
   env -i aws s3 ls "$1" --summarize --human-readable
@@ -46,3 +46,6 @@ if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
   echo "~~~ Stopping existing :docker: containers"
   docker stop $(docker ps -q)
 fi
+
+unset BUILDKITE_SECRETS_BUCKET
+unset BUILDKITE_SECRETS_KEY
