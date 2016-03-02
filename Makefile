@@ -18,6 +18,7 @@ setup:
 
 clean:
 	-rm build/*
+	-rm templates/mappings.yml
 
 build-ami:
 	cd packer/; packer build buildkite-ami.json
