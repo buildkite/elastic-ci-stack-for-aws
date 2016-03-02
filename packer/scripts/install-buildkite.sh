@@ -10,7 +10,6 @@ priority=1
 EOF
 
 sudo yum -y install buildkite-agent
-sudo usermod -a -G docker buildkite-agent
 
 # https://github.com/buildkite/agent/issues/234
 if [ -f /etc/init/buildkite-agent.conf ]; then
