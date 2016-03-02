@@ -24,11 +24,11 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-docker.sh"
+      "script": "scripts/install-buildkite.sh"
     },
     {
       "type": "shell",
-      "script": "scripts/install-buildkite.sh"
+      "script": "scripts/install-docker.sh"
     },
     {
       "type": "shell",
