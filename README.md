@@ -53,11 +53,21 @@ By default, builds will look for `s3://{SecretsBucket}/{PipelineSlug}/filename`.
 
 You should encrypt your objects with a project-specific key and provide it in `BUILDKITE_SECRETS_KEY` which will be used to decrypt all the files found in the secrets bucket.
 
-### Uploading your Secrets
+### Creating a new project
 
 ```bash
+# generate a deploy key for your project
+ssh-keygen -t rsa -b 4096 -f id_rsa_github
+pbcopy < id_rsa_github.pub # paste this into your github deploy key
+
+# upload the private key, encrypted
 PASSPHRASE=$(head -c 24  /dev/urandom | base64)
-aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" my_id_rsa_key "s3://my-provision-bucket/myproject/id_rsa_github"
+aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_github "s3://my-provision-bucket/myproject/id_rsa_github"
+pbcopy <<< "$PASSPHRASE" # paste passphrase into buildkite env as BUILDKITE_SECRETS_KEY
+
+# cleanup
+unset PASSPHRASE
+rm id_rsa_github*
 ```
 
 For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL` in your `env` file.
