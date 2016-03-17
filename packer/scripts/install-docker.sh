@@ -1,9 +1,20 @@
 #!/bin/bash -eu
 
+sudo tee /etc/yum.repos.d/docker.repo <<-'EOF'
+[dockerrepo]
+name=Docker Repository
+baseurl=https://yum.dockerproject.org/repo/main/centos/$releasever/
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.dockerproject.org/gpg
+EOF
+
 sudo yum update -yq
-sudo yum install -yq docker
+sudo yum install -yq docker-engine
 sudo usermod -a -G docker ec2-user
 sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
+sudo cp /tmp/conf/subuid /etc/subuid
+sudo cp /tmp/conf/subgid /etc/subgid
 
 sudo service docker start
 sudo docker info
