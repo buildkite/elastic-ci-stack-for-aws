@@ -49,3 +49,5 @@ fi
 
 unset BUILDKITE_SECRETS_BUCKET
 unset BUILDKITE_SECRETS_KEY
+
+sudo /usr/bin/fix-checkout-permissions
