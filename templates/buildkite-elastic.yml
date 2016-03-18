@@ -238,7 +238,6 @@ Resources:
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
-
       NotificationConfigurations:
         - TopicARN: $(AgentAutoScaleTopic)
           NotificationTypes:
