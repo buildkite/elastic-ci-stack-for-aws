@@ -118,6 +118,9 @@ Conditions:
     ScaleOnCPU:
       !Equals [ $(AutoscaleStrategy), "cpu" ]
 
+Outputs:
+  AgentAutoScaleTopic:
+    Value: $(AgentAutoScaleTopic)
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
