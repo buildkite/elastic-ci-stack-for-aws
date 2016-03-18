@@ -18,6 +18,11 @@ if [ -f /etc/init/buildkite-agent.conf ]; then
   sudo cp /usr/share/buildkite-agent/lsb/buildkite-agent.sh /etc/init.d/buildkite-agent
 fi
 
+# Allow buildkite to fix checkout permissions
+sudo cp /tmp/conf/buildkite-sudoers.conf /etc/sudoers.d/buildkite
+sudo chmod 440 /etc/sudoers.d/buildkite
+sudo mv /tmp/conf/scripts/fix-checkout-permissions /usr/bin/
+
 # move custom hooks into place
 chmod +x /tmp/conf/hooks/*
 sudo cp -a /tmp/conf/hooks/* /etc/buildkite-agent/hooks
