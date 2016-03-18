@@ -118,6 +118,12 @@ Conditions:
     ScaleOnCPU:
       !Equals [ $(AutoscaleStrategy), "cpu" ]
 
+Outputs:
+  AgentAutoScaleTopic:
+    Value: $(AgentAutoScaleTopic)
+
+  AgentAutoScaleTopicName:
+    Value: $(AgentAutoScaleTopic[TopicName])
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
@@ -224,6 +230,9 @@ Resources:
                 chmod +x /etc/cron.hourly/authorized_keys
                 /etc/cron.hourly/authorized_keys
 
+  AgentAutoScaleTopic:
+    Type: AWS::SNS::Topic
+
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -235,8 +244,26 @@ Resources:
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
+      NotificationConfigurations:
+        - TopicARN: $(AgentAutoScaleTopic)
+          NotificationTypes:
+            - "autoscaling:EC2_INSTANCE_LAUNCH"
+            - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
+            - "autoscaling:EC2_INSTANCE_TERMINATE"
+            - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+      MetricsCollection:
+        - Granularity: 1Minute
+          Metrics:
+            - GroupMinSize
+            - GroupMaxSize
+            - GroupInServiceInstances
+            - GroupTerminatingInstances
+            - GroupPendingInstances
       Tags:
-        - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
+        - Key: Role
+          Value: buildkite-agent
+          PropagateAtLaunch: true
+
     CreationPolicy:
       ResourceSignal:
         Timeout: PT5M
