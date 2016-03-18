@@ -122,6 +122,9 @@ Outputs:
   AgentAutoScaleTopic:
     Value: $(AgentAutoScaleTopic)
 
+  AgentAutoScaleTopicName:
+    Value: $(AgentAutoScaleTopic[TopicName])
+
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
   IAMInstanceProfile:
