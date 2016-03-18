@@ -224,6 +224,9 @@ Resources:
                 chmod +x /etc/cron.hourly/authorized_keys
                 /etc/cron.hourly/authorized_keys
 
+  AgentAutoScaleTopic:
+    Type: AWS::SNS::Topic
+
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -237,6 +240,14 @@ Resources:
       MaxSize: $(MaxSize)
       Tags:
         - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
+    NotificationConfigurations:
+        - TopicARN: $(AgentAutoScaleTopic)
+          NotificationTypes:
+            - "autoscaling:EC2_INSTANCE_LAUNCH"
+            - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
+            - "autoscaling:EC2_INSTANCE_TERMINATE"
+            - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+
     CreationPolicy:
       ResourceSignal:
         Timeout: PT5M
