@@ -238,15 +238,26 @@ Resources:
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
-      Tags:
-        - { Key: Role, Value: buildkite-agent, PropagateAtLaunch: true }
-    NotificationConfigurations:
+
+      NotificationConfigurations:
         - TopicARN: $(AgentAutoScaleTopic)
           NotificationTypes:
             - "autoscaling:EC2_INSTANCE_LAUNCH"
             - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
             - "autoscaling:EC2_INSTANCE_TERMINATE"
             - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+      MetricsCollection:
+        - Granularity: 1Minute
+          Metrics:
+            - GroupMinSize
+            - GroupMaxSize
+            - GroupInServiceInstances
+            - GroupTerminatingInstances
+            - GroupPendingInstances
+      Tags:
+        - Key: Role
+          Value: buildkite-agent
+          PropagateAtLaunch: true
 
     CreationPolicy:
       ResourceSignal:
