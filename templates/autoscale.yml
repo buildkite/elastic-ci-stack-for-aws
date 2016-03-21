@@ -72,15 +72,15 @@ Resources:
    Type: AWS::CloudWatch::Alarm
    Condition: ScaleOnScheduledJobs
    Properties:
-      AlarmDescription: Scale-down if ScheduledJobs == 0 for 1 minute
-      MetricName: ScheduledJobsCount
+      AlarmDescription: Scale-down if 0 jobs for 30 minutes
+      MetricName: RunningJobsCount
       Namespace: Buildkite
-      Statistic: Average
-      Period: 60
-      EvaluationPeriods: 1
-      Threshold: 1
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 6
+      Threshold: 0
       AlarmActions: [ $(AgentScaleDownPolicy) ]
       Dimensions:
         - Name: Queue
           Value: $(BuildkiteQueue)
-      ComparisonOperator: LessThanThreshold
+      ComparisonOperator: LessThanOrEqualToThreshold
