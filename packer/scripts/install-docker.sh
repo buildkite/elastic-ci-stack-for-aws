@@ -1,11 +1,19 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
 
 sudo yum update -yq
 sudo yum install -yq docker
 sudo usermod -a -G docker ec2-user
-sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
+sudo usermod -a -G docker buildkite-agent
 
-sudo service docker start
+sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
+sudo cp /tmp/conf/subuid /etc/subuid
+sudo cp /tmp/conf/subgid /etc/subgid
+
+# Overwrite the yum packaged docker with the latest
+sudo wget https://get.docker.com/builds/Linux/x86_64/docker-1.10.3 -O /usr/bin/docker
+sudo chmod +x /usr/bin/docker
+
+sudo service docker start || ( cat /var/log/docker && false )
 sudo docker info
 
 # installs docker-compose
