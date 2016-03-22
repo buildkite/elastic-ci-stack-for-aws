@@ -15,7 +15,7 @@ s3_download() {
   env -i aws s3 cp ${aws_s3_args[@]} "$1" /dev/stdout
 }
 
-echo '+++ :house_with_garden: Setting up the environment'
+echo '--- :house_with_garden: Setting up the environment'
 
 eval "$(cat ~/cfn-env)"
 eval "$(ssh-agent -s)"
