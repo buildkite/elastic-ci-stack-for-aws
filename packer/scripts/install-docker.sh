@@ -13,7 +13,7 @@ sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
 # Overwrite the yum packaged docker with the latest
 # Releases can be found at https://github.com/docker/docker/releases
 # shasums can be found at $URL.sha256
-wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -o /tmp/docker
+wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -O /tmp/docker
 echo "$DOCKER_SHA256 /tmp/docker" | sha256sum --check --strict
 sudo cp /tmp/docker /usr/bin/docker
 sudo chmod +x /usr/bin/docker
