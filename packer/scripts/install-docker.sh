@@ -1,5 +1,8 @@
 #!/bin/bash -eu
 
+DOCKER_VERSION=1.10.3
+DOCKER_SHA256=a8315f0ff661e6a24a8b83743b6a4be87765bd000fab628de1a8c398b84966cc
+
 sudo yum update -yq
 sudo yum install -yq docker
 sudo usermod -a -G docker ec2-user
@@ -8,8 +11,9 @@ sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
 # Overwrite the yum packaged docker with the latest
 # Releases can be found at https://github.com/docker/docker/releases
 # shasums can be found at $URL.sha256
-sudo wget https://get.docker.com/builds/Linux/x86_64/docker-1.10.3 -O /usr/bin/docker
-echo 'a8315f0ff661e6a24a8b83743b6a4be87765bd000fab628de1a8c398b84966cc  /usr/bin/docker' | sha256sum -c
+wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -o /tmp/docker
+echo "$DOCKER_SHA256 /tmp/docker" | sha256sum --check --strict
+sudo cp /tmp/docker /usr/bin/docker
 sudo chmod +x /usr/bin/docker
 
 sudo service docker start || ( cat /var/log/docker && false )
