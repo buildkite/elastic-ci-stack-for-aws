@@ -1,11 +1,24 @@
-#!/bin/bash -eu
+#!/bin/bash
+
+set -eu -o pipefail
+
+DOCKER_VERSION=1.10.3
+DOCKER_SHA256=d0df512afa109006a450f41873634951e19ddabf8c7bd419caeb5a526032d86d
 
 sudo yum update -yq
 sudo yum install -yq docker
 sudo usermod -a -G docker ec2-user
 sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
 
-sudo service docker start
+# Overwrite the yum packaged docker with the latest
+# Releases can be found at https://github.com/docker/docker/releases
+# shasums can be found at $URL.sha256
+wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -O /tmp/docker
+echo "$DOCKER_SHA256 /tmp/docker" | sha256sum --check --strict
+sudo cp /tmp/docker /usr/bin/docker
+sudo chmod +x /usr/bin/docker
+
+sudo service docker start || ( cat /var/log/docker && false )
 sudo docker info
 
 # installs docker-compose
