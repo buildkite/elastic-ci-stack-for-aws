@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 DOCKER_VERSION=1.10.3
-DOCKER_SHA256=a8315f0ff661e6a24a8b83743b6a4be87765bd000fab628de1a8c398b84966cc
+DOCKER_SHA256=d0df512afa109006a450f41873634951e19ddabf8c7bd419caeb5a526032d86d
 
 sudo yum update -yq
 sudo yum install -yq docker
