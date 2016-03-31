@@ -22,7 +22,7 @@ sudo service docker start || ( cat /var/log/docker && false )
 sudo docker info
 
 # installs docker-compose
-sudo curl -o /usr/bin/docker-compose -L https://github.com/docker/compose/releases/download/1.5.0/docker-compose-Linux-x86_64
+sudo curl -o /usr/bin/docker-compose -L https://github.com/docker/compose/releases/download/1.6.2/docker-compose-Linux-x86_64
 sudo chmod +x /usr/bin/docker-compose
 
 # install docker-gc
