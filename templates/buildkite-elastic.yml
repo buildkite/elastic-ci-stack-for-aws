@@ -156,6 +156,10 @@ Resources:
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - sqs:*
+            Resource: $(AgentLifecycleQueue[Arn])
       Roles:
         - $(IAMRole)
 
@@ -229,6 +233,36 @@ Resources:
                 EOF
                 chmod +x /etc/cron.hourly/authorized_keys
                 /etc/cron.hourly/authorized_keys
+
+  AgentLifecycleQueue:
+    Type: AWS::SQS::Queue
+
+  AgentLifecycleHookRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ autoscaling.amazonaws.com ]
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AgentLifecyclePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:*
+                Resource: $(AgentLifecycleQueue[Arn])
+      Path: /
+
+  AgentLifecycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: $(AgentAutoScaleGroup)
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      NotificationTargetARN: $(AgentLifecycleQueue[Arn])
+      RoleARN: $(AgentLifecycleHookRole)
 
   AgentAutoScaleTopic:
     Type: AWS::SNS::Topic
