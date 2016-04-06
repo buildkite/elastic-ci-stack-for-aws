@@ -8,7 +8,7 @@ steps:
 
   - command: make clean build
     name: "Build binaries"
-    artifact_paths: "build/"
+    artifact_paths: build/buildkite-lifecycle-agent
     agents:
       queue: aws-stack
     env:
