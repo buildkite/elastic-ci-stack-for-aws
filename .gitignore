@@ -1,5 +1,6 @@
 build/
 packer/packer.output
+packer/bin
 config.json
 templates/mappings.yml
 vendor/

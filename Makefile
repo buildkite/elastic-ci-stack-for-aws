@@ -20,9 +20,12 @@ build/buildkite-lifecycle-agent: lifecycle/main.go
 clean:
 	-rm build/*
 	-rm templates/mappings.yml
+	-rm packer/bin/buildkite-lifecycle-agent
 
-build-ami:
-	cd packer/; packer build buildkite-ami.json
+build-ami: build/buildkite-lifecycle-agent
+	mkdir -p packer/bin
+	cp build/buildkite-lifecycle-agent packer/bin/
+	cd packer/; packer validate buildkite-ami.json && packer build buildkite-ami.json
 
 upload-stack: build/aws-stack.json
 	aws s3 sync --acl public-read build s3://buildkite-aws-stack/aws-stack.json
