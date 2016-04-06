@@ -94,7 +94,7 @@ cat << EOF > config.json
 ]
 EOF
 
-buildkite-agent artifact download "build/*" build/
+buildkite-agent artifact download "build/aws-stack.json" build/aws-stack.json
 make validate
 
 echo "--- Creating stack $stack_name"
