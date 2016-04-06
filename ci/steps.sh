@@ -5,14 +5,25 @@ export queue_name="testqueue-$$"
 
 cat << EOF
 steps:
+
+  - command: make clean build
+    name: "Build artifacts"
+    artifact_paths: "build/*"
+    agents:
+      queue: aws-stack
+    env:
+      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
+
+  - wait
+
   - command: ci/packer.sh
-    name: "Build packer image"
+    name: "Build :packer: image"
     agents:
       queue: aws-stack
 
   - wait
 
-  - command: ci/test.sh
+  - command: ci/cloudformation.sh
     name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack

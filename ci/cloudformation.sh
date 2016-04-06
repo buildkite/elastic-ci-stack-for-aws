@@ -94,7 +94,9 @@ cat << EOF > config.json
 ]
 EOF
 
-make setup clean build validate
+mkdir -p build/
+buildkite-agent artifact download "build/aws-stack.json" build/
+make validate
 
 echo "--- Creating stack $stack_name"
 aws cloudformation create-stack \

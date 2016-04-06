@@ -15,6 +15,11 @@
   "provisioners": [
     {
       "type": "file",
+      "source": "bin",
+      "destination": "/tmp"
+    },
+    {
+      "type": "file",
       "source": "conf",
       "destination": "/tmp"
     },
