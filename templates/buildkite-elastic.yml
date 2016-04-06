@@ -211,9 +211,12 @@ Resources:
           commands:
             01-write-buildkite-env:
               command: |
+                INSTANCE_ID=\$(ec2-metadata --instance-id | cut -d " " -f 2)
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME=$(AWS::StackName)
                 BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
+                LIFECYCLE_SQS_QUEUE=$(AgentLifecycleQueue)
+                INSTANCE_ID=\$INSTANCE_ID
                 EOF
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
             02-install-buildkite:
