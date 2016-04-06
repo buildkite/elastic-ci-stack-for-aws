@@ -262,7 +262,7 @@ Resources:
       AutoScalingGroupName: $(AgentAutoScaleGroup)
       LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
       NotificationTargetARN: $(AgentLifecycleQueue[Arn])
-      RoleARN: $(AgentLifecycleHookRole)
+      RoleARN: $(AgentLifecycleHookRole[Arn])
 
   AgentAutoScaleTopic:
     Type: AWS::SNS::Topic
