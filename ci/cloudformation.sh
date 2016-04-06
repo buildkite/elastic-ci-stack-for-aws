@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 
 ## -------------------------------------------------
 ## functions
@@ -94,7 +94,8 @@ cat << EOF > config.json
 ]
 EOF
 
-buildkite-agent artifact download "build/aws-stack.json" build/aws-stack.json
+mkdir -p build/
+buildkite-agent artifact download "build/aws-stack.json" build/
 make validate
 
 echo "--- Creating stack $stack_name"
