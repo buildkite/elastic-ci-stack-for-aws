@@ -17,7 +17,7 @@ steps:
   - wait
 
   - command: ci/packer.sh
-    name: "Build packer image"
+    name: "Build :packer: image"
     agents:
       queue: aws-stack
     env:
@@ -29,6 +29,8 @@ steps:
     name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack
+    env:
+      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
 
   - wait
 
