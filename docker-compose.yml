@@ -1,6 +1,8 @@
 build:
   build: ci/
   command: "make clean build"
+  environment:
+    - BUILDKITE_AWS_STACK_BUCKET
   volumes:
     - .:/go/src/github.com/buildkite/buildkite-aws-stack
   working_dir: /go/src/github.com/buildkite/buildkite-aws-stack

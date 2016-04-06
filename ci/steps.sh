@@ -14,12 +14,7 @@ steps:
     env:
       BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
 
-  - command: ci/packer.sh
-    name: "Build packer image"
-    agents:
-      queue: aws-stack
-    env:
-      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
+  - wait
 
   - command: ci/packer.sh
     name: "Build packer image"
