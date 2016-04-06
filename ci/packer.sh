@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-buildkite-agent artifact download "build/buildkite-lifecycle-agent" build/buildkite-lifecycle-agent
+buildkite-agent artifact download "build/buildkite-lifecycle-agent" build/
 
 packer_hash=$(find packer/ -type f -print0 | xargs -0 sha1sum | cut -b-40 | sort | sha1sum | awk '{print $1}')
 packer_file="${packer_hash}.packer"

@@ -7,7 +7,7 @@ cat << EOF
 steps:
 
   - command: make clean build
-    name: "Build"
+    name: "Build artifacts"
     artifact_paths: "build/*"
     agents:
       queue: aws-stack
