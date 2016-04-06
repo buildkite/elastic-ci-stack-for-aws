@@ -1,0 +1,6 @@
+build:
+  build: ci/
+  command: "make clean build"
+  volumes:
+    - .:/go/src/github.com/buildkite/buildkite-aws-stack
+  working_dir: /go/src/github.com/buildkite/buildkite-aws-stack

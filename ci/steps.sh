@@ -5,10 +5,28 @@ export queue_name="testqueue-$$"
 
 cat << EOF
 steps:
+
+  - command: make clean build
+    name: "Build binaries"
+    artifact_paths: "build/"
+    agents:
+      queue: aws-stack
+    env:
+      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
+
   - command: ci/packer.sh
     name: "Build packer image"
     agents:
       queue: aws-stack
+    env:
+      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
+
+  - command: ci/packer.sh
+    name: "Build packer image"
+    agents:
+      queue: aws-stack
+    env:
+      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
 
   - wait
 
