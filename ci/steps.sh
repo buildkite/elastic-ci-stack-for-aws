@@ -6,7 +6,7 @@ export queue_name="testqueue-$$"
 cat << EOF
 steps:
 
-  - command: make clean build validate
+  - command: make clean build
     name: "Build"
     artifact_paths: "build/*"
     agents:
