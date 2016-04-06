@@ -7,8 +7,8 @@ cat << EOF
 steps:
 
   - command: make clean build
-    name: "Build binaries"
-    artifact_paths: build/buildkite-lifecycle-agent
+    name: "Build"
+    artifact_paths: "build/*"
     agents:
       queue: aws-stack
     env:
