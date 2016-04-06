@@ -20,8 +20,6 @@ steps:
     name: "Build :packer: image"
     agents:
       queue: aws-stack
-    env:
-      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
 
   - wait
 
@@ -29,8 +27,6 @@ steps:
     name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack
-    env:
-      BUILDKITE_DOCKER_COMPOSE_CONTAINER: build
 
   - wait
 

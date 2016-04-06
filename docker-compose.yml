@@ -1,11 +1,6 @@
 build:
   build: ci/
   command: "make clean build"
-  environment:
-    - BUILDKITE_AWS_STACK_BUCKET
-    - AWS_ACCESS_KEY_ID
-    - AWS_DEFAULT_REGION
-    - AWS_SECRET_ACCESS_KEY
   volumes:
     - .:/go/src/github.com/buildkite/buildkite-aws-stack
   working_dir: /go/src/github.com/buildkite/buildkite-aws-stack
