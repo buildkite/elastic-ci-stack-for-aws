@@ -15,8 +15,8 @@
   "provisioners": [
     {
       "type": "file",
-      "source": "bin/",
-      "destination": "/usr/local/bin/"
+      "source": "bin",
+      "destination": "/tmp"
     },
     {
       "type": "file",

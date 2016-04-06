@@ -27,3 +27,10 @@ sudo mv /tmp/conf/scripts/fix-checkout-permissions /usr/bin/
 chmod +x /tmp/conf/hooks/*
 sudo cp -a /tmp/conf/hooks/* /etc/buildkite-agent/hooks
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
+
+# install lifecycle agent
+chmod +x /tmp/bin/buildkite-lifecycle-agent
+sudo cp /tmp/bin/buildkite-lifecycle-agent /usr/bin/
+sudo cp /tmp/conf/buildkite-lifecycle-agent.conf /etc/init/
+
+
