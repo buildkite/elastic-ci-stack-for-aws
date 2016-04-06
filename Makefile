@@ -17,10 +17,6 @@ build/buildkite-lifecycle-agent: lifecycle/main.go
 	which glide || go get github.com/Masterminds/glide
 	cd lifecycle/ && glide install && go build -o ../build/buildkite-lifecycle-agent main.go
 
-setup:
-	which bundle || gem install bundler --no-ri --no-rdoc
-	bundle install --path vendor/bundle
-
 clean:
 	-rm build/*
 	-rm templates/mappings.yml

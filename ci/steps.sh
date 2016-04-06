@@ -6,7 +6,7 @@ export queue_name="testqueue-$$"
 cat << EOF
 steps:
 
-  - command: make clean build
+  - command: make clean build validate
     name: "Build"
     artifact_paths: "build/*"
     agents:
@@ -23,7 +23,7 @@ steps:
 
   - wait
 
-  - command: ci/test.sh
+  - command: ci/cloudformation.sh
     name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack
