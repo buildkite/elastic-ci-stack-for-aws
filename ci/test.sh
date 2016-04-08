@@ -60,6 +60,10 @@ cat << EOF > config.json
     "ParameterValue": "$BUILDKITE_AWS_STACK_AGENT_TOKEN"
   },
   {
+    "ParameterKey": "BuildkiteApiAccessToken",
+    "ParameterValue": "$BUILDKITE_AWS_STACK_API_TOKEN"
+  },
+  {
     "ParameterKey": "BuildkiteQueue",
     "ParameterValue": "${queue_name}"
   },
