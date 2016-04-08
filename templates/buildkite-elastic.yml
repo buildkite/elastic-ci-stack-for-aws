@@ -15,6 +15,12 @@ Parameters:
     Type: String
     NoEcho: true
 
+  BuildkiteApiAccessToken:
+    Description: A BuildKite API access token for reading queue metrics
+    Type: String
+    NoEcho: true
+    Default: ""
+
   BuildkiteQueue:
     Description: The queue metadata to register the agent with
     Type: String
@@ -88,7 +94,7 @@ Parameters:
   AutoscaleStrategy:
     Type: String
     Description: The strategy to use for autoscaling
-    Default: cpu
+    Default: scheduledjobs
     AllowedValues:
       - cpu
       - scheduledjobs
@@ -117,6 +123,9 @@ Conditions:
 
     ScaleOnCPU:
       !Equals [ $(AutoscaleStrategy), "cpu" ]
+
+    CreateMetricsStack:
+       !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
 
 Outputs:
   AgentAutoScaleTopic:

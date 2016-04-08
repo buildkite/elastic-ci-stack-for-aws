@@ -1,0 +1,14 @@
+
+Resources:
+  MetricsStack:
+    Condition: CreateMetricsStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/buildkite-cloudwatch-metrics-publisher/master/cloudwatch-metrics-publisher.json
+      Parameters:
+        BuildkiteApiAccessToken: $(BuildkiteApiAccessToken)
+        BuildkiteOrgSlug: $(BuildkiteOrgSlug)
+        KeyName: $(KeyName)
+        QueueName: $(BuildkiteQueue)
+        PollInterval: 15s
+
