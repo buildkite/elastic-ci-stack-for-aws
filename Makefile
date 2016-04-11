@@ -8,7 +8,7 @@ build: build/aws-stack.json
 templates/mappings.yml:
 	aws s3 cp s3://buildkite-aws-stack/mappings.yml templates/mappings.yml
 
-build/aws-stack.json: templates/buildkite-elastic.yml templates/mappings.yml templates/autoscale.yml templates/vpc.yml
+build/aws-stack.json: $(wildcard templates/*.yml)
 	-mkdir -p build/
 	bundle exec cfoo $^ > $@
 

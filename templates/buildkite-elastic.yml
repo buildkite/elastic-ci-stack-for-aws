@@ -64,12 +64,12 @@ Parameters:
   MaxSize:
     Description: The maximum number of agents to launch
     Type: Number
-    Default: 6
+    Default: 10
 
   MinSize:
     Description: The minumum number of agents to launch
     Type: Number
-    Default: 1
+    Default: 0
 
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.

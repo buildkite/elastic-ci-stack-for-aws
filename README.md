@@ -28,13 +28,14 @@ aws cloudformation create-stack \
 | KeyName                      | The AWS EC2 Keypair to use                                           | default         |
 | BuildkiteOrgSlug             | Your Buildkite Organization slug (e.g 99designs)                     |                 |
 | BuildkiteAgentToken          | Your Buildkite Agent Token                                           |                 |
+| BuildkiteApiAccessToken      | A Buildkite API token for metrics                                    |                 |
 | BuildkiteQueue               | The Buildkite queue to give the agents                               | elastic         |
 | SecretsBucket                | An S3 bucket (and optional prefix) that contains secrets             |                 |
 | InstanceType                 | The EC2 instance size to launch                                      | t2.nano         |
-| MinSize                      | The minimum number of instances to launch                            | 1               |
-| MaxSize                      | The maximum number of instances to launch                            | 1               |
+| MinSize                      | The minimum number of instances to launch                            | 0               |
+| MaxSize                      | The maximum number of instances to launch                            | 10              |
 | SpotPrice                    | An optional price to bid for spot instances (0 means non-spot)       | 0               |
-| AutoscalingStrategy          | Either cpu or scheduledjobs (see [Autoscaling](#autoscaling))        | cpu             |
+| AutoscalingStrategy          | Either cpu or scheduledjobs (see [Autoscaling](#autoscaling))        | scheduledjobs   |
 
 
 Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for more details.
@@ -74,9 +75,7 @@ For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD`
 
 ## Autoscaling
 
-Autoscaling behaviour is determined by a number of stack parameters. By default your stack will have between 1 and 6 instances and scale based on the CPU load of the instances. The threshold for CPU scaling is [40% cpu load for 5 minutes](templates/autoscale.yml), which at present isn't customizable.
-
-If you want to get fancy, you can set up the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) which publishes custom CloudWatch metrics every 5 minutes. If you set the stack param `AutoscalingStrategy` to `scheduledjobs` then your stack will be scaled based on the number of scheduled jobs in it's queue (determined by `BuildkiteQueue`). You can even set the `MinSize` to 0 if you want to keep costs down, but be mindful of the 5 minute lag time on a new instance spinning up to run your build.
+If you provided a `BuildkiteApiAccessToken` then build and job metrics will be collected for your queue and used to scale your cluster of agents. Autoscaling is designed to scale up quite quickly and then gradually scale down. See [the autoscale.yml template](templates/autoscale.yml) for more details, or the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) project for how metrics are collected.
 
 ## Security
 

@@ -28,6 +28,24 @@ steps:
       stack: $stack_name
       queue: $queue_name
 
+  - command: sleep 15
+    name: "Run a command on :buildkite: agent"
+    timeout_in_minutes: 5
+    env:
+      BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
+    agents:
+      stack: $stack_name
+      queue: $queue_name
+
+  - command: sleep 25
+    name: "Run a command on :buildkite: agent"
+    timeout_in_minutes: 5
+    env:
+      BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
+    agents:
+      stack: $stack_name
+      queue: $queue_name
+
   - wait
 
   - command: ci/publish.sh
