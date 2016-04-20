@@ -125,7 +125,7 @@ Conditions:
       !Equals [ $(AutoscaleStrategy), "cpu" ]
 
     CreateMetricsStack:
-       !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
+      [ !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ] ]
 
 Outputs:
   AgentAutoScaleTopic:
