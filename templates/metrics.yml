@@ -11,8 +11,4 @@ Resources:
         KeyName: $(KeyName)
         QueueName: $(BuildkiteQueue)
         PollInterval: 15s
-        Subnets: !If [
-          "CreateVpcResources",
-          [ $(Subnet0), $(Subnet1), $(Subnet2) ],
-          $Subnets
-        ]
+        Subnets: !If [ "CreateVpcResources", [ $(Subnet0), $(Subnet1), $(Subnet2) ], $(Subnets) ]
