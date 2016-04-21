@@ -26,7 +26,7 @@ build-ami:
 upload: build/aws-stack.json
 	aws s3 sync --acl public-read build s3://buildkite-aws-stack/
 
-create-stack: build/aws-stack.json
+create-stack: templates/mappings.yml build/aws-stack.json
 	aws cloudformation create-stack \
 	--output text \
 	--stack-name buildkite-$(shell date +%Y-%m-%d-%H-%M) \
