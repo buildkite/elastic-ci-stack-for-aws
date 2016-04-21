@@ -19,5 +19,5 @@ Resources:
         Subnets: !If [
           "CreateVpcResources",
           "$(Subnet0),$(Subnet1),$(Subnet2)",
-          $(Subnets)
+          !Join [ ",", $(Subnets) ]
         ]
