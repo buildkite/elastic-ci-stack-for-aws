@@ -72,7 +72,7 @@ Resources:
    Type: AWS::CloudWatch::Alarm
    Condition: ScaleOnScheduledJobs
    Properties:
-      AlarmDescription: Scale-down if 0 jobs for 30 minutes
+      AlarmDescription: Scale-down if 0 jobs for 5 minutes
       MetricName: RunningJobsCount
       Namespace: Buildkite
       Statistic: Maximum
