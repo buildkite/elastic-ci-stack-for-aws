@@ -223,7 +223,8 @@ Resources:
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
             02-install-buildkite:
               command: |
-                BUILDKITE_METADATA=\$(sprintf '"queue=%s,docker=%s"' $(BuildkiteQueue) \$(docker --version | cut -f3 -d' ' | sed 's/,//'))
+                BUILDKITE_METADATA=\$(sprintf '"queue=%s,docker=%s,stack=%s"' \
+                  $(BuildkiteQueue) \$(docker --version | cut -f3 -d' ' | sed 's/,//')) $(AWS::StackName)
                 sed -i -r 's/^(name)=.*/\1="$(AWS::StackName)-%hostname-%n"/' /etc/buildkite-agent/buildkite-agent.cfg
                 sed -i -r 's/^(token)=.*/\1="$(BuildkiteAgentToken)"/' /etc/buildkite-agent/buildkite-agent.cfg
                 sed -i -r 's/^(# )?(meta-data-ec2-tags)=.*/\2=true/' /etc/buildkite-agent/buildkite-agent.cfg
