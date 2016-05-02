@@ -16,44 +16,8 @@ Resources:
       Cooldown : 10
       ScalingAdjustment : -1
 
-  CPUAlarmHigh:
-   Type: AWS::CloudWatch::Alarm
-   Condition: ScaleOnCPU
-   Properties:
-      AlarmDescription: Scale-up if CPU > 40% for 5 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: 300
-      EvaluationPeriods: 2
-      Threshold: 40
-      AlarmActions: [ $(AgentScaleUpPolicy) ]
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: $(AgentAutoScaleGroup)
-      ComparisonOperator: GreaterThanThreshold
-
-  CPUAlarmLow:
-   Type: AWS::CloudWatch::Alarm
-   Condition: ScaleOnCPU
-   Properties:
-      AlarmDescription: Scale-down if CPU < 5% for 5 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: 300
-      EvaluationPeriods: 2
-      Threshold: 5
-      AlarmActions: [ $(AgentScaleDownPolicy) ]
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: $(AgentAutoScaleGroup)
-      ComparisonOperator: LessThanThreshold
-
-
   ScheduledJobsAlarmHigh:
    Type: AWS::CloudWatch::Alarm
-   Condition: ScaleOnScheduledJobs
    Properties:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
@@ -70,7 +34,6 @@ Resources:
 
   ScheduledJobsAlarmLow:
    Type: AWS::CloudWatch::Alarm
-   Condition: ScaleOnScheduledJobs
    Properties:
       AlarmDescription: Scale-down if 0 jobs for 5 minutes
       MetricName: RunningJobsCount
