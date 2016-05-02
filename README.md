@@ -1,6 +1,6 @@
 # Buildkite AWS Stack
 
-[![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
+[![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
 Create an auto-scaling build cluster on AWS/VPC in under 10 minutes. Designed to support multiple different projects sharing a single stack and isolated builds of third-party pull-requests.
 
@@ -8,7 +8,7 @@ Create an auto-scaling build cluster on AWS/VPC in under 10 minutes. Designed to
 
 The easiest way is to launch the latest built version via this button:
 
-[![Launch Buildkite AWS Stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
+[![Launch Buildkite AWS Stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
 
 If you'd like to use the CLI, download [`config.json.example`](config.json.example) to `config.json` and then run the below command to create a new stack.
 
