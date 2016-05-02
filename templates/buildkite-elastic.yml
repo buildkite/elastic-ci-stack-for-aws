@@ -1,6 +1,44 @@
 
 ## Provides the infrastructure for a scalable buildkite cluster
 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Buildkite Configuration
+        Parameters:
+        - BuildkiteAgentToken
+        - BuildkiteOrgSlug
+        - BuildkiteQueue
+
+      - Label:
+          default: Network Configuration
+        Parameters:
+        - VpcId
+        - Subnets
+        - AvailabilityZones
+        - SecurityGroupId
+
+      - Label:
+          default: Instance Configuration
+        Parameters:
+        - ImageId
+        - InstanceType
+        - KeyName
+        - SpotPrice
+        - SecretsBucket
+        - AuthorizedUsersUrl
+        - RootVolumeSize
+        - RootVolumeIops
+
+      - Label:
+          default: Auto-scaling Configuration
+        Parameters:
+        - MinSize
+        - MaxSize
+        - AutoscaleStrategy
+        - BuildkiteApiAccessToken
+
 Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
