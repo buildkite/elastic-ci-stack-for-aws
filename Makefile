@@ -6,7 +6,8 @@ all: build
 build: build/aws-stack.json
 
 templates/mappings.yml:
-	aws s3 cp s3://buildkite-aws-stack/mappings.yml templates/mappings.yml
+	curl -Lf -o templates/mappings.yml https://s3.amazonaws.com/buildkite-aws-stack/mappings.yml
+	touch templates/mappings.yml
 
 build/aws-stack.json: $(wildcard templates/*.yml)
 	-mkdir -p build/
