@@ -21,6 +21,17 @@ aws cloudformation create-stack \
   --parameters <(cat config.json)
 ```
 
+
+Alternately, if you prefer to use this repo, clone it and run the following command to set up things locally and create a remote stack.
+```bash
+make && make create-stack
+
+# If you need to specify a profile:
+AWS_PROFILE="SOMETHING" make && make create-stack
+
+```
+
+
 ### Useful Stack Parameters
 
 | Command                      | Description                                                          | Default         |
