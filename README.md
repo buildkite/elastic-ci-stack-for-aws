@@ -24,10 +24,14 @@ aws cloudformation create-stack \
 
 Alternately, if you prefer to use this repo, clone it and run the following command to set up things locally and create a remote stack.
 ```bash
-make && make create-stack
+# To set up your local environment and generate the CFN template JSON
+make
 
-# If you need to specify a profile:
-AWS_PROFILE="SOMETHING" make && make create-stack
+# Or, to set things up locally and create the stack on AWS
+make create-stack
+
+# You can use any of the AWS... environment variables that the aws-cli supports.
+AWS_PROFILE="SOMETHING" make create-stack
 
 ```
 

@@ -1,4 +1,4 @@
-.PHONY: all clean build build-ami upload create-stack
+.PHONY: all clean build build-ami upload create-stack update-stack config.json
 
 BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
 
@@ -27,9 +27,10 @@ build-ami:
 upload: build/aws-stack.json
 	aws s3 sync --acl public-read build s3://${BUILDKITE_STACK_BUCKET}/
 
-create-stack: templates/mappings.yml build/aws-stack.json
+config.json:
 	test -s config.json || { echo "Please create a config.json file"; exit 1; }
 
+create-stack: config.json templates/mappings.yml build/aws-stack.json
 	aws cloudformation create-stack \
 	--output text \
 	--stack-name buildkite \
@@ -43,9 +44,7 @@ validate: build/aws-stack.json
 	--output table \
 	--template-body "file://${PWD}/build/aws-stack.json"
 
-update-stack: templates/mappings.yml build/aws-stack.json
-	test -s config.json || { echo "Please create a config.json file"; exit 1; }
-
+update-stack: config.json templates/mappings.yml build/aws-stack.json
 	aws cloudformation update-stack \
 	--output text \
 	--stack-name buildkite \
