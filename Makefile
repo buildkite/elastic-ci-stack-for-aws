@@ -37,7 +37,7 @@ create-stack: config.json templates/mappings.yml build/aws-stack.json
 	--disable-rollback \
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
-	--parameters '$(shell cat config.json)' \
+	--parameters '$(shell cat config.json)'
 
 validate: build/aws-stack.json
 	aws cloudformation validate-template \
@@ -50,5 +50,4 @@ update-stack: config.json templates/mappings.yml build/aws-stack.json
 	--stack-name buildkite \
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
-	--parameters '$(shell cat config.json)' \
-
+	--parameters '$(shell cat config.json)'
