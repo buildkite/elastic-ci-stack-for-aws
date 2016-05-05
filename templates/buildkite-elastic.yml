@@ -273,10 +273,16 @@ Resources:
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME=$(AWS::StackName)
                 BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
-                LIFECYCLE_SQS_QUEUE=$(AgentLifecycleQueue)
-                INSTANCE_ID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
                 EOF
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
+            01-write-lifecycled-config:
+              command: |
+                #!/bin/bash -eu
+                cat << EOF > /etc/lifecycled
+                LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
+                LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
+                LIFECYCLED_HANDLER=/usr/bin/buildkite-lifecycle-handler
+                EOF
             02-install-buildkite:
               command: |
                 export BUILDKITE_METADATA=\$(printf '"queue=%s,docker=%s,stack=%s"' $(BuildkiteQueue) \$(docker --version | cut -f3 -d' ' | sed 's/,//') $(AWS::StackName))
