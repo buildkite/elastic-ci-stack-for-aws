@@ -1,4 +1,3 @@
-
 ## Provides the infrastructure for a scalable buildkite cluster
 
 Metadata:
@@ -27,6 +26,7 @@ Metadata:
         - KeyName
         - SpotPrice
         - SecretsBucket
+        - ArtifactsBucket
         - AuthorizedUsersUrl
         - RootVolumeSize
         - RootVolumeIops
@@ -65,7 +65,12 @@ Parameters:
     Default: elastic
 
   SecretsBucket:
-    Description: An s3 bucket containing provisioning files
+    Description: An S3 bucket containing provisioning files
+    Type: String
+    Default: ""
+
+  ArtifactsBucket:
+    Description: An S3 bucket containing build artifacts
     Type: String
     Default: ""
 
@@ -145,6 +150,9 @@ Conditions:
     UseSecretsBucket:
       !Not [ !Equals [ $(SecretsBucket), "" ] ]
 
+    UseArtifactsBucket:
+      !Not [ !Equals [ $(ArtifactsBucket), "" ] ]
+
     UseDefaultAMI:
       !Equals [ $(ImageId), "" ]
 
@@ -207,6 +215,23 @@ Resources:
             Resource:
               - "arn:aws:s3:::$(SecretsBucket)/*"
               - "arn:aws:s3:::$(SecretsBucket)"
+      Roles:
+        - $(IAMRole)
+
+  ArtifactsBucketPolicies:
+    Type: AWS::IAM::Policy
+    Condition: UseArtifactsBucket
+    Properties:
+      PolicyName: ArtifactsBucketPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:Put*
+              - s3:List*
+            Resource:
+              - "arn:aws:s3:::$(ArtifactsBucket)/*"
+              - "arn:aws:s3:::$(ArtifactsBucket)"
       Roles:
         - $(IAMRole)
 
@@ -321,4 +346,3 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
-
