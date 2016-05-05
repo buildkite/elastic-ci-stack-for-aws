@@ -1,6 +1,5 @@
-
 .PHONY: all clean build build-ami upload create-stack
-AWS_PROFILE ?= default
+
 BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
 
 all: setup build
@@ -17,7 +16,6 @@ build/aws-stack.json: $(wildcard templates/*.yml)
 
 setup:
 	bundle check || ((which bundle || gem install bundler --no-ri --no-rdoc) && bundle install --path vendor/bundle)
-	cp config.json.example config.json
 
 clean:
 	-rm -f build/*
@@ -30,6 +28,8 @@ upload: build/aws-stack.json
 	aws s3 sync --acl public-read build s3://${BUILDKITE_STACK_BUCKET}/
 
 create-stack: templates/mappings.yml build/aws-stack.json
+	test -s config.json || { echo "Please create a config.json file"; exit 1; }
+
 	aws cloudformation create-stack \
 	--output text \
 	--stack-name buildkite \
@@ -37,7 +37,6 @@ create-stack: templates/mappings.yml build/aws-stack.json
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
 	--parameters '$(shell cat config.json)' \
-	--profile "$(AWS_PROFILE)"
 
 validate: build/aws-stack.json
 	aws cloudformation validate-template \
@@ -45,11 +44,12 @@ validate: build/aws-stack.json
 	--template-body "file://${PWD}/build/aws-stack.json"
 
 update-stack: templates/mappings.yml build/aws-stack.json
+	test -s config.json || { echo "Please create a config.json file"; exit 1; }
+
 	aws cloudformation update-stack \
 	--output text \
 	--stack-name buildkite \
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
 	--parameters '$(shell cat config.json)' \
-	--profile "$(AWS_PROFILE)"
 
