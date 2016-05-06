@@ -279,10 +279,12 @@ Resources:
               command: |
                 #!/bin/bash -eu
                 cat << EOF > /etc/lifecycled
+                AWS_REGION=$(AWS::Region)
                 LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
                 LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
                 LIFECYCLED_HANDLER=/usr/bin/buildkite-lifecycle-handler
                 EOF
+                start lifecycled
             02-install-buildkite:
               command: |
                 export BUILDKITE_METADATA=\$(printf '"queue=%s,docker=%s,stack=%s"' $(BuildkiteQueue) \$(docker --version | cut -f3 -d' ' | sed 's/,//') $(AWS::StackName))
