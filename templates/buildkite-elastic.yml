@@ -208,7 +208,12 @@ Resources:
               - cloudwatch:PutMetricData
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
+              - autoscaling:CompleteLifecycleAction
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - sqs:*
+            Resource: $(AgentLifecycleQueue[Arn])
       Roles:
         - $(IAMRole)
 
@@ -277,11 +282,22 @@ Resources:
           commands:
             01-write-buildkite-env:
               command: |
+                #!/bin/bash -eu
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME=$(AWS::StackName)
                 BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
                 EOF
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
+            01-write-lifecycled-config:
+              command: |
+                #!/bin/bash -eu
+                cat << EOF > /etc/lifecycled
+                AWS_REGION=$(AWS::Region)
+                LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
+                LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
+                LIFECYCLED_HANDLER=/usr/bin/buildkite-lifecycle-handler
+                EOF
+                start lifecycled
             02-install-buildkite:
               command: |
                 export BUILDKITE_METADATA=\$(printf '"queue=%s,docker=%s,stack=%s"' $(BuildkiteQueue) \$(docker --version | cut -f3 -d' ' | sed 's/,//') $(AWS::StackName))
@@ -293,6 +309,7 @@ Resources:
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
+                #!/bin/bash -eu
                 cat << EOF > /etc/cron.hourly/authorized_keys
                 curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
                 mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
@@ -301,6 +318,36 @@ Resources:
                 EOF
                 chmod +x /etc/cron.hourly/authorized_keys
                 /etc/cron.hourly/authorized_keys
+
+  AgentLifecycleQueue:
+    Type: AWS::SQS::Queue
+
+  AgentLifecycleHookRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ autoscaling.amazonaws.com ]
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AgentLifecyclePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:*
+                Resource: $(AgentLifecycleQueue[Arn])
+      Path: /
+
+  AgentLifecycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: $(AgentAutoScaleGroup)
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      NotificationTargetARN: $(AgentLifecycleQueue[Arn])
+      RoleARN: $(AgentLifecycleHookRole[Arn])
 
   AgentAutoScaleTopic:
     Type: AWS::SNS::Topic

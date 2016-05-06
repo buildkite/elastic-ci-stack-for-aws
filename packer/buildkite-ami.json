@@ -25,6 +25,10 @@
     {
       "type": "shell",
       "script": "scripts/install-buildkite.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-lifecycled.sh"
     }
   ]
 }
