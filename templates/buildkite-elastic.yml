@@ -59,7 +59,6 @@ Parameters:
     Description: A BuildKite API access token for reading queue metrics
     Type: String
     NoEcho: true
-    Default: ""
 
   BuildkiteQueue:
     Description: The queue metadata to register the agent with

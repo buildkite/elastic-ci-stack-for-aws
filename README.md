@@ -23,6 +23,7 @@ aws cloudformation create-stack \
 
 
 Alternately, if you prefer to use this repo, clone it and run the following command to set up things locally and create a remote stack.
+
 ```bash
 # To set up your local environment and generate the CFN template JSON
 make
@@ -32,27 +33,23 @@ make create-stack
 
 # You can use any of the AWS... environment variables that the aws-cli supports.
 AWS_PROFILE="SOMETHING" make create-stack
-
 ```
-
 
 ### Useful Stack Parameters
 
-| Command                      | Description                                                          | Default         |
-| ---                          | ---                                                                  | ---             |
-| KeyName                      | The AWS EC2 Keypair to use                                           | default         |
-| BuildkiteOrgSlug             | Your Buildkite Organization slug (e.g 99designs)                     |                 |
-| BuildkiteAgentToken          | Your Buildkite Agent Token                                           |                 |
-| BuildkiteApiAccessToken      | A Buildkite API token for metrics                                    |                 |
-| BuildkiteQueue               | The Buildkite queue to give the agents                               | elastic         |
-| SecretsBucket                | An S3 bucket (and optional prefix) that contains secrets             |                 |
-| ArtifactsBucket              | An S3 bucket (and optional prefix) that contains build artifacts     |                 |
-| InstanceType                 | The EC2 instance size to launch                                      | t2.nano         |
-| MinSize                      | The minimum number of instances to launch                            | 0               |
-| MaxSize                      | The maximum number of instances to launch                            | 10              |
-| SpotPrice                    | An optional price to bid for spot instances (0 means non-spot)       | 0               |
-| AutoscalingStrategy          | Either cpu or scheduledjobs (see [Autoscaling](#autoscaling))        | scheduledjobs   |
-
+| Command                      | Description                                                                                                               | Default         |
+| ---                          | ---                                                                                                                       | ---             |
+| KeyName                      | The AWS EC2 Keypair to use                                                                                                | default         |
+| BuildkiteOrgSlug             | Your Buildkite Organization slug (e.g 99designs)                                                                          |                 |
+| BuildkiteAgentToken          | Your Buildkite Agent Token                                                                                                |                 |
+| BuildkiteApiAccessToken      | A Buildkite API token for metrics                                                                                         |                 |
+| BuildkiteQueue               | The Buildkite queue to give the agents                                                                                    | elastic         |
+| SecretsBucket                | An existing S3 bucket (and optional prefix) that contains secrets                                                         |                 |
+| ArtifactsBucket              | An existing S3 bucket (and optional prefix) that contains [build artifacts](https://buildkite.com/docs/guides/artifacts)  |                 |
+| InstanceType                 | The EC2 instance size to launch                                                                                           | t2.nano         |
+| MinSize                      | The minimum number of instances to launch                                                                                 | 0               |
+| MaxSize                      | The maximum number of instances to launch                                                                                 | 10              |
+| SpotPrice                    | An optional price to bid for spot instances (0 means non-spot)                                                            | 0               |
 
 Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for more details.
 
@@ -93,6 +90,8 @@ For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD`
 
 If you provided a `BuildkiteApiAccessToken`, a Buildkite API token with `read_builds` and `read_agents` permissions across your organization, then build and job metrics will be collected for your queue and used to scale your cluster of agents. Autoscaling is designed to scale up quite quickly and then gradually scale down. See [the autoscale.yml template](templates/autoscale.yml) for more details, or the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) project for how metrics are collected.
 
+When scaling down, instances wait until any running jobs on them have completed (thanks to [lifecycled](https://github.com/lox/lifecycled)).
+
 ## Security
 
 This repository hasn't been reviewed by security researchers, so exercise caution and careful thought with what credentials you make available to your builds. At present anyone with access to your CI machines or commit access to your codebase (including third-party pull-requests) will theoretically have access to your encrypted secrets. Anyone with access to your Buildkite Project Configuration will be able to retrieve the encryption key used to decrypt these. In combination, the attacker would have access to your decrypted secrets.
@@ -103,5 +102,5 @@ Presently the EC2 Metadata instance is available via HTTP request from builds, w
 
 This is experimental and still being actively developed, but under heavy use at 99designs.
 
-Feel free to drop me an email at lachlan@99designs.com with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
+Feel free to drop me an email at lachlan@ljd.cc with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
 
