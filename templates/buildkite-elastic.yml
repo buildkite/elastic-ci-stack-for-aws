@@ -196,6 +196,7 @@ Resources:
               - cloudwatch:PutMetricData
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
+              - autoscaling:CompleteLifecycleAction
             Resource: "*"
           - Effect: Allow
             Action:
