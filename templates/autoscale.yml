@@ -5,16 +5,16 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown: 10
-      ScalingAdjustment: 1
+      Cooldown: 300
+      ScalingAdjustment: $(ScaleInAdjustment)
 
   AgentScaleDownPolicy:
     Type : AWS::AutoScaling::ScalingPolicy
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown : 10
-      ScalingAdjustment : -1
+      Cooldown : 600
+      ScalingAdjustment : $(ScaleOutAdjustment)
 
   ScheduledJobsAlarmHigh:
    Type: AWS::CloudWatch::Alarm
@@ -35,12 +35,12 @@ Resources:
   ScheduledJobsAlarmLow:
    Type: AWS::CloudWatch::Alarm
    Properties:
-      AlarmDescription: Scale-down if 0 jobs for 5 minutes
-      MetricName: RunningJobsCount
+      AlarmDescription: Scale-down if ScheduledJobsCount == 0 for 5 minutes
+      MetricName: ScheduledJobsCount
       Namespace: Buildkite
       Statistic: Maximum
       Period: 300
-      EvaluationPeriods: 6
+      EvaluationPeriods: 1
       Threshold: 0
       AlarmActions: [ $(AgentScaleDownPolicy) ]
       Dimensions:

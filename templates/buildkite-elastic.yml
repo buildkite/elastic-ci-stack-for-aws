@@ -36,6 +36,8 @@ Metadata:
         Parameters:
         - MinSize
         - MaxSize
+        - ScaleInAdjustment
+        - ScaleOutAdjustment
         - AutoscaleStrategy
         - BuildkiteApiAccessToken
 
@@ -113,6 +115,16 @@ Parameters:
     Description: The minumum number of agents to launch
     Type: Number
     Default: 0
+
+  ScaleOutAdjustment:
+    Description: The number of agents to add on each scale out event (ScheduledJobsCount > 0 for 1 minute)
+    Type: Number
+    Default: 5
+
+  ScaleInAdjustment:
+    Description: The number of agents to remove on each scale in event (ScheduledJobsCount == 0 for 5 minutes)
+    Type: Number
+    Default: -2
 
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.
