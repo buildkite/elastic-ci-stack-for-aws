@@ -9,6 +9,7 @@ Metadata:
         - BuildkiteAgentToken
         - BuildkiteOrgSlug
         - BuildkiteQueue
+        - BuildkiteApiAccessToken
 
       - Label:
           default: Network Configuration
@@ -39,7 +40,6 @@ Metadata:
         - ScaleInAdjustment
         - ScaleOutAdjustment
         - AutoscaleStrategy
-        - BuildkiteApiAccessToken
 
 Parameters:
   KeyName:
