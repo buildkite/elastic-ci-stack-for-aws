@@ -208,6 +208,7 @@ Resources:
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
               - autoscaling:CompleteLifecycleAction
+              - autoscaling:RecordLifecycleActionHeartbeat
             Resource: "*"
           - Effect: Allow
             Action:
