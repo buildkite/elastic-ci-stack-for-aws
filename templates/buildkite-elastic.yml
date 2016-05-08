@@ -47,31 +47,31 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
 
   BuildkiteOrgSlug:
-    Description: Your Buildkite organization slug
+    Description: Your Buildkite organization’s slug
     Type: String
 
   BuildkiteAgentToken:
-    Description: Your Buildkite agent token from Buildkite.com
+    Description: Your Buildkite organization’s agent token
     Type: String
     NoEcho: true
 
   BuildkiteApiAccessToken:
-    Description: A BuildKite API access token for reading queue metrics
+    Description: A BuildKite API access token (with the `read_pipelines` scope enabled) for reading queue metrics
     Type: String
     NoEcho: true
 
   BuildkiteQueue:
-    Description: The queue metadata to register the agent with
+    Description: Name of the queue that agents will register themselves within (using meta-data="queue=<name>")
     Type: String
     Default: elastic
 
   SecretsBucket:
-    Description: An S3 bucket containing provisioning files
+    Description: Optional - name of an S3 bucket containing provisioning files
     Type: String
     Default: ""
 
   ArtifactsBucket:
-    Description: An S3 bucket containing build artifacts
+    Description: Optional - name of an S3 bucket for build artifact storage
     Type: String
     Default: ""
 
@@ -101,7 +101,7 @@ Parameters:
     Default: t2.nano
 
   SpotPrice:
-    Description: An optional spot price to use for the agents, if 0 normal instances are used
+    Description: Optional - Spot price to use for the agents. 0 means normal (non-spot) instances are used
     Type: String
     Default: 0
 
@@ -142,7 +142,7 @@ Parameters:
 
   ImageId:
     Type: String
-    Description: The AMI to use, otherwise uses the mapping built in
+    Description: Optional - The AMI to use, otherwise uses the mapping built in
     Default: ""
 
 Conditions:
