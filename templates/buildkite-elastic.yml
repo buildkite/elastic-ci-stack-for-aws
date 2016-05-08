@@ -47,21 +47,21 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
 
   BuildkiteOrgSlug:
-    Description: Your Buildkite organization’s slug
+    Description: Your Buildkite organization's slug
     Type: String
 
   BuildkiteAgentToken:
-    Description: Your Buildkite organization’s agent token
+    Description: Your Buildkite organization's agent token
     Type: String
     NoEcho: true
 
   BuildkiteApiAccessToken:
-    Description: A BuildKite API access token (with the `read_pipelines` scope enabled) for reading queue metrics
+    Description: A Buildkite API access token (with read_pipelines scope enabled) for reading queue metrics
     Type: String
     NoEcho: true
 
   BuildkiteQueue:
-    Description: Name of the queue that agents will register themselves within (using meta-data="queue=<name>")
+    Description: Name of the Buildkite agent queue that agents will use
     Type: String
     Default: elastic
 
@@ -92,7 +92,7 @@ Parameters:
 
   AvailabilityZones:
     Type: CommaDelimitedList
-    Description: Optional - Comma-delimited list of VPC availability zones in which to create subnets.  Required if setting VpcId.
+    Description: Optional - Comma-delimited list of VPC availability zones in which to create subnets. Required if setting VpcId.
     Default: ""
 
   InstanceType:
