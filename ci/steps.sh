@@ -16,6 +16,7 @@ steps:
     name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack
+    artifact_paths: "build/*.json"
 
   - wait
 
