@@ -10,7 +10,7 @@ templates/mappings.yml:
 	curl -Lf -o templates/mappings.yml https://s3.amazonaws.com/buildkite-aws-stack/mappings.yml
 	touch templates/mappings.yml
 
-build/aws-stack.json: $(wildcard templates/*.yml)
+build/aws-stack.json: $(wildcard templates/*.yml) templates/mappings.yml
 	-mkdir -p build/
 	bundle exec cfoo $^ > $@
 
