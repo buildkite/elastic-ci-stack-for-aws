@@ -56,7 +56,7 @@ Parameters:
     NoEcho: true
 
   BuildkiteApiAccessToken:
-    Description: A Buildkite API access token (with read_pipelines scope enabled) for reading queue metrics
+    Description: A Buildkite API access token (with read_pipelines, read_builds and read_agents)
     Type: String
     NoEcho: true
 
