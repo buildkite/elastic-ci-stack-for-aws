@@ -17,6 +17,7 @@ Resources:
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    DependsOn: Gateway
     Condition: CreateVpcResources
     Properties:
       InternetGatewayId: $(Gateway)
