@@ -20,7 +20,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
       Cooldown: 300
-      ScalingAdjustment : $(ScaleOutAdjustment)
+      ScalingAdjustment : $(ScaleUpAdjustment)
 
   AgentScaleDownPolicy:
     Type : AWS::AutoScaling::ScalingPolicy
@@ -28,7 +28,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
       Cooldown : 600
-      ScalingAdjustment: $(ScaleInAdjustment)
+      ScalingAdjustment: $(ScaleDownAdjustment)
 
   ScheduledJobsAlarmHigh:
    Type: AWS::CloudWatch::Alarm

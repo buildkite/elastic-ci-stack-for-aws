@@ -115,13 +115,13 @@ Parameters:
     Type: Number
     Default: 0
 
-  ScaleOutAdjustment:
-    Description: The number of agents to add on each scale out event (ScheduledJobsCount > 0 for 1 minute)
+  ScaleUpAdjustment:
+    Description: The number of agents to add on each scale up event (ScheduledJobsCount > 0 for 1 minute)
     Type: Number
     Default: 5
 
-  ScaleInAdjustment:
-    Description: The number of agents to remove on each scale in event (ScheduledJobsCount == 0 for 5 minutes)
+  ScaleDownAdjustment:
+    Description: The number of agents to remove on each scale down event (ScheduledJobsCount == 0 for 5 minutes)
     Type: Number
     Default: -2
 
