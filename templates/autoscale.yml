@@ -1,5 +1,19 @@
 
 Resources:
+  MissingMetricsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      MetricName: ScheduledJobsCount
+      Namespace: Buildkite
+      Statistic: SampleCount
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      Dimensions:
+        - Name: Queue
+          Value: $(BuildkiteQueue)
+      ComparisonOperator: LessThanOrEqualToThreshold
+
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
@@ -35,12 +49,12 @@ Resources:
   ScheduledJobsAlarmLow:
    Type: AWS::CloudWatch::Alarm
    Properties:
-      AlarmDescription: Scale-down if ScheduledJobsCount == 0 for 5 minutes
+      AlarmDescription: Scale-down if ScheduledJobsCount == 0 for 60 minutes
       MetricName: ScheduledJobsCount
       Namespace: Buildkite
       Statistic: Maximum
-      Period: 300
-      EvaluationPeriods: 1
+      Period: 1200
+      EvaluationPeriods: 3
       Threshold: 0
       AlarmActions: [ $(AgentScaleDownPolicy) ]
       Dimensions:
