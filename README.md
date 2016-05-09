@@ -88,7 +88,7 @@ For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD`
 
 ## Autoscaling
 
-If you provided a `BuildkiteApiAccessToken`, a Buildkite API token with `read_builds` and `read_agents` permissions across your organization, then build and job metrics will be collected for your queue and used to scale your cluster of agents. Autoscaling is designed to scale up quite quickly and then gradually scale down. See [the autoscale.yml template](templates/autoscale.yml) for more details, or the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) project for how metrics are collected.
+If you provided a `BuildkiteApiAccessToken`, a Buildkite API token with `read_pipelines`, `read_builds` and `read_agents` permissions across your organization, then build and job metrics will be collected for your queue and used to scale your cluster of agents. Autoscaling is designed to scale up quite quickly and then gradually scale down. See [the autoscale.yml template](templates/autoscale.yml) for more details, or the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) project for how metrics are collected.
 
 When scaling down, instances wait until any running jobs on them have completed (thanks to [lifecycled](https://github.com/lox/lifecycled)).
 
