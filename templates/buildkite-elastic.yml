@@ -123,7 +123,7 @@ Parameters:
   ScaleDownAdjustment:
     Description: The number of agents to remove on each scale down event (ScheduledJobsCount == 0 for 5 minutes)
     Type: Number
-    Default: -2
+    Default: -5
 
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.
