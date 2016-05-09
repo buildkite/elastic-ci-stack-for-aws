@@ -30,10 +30,13 @@ upload: build/aws-stack.json
 config.json:
 	test -s config.json || { echo "Please create a config.json file"; exit 1; }
 
+
+stack_name =? buildkite
+
 create-stack: config.json templates/mappings.yml build/aws-stack.json
 	aws cloudformation create-stack \
 	--output text \
-	--stack-name buildkite \
+	--stack-name ${stack_name} \
 	--disable-rollback \
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
@@ -47,7 +50,7 @@ validate: build/aws-stack.json
 update-stack: config.json templates/mappings.yml build/aws-stack.json
 	aws cloudformation update-stack \
 	--output text \
-	--stack-name buildkite \
+	--stack-name ${stack_name} \
 	--template-body "file://${PWD}/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
 	--parameters '$(shell cat config.json)'
