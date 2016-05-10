@@ -1,7 +1,6 @@
 #!/bin/bash -eu
 
 sudo yum install -y awslogs
-sudo chkconfig awslogs on
 
 cat << EOF | sudo tee /etc/awslogs/awslogs.conf
 [general]
@@ -14,3 +13,4 @@ log_stream_name = {instance_id}
 datetime_format = %b %d %H:%M:%S
 EOF
 
+sudo chkconfig awslogs on
