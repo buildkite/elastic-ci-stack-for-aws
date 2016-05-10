@@ -4,11 +4,11 @@ LIFECYCLED_VERSION=v1.1.1
 
 sudo touch /etc/lifecycled
 sudo curl -Lf -o /usr/bin/lifecycled \
-	https://github.com/lox/lifecycled/releases/download/$(LIFECYCLED_VERSION)/lifecycled-linux-x86_64
+	https://github.com/lox/lifecycled/releases/download/${LIFECYCLED_VERSION}/lifecycled-linux-x86_64
 sudo chmod +x /usr/bin/lifecycled
 
 sudo curl -Lf -o /etc/init/lifecycled.conf \
-	https://raw.githubusercontent.com/lox/lifecycled/$(LIFECYCLED_VERSION)/init/upstart/lifecycled.conf
+	https://raw.githubusercontent.com/lox/lifecycled/${LIFECYCLED_VERSION}/init/upstart/lifecycled.conf
 
 cat << EOF | sudo tee /usr/bin/buildkite-lifecycle-handler
 #!/bin/sh -eu
