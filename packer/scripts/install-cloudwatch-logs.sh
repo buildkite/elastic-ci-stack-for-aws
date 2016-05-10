@@ -2,7 +2,7 @@
 
 sudo yum install -y awslogs
 
-mkdir -p /var/awslogs/state
+sudo mkdir -p /var/awslogs/state
 
 cat << EOF | sudo tee /etc/awslogs/awslogs.conf
 [general]
