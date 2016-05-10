@@ -20,6 +20,10 @@
     },
     {
       "type": "shell",
+      "script": "scripts/install-cloudwatch-logs.sh"
+    },
+    {
+      "type": "shell",
       "script": "scripts/install-docker.sh"
     },
     {
