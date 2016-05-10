@@ -13,3 +13,4 @@ log_group_name = /var/log/messages
 log_stream_name = {instance_id}
 datetime_format = %b %d %H:%M:%S
 EOF
+
