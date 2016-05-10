@@ -391,7 +391,7 @@ Resources:
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: $(MinSize)
-        MaxBatchSize: 1
+        MaxBatchSize: 5
         PauseTime: PT15M
         WaitOnResourceSignals: true
 
