@@ -12,12 +12,6 @@ EOF
 sudo yum -y install buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
-# https://github.com/buildkite/agent/issues/234
-if [ -f /etc/init/buildkite-agent.conf ]; then
-  sudo rm /etc/init/buildkite-agent.conf
-  sudo cp /usr/share/buildkite-agent/lsb/buildkite-agent.sh /etc/init.d/buildkite-agent
-fi
-
 # Allow buildkite to fix checkout permissions
 sudo cp /tmp/conf/buildkite-sudoers.conf /etc/sudoers.d/buildkite
 sudo chmod 440 /etc/sudoers.d/buildkite
