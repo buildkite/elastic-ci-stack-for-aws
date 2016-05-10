@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-LIFECYCLED_VERSION=v1.1.1
+LIFECYCLED_VERSION=v1.1.2
 
 sudo touch /etc/lifecycled
 sudo curl -Lf -o /usr/bin/lifecycled \
