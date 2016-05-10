@@ -293,6 +293,7 @@ Resources:
                 #!/bin/bash -eu
                 cat << EOF > /etc/lifecycled
                 AWS_REGION=$(AWS::Region)
+                LIFECYCLED_DEBUG=true
                 LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
                 LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
                 LIFECYCLED_HANDLER=/usr/bin/buildkite-lifecycle-handler
