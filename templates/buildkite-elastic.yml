@@ -292,14 +292,17 @@ Resources:
             01-write-buildkite-env:
               command: |
                 #!/bin/bash -eu
+
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME=$(AWS::StackName)
                 BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
                 EOF
+
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
             01-write-lifecycled-config:
               command: |
                 #!/bin/bash -eu
+
                 cat << EOF > /etc/lifecycled
                 AWS_REGION=$(AWS::Region)
                 LIFECYCLED_DEBUG=true
@@ -307,26 +310,36 @@ Resources:
                 LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
                 LIFECYCLED_HANDLER=/usr/bin/buildkite-lifecycle-handler
                 EOF
+
                 start lifecycled
             02-install-buildkite:
               command: |
-                export BUILDKITE_METADATA=\$(printf '"queue=%s,docker=%s,stack=%s"' $(BuildkiteQueue) \$(docker --version | cut -f3 -d' ' | sed 's/,//') $(AWS::StackName))
-                sed -i -r 's/^(name)=.*/\1="$(AWS::StackName)-%hostname-%n"/' /etc/buildkite-agent/buildkite-agent.cfg
-                sed -i -r 's/^(token)=.*/\1="$(BuildkiteAgentToken)"/' /etc/buildkite-agent/buildkite-agent.cfg
-                sed -i -r 's/^(# )?(meta-data-ec2-tags)=.*/\2=true/' /etc/buildkite-agent/buildkite-agent.cfg
-                sed -i -r "s/^(# )?(meta-data)=.*/\2=\$BUILDKITE_METADATA/" /etc/buildkite-agent/buildkite-agent.cfg
+                instance_id=\$(curl -sf http://169.254.169.254/latest/meta-data/instance-id)
+                instance_type=\$(curl -sf http://169.254.169.254/latest/meta-data/instance-type)
+                ami_id=\$(curl -sf http://169.254.169.254/latest/meta-data/ami-id)
+                docker_version=\$(docker --version | cut -f3 -d' ' | sed 's/,//')
+                meta_data_tags=\$(printf 'queue=%s,docker=%s,stack=%s,aws-buildkite-stack,aws:instance-id=%s,aws:instance-type=%s,aws:ami-id=%s' "$(BuildkiteQueue)" "\$docker_version" "$(AWS::StackName)" "\$instance_id" "\$instance_type" "\$ami_id")
+
+                sed -i -r "s/^(name)=.*/\\1=\"$(AWS::StackName)-\$instance_id\"/" /etc/buildkite-agent/buildkite-agent.cfg
+                sed -i -r "s/^(token)=.*/\\1=\"$(BuildkiteAgentToken)\"/" /etc/buildkite-agent/buildkite-agent.cfg
+                sed -i -r "s/^(# )?(meta-data-ec2-tags)=.*/\\2=true/" /etc/buildkite-agent/buildkite-agent.cfg
+                sed -i -r "s/^(# )?(meta-data)=.*/\\2=\"\$meta_data_tags\"/" /etc/buildkite-agent/buildkite-agent.cfg
+
                 service buildkite-agent start
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
                 #!/bin/bash -eu
+
                 cat << EOF > /etc/cron.hourly/authorized_keys
                 curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
                 mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
                 chmod 600 /home/ec2-user/.ssh/authorized_keys
                 chown ec2-user: /home/ec2-user/.ssh/authorized_keys
                 EOF
+
                 chmod +x /etc/cron.hourly/authorized_keys
+                
                 /etc/cron.hourly/authorized_keys
 
   AgentLifecycleQueue:
