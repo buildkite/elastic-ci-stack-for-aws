@@ -1,0 +1,3 @@
+Mappings:
+  AWSRegion2AMI:
+    us-east-1     : { AMI: packer_image_id }

@@ -51,7 +51,6 @@ steps:
 
   - command: ci/publish.sh
     name: "Publishing :cloudformation: stack"
-    branches: master
     agents:
       queue: aws-stack
 

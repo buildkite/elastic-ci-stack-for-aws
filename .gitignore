@@ -1,7 +1,8 @@
 build/
-packer/packer.output
+packer.output
 config.json
 templates/mappings.yml
 vendor/
 .bundle/
+*.bak
 
