@@ -80,10 +80,6 @@ cat << EOF > config.json
     "ParameterValue": "${BUILDKITE_AWS_STACK_BUCKET}"
   },
   {
-    "ParameterKey": "ImageId",
-    "ParameterValue": "${image_id}"
-  },
-  {
     "ParameterKey": "VpcId",
     "ParameterValue": "${vpc_id}"
   },
@@ -98,7 +94,13 @@ cat << EOF > config.json
 ]
 EOF
 
-make setup clean build validate
+cat << EOF > templates/mappings.yml
+Mappings:
+  AWSRegion2AMI:
+    us-east-1     : { AMI: $image_id }
+EOF
+
+make setup build validate
 
 echo "--- Creating stack $stack_name"
 aws cloudformation create-stack \
