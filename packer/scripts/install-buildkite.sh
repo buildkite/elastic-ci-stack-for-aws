@@ -9,7 +9,7 @@ gpgcheck=0
 priority=1
 EOF
 
-sudo yum -y install buildkite-agent
+sudo yum -y -q install buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 # Allow buildkite to fix checkout permissions

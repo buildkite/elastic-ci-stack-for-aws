@@ -5,8 +5,8 @@ set -eu -o pipefail
 DOCKER_VERSION=1.11.1
 DOCKER_SHA256=893e3c6e89c0cd2c5f1e51ea41bc2dd97f5e791fcfa3cee28445df277836339d
 
-sudo yum update -yq
-sudo yum install -yq docker
+sudo yum update -y -q
+sudo yum install -y -q docker
 sudo usermod -a -G docker ec2-user
 sudo cp /tmp/conf/docker.conf /etc/sysconfig/docker
 
