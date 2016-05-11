@@ -26,7 +26,7 @@ Alternately, if you prefer to use this repo, clone it and run the following comm
 
 ```bash
 # To set up your local environment and generate the CFN template JSON
-make
+make setup build
 
 # Or, to set things up locally and create the stack on AWS
 make create-stack
