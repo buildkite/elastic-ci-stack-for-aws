@@ -306,8 +306,10 @@ Resources:
             02-install-buildkite:
               command: |
                 instance_id=\$(curl -sf http://169.254.169.254/latest/meta-data/instance-id)
+                instance_type=\$(curl -sf http://169.254.169.254/latest/meta-data/instance-type)
+                ami_id=\$(curl -sf http://169.254.169.254/latest/meta-data/ami-id)
                 docker_version=\$(docker --version | cut -f3 -d' ' | sed 's/,//')
-                meta_data_tags=\$(printf 'queue=%s,docker=%s,stack=%s' "$(BuildkiteQueue)" "\$docker_version" "$(AWS::StackName)")
+                meta_data_tags=\$(printf 'queue=%s,docker=%s,stack=%s,aws-buildkite-stack,aws:instance-id=%s,aws:instance-type=%s,aws:ami-id=%s' "$(BuildkiteQueue)" "\$docker_version" "$(AWS::StackName)" "\$instance_id" "\$instance_type" "\$ami_id")
 
                 sed -i -r "s/^(name)=.*/\\1=\"$(AWS::StackName)-\$instance_id\"/" /etc/buildkite-agent/buildkite-agent.cfg
                 sed -i -r "s/^(token)=.*/\\1=\"$(BuildkiteAgentToken)\"/" /etc/buildkite-agent/buildkite-agent.cfg
