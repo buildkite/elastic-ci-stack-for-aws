@@ -1,6 +1,7 @@
 .PHONY: all clean build build-ami upload create-stack update-stack config.json
 
 BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
+BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 all: setup build
 
