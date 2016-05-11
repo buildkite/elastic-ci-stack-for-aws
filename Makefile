@@ -31,7 +31,7 @@ packer.output: $(shell find packer -type f)
 
 templates/mappings.yml: packer.output
 	cp templates/mappings.yml.template templates/mappings.yml
-	sed -i '' "s/packer_image_id/$(shell grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2)/" templates/mappings.yml
+	sed -i.bak "s/packer_image_id/$(shell grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2)/" templates/mappings.yml
 
 build-ami: templates/mappings.yml
 
