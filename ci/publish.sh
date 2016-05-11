@@ -2,9 +2,8 @@
 set -eu
 
 image_id=$(buildkite-agent meta-data get image_id)
-branch=$(git rev-parse --abbrev-ref HEAD)
 
-echo "Publishing branch $branch"
+echo "Publishing branch $BUILDKITE_BRANCH"
 
 cat << EOF > templates/mappings.yml
 Mappings:
@@ -14,10 +13,10 @@ EOF
 
 make setup build
 
-if [[ $branch == "master" ]] ; then
+if [[ $BUILDKITE_BRANCH == "master" ]] ; then
 	aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
 	aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
 else
-	aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${branch}/mappings.yml"
-	aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${branch}/aws-stack.json"
+	aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/mappings.yml"
+	aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.json"
 fi
