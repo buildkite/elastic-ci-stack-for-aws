@@ -3,7 +3,7 @@
 cat << EOF | sudo tee -a  /etc/yum.repos.d/buildkite-agent.repo
 [buildkite-agent]
 name = Buildkite Pty Ltd
-baseurl = https://yum.buildkite.com/buildkite-agent/stable/x86_64/
+baseurl = https://yum.buildkite.com/buildkite-agent/${AGENT_RELEASE_STREAM}/x86_64/
 enabled=1
 gpgcheck=0
 priority=1

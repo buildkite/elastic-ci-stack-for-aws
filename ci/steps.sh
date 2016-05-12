@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export stack_name="buildkite-aws-stack-test-$$"
-export queue_name="testqueue-$$"
+export stack_name="buildkite-aws-stack-test-${AGENT_RELEASE_STREAM}-$$"
+export queue_name="testqueue-${AGENT_RELEASE_STREAM}-$$"
 
 cat << EOF
 steps:
@@ -9,6 +9,7 @@ steps:
     name: "Build packer image"
     agents:
       queue: aws-stack
+    artifact_paths: "templates/mappings*.yml"
 
   - wait
 
@@ -64,4 +65,3 @@ EOF
 
 buildkite-agent meta-data set stack_name "$stack_name"
 buildkite-agent meta-data set queue_name "$queue_name"
-

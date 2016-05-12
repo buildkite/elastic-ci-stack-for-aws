@@ -8,7 +8,7 @@ Create an auto-scaling build cluster on AWS/VPC in under 10 minutes. Designed to
 
 The easiest way is to launch the latest built version via this button:
 
-[![Launch Buildkite AWS Stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
+[![Launch Buildkite AWS Stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/stable/aws-stack.json)
 
 If you'd like to use the CLI, download [`config.json.example`](config.json.example) to `config.json` and then run the below command to create a new stack.
 
@@ -16,42 +16,17 @@ If you'd like to use the CLI, download [`config.json.example`](config.json.examp
 aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
-  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
+  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/stable/aws-stack.json" \
   --capabilities CAPABILITY_IAM \
   --parameters <(cat config.json)
 ```
 
+There are stack parameters for instance size, autoscaling min and max, scale up and down instance count, S3 secret buckets, S3 artifact buckets, spot price bids, and more. Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for a full list, or use the AWS button above to see them in the Cloudformation web UI.
 
-Alternately, if you prefer to use this repo, clone it and run the following command to set up things locally and create a remote stack.
+The following following alternative stack template URLs can be used if you'd like to use the latest beta or experimental version of the Buildkite Agent:
 
-```bash
-# To set up your local environment and build a template based on public AMIs
-make setup download-mappings build
-
-# Or, to set things up locally and create the stack on AWS
-make create-stack
-
-# You can use any of the AWS... environment variables that the aws-cli supports.
-AWS_PROFILE="SOMETHING" make create-stack
-```
-
-### Useful Stack Parameters
-
-| Command                      | Description                                                                                                               | Default         |
-| ---                          | ---                                                                                                                       | ---             |
-| KeyName                      | The AWS EC2 Keypair to use                                                                                                | default         |
-| BuildkiteOrgSlug             | Your Buildkite Organization slug (e.g 99designs)                                                                          |                 |
-| BuildkiteAgentToken          | Your Buildkite Agent Token                                                                                                |                 |
-| BuildkiteApiAccessToken      | A Buildkite API token for metrics                                                                                         |                 |
-| BuildkiteQueue               | The Buildkite queue to give the agents                                                                                    | elastic         |
-| SecretsBucket                | An existing S3 bucket (and optional prefix) that contains secrets                                                         |                 |
-| ArtifactsBucket              | An existing S3 bucket (and optional prefix) that contains [build artifacts](https://buildkite.com/docs/guides/artifacts)  |                 |
-| InstanceType                 | The EC2 instance size to launch                                                                                           | t2.nano         |
-| MinSize                      | The minimum number of instances to launch                                                                                 | 0               |
-| MaxSize                      | The maximum number of instances to launch                                                                                 | 10              |
-| SpotPrice                    | An optional price to bid for spot instances (0 means non-spot)                                                            | 0               |
-
-Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for more details.
+* [https://s3.amazonaws.com/buildkite-aws-stack/unstable/aws-stack.json](https://s3.amazonaws.com/buildkite-aws-stack/unstable/aws-stack.json)
+* [https://s3.amazonaws.com/buildkite-aws-stack/experimental/aws-stack.json](https://s3.amazonaws.com/buildkite-aws-stack/experimental/aws-stack.json)
 
 ## Targeting Builds
 
@@ -92,6 +67,21 @@ If you provided a `BuildkiteApiAccessToken`, a Buildkite API token with `read_pi
 
 When scaling down, instances wait until any running jobs on them have completed (thanks to [lifecycled](https://github.com/lox/lifecycled)).
 
+## Building your own stack
+
+If you'd like to use this repo to build the stack yourself, clone it and run the following commands:
+
+```bash
+# To set up your local environment and build a template based on public AMIs
+make setup download-mappings build
+
+# Or, to set things up locally and create the stack on AWS
+make create-stack
+
+# You can use any of the AWS... environment variables that the aws-cli supports.
+AWS_PROFILE="SOMETHING" make create-stack
+```
+
 ## Security
 
 This repository hasn't been reviewed by security researchers, so exercise caution and careful thought with what credentials you make available to your builds. At present anyone with access to your CI machines or commit access to your codebase (including third-party pull-requests) will theoretically have access to your encrypted secrets. Anyone with access to your Buildkite Project Configuration will be able to retrieve the encryption key used to decrypt these. In combination, the attacker would have access to your decrypted secrets.
@@ -100,7 +90,6 @@ Presently the EC2 Metadata instance is available via HTTP request from builds, w
 
 ## Questions?
 
-This is experimental and still being actively developed, but under heavy use at 99designs.
+This is experimental and still being actively developed, but under heavy use at 99designs & Buildkite.
 
 Feel free to drop me an email at lachlan@ljd.cc with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
-
