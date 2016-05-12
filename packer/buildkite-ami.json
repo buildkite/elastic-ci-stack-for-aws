@@ -1,4 +1,7 @@
 {
+  "variables": {
+    "release-stream": "stable"
+  },
   "builders": [
     {
       "type": "amazon-ebs",
@@ -7,7 +10,7 @@
       "region": "us-east-1",
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
-      "ami_name": "buildkite-{{isotime | clean_ami_name}}",
+      "ami_name": "buildkite-{{user `release-stream` | clean_ami_name}}-{{isotime | clean_ami_name}}",
       "ami_description": "A basic image with a Buildkite agent running",
       "ami_groups": ["all"]
     }
@@ -28,7 +31,8 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-buildkite.sh"
+      "script": "scripts/install-buildkite.sh",
+      "environment_vars": ["RELEASE_STREAM={{user `release-stream`}}"]
     },
     {
       "type": "shell",
