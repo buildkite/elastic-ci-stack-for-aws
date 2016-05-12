@@ -1,8 +1,9 @@
 build/
 packer.output
 config.json
-templates/mappings.yml
+templates/mappings-stable.yml
+templates/mappings-unstable.yml
+templates/mappings-experimental.yml
 vendor/
 .bundle/
 *.bak
-

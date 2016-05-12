@@ -9,6 +9,7 @@ steps:
     name: "Build packer image"
     agents:
       queue: aws-stack
+    artifact_paths: "templates/mappings*.yml"
 
   - wait
 
@@ -64,4 +65,3 @@ EOF
 
 buildkite-agent meta-data set stack_name "$stack_name"
 buildkite-agent meta-data set queue_name "$queue_name"
-
