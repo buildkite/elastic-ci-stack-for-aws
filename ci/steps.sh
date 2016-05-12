@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export stack_name="buildkite-aws-stack-test-$$"
-export queue_name="testqueue-$$"
+export stack_name="buildkite-aws-stack-test-${AGENT_RELEASE_STREAM}-$$"
+export queue_name="testqueue-${AGENT_RELEASE_STREAM}-$$"
 
 cat << EOF
 steps:
