@@ -13,7 +13,7 @@ sudo curl -Lf -o /etc/init/lifecycled.conf \
 cat << EOF | sudo tee /usr/bin/buildkite-lifecycle-handler
 #!/bin/sh -eu
 echo "stopping buildkite-agent gracefully"
-service buildkite-agent stop
+pgrep buildkite-agent | xargs kill
 while pgrep buildkite-agent > /dev/null; do
   sleep 0.5
 done

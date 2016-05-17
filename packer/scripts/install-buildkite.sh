@@ -1,16 +1,34 @@
 #!/bin/bash -eu
 
-cat << EOF | sudo tee -a  /etc/yum.repos.d/buildkite-agent.repo
-[buildkite-agent]
-name = Buildkite Pty Ltd
-baseurl = https://yum.buildkite.com/buildkite-agent/stable/x86_64/
-enabled=1
-gpgcheck=0
-priority=1
-EOF
+# Install all 3 versions of the agent
 
-sudo yum -y -q install buildkite-agent
+sudo curl -Lf -o /usr/bin/buildkite-agent-stable \
+  https://download.buildkite.com/agent/stable/latest/buildkite-agent-`uname -s`-`uname -m`
+sudo chmod +x /usr/bin/buildkite-agent-stable
+
+sudo curl -Lf -o /usr/bin/buildkite-agent-unstable \
+  https://download.buildkite.com/agent/unstable/latest/buildkite-agent-`uname -s`-`uname -m`
+sudo chmod +x /usr/bin/buildkite-agent-unstable
+
+sudo curl -Lf -o /usr/bin/buildkite-agent-experimental \
+  https://download.buildkite.com/agent/experimental/latest/buildkite-agent-`uname -s`-`uname -m`
+sudo chmod +x /usr/bin/buildkite-agent-experimental
+
+sudo useradd buildkite-agent
 sudo usermod -a -G docker buildkite-agent
+
+sudo mkdir -p /etc/buildkite-agent/hooks
+sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
+
+# This can be removed when stable refers to 3.0
+sudo wget -nv https://raw.githubusercontent.com/buildkite/agent/2-1-stable/templates/bootstrap.sh -O /etc/buildkite-agent/2-1-stable-bootstrap.sh
+sudo chmod +x /etc/buildkite-agent/2-1-stable-bootstrap.sh
+
+sudo mkdir -p /var/lib/buildkite-agent/builds
+sudo chown -R buildkite-agent: /var/lib/buildkite-agent/builds
+
+sudo mkdir -p /var/lib/buildkite-agent/plugins
+sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 # Allow buildkite to fix checkout permissions
 sudo cp /tmp/conf/buildkite-sudoers.conf /etc/sudoers.d/buildkite
