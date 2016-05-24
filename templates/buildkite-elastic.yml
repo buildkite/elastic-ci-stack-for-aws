@@ -321,6 +321,8 @@ Resources:
                 start lifecycled
             02-install-buildkite:
               command: |
+                #!/bin/bash -eu
+
                 ln -s /usr/bin/buildkite-agent-$(BuildkiteAgentRelease) /usr/bin/buildkite-agent
 
                 INSTANCE_ID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
@@ -335,11 +337,9 @@ Resources:
                 build-path=/var/lib/buildkite-agent/builds
                 plugins-path=/var/lib/buildkite-agent/plugins
                 EOF
-
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-                su - buildkite-agent -c "buildkite-agent start" 2>&1 > /var/log/buildkite-agent.log &
-                # su - buildkite-agent -c "buildkite-agent start; aws autoscaling set-instance-health --instance-id \"\$INSTANCE_ID\" --health-status Unhealthy --should-respect-grace-period False" 2>&1 > /var/log/buildkite-agent.log &
+                start buildkite-agent
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |

@@ -20,6 +20,9 @@ sudo curl -Lsf -o /usr/bin/buildkite-agent-experimental \
 sudo chmod +x /usr/bin/buildkite-agent-experimental
 buildkite-agent-experimental --version
 
+echo "Adding upstart script..."
+sudo cp /tmp/conf/buildkite-agent-upstart.conf /etc/init/lifecycled.conf
+
 echo "Creating buildkite-agent user..."
 sudo useradd buildkite-agent
 sudo usermod -a -G docker buildkite-agent
@@ -32,7 +35,7 @@ sudo mkdir -p /etc/buildkite-agent
 sudo curl -Lsf -o /etc/buildkite-agent/bootstrap.sh \
   https://raw.githubusercontent.com/buildkite/agent/2-1-stable/templates/bootstrap.sh
 sudo chmod +x /etc/buildkite-agent/bootstrap.sh
-sudo chown -R buildkite-agent: /etc/buildkite-agent/bootstrap.sh
+sudo chown -R buildkite-agent: /etc/buildkite-agent
 
 echo "Creating hooks dir..."
 sudo mkdir -p /etc/buildkite-agent/hooks

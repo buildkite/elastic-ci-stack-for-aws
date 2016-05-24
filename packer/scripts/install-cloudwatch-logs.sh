@@ -14,11 +14,4 @@ log_group_name = /var/log/messages
 log_stream_name = {instance_id}
 datetime_format = %b %d %H:%M:%S
 
-[/var/log/buildkite-agent.log]
-file = /var/log/buildkite-agent.log
-log_group_name = /var/log/buildkite-agent.log
-log_stream_name = {instance_id}
-datetime_format = %Y-%m-%d %H:%M:%S
-EOF
-
 sudo chkconfig awslogs on
