@@ -8,7 +8,7 @@
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
       "ami_name": "buildkite-stack-{{isotime | clean_ami_name}}",
-      "ami_description": "Amazon Linux with Docker, Lifecycled and Buildkite Agent",
+      "ami_description": "Buildkite CloudFormation Stack base image (Amazon Linux, Docker, Lifecycled and Buildkite Agent)",
       "ami_groups": ["all"]
     }
   ],
