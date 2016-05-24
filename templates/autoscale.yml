@@ -49,7 +49,7 @@ Resources:
   ScheduledJobsAlarmLow:
    Type: AWS::CloudWatch::Alarm
    Properties:
-      AlarmDescription: Scale-down if ScheduledJobsCount == 0 for 60 minutes
+      AlarmDescription: Scale-down if ScheduledJobsCount == 0 for 20 minutes
       MetricName: ScheduledJobsCount
       Namespace: Buildkite
       Statistic: Maximum
