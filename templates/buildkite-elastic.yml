@@ -320,16 +320,12 @@ Resources:
                 start lifecycled
             02-install-buildkite:
               command: |
+                ln -s /usr/bin/buildkite-agent-$(BuildkiteAgentRelease) /usr/bin/buildkite-agent
+
                 INSTANCE_ID=\$(curl -sf http://169.254.169.254/latest/meta-data/instance-id)
                 DOCKER_VERSION=\$(docker --version | cut -f3 -d' ' | sed 's/,//')
-                BUILDKITE_AGENT_BINARY=/usr/bin/buildkite-agent-$(BuildkiteAgentRelease)
-                if [[ "$(BuildkiteAgentRelease)" == "stable" ]]; then
-                  BOOTSTRAP_SCRIPT=/etc/buildkite-agent/2-1-stable-bootstrap.sh
-                else
-                  BOOTSTRAP_SCRIPT="\$BUILDKITE_AGENT_BINARY bootstrap"
-                fi
-
-                cat << EOF > /etc/buildkite-agent
+                
+                cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
                 name="$(AWS::StackName)-\$INSTANCE_ID"
                 token="$(BuildkiteAgentToken)"
                 meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,aws-buildkite-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
@@ -337,10 +333,9 @@ Resources:
                 hooks-path=/etc/buildkite-agent/hooks
                 build-path=/var/lib/buildkite-agent/builds
                 plugins-path=/var/lib/buildkite-agent/plugins
-                bootstrap-script=\$BOOTSTRAP_SCRIPT
                 EOF
 
-                su - buildkite-agent -c "\$BUILDKITE_AGENT_BINARY start --config /etc/buildkite-agent'
+                su - buildkite-agent -c "buildkite-agent start" &
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |

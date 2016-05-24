@@ -21,9 +21,9 @@ sudo mkdir -p /etc/buildkite-agent/hooks
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
 
 # This can be removed when stable refers to 3.0
-sudo curl -Lf -o /etc/buildkite-agent/2-1-stable-bootstrap.sh \
+sudo curl -Lf -o /etc/buildkite-agent/bootstrap.sh \
   https://raw.githubusercontent.com/buildkite/agent/2-1-stable/templates/bootstrap.sh
-sudo chmod +x /etc/buildkite-agent/2-1-stable-bootstrap.sh
+sudo chmod +x /etc/buildkite-agent/bootstrap.sh
 
 sudo mkdir -p /var/lib/buildkite-agent/builds
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/builds
