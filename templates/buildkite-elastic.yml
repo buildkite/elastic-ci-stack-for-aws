@@ -334,7 +334,6 @@ Resources:
                 token="$(BuildkiteAgentToken)"
                 meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,aws-buildkite-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
                 meta-data-ec2=true
-                meta-data-ec2-tags=true
                 hooks-path=/etc/buildkite-agent/hooks
                 build-path=/var/lib/buildkite-agent/builds
                 plugins-path=/var/lib/buildkite-agent/plugins
