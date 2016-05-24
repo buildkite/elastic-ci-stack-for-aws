@@ -336,6 +336,8 @@ Resources:
                 plugins-path=/var/lib/buildkite-agent/plugins
                 EOF
 
+                chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
+
                 su - buildkite-agent -c "buildkite-agent start" &
                 # su - buildkite-agent -c "buildkite-agent start; aws autoscaling set-instance-health --instance-id \"\$INSTANCE_ID\" --health-status Unhealthy --should-respect-grace-period False" &
             03-fetch-authorized-users:
