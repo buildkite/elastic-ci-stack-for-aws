@@ -52,7 +52,7 @@ Parameters:
     Type: String
 
   BuildkiteAgentRelease:
-    Description: The buildkite-agent release stream ("stable", "unstable" or "beta")
+    Description: The buildkite-agent release stream ("stable", "unstable" or "experimental")
     Type: String
     Default: "stable"
 
