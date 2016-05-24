@@ -24,6 +24,10 @@ echo "Creating buildkite-agent user..."
 sudo useradd buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
+echo "Creating buildkite-agent log..."
+sudo touch /var/log/buildkite-agent.log
+sudo chown buildkite-agent: /var/log/buildkite-agent.log
+
 echo "Downloading legacy bootstrap.sh for v2 stable agent..."
 sudo mkdir -p /etc/buildkite-agent
 sudo curl -Lsf -o /etc/buildkite-agent/bootstrap.sh \

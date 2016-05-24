@@ -338,8 +338,8 @@ Resources:
 
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-                su - buildkite-agent -c "buildkite-agent start" &
-                # su - buildkite-agent -c "buildkite-agent start; aws autoscaling set-instance-health --instance-id \"\$INSTANCE_ID\" --health-status Unhealthy --should-respect-grace-period False" &
+                su - buildkite-agent -c "buildkite-agent start 2>&1 > /var/log/buildkite-agent.log" &
+                # su - buildkite-agent -c "buildkite-agent start 2>&1 > /var/log/buildkite-agent.log; aws autoscaling set-instance-health --instance-id \"\$INSTANCE_ID\" --health-status Unhealthy --should-respect-grace-period False" &
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
