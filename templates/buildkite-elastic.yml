@@ -329,7 +329,7 @@ Resources:
                 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
                 name="$(AWS::StackName)-\$INSTANCE_ID"
                 token="$(BuildkiteAgentToken)"
-                meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,aws-buildkite-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
+                meta-data=\$(printf 'queue=%s,docker=%s,buildkite-aws-stack=%s' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
                 meta-data-ec2=true
                 hooks-path=/etc/buildkite-agent/hooks
                 build-path=/var/lib/buildkite-agent/builds
