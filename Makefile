@@ -9,6 +9,7 @@ all: setup build
 
 build: build/aws-stack.json
 
+.DELETE_ON_ERROR:
 build/aws-stack.json: $(wildcard templates/*.yml) templates/mappings.yml
 	-mkdir -p build/
 	bundle exec cfoo $^ > $@
