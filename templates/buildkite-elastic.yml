@@ -215,7 +215,6 @@ Resources:
               - ec2:DescribeTags
               - autoscaling:CompleteLifecycleAction
               - autoscaling:RecordLifecycleActionHeartbeat
-              - autoscaling:SetInstanceHealth
             Resource: "*"
           - Effect: Allow
             Action:
