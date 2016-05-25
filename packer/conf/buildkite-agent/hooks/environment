@@ -1,5 +1,6 @@
 #!/bin/bash
-set -eu
+
+set -eu -o pipefail
 
 s3_exists() {
   env -i aws s3 ls "$1" --summarize --human-readable

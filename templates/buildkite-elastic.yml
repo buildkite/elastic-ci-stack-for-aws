@@ -336,6 +336,7 @@ Resources:
                 build-path=/var/lib/buildkite-agent/builds
                 plugins-path=/var/lib/buildkite-agent/plugins
                 EOF
+
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
                 start buildkite-agent

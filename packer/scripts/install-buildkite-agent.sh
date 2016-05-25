@@ -1,6 +1,10 @@
-#!/bin/bash -eu
+#!/bin/bash
 
-# Install all 3 versions of the agent
+set -eu -o pipefail
+
+echo "Creating buildkite-agent user..."
+sudo useradd buildkite-agent
+sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
@@ -20,16 +24,6 @@ sudo curl -Lsf -o /usr/bin/buildkite-agent-experimental \
 sudo chmod +x /usr/bin/buildkite-agent-experimental
 buildkite-agent-experimental --version
 
-echo "Adding upstart script..."
-sudo cp /tmp/conf/buildkite-agent-upstart.conf /etc/init/lifecycled.conf
-
-echo "Creating buildkite-agent user..."
-sudo useradd buildkite-agent
-sudo usermod -a -G docker buildkite-agent
-
-echo "Creating buildkite-agent log..."
-sudo touch /var/log/buildkite-agent.log
-
 echo "Downloading legacy bootstrap.sh for v2 stable agent..."
 sudo mkdir -p /etc/buildkite-agent
 sudo curl -Lsf -o /etc/buildkite-agent/bootstrap.sh \
@@ -37,19 +31,24 @@ sudo curl -Lsf -o /etc/buildkite-agent/bootstrap.sh \
 sudo chmod +x /etc/buildkite-agent/bootstrap.sh
 sudo chown -R buildkite-agent: /etc/buildkite-agent
 
+echo "Adding scripts..."
+sudo cp /tmp/conf/buildkite-agent/scripts/* /usr/bin
+
+echo "Adding sudoers config..."
+sudo cp /tmp/conf/buildkite-agent/sudoers.conf /etc/sudoers.d/buildkite-agent
+sudo chmod 440 /etc/sudoers.d/buildkite-agent
+
+echo "Creating buildkite-agent log..."
+sudo touch /var/log/buildkite-agent.log
+
 echo "Creating hooks dir..."
 sudo mkdir -p /etc/buildkite-agent/hooks
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
 
 echo "Copying custom hooks..."
-sudo cp -a /tmp/conf/hooks/* /etc/buildkite-agent/hooks
+sudo cp -a /tmp/conf/buildkite-agent/hooks/* /etc/buildkite-agent/hooks
 sudo chmod +x /etc/buildkite-agent/hooks/*
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
-
-echo "Configuring sudoers so the environment hook can fix incorrectly owned files..."
-sudo cp /tmp/conf/buildkite-sudoers.conf /etc/sudoers.d/buildkite
-sudo chmod 440 /etc/sudoers.d/buildkite
-sudo mv /tmp/conf/scripts/fix-checkout-permissions /usr/bin/
 
 echo "Creating builds dir..."
 sudo mkdir -p /var/lib/buildkite-agent/builds
@@ -58,3 +57,6 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/builds
 echo "Creating plugins dir..."
 sudo mkdir -p /var/lib/buildkite-agent/plugins
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
+
+echo "Adding upstart script..."
+sudo cp /tmp/conf/buildkite-agent/upstart.conf /etc/init/buildkite-agent.conf

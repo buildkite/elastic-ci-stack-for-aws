@@ -20,7 +20,11 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-cloudwatch-logs.sh"
+      "script": "scripts/install-awslogs.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-lifecycled.sh"
     },
     {
       "type": "shell",
@@ -28,11 +32,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-buildkite.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
+      "script": "scripts/install-buildkite-agent.sh"
     }
   ]
 }

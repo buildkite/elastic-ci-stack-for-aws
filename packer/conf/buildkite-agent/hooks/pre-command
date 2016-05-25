@@ -1,5 +1,6 @@
 #!/bin/bash
-set -eu
+
+set -eu -o pipefail
 
 [[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
 [[ -f ~/.dockercfg ]] && rm ~/.dockercfg
