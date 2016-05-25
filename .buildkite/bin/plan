@@ -1,0 +1,25 @@
+#!/bin/bash -ie
+
+CONFIG_ARGS=()
+PLAN_ARGS=()
+OUT_FILE=""
+
+for arg in "$@"; do
+  if [[ $arg == -backend* ]]; then
+    CONFIG_ARGS+=($arg)
+  else
+    if [[ $arg == -out=* ]]; then
+      OUT_FILE=${arg#*=}
+    fi
+    PLAN_ARGS+=($arg)
+  fi
+done
+
+terraform remote config ${CONFIG_ARGS[@]}
+echo "~~~ Planning :terraform:"
+terraform plan ${PLAN_ARGS[@]}
+
+if hash buildkite-agent 2> /dev/null; then
+  echo "~~~ Uploading :terraform:"
+  buildkite-agent artifact upload $OUT_FILE $BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+fi
