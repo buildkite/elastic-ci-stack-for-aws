@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -eu -o pipefail
-
-if [[ -e /var/lib/buildkite-agent/builds ]] ; then
-	chown -R  buildkite-agent.buildkite-agent /var/lib/buildkite-agent/builds
-fi

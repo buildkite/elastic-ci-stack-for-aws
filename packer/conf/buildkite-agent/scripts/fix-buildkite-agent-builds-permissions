@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Files that are created by Docker containers end up with strange user and
+# group ids, usually 0 (root). Docker namespacing will one day save us, but it
+# can only map a single docker user id to a given user id (not any docker user
+# id to a single system user id).
+#
+# Until we can map any old user id back to
+# buildkite-agent automatically with Docker, then we just need to fix the
+# permissions manually before each build runs so git clean can work as
+# expected.
+
+set -eu -o pipefail
+
+if [[ -e /var/lib/buildkite-agent/builds ]] ; then
+	chown -R  buildkite-agent.buildkite-agent /var/lib/buildkite-agent/builds
+fi

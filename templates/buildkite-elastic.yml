@@ -314,7 +314,7 @@ Resources:
                 LIFECYCLED_DEBUG=true
                 LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
                 LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
-                LIFECYCLED_HANDLER=/usr/bin/buildkite-lifecycle-handler
+                LIFECYCLED_HANDLER=/usr/bin/buildkite-agent-lifecycled-handler
                 EOF
 
                 start lifecycled
