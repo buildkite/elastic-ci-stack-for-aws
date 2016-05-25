@@ -4,19 +4,35 @@ set -eu
 [[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
 [[ -f ~/.dockercfg ]] && rm ~/.dockercfg
 
+docker_login() {
+  local login=$(jq -r 'keys | .[]' <<< "$1")
+  local user=$(jq -r ".\"$login\".auth" <<< "$1" | base64 --decode | cut -d: -f1)
+  local password=$(jq -r ".\"$login\".auth" <<< "$1" | base64 --decode | cut -d: -f2)
+  local email=$(jq -r ".\"$login\".email" <<< "$1")
+
+  if [[ -n "$user" && -n "$password" && -n "$email" ]] ; then
+    echo "~~~ Authenticating with $login as $user"
+    docker login --username="$user" -password="$password" --email="$email" "$login"
+  elif [[ -n "$user" && -n "$password" ]] ; then
+    echo "Missing email for $login"
+    return 1
+  fi
+}
+
+if [[ -n "${DOCKER_AUTH:-}" ]] ; then
+  jq -rc '. as $auths | keys | map({(.): $auths[.]}) | .[]' <<< "$DOCKER_AUTH" | while read -a auth; do
+    docker_login "$auth"
+  done
+  unset DOCKER_AUTH
+fi
+
 if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
-  DOCKER_HUB_USER=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f1)
-  DOCKER_HUB_PASSWORD=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f2)
-  DOCKER_HUB_EMAIL=$(jq -r '."https://index.docker.io/v1/".email' <<< "$DOCKER_HUB_AUTH")
+  docker_login "$DOCKER_HUB_AUTH"
   unset DOCKER_HUB_AUTH
 fi
 
-if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" && -n "${DOCKER_HUB_EMAIL:-}" ]] ; then
-  echo "~~~ Authenticating with :docker: hub as ${DOCKER_HUB_USER}"
-  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}" --email="${DOCKER_HUB_EMAIL}"
-elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
-  echo "Missing DOCKER_HUB_EMAIL."
-  exit 1
+if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
+  docker_login "{\"auth\":\"$(echo "${DOCKER_HUB_USER}:${DOCKER_HUB_PASSWORD}" | base64)\",\"email\":\"${DOCKER_HUB_EMAIL}\"}"
 fi
 
 unset DOCKER_HUB_USER
