@@ -4,9 +4,9 @@ set -eu -o pipefail
 
 echo "stopping buildkite-agent gracefully"
 
-service buildkite-agent stop
+/etc/init.d/buildkite-agent stop
 
-while pgrep buildkite-agent > /dev/null; do
+while [[ $(/etc/init.d/buildkite-agent status) == "Running" ]]; do
   sleep 0.5
 done
 

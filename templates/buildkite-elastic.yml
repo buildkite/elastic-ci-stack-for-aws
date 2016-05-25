@@ -339,7 +339,8 @@ Resources:
 
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-                start buildkite-agent
+                chkconfig --add buildkite-agent
+                chkconfig buildkite-agent on
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |

@@ -62,5 +62,5 @@ echo "Creating plugins dir..."
 sudo mkdir -p /var/lib/buildkite-agent/plugins
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
-echo "Adding upstart script..."
-sudo cp /tmp/conf/buildkite-agent/upstart.conf /etc/init/buildkite-agent.conf
+echo "Adding init.d script..."
+sudo cp /tmp/conf/buildkite-agent/init.d/buildkite-agent /etc/init.d/
