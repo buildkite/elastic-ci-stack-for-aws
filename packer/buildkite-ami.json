@@ -28,6 +28,10 @@
     },
     {
       "type": "shell",
+      "script": "scripts/install-terraform.sh"
+    },
+    {
+      "type": "shell",
       "script": "scripts/install-buildkite.sh"
     },
     {
