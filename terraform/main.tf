@@ -42,7 +42,7 @@ resource "aws_cloudformation_stack" "buildkite" {
     MinSize = "${var.min_size}"
     RootVolumeSize = "${var.volume_size}"
     ImageId = "${var.image_id}"
-    AvailabilityZones = "${var.region}"
+    AvailabilityZones = "${coalesce(var.availability_zones, var.region)}"
   }
 }
 
