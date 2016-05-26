@@ -1,25 +1,27 @@
 #!/bin/bash -ie
 
-CONFIG_ARGS=()
-PLAN_ARGS=()
-OUT_FILE=""
+if [ -z "$OUTFILE" ]; then
+  echo "OUTFILE is not set or empty"
+  exit 1
+fi
 
-for arg in "$@"; do
-  if [[ $arg == -backend* ]]; then
-    CONFIG_ARGS+=($arg)
-  else
-    if [[ $arg == -out=* ]]; then
-      OUT_FILE=${arg#*=}
-    fi
-    PLAN_ARGS+=($arg)
-  fi
-done
+if [ -z "$STATE_BUCKET" ]; then
+  echo "STATE_BUCKET is not set or empty"
+  exit 1
+fi
 
-terraform remote config ${CONFIG_ARGS[@]}
+if [ -z "$STATE_KEY" ]; then
+  echo "STATE_KEY is not set or empty"
+  exit 1
+fi
+
+cd ./terraform
+terraform remote config -backend=s3 -backend-config="bucket=$STATE_BUCKET" -backend-config="key=$STATE_KEY"
+
 echo "~~~ Planning :terraform:"
-terraform plan ${PLAN_ARGS[@]}
+terraform plan -input=false -out $"OUTFILE"
 
 if hash buildkite-agent 2> /dev/null; then
   echo "~~~ Uploading :terraform:"
-  buildkite-agent artifact upload $OUT_FILE $BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+  buildkite-agent artifact upload $OUTFILE $BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
 fi
