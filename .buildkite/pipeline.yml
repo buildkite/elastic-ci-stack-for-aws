@@ -12,3 +12,9 @@ steps:
     agents:
       - queue=native
 
+  - wait
+
+  - name: ":secret: Upload"
+    command: ".buildkite/bin/upload-secrets"
+    agents:
+      - queue=native
