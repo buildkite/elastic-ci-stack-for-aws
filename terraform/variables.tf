@@ -1,3 +1,18 @@
+variable "access_key" {
+  default = ""
+  description = "The AWS access key"
+}
+
+variable "secret_key" {
+  default = ""
+  description = "The AWS secret key"
+}
+
+variable "region" {
+  default = "us-east-1"
+  description = "The AWS region"
+}
+
 variable "name" {
   description = "Name of the stack"
   name = "buildkite"
