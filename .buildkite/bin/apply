@@ -1,0 +1,14 @@
+#!/bin/bash -ie
+
+if [ -z "$PLANFILE" ]; then
+  echo "PLANFILE is not set or empty"
+  exit 1
+fi
+
+cd ./terraform
+
+echo "~~~ Downloading :terraform:"
+buildkite-agent artifact download "$PLANFILE" .
+
+echo "~~~ Applying :terraform:"
+terraform apply -input=false "$PLANFILE"

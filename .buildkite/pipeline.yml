@@ -5,3 +5,10 @@ steps:
     agents:
       - queue=native
 
+  - wait
+
+  - name: ":terraform: Apply"
+    command: ".buildkite/bin/apply"
+    agents:
+      - queue=native
+

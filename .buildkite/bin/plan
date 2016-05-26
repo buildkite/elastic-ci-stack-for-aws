@@ -1,7 +1,7 @@
 #!/bin/bash -ie
 
-if [ -z "$OUTFILE" ]; then
-  echo "OUTFILE is not set or empty"
+if [ -z "$PLANFILE" ]; then
+  echo "PLANFILE is not set or empty"
   exit 1
 fi
 
@@ -19,9 +19,9 @@ cd ./terraform
 terraform remote config -backend=s3 -backend-config="bucket=$STATE_BUCKET" -backend-config="key=$STATE_KEY"
 
 echo "~~~ Planning :terraform:"
-terraform plan -input=false -out $"OUTFILE"
+terraform plan -input=false -out "$PLANFILE"
 
 if hash buildkite-agent 2> /dev/null; then
   echo "~~~ Uploading :terraform:"
-  buildkite-agent artifact upload $OUTFILE $BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+  buildkite-agent artifact upload "$PLANFILE" "$BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
 fi
