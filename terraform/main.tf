@@ -47,9 +47,9 @@ resource "aws_cloudformation_stack" "buildkite" {
 }
 
 output "secrets_bucket" {
-  value = "aws_s3_bucket.buildkite_secrets.id"
+  value = "${aws_s3_bucket.buildkite_secrets.id}"
 }
 
 output "artifacts_bucket" {
-  value = "aws_s3_bucket.buildkite_artifacts.id"
+  value = "${aws_s3_bucket.buildkite_artifacts.id}"
 }
