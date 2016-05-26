@@ -39,6 +39,11 @@ variable "buildkite_api_access_token" {
   description = "A Buildkite API access token (with read_pipelines, read_builds and read_agents) used for gathering metrics"
 }
 
+variable "buildkite_queue" {
+  description = "Name of the Buildkite agent queue that agents will use"
+  default = "elastic"
+}
+
 variable "instance_type" {
   description = "The type of instance to use for the agent"
   default = "t2.nano"

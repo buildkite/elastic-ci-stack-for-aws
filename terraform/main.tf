@@ -34,6 +34,7 @@ resource "aws_cloudformation_stack" "buildkite" {
     KeyName = "${var.key_name}"
     BuildkiteOrgSlug = "${var.buildkite_org_slug}"
     BuildkiteAgentToken = "${var.buildkite_agent_token}"
+    BuildkiteQueue = "${var.buildkite_queue}"
     BuildkiteApiAccessToken = "${var.buildkite_api_access_token}"
     SecretsBucket = "${aws_s3_bucket.buildkite_secrets.id}"
     ArtifactsBucket = "${aws_s3_bucket.buildkite_artifacts.id}"
