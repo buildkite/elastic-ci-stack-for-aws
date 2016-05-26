@@ -2,4 +2,6 @@
 steps:
   - name: ":terraform: Plan"
     command: ".buildkite/bin/plan -backend=s3 -backend-config=\"bucket=$STATE_BUCKET\" -backend-config=\"key=$STATE_KEY\" -out=\"$OUTFILE\""
+    agents:
+      - queue=native
 
