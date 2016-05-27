@@ -3,18 +3,18 @@ steps:
   - name: ":terraform: Plan"
     command: ".buildkite/bin/plan"
     agents:
-      - queue=native
+      - queue=elastic
 
   - wait
 
   - name: ":terraform: Apply"
     command: ".buildkite/bin/apply"
     agents:
-      - queue=native
+      - queue=elastic
 
   - wait
 
   - name: ":secret: Upload"
     command: ".buildkite/bin/upload-secrets"
     agents:
-      - queue=native
+      - queue=elastic
