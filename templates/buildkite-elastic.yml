@@ -39,7 +39,6 @@ Metadata:
         - MaxSize
         - ScaleInAdjustment
         - ScaleOutAdjustment
-        - AutoscaleStrategy
 
 Parameters:
   KeyName:
@@ -121,9 +120,9 @@ Parameters:
     Default: 5
 
   ScaleDownAdjustment:
-    Description: The number of agents to remove on each scale down event (ScheduledJobsCount == 0 for 5 minutes)
+    Description: The number of agents to remove on each scale down event (BusyAgentCount == 0 for the last 6 minutes, every 2 minutes)
     Type: Number
-    Default: -5
+    Default: -1
 
   RootVolumeSize:
     Description: Size of EBS volume for root filesystem in GB.
