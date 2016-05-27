@@ -21,11 +21,6 @@ steps:
 
   - wait
 
-  - name: ":suspect: Test plain-utils deploy"
-    command: "plain-utils ansible-playbook staging master deploy.yml -t bucky"
-    agents:
-      - queue=elastic
-
   - name: ":suspect: Test plain-utils pull"
     command: "plain-utils pull payments-staging"
     agents:
