@@ -12,7 +12,7 @@ docker_login() {
 
   if [[ -n "$user" && -n "$password" && -n "$email" ]] ; then
     echo "~~~ Authenticating with $login as $user"
-    docker login --username="$user" -password="$password" --email="$email" "$login"
+    docker login --username="$user" --password="$password" --email="$email" "$login"
   elif [[ -n "$user" && -n "$password" ]] ; then
     echo "Missing email for $login"
     return 1
