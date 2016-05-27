@@ -20,7 +20,7 @@ variable "name" {
 
 variable "image_id" {
   description = "The AMI to use"
-  default = "ami-5a847437"
+  default = "ami-8d47b7e0"
 }
 
 variable "key_name" {

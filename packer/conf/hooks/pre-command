@@ -13,35 +13,27 @@ fi
 if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
   DOCKER_HUB_USER=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f1)
   DOCKER_HUB_PASSWORD=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f2)
-  DOCKER_HUB_EMAIL=$(jq -r '."https://index.docker.io/v1/".email' <<< "$DOCKER_HUB_AUTH")
   unset DOCKER_HUB_AUTH
 fi
 
-if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" && -n "${DOCKER_HUB_EMAIL:-}" ]] ; then
+if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
   echo "~~~ Authenticating with :docker: hub as ${DOCKER_HUB_USER}"
-  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}" --email="${DOCKER_HUB_EMAIL}"
-elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
-  echo "Missing DOCKER_HUB_EMAIL."
-  exit 1
+  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}"
 fi
 
 unset DOCKER_HUB_USER
 unset DOCKER_HUB_PASSWORD
-unset DOCKER_HUB_EMAIL
 
 if [[ -n "${QUAY_AUTH:-}" ]] ; then
   QUAY_USER=$(jq -r '."quay.io".auth' <<< "$QUAY_AUTH" | base64 --decode | cut -d: -f1)
   QUAY_PASSWORD=$(jq -r '."quay.io".auth' <<< "$QUAY_AUTH" | base64 --decode | cut -d: -f2)
-  QUAY_EMAIL=$(jq -r '."quay.io".email' <<< "$QUAY_AUTH")
   unset QUAY_AUTH
 fi
 
-if [[ -n "${QUAY_USER:-}" && -n "${QUAY_PASSWORD:-}" && -n "${QUAY_EMAIL:-}" ]] ; then
+if [[ -n "${QUAY_USER:-}" && -n "${QUAY_PASSWORD:-}" ]] ; then
   echo "~~~ Authenticating with quay.io hub as ${QUAY_USER}"
-  docker login --username="${QUAY_USER}" --password="${QUAY_PASSWORD}"
-  exit 1
+  docker login --username="${QUAY_USER}" --password="${QUAY_PASSWORD}" quay.io
 fi
 
 unset QUAY_USER
 unset QUAY_PASSWORD
-unset QUAY_EMAIL
