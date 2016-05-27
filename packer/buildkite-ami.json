@@ -3,7 +3,7 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "source_ami": "ami-08111162",
+      "source_ami": "ami-31719d5c",
       "region": "us-east-1",
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
@@ -14,29 +14,12 @@
   ],
   "provisioners": [
     {
-      "type": "file",
-      "source": "conf",
-      "destination": "/tmp"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-cloudwatch-logs.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-docker.sh"
-    },
-    {
       "type": "shell",
       "script": "scripts/install-terraform.sh"
     },
     {
       "type": "shell",
-      "script": "scripts/install-buildkite.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
+      "script": "scripts/fix-buildkite.sh"
     }
   ]
 }
