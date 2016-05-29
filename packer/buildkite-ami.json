@@ -24,6 +24,10 @@
     },
     {
       "type": "shell",
+      "script": "scripts/install-ansible.sh"
+    },
+    {
+      "type": "shell",
       "script": "scripts/fix-buildkite.sh"
     }
   ]
