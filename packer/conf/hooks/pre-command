@@ -17,7 +17,7 @@ if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
 fi
 
 if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
-  echo "~~~ Authenticating with :docker: hub as ${DOCKER_HUB_USER}"
+  echo "~~~ Authenticating with :docker: registry as ${DOCKER_HUB_USER}"
   docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}"
 fi
 
@@ -31,7 +31,7 @@ if [[ -n "${QUAY_AUTH:-}" ]] ; then
 fi
 
 if [[ -n "${QUAY_USER:-}" && -n "${QUAY_PASSWORD:-}" ]] ; then
-  echo "~~~ Authenticating with quay.io hub as ${QUAY_USER}"
+  echo "~~~ Authenticating with :quay: registry as ${QUAY_USER}"
   docker login --username="${QUAY_USER}" --password="${QUAY_PASSWORD}" quay.io
 fi
 
