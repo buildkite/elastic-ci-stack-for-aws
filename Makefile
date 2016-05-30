@@ -2,7 +2,7 @@
 
 BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
-STACK_NAME =? buildkite
+STACK_NAME ?= buildkite
 SHELL=/bin/bash -o pipefail
 
 all: setup build
