@@ -1,5 +1,10 @@
 ---
 steps:
+  - name: ":packer: Build AMI"
+    command: ".buildkite/bin/build-ami"
+    agents:
+      - queue=elastic
+
   - name: ":terraform: Plan"
     command: ".buildkite/bin/plan"
     agents:

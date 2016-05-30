@@ -1,15 +1,27 @@
 {
+  "variables": {
+    "source_ami": "ami-31719d5c",
+    "region": "us-east-1",
+    "branch": "{{env `BUILDKITE_BRANCH`}}",
+    "commit": "{{env `BUILDKITE_COMMIT`}}",
+    "build_url": "{{env `BUILDKITE_BUILD_URL`}}"
+  },
   "builders": [
     {
       "type": "amazon-ebs",
-      "region": "us-east-1",
-      "source_ami": "ami-31719d5c",
-      "region": "us-east-1",
+      "region": "{{user `region`}}",
+      "source_ami": "{{user `source_ami`}}",
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
       "ami_name": "buildkite-{{isotime | clean_ami_name}}",
       "ami_description": "A basic image with a Buildkite agent running",
-      "ami_groups": ["all"]
+      "ami_groups": ["all"],
+      "tags": {
+        "SourceAMI": "{{user `source_ami`}}",
+        "Branch": "{{user `branch`}}",
+        "Commit": "{{user `commit`}}",
+        "BuildURL": "{{user `build_url`}}"
+      }
     }
   ],
   "provisioners": [
@@ -17,6 +29,10 @@
       "type": "file",
       "source": "conf",
       "destination": "/tmp"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-packer.sh"
     },
     {
       "type": "shell",
