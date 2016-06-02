@@ -12,19 +12,19 @@ sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/latest/buildkite-agent-$(uname -s)-$(uname -m)"
+  "https://download.buildkite.com/agent/stable/latest/buildkite-agent-linux-amd64"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
 echo "Downloading buildkite-agent unstable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-unstable \
-  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-$(uname -s)-$(uname -m)"
+  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64"
 sudo chmod +x /usr/bin/buildkite-agent-unstable
 buildkite-agent-unstable --version
 
 echo "Downloading buildkite-agent experimental..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-experimental \
-  "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-$(uname -s)-$(uname -m)"
+  "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
 sudo chmod +x /usr/bin/buildkite-agent-experimental
 buildkite-agent-experimental --version
 
