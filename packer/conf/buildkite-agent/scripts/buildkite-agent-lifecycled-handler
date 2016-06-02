@@ -6,7 +6,7 @@ echo "stopping buildkite-agent gracefully"
 
 service buildkite-agent stop
 
-while [[ $(service buildkite-agent status) == "Running" ]]; do
+while pgrep buildkite-agent > /dev/null; do
   sleep 0.5
 done
 
