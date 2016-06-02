@@ -64,3 +64,4 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 echo "Adding init.d script..."
 sudo cp /tmp/conf/buildkite-agent/init.d/buildkite-agent /etc/init.d/
+sudo chkconfig buildkite-agent on
