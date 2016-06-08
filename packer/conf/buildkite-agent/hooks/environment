@@ -1,5 +1,6 @@
 #!/bin/bash
-set -eu
+
+set -eu -o pipefail
 
 s3_exists() {
   env -i aws s3 ls "$1" --summarize --human-readable
@@ -50,4 +51,4 @@ fi
 unset BUILDKITE_SECRETS_BUCKET
 unset BUILDKITE_SECRETS_KEY
 
-sudo /usr/bin/fix-checkout-permissions
+sudo /usr/bin/fix-buildkite-agent-builds-permissions

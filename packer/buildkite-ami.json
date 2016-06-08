@@ -7,8 +7,8 @@
       "region": "us-east-1",
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
-      "ami_name": "buildkite-{{isotime | clean_ami_name}}",
-      "ami_description": "A basic image with a Buildkite agent running",
+      "ami_name": "buildkite-stack-{{isotime | clean_ami_name}}",
+      "ami_description": "Buildkite CloudFormation Stack base image (Amazon Linux, buildkite-agent, docker, docker-compose, docker-gc, jq, lifecycled)",
       "ami_groups": ["all"]
     }
   ],
@@ -20,7 +20,11 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-cloudwatch-logs.sh"
+      "script": "scripts/install-awslogs.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-lifecycled.sh"
     },
     {
       "type": "shell",
@@ -28,11 +32,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-buildkite.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
+      "script": "scripts/install-buildkite-agent.sh"
     }
   ]
 }

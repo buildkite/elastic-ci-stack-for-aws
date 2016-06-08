@@ -6,6 +6,7 @@ Metadata:
       - Label:
           default: Buildkite Configuration
         Parameters:
+        - BuildkiteAgentRelease
         - BuildkiteAgentToken
         - BuildkiteOrgSlug
         - BuildkiteQueue
@@ -37,8 +38,9 @@ Metadata:
         Parameters:
         - MinSize
         - MaxSize
-        - ScaleInAdjustment
-        - ScaleOutAdjustment
+        - ScaleUpAdjustment
+        - ScaleDownAdjustment
+        - AutoscaleStrategy
 
 Parameters:
   KeyName:
@@ -48,6 +50,11 @@ Parameters:
   BuildkiteOrgSlug:
     Description: Your Buildkite organization's slug
     Type: String
+
+  BuildkiteAgentRelease:
+    Description: The buildkite-agent release stream ("stable", "unstable" or "experimental")
+    Type: String
+    Default: "stable"
 
   BuildkiteAgentToken:
     Description: Your Buildkite organization's agent token
@@ -115,7 +122,7 @@ Parameters:
     Default: 0
 
   ScaleUpAdjustment:
-    Description: The number of agents to add on each scale up event (ScheduledJobsCount > 0 for 1 minute)
+    Description: The number of agents to adjust by on each scale up event (ScheduledJobsCount > 0 for 1 minute)
     Type: Number
     Default: 5
 
@@ -307,22 +314,38 @@ Resources:
                 LIFECYCLED_DEBUG=true
                 LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
                 LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
-                LIFECYCLED_HANDLER=/usr/bin/buildkite-lifecycle-handler
+                LIFECYCLED_HANDLER=/usr/bin/buildkite-agent-lifecycled-handler
                 EOF
 
                 start lifecycled
             02-install-buildkite:
               command: |
-                instance_id=\$(curl -sf http://169.254.169.254/latest/meta-data/instance-id)
-                instance_type=\$(curl -sf http://169.254.169.254/latest/meta-data/instance-type)
-                ami_id=\$(curl -sf http://169.254.169.254/latest/meta-data/ami-id)
-                docker_version=\$(docker --version | cut -f3 -d' ' | sed 's/,//')
-                meta_data_tags=\$(printf 'queue=%s,docker=%s,stack=%s,aws-buildkite-stack,aws:instance-id=%s,aws:instance-type=%s,aws:ami-id=%s' "$(BuildkiteQueue)" "\$docker_version" "$(AWS::StackName)" "\$instance_id" "\$instance_type" "\$ami_id")
+                #!/bin/bash -eu
 
-                sed -i -r "s/^(name)=.*/\\1=\"$(AWS::StackName)-\$instance_id\"/" /etc/buildkite-agent/buildkite-agent.cfg
-                sed -i -r "s/^(token)=.*/\\1=\"$(BuildkiteAgentToken)\"/" /etc/buildkite-agent/buildkite-agent.cfg
-                sed -i -r "s/^(# )?(meta-data-ec2-tags)=.*/\\2=true/" /etc/buildkite-agent/buildkite-agent.cfg
-                sed -i -r "s/^(# )?(meta-data)=.*/\\2=\"\$meta_data_tags\"/" /etc/buildkite-agent/buildkite-agent.cfg
+                ln -s /usr/bin/buildkite-agent-$(BuildkiteAgentRelease) /usr/bin/buildkite-agent
+
+                INSTANCE_ID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
+                DOCKER_VERSION=\$(docker --version | cut -f3 -d' ' | sed 's/,//')
+
+                # Once 3.0 is stable we can just remove this and let the agent do the right thing
+                if [[ "$(BuildkiteAgentRelease)" == "stable" ]]; then
+                  BOOTSTRAP_SCRIPT="/etc/buildkite-agent/bootstrap.sh"
+                else
+                  BOOTSTRAP_SCRIPT="buildkite-agent bootstrap"
+                fi;
+
+                cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
+                name="$(AWS::StackName)-\$INSTANCE_ID"
+                token="$(BuildkiteAgentToken)"
+                meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
+                meta-data-ec2=true
+                bootstrap-script="\$BOOTSTRAP_SCRIPT"
+                hooks-path=/etc/buildkite-agent/hooks
+                build-path=/var/lib/buildkite-agent/builds
+                plugins-path=/var/lib/buildkite-agent/plugins
+                EOF
+
+                chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
                 service buildkite-agent start
             03-fetch-authorized-users:
@@ -338,7 +361,7 @@ Resources:
                 EOF
 
                 chmod +x /etc/cron.hourly/authorized_keys
-                
+
                 /etc/cron.hourly/authorized_keys
 
   AgentLifecycleQueue:
