@@ -1,13 +1,3 @@
 #!/bin/bash
 
-set -eu -o pipefail
-
-echo "stopping buildkite-agent gracefully"
-
 service buildkite-agent stop
-
-while pgrep buildkite-agent > /dev/null; do
-  sleep 0.5
-done
-
-echo "buildkite-agent stopped"
