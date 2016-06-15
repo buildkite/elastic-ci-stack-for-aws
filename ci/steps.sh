@@ -53,6 +53,7 @@ steps:
     name: "Publishing :cloudformation: stack"
     agents:
       queue: aws-stack
+    artifact_paths: "templates/mappings.yml;build/aws-stack.json"
 
   - wait
 
