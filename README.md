@@ -2,7 +2,18 @@
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
-Create an auto-scaling build cluster on AWS/VPC in under 10 minutes. Designed to support multiple different projects sharing a single stack and isolated builds of third-party pull-requests.
+A simple to setup auto-scaling build cluster running in your own AWS VPC. This single stack gives you a build cluster that all your projects can use, and allows you to massively parallelise any project that can be run with Docker Compose.
+
+* Support All major AWS regions
+* Support for stable, unstable and experimental Buildkite Agent releases
+* Any instance size
+* Custom scale-in/scale-in parameters
+* Docker, Docker Compose and docker-gc
+* Per-pipeline S3 secret storage (with encryption) for SSH keys and environment hooks
+* Docker Hub credential login support for pushing images
+* CloudWatch system and buildkite agent logs
+* CloudWatch build metrics
+* Spot instance pricing
 
 ## Getting Started
 
@@ -35,27 +46,9 @@ make create-stack
 AWS_PROFILE="SOMETHING" make create-stack
 ```
 
-### Useful Stack Parameters
-
-| Command                      | Description                                                                                                               | Default         |
-| ---                          | ---                                                                                                                       | ---             |
-| KeyName                      | The AWS EC2 Keypair to use                                                                                                | default         |
-| BuildkiteOrgSlug             | Your Buildkite Organization slug (e.g 99designs)                                                                          |                 |
-| BuildkiteAgentToken          | Your Buildkite Agent Token                                                                                                |                 |
-| BuildkiteApiAccessToken      | A Buildkite API token for metrics                                                                                         |                 |
-| BuildkiteQueue               | The Buildkite queue to give the agents                                                                                    | elastic         |
-| SecretsBucket                | An existing S3 bucket (and optional prefix) that contains secrets                                                         |                 |
-| ArtifactsBucket              | An existing S3 bucket (and optional prefix) that contains [build artifacts](https://buildkite.com/docs/guides/artifacts)  |                 |
-| InstanceType                 | The EC2 instance size to launch                                                                                           | t2.nano         |
-| MinSize                      | The minimum number of instances to launch                                                                                 | 0               |
-| MaxSize                      | The maximum number of instances to launch                                                                                 | 10              |
-| SpotPrice                    | An optional price to bid for spot instances (0 means non-spot)                                                            | 0               |
-
-Check out [`buildkite-elastic.yml`](templates/buildkite-elastic.yml) for more details.
-
 ## Targeting Builds
 
-Set your [Agent Query Rules](https://buildkite.com/docs/agent/agent-meta-data) to `queue=elastic`, or to whatever `BuildkiteQueue` you provided to your stack.
+Set your [Agent Query Rules](https://buildkite.com/docs/agent/agent-meta-data) to the `BuildkiteQueue` parameter you provided to your stack (e.g. `queue=elastic`)
 
 ## Secrets
 
