@@ -100,7 +100,7 @@ Presently the EC2 Metadata instance is available via HTTP request from builds, w
 
 ## Questions?
 
-This is experimental and still being actively developed, but under heavy use at 99designs.
+This is currently in supported beta, and is under heavy use at 99designs and Buildkite.
 
-Feel free to drop me an email at lachlan@ljd.cc with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
+Feel free to drop me an email to support@buildkite.com with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
 
