@@ -19,6 +19,13 @@ copy_ami_to_region() {
     --output text
 }
 
+make_ami_public() {
+  local image_id="$1"
+  local region="$2"
+
+  aws ec2 modify-image-attribute --region "$region" --image-id "$image_id" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
+}
+
 fetch_ami_name() {
   local ami_id="$1"
   local region="$2"
@@ -57,6 +64,9 @@ EOF
 
 for region in ${DESTINATION_REGIONS[*]} ; do
   copied_image_id=$(copy_ami_to_region "$image_id" us-east-1 "$region" "$image_name-$region")
+
+  make_ami_public "$copied_image_id" "$region"
+
   echo "    $region : { AMI: $copied_image_id }" >> templates/mappings.yml
 done
 
