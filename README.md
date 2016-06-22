@@ -16,7 +16,7 @@ A simple to setup auto-scaling build cluster running in your own AWS VPC. This s
 * Spot instance pricing
 * Test new build clusters by easily spinning up new instances of the stack
 
-Although the stack is completely self-contained and will create it's own VPC by default we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
+Although the stack is completely self-contained, and will create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
 ## Getting Started
 
