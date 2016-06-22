@@ -4,9 +4,9 @@
 
 A simple to setup auto-scaling build cluster running in your own AWS VPC. This single stack gives you a build cluster that all your projects can use, and allows you to massively parallelise any project that can be run with Docker Compose.
 
-* Support All major AWS regions
-* Support for stable, unstable and experimental Buildkite Agent releases
-* Any instance size
+* All major AWS regions
+* Use stable, unstable or experimental Buildkite Agent releases
+* Choose any instance size you need
 * Custom scale-in/scale-in parameters
 * Docker, Docker Compose and docker-gc
 * Per-pipeline S3 secret storage (with encryption) for SSH keys and environment hooks
@@ -14,6 +14,9 @@ A simple to setup auto-scaling build cluster running in your own AWS VPC. This s
 * CloudWatch system and buildkite agent logs
 * CloudWatch build metrics
 * Spot instance pricing
+* Test new build clusters by easily spinning up new instances of the stack
+
+Although the stack is completely self-contained and will create it's own VPC by default we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
 ## Getting Started
 
