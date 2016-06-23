@@ -2,6 +2,18 @@
 
 set -eu
 
+DESTINATION_REGIONS=(
+  us-west-1
+  us-west-2
+  eu-west-1
+  eu-central-1
+  ap-northeast-1
+  ap-northeast-2
+  ap-southeast-1
+  ap-southeast-2
+  sa-east-1
+)
+
 copy_ami_to_region() {
   local source_ami_id="$1"
   local source_region="$2"
@@ -19,9 +31,29 @@ copy_ami_to_region() {
     --output text
 }
 
+wait_for_ami_to_be_available() {
+  local image_id="$1"
+  local region="$2"
+  local image_state
+
+  while true; do
+    image_state=$(aws ec2 describe-images --region "$region" --image-ids "$image_id" --output text --query 'Images[*].State');
+    echo "$image_id ($region) is $image_state"
+
+    if [[ "$image_state" == "available" ]]; then
+      break
+    elif [[ "$image_state" == "pending" ]]; then
+      sleep 5
+    else
+      exit 1
+    fi
+  done
+}
+
 make_ami_public() {
   local image_id="$1"
   local region="$2"
+  local image_state
 
   aws ec2 modify-image-attribute --region "$region" --image-id "$image_id" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
 }
@@ -39,36 +71,53 @@ fetch_ami_name() {
     --query 'Images[*].Name'
 }
 
-DESTINATION_REGIONS=(
-  us-west-1
-  us-west-2
-  eu-west-1
-  eu-central-1
-  ap-northeast-1
-  ap-northeast-2
-  ap-southeast-1
-  ap-southeast-2
-  sa-east-1
-)
+copy_ami_and_create_mappings_yml() {
+  local base_image_id="$1"
+  local destination_yml="$2"
+  local image_name
+  local region
+  local copied_image_id
 
-image_id=$(buildkite-agent meta-data get image_id)
-image_name=$(fetch_ami_name "$image_id" us-east-1)
+  image_name=$(fetch_ami_name "$base_image_id" us-east-1)
 
-echo "--- Creating mappings.yml"
-
-cat << EOF > templates/mappings.yml
+  cat << EOF > "$destination_yml"
 Mappings:
   AWSRegion2AMI:
-    us-east-1 : { AMI: $image_id }
+    us-east-1 : { AMI: $base_image_id }
 EOF
 
-for region in ${DESTINATION_REGIONS[*]} ; do
-  copied_image_id=$(copy_ami_to_region "$image_id" us-east-1 "$region" "$image_name-$region")
+  for region in ${DESTINATION_REGIONS[*]} ; do
+    echo "--- Copying $image_id to $region"
 
-  make_ami_public "$copied_image_id" "$region"
+    copied_image_id=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
 
-  echo "    $region : { AMI: $copied_image_id }" >> templates/mappings.yml
-done
+    wait_for_ami_to_be_available "$copied_image_id" "$region"
+
+    make_ami_public "$copied_image_id" "$region"
+
+    echo "    $region : { AMI: $copied_image_id }" >> "$destination_yml"
+  done
+}
+
+generate_mappings() {
+  local image_id
+  local s3_mappings_cache
+
+  image_id=$(buildkite-agent meta-data get image_id)
+  s3_mappings_cache="s3://${BUILDKITE_AWS_STACK_BUCKET}/mappings-${image_id}.yml"
+
+  if aws s3 cp "${s3_mappings_cache}" templates/mappings.yml ; then
+    echo "Skipping creating additional AZ mappings, base AMI has not changed"
+  else
+    copy_ami_and_create_mappings_yml "$image_id" templates/mappings.yml
+
+    aws s3 cp templates/mappings.yml "${s3_mappings_cache}"
+  fi
+}
+
+echo "--- Generating mappings"
+
+generate_mappings
 
 echo "--- Building and publishing stack"
 
