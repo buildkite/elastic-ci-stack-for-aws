@@ -9,6 +9,7 @@ sudo yum update -y -q
 sudo yum install -y -q docker
 sudo usermod -a -G docker ec2-user
 sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
+sudo service docker stop
 
 # Overwrite the yum packaged docker with the latest
 # Releases can be found at https://github.com/docker/docker/releases
