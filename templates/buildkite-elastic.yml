@@ -11,6 +11,7 @@ Metadata:
         - BuildkiteOrgSlug
         - BuildkiteQueue
         - BuildkiteApiAccessToken
+        - BuildkiteAgentsPerInstance
 
       - Label:
           default: Network Configuration
@@ -70,6 +71,11 @@ Parameters:
     Description: Name of the Buildkite agent queue that agents will use
     Type: String
     Default: elastic
+
+  BuildkiteAgentsPerInstance:
+    Description: How Many Buildkite agents to run per instance/machine
+    Type: Number
+    Default: 1
 
   SecretsBucket:
     Description: Optional - name of an S3 bucket containing provisioning files
@@ -334,21 +340,24 @@ Resources:
                   BOOTSTRAP_SCRIPT="buildkite-agent bootstrap"
                 fi;
 
-                cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-                name="$(AWS::StackName)-\$INSTANCE_ID"
-                token="$(BuildkiteAgentToken)"
-                meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
-                meta-data-ec2=true
-                bootstrap-script="\$BOOTSTRAP_SCRIPT"
-                hooks-path=/etc/buildkite-agent/hooks
-                build-path=/var/lib/buildkite-agent/builds
-                plugins-path=/var/lib/buildkite-agent/plugins
-                EOF
+                for kite in {1..$(BuildkiteAgentsPerInstance)}; do
+                  cat << EOF > /etc/buildkite-agent/buildkite-agent-${kite}.cfg
+                  name="$(AWS::StackName)-${kite}-\$INSTANCE_ID"
+                  token="$(BuildkiteAgentToken)"
+                  meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
+                  meta-data-ec2=true
+                  bootstrap-script="\$BOOTSTRAP_SCRIPT"
+                  hooks-path=/etc/buildkite-agent/hooks
+                  build-path=/var/lib/buildkite-agent-${kite}/builds
+                  plugins-path=/var/lib/buildkite-agent/plugins
+                  EOF
 
-                chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
+                  chown buildkite-agent: /etc/buildkite-agent/buildkite-agent-${kite}.cfg
 
-                service buildkite-agent start
-            03-fetch-authorized-users:
+                  service buildkite-agent-${kite} start
+                done
+
+            04-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
                 #!/bin/bash -eu
