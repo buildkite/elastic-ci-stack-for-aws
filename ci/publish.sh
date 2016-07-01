@@ -86,17 +86,19 @@ Mappings:
     us-east-1 : { AMI: $base_image_id }
 EOF
 
-  for region in ${DESTINATION_REGIONS[*]} ; do
-    echo "--- Copying $image_id to $region"
+  if [[ $BUILDKITE_BRANCH == "master" ]] ; then
+    for region in ${DESTINATION_REGIONS[*]} ; do
+      echo "--- Copying $image_id to $region"
 
-    copied_image_id=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
+      copied_image_id=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
 
-    wait_for_ami_to_be_available "$copied_image_id" "$region"
+      wait_for_ami_to_be_available "$copied_image_id" "$region"
 
-    make_ami_public "$copied_image_id" "$region"
+      make_ami_public "$copied_image_id" "$region"
 
-    echo "    $region : { AMI: $copied_image_id }" >> "$destination_yml"
-  done
+      echo "    $region : { AMI: $copied_image_id }" >> "$destination_yml"
+    done
+  fi
 }
 
 generate_mappings() {
