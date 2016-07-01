@@ -340,22 +340,27 @@ Resources:
                   BOOTSTRAP_SCRIPT="buildkite-agent bootstrap"
                 fi;
 
-                for kite in {1..$(BuildkiteAgentsPerInstance)}; do
-                  cat << EOF > /etc/buildkite-agent/buildkite-agent-${kite}.cfg
-                  name="$(AWS::StackName)-${kite}-\$INSTANCE_ID"
-                  token="$(BuildkiteAgentToken)"
-                  meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
-                  meta-data-ec2=true
-                  bootstrap-script="\$BOOTSTRAP_SCRIPT"
-                  hooks-path=/etc/buildkite-agent/hooks
-                  build-path=/var/lib/buildkite-agent-${kite}/builds
-                  plugins-path=/var/lib/buildkite-agent/plugins
-                  EOF
+                cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
+                name="$(AWS::StackName)-\$INSTANCE_ID-%n"
+                token="$(BuildkiteAgentToken)"
+                meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
+                meta-data-ec2=true
+                bootstrap-script="\$BOOTSTRAP_SCRIPT"
+                hooks-path=/etc/buildkite-agent/hooks
+                build-path=/var/lib/buildkite-agent/builds
+                plugins-path=/var/lib/buildkite-agent/plugins
+                EOF
 
-                  chown buildkite-agent: /etc/buildkite-agent/buildkite-agent-${kite}.cfg
+                chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-                  service buildkite-agent-${kite} start
-                done
+                if [[ $(BuildkiteAgentsPerInstance) > 1 ]]; then
+                  for i in $(seq 1 $(( $(BuildkiteAgentsPerInstance) - 1 )) ); do
+                    cp /etc/init.d/buildkite-agent /etc/init.d/buildkite-agent-\${i}
+                    service buildkite-agent-\${i} start
+                  done
+                fi;
+
+                service buildkite-agent start
 
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
