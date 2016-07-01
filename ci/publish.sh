@@ -106,7 +106,7 @@ generate_mappings() {
   local s3_mappings_cache
 
   image_id=$(buildkite-agent meta-data get image_id)
-  s3_mappings_cache="s3://${BUILDKITE_AWS_STACK_BUCKET}/mappings-${image_id}.yml"
+  s3_mappings_cache="s3://${BUILDKITE_AWS_STACK_BUCKET}/mappings-${image_id}-${BUILDKITE_BRANCH}.yml"
 
   if aws s3 cp "${s3_mappings_cache}" templates/mappings.yml ; then
     echo "Skipping creating additional AZ mappings, base AMI has not changed"
