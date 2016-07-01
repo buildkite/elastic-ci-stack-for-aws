@@ -73,7 +73,7 @@ Parameters:
     Default: elastic
 
   BuildkiteAgentsPerInstance:
-    Description: How Many Buildkite agents to run per instance/machine
+    Description: The number of Buildkite agents to run on each instance
     Type: Number
     Default: 1
 
