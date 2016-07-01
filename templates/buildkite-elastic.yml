@@ -357,7 +357,7 @@ Resources:
                   service buildkite-agent-${kite} start
                 done
 
-            04-fetch-authorized-users:
+            03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
                 #!/bin/bash -eu
