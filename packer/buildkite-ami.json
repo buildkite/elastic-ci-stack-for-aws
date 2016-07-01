@@ -3,7 +3,7 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "source_ami": "ami-08111162",
+      "source_ami": "ami-6869aa05",
       "region": "us-east-1",
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
