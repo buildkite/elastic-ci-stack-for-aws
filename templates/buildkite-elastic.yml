@@ -308,6 +308,7 @@ Resources:
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME=$(AWS::StackName)
                 BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
+                BUILDKITE_AGENTS_PER_INSTANCE=$(BuildkiteAgentsPerInstance)
                 EOF
 
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
@@ -354,7 +355,7 @@ Resources:
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
                 if [[ $(BuildkiteAgentsPerInstance) > 1 ]]; then
-                  for i in $(seq 1 $(( $(BuildkiteAgentsPerInstance) - 1 )) ); do
+                  for i in \$(seq 1 \$(( $(BuildkiteAgentsPerInstance) - 1 )) ); do
                     cp /etc/init.d/buildkite-agent /etc/init.d/buildkite-agent-\${i}
                     service buildkite-agent-\${i} start
                   done
