@@ -358,6 +358,7 @@ Resources:
                   for i in \$(seq 1 \$(( $(BuildkiteAgentsPerInstance) - 1 )) ); do
                     cp /etc/init.d/buildkite-agent /etc/init.d/buildkite-agent-\${i}
                     service buildkite-agent-\${i} start
+                    chkconfig --add buildkite-agent\${i}
                   done
                 fi;
 
