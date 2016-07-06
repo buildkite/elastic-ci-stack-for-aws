@@ -8,7 +8,7 @@ A simple to setup auto-scaling build cluster running in your own AWS VPC. This s
 * Use stable, unstable or experimental Buildkite Agent releases
 * Choose any instance size you need
 * Configurable number of agents per instance
-* Custom scale-in/scale-in parameters
+* Configurable scale-in/scale-in parameters
 * Docker, Docker Compose and docker-gc
 * Per-pipeline S3 secret storage (with encryption) for SSH keys and environment hooks
 * Docker Hub credential login support for pushing images
