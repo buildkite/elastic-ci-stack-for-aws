@@ -1,17 +1,15 @@
 #!/bin/bash
 
 set -eu -o pipefail
+
+# Expose BUILDKITE_AGENTS_PER_INSTANCE
 eval "$(cat /var/lib/buildkite-agent/cfn-env)"
 
 echo "Stopping buildkite-agent gracefully"
 
-service buildkite-agent stop &
-
-if [[ ${BUILDKITE_AGENTS_PER_INSTANCE} > 1 ]]; then
-  for i in $(seq 1 $(( ${BUILDKITE_AGENTS_PER_INSTANCE} - 1 )) ); do
-    service "buildkite-agent-${i}" stop &
-  done
-fi
+for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
+  service "buildkite-agent-${i}" stop &
+done
 
 until pgrep buildkite-agent > /dev/null; do
   echo "Waiting for buildkite-agent processes to finish..."
