@@ -4,13 +4,13 @@
 
 A simple to setup, best-practice, auto-scaling build cluster running in your own AWS VPC.
 
-This stack is designed to run almost all of your organization’s projects, whether it’s legacy backend application’s tests parallelized across dozens or hundreds of agents for faster build times, or running ops-related tasks with your own tools or the `aws-cli`.
+This stack is designed to run almost all of your organization’s projects, whether it’s legacy backend application tests parallelized across dozens or hundreds of agents for faster build times, or running ops-related tasks with your own tools or the `aws-cli`, you can run them all on this single stack.
 
 * All major AWS regions
 * Configurable instance size
 * Configurable number of agents per instance
 * Configurable spot instance bid price
-* Custom scale-in/scale-in parameters
+* Configurable auto-scaling based on build activity
 * Docker and Docker Compose support
 * Per-pipeline S3 secret storage (with SSE encryption support)
 * Docker Registry push/pull support
