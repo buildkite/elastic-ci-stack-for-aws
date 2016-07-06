@@ -354,15 +354,11 @@ Resources:
 
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-                if [[ $(BuildkiteAgentsPerInstance) > 1 ]]; then
-                  for i in \$(seq 1 \$(( $(BuildkiteAgentsPerInstance) - 1 )) ); do
-                    cp /etc/init.d/buildkite-agent /etc/init.d/buildkite-agent-\${i}
-                    service buildkite-agent-\${i} start
-                    chkconfig --add buildkite-agent\${i}
-                  done
-                fi;
-
-                service buildkite-agent start
+                for i in \$(seq 1 $(BuildkiteAgentsPerInstance)); do
+                  cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
+                  service buildkite-agent-\${i} start
+                  chkconfig --add buildkite-agent-\${i}
+                done
 
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"

@@ -62,6 +62,5 @@ echo "Creating plugins dir..."
 sudo mkdir -p /var/lib/buildkite-agent/plugins
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
-echo "Adding init.d script..."
-sudo cp /tmp/conf/buildkite-agent/init.d/buildkite-agent /etc/init.d/
-sudo chkconfig buildkite-agent on
+echo "Adding init.d template..."
+sudo cp /tmp/conf/buildkite-agent/init.d/buildkite-agent /etc/buildkite-agent/init.d.tmpl
