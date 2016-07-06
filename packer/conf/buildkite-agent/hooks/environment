@@ -23,7 +23,7 @@ eval "$(ssh-agent -s)"
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
 
-  # allow env to override paths
+  # Allow environment vars set in Buildkite to override paths
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
   secrets_url_base="s3://${BUILDKITE_SECRETS_BUCKET}/${secrets_prefix}"
   ssh_key_url="${secrets_url_base}/${SSH_KEY_NAME:-id_rsa}"
