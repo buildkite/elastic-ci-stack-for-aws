@@ -27,13 +27,17 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
   secrets_url_base="s3://${BUILDKITE_SECRETS_BUCKET}/${secrets_prefix}"
   ssh_key_url="${secrets_url_base}/${SSH_KEY_NAME:-id_rsa}"
+  old_ssh_key_url="${secrets_url_base}/id_rsa_github"
   env_url="${secrets_url_base}/env"
 
   if s3_exists "$ssh_key_url" ; then
     echo "Downloading ssh key from $ssh_key_url"
     ssh-add <(s3_download "$ssh_key_url")
+  elif s3_exists "$old_ssh_key_url" ; then
+    echo "Downloading ssh key from $old_ssh_key_url"
+    ssh-add <(s3_download "$old_ssh_key_url")
   else
-    echo "No SSH key found at $ssh_key_url"
+    echo "No SSH keys found in s3://${BUILDKITE_SECRETS_BUCKET}"
   fi
 
   if s3_exists "$env_url" ; then
