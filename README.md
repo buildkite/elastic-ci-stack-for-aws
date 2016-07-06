@@ -57,30 +57,31 @@ Set your [Agent Query Rules](https://buildkite.com/docs/agent/agent-meta-data) t
 
 Your stack has access to the `SecretsBucket` parameter you passed in. This should be used in combination with server-side object encryption to ensure that your CI secrets (such as Github credentials) are reasonably secure. See the [Security](#security) section for more details.
 
-Two files are specifically looked for, `id_rsa_github`, for checking out your git code and optionally `env`, which contains environment variables to expose to the job command.
+You should encrypt your S3 objects with a pipeline-specific key using the environment variable `BUILDKITE_SECRETS_KEY` — you can add that to the Buildkite web UI under the pipeline’s settings. Any key found in `BUILDKITE_SECRETS_KEY` will be used to decrypt files from the secrets bucket.
 
-By default, builds will look for `s3://{SecretsBucket}/{PipelineSlug}/filename`.  You can override the `{PipelineSlug}` part with the `BUILDKITE_SECRETS_PREFIX` environment variable.
+The secrets bucket should the following layout:
 
-You should encrypt your objects with a project-specific key and provide it in `BUILDKITE_SECRETS_KEY` which will be used to decrypt all the files found in the secrets bucket.
+* `/{PipelineSlug}/env` - A bash script agent environment hook
+* `/{PipelineSlug}/id_rsa` - A private key to use for Git SSH operations
 
-### Creating a new project
+Here’s step-by-step instructions for adding a new encrypted SSH key to your S3 secrets bucket for a new Buildkite pipeline:
 
 ```bash
 # generate a deploy key for your project
-ssh-keygen -t rsa -b 4096 -f id_rsa_github
-pbcopy < id_rsa_github.pub # paste this into your github deploy key
+ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
+pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
 
 # upload the private key, encrypted
 PASSPHRASE=$(head -c 24  /dev/urandom | base64)
-aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_github "s3://my-provision-bucket/myproject/id_rsa_github"
+aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_buildkite "s3://{SecretsBucket}/{PipelineSlug}/id_rsa"
 pbcopy <<< "$PASSPHRASE" # paste passphrase into buildkite env as BUILDKITE_SECRETS_KEY
 
 # cleanup
 unset PASSPHRASE
-rm id_rsa_github*
+rm id_rsa_buildkite*
 ```
 
-For Docker Hub credentials, you can use `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL` in your `env` file.
+If you want to push or pull from Docker Hub you can use the `env` file and to export `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL`.
 
 ## Autoscaling
 
