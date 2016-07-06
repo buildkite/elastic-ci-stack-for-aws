@@ -42,9 +42,6 @@ echo "Adding sudoers config..."
 sudo cp /tmp/conf/buildkite-agent/sudoers.conf /etc/sudoers.d/buildkite-agent
 sudo chmod 440 /etc/sudoers.d/buildkite-agent
 
-echo "Creating buildkite-agent log..."
-sudo touch /var/log/buildkite-agent.log
-
 echo "Creating hooks dir..."
 sudo mkdir -p /etc/buildkite-agent/hooks
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
