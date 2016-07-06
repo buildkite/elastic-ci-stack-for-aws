@@ -11,6 +11,7 @@ Metadata:
         - BuildkiteOrgSlug
         - BuildkiteQueue
         - BuildkiteApiAccessToken
+        - BuildkiteAgentsPerInstance
 
       - Label:
           default: Network Configuration
@@ -70,6 +71,11 @@ Parameters:
     Description: Name of the Buildkite agent queue that agents will use
     Type: String
     Default: elastic
+
+  BuildkiteAgentsPerInstance:
+    Description: The number of Buildkite agents to run on each instance
+    Type: Number
+    Default: 1
 
   SecretsBucket:
     Description: Optional - name of an S3 bucket containing provisioning files
@@ -302,6 +308,7 @@ Resources:
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME=$(AWS::StackName)
                 BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
+                BUILDKITE_AGENTS_PER_INSTANCE=$(BuildkiteAgentsPerInstance)
                 EOF
 
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
@@ -335,7 +342,7 @@ Resources:
                 fi;
 
                 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-                name="$(AWS::StackName)-\$INSTANCE_ID"
+                name="$(AWS::StackName)-\$INSTANCE_ID-%n"
                 token="$(BuildkiteAgentToken)"
                 meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
                 meta-data-ec2=true
@@ -347,7 +354,12 @@ Resources:
 
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-                service buildkite-agent start
+                for i in \$(seq 1 $(BuildkiteAgentsPerInstance)); do
+                  cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
+                  service buildkite-agent-\${i} start
+                  chkconfig --add buildkite-agent-\${i}
+                done
+
             03-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
