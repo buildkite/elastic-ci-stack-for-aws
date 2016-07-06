@@ -76,8 +76,8 @@ The following environment variables can be set on the Buildkite pipeline or step
 * `BUILDKITE_SECRETS_BUCKET` - the name of the S3 bucket where secrets are stored. Default: the value set in the stack parameter when the stack was created. Example: `my-secrets-bucket`
 * `BUILDKITE_SECRETS_KEY` - the encryption key used to decrypt objects from the secrets bucket. Default: nil. Example: `w2Uzhc4kXXbW//T9zaY3neoCbR9roQ10`
 * `BUILDKITE_SECRETS_PREFIX` - the folder within the secrets bucket. Default: the build pipeline's slug. Example: `my-great-pipeline`
-* `SSH_KEY_NAME` - the filename of the SSH key inside this pipeline’s folder in the secrets bucket. Default: `id_rsa`. Example: `id_rsa_github`
-* `SHARED_SSH_KEY_NAME` - the filename of the SSH key in the root of the secrets bucket if there's no pipeline-specific SSH key present. Default: `id_rsa`. Example: `id_rsa_github_shared`
+* `SSH_KEY_NAME` - the filename of the SSH key inside this pipeline’s folder in the secrets bucket. Default: `private_ssh_key`. Example: `other_ssh_key`
+* `SHARED_SSH_KEY_NAME` - the filename of the SSH key in the root of the secrets bucket if there's no pipeline-specific SSH key present. Default: `private_ssh_key`. Example: `other_ssh_key`
 
 ## Secrets Bucket Support
 
@@ -85,15 +85,15 @@ The stack has a `SecretsBucket` parameter which will allow your build agents to 
 
 The secrets bucket can contain the following files:
 
-* `/id_sra` - An optional private key to use Git SSH operations when there is no pipeline-specific key present
+* `/private_ssh_key` - An optional private key to use for Git SSH operations when there is no pipeline-specific key present
 * `/{PipelineSlug}/env` - An optional bash script to use as an [agent environment hook](https://buildkite.com/docs/agent/hooks)
-* `/{PipelineSlug}/id_rsa` - An optional pipeline-specific private key to use for Git SSH operations
+* `/{PipelineSlug}/private_ssh_key` - An optional pipeline-specific private key to use for Git SSH operations
 
 The files in your secrets bucket should be encrypted with server-side object encryption to ensure they are reasonably secure. See the [Security](#security) section for more details.
 
 Encryption is done via the `BUILDKITE_SECRETS_KEY` environment variable set via the Buildkite pipeline settings, and can be the same, or different, for each pipeline.
 
-Here’s an an example (for OS X) that shows how to create a new private SSH key, generate and copy a random passphrase for S3 encryption, and upload an encypted version of the key to your S3 bucket:
+Here’s an an example (for OS X) that shows how to create and copy a random encyption passphrase, generate a private SSH key, and upload it with SSE encryption to an S3 bucket:
 
 ```bash
 # generate a deploy key for your project
@@ -102,7 +102,7 @@ pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
 
 # upload the private key, encrypted
 PASSPHRASE=$(head -c 24 /dev/urandom | base64)
-aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_buildkite "s3://{SecretsBucket}/{PipelineSlug}/id_rsa"
+aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_buildkite "s3://{SecretsBucket}/private_ssh_key"
 pbcopy <<< "$PASSPHRASE" # paste passphrase into buildkite env as BUILDKITE_SECRETS_KEY
 
 # cleanup
