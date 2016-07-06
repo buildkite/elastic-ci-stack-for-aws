@@ -2,20 +2,21 @@
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
-A simple to setup auto-scaling build cluster running in your own AWS VPC. This single stack gives you a build cluster that all your projects can use, and allows you to massively parallelise any project that can be run with Docker Compose.
+A simple to setup, best-practice, auto-scaling build cluster running in your own AWS VPC.
+
+This stack is designed to run almost all of your organization’s projects, whether it’s legacy backend application’s tests parallelized across dozens or hundreds of agents for faster build times, or running ops-related tasks with your own tools or the `aws-cli`.
 
 * All major AWS regions
-* Use stable, unstable or experimental Buildkite Agent releases
-* Choose any instance size you need
+* Configurable instance size
 * Configurable number of agents per instance
-* Configurable scale-in/scale-in parameters
-* Docker, Docker Compose and docker-gc
-* Per-pipeline S3 secret storage (with encryption) for SSH keys and environment hooks
-* Docker Hub credential login support for pushing images
-* CloudWatch system and buildkite agent logs
-* CloudWatch build metrics
-* Spot instance pricing
-* Test new build clusters by easily spinning up new instances of the stack
+* Configurable spot instance bid price
+* Custom scale-in/scale-in parameters
+* Docker and Docker Compose support
+* Per-pipeline S3 secret storage (with SSE encryption support)
+* Docker Registry push/pull support
+* CloudWatch logs for system and buildkite agent events
+* CloudWatch metrics from the Buildkite API
+* Support for stable, unstable or experimental Buildkite Agent releases
 
 ## Getting Started
 
@@ -58,9 +59,9 @@ AWS_PROFILE="SOMETHING" make create-stack
 * [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli
 * [docker-gc](https://github.com/spotify/docker-gc) - removes old docker images
 
-## Running Builds on Your Stack
+## Targetting your Stack’s Agents
 
-When you create the stack you specify a `BuildkiteQueue` parameter which is used to set agent’s queue, and ensures they will only accept jobs that are specifically designed for it. This means you can easily experiment with entire new stacks without interuppting existing builds. See the [Agent Queues documentation](https://buildkite.com/docs/agent/queues) for how to target the agents in your pipelines.
+When you create the stack you specify a `BuildkiteQueue` parameter which is used to set agent’s queue, and ensures they will only accept jobs that specifically target them. This means you can easily experiment with entire new stacks without interuppting existing builds. See the [Agent Queues documentation](https://buildkite.com/docs/agent/queues) for how to target the agents in your pipelines.
 
 Note that if you’ve set `MinInstances` to 0 then you won’t see any agents in Buildkite until you create build jobs, causing the autoscaling metrics to trigger a scale out event.
 
@@ -109,11 +110,13 @@ unset PASSPHRASE
 rm id_rsa_buildkite*
 ```
 
-## Docker Hub Login Support
+## Docker Registry Support
 
 If you want to push or pull from Docker Hub you can use the `env` file in your secrets bucket to export `DOCKER_HUB_USER`, `DOCKER_HUB_PASSWORD` and `DOCKER_HUB_EMAIL`. This will perform a `docker login` before each pipeline step is run, allowing you to `docker push` to Docker Hub.
 
-If you want to use ECR instead of Docker Hub there's no need to worry about credentials, you simply ensure that your agent machines have the necessary IAM roles and permissions.
+If you want to use [AWS ECR](https://aws.amazon.com/ecr/) instead of Docker Hub there's no need to worry about credentials, you simply ensure that your agent machines have the necessary IAM roles and permissions.
+
+For all other services you’ll need to perform your own `docker login` commands using the `env` hook.
 
 ## Security
 
