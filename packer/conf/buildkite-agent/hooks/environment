@@ -3,7 +3,12 @@
 set -eu -o pipefail
 
 s3_exists() {
-  env -i aws s3 ls "$1" --summarize --human-readable
+  env -i aws s3 ls "$1" --summarize --human-readable | \
+    # `s3 ls` does wildcard matching, so `private_ssh_key` matches `private_ssh_key_old`, e.g.:
+    # 2016-03-01 17:40:53    1.6 KiB private_ssh_key_old
+    #
+    # So we need to grep the output for an exact filename match
+    grep "$(basename "$1")\$"
 }
 
 s3_download() {
@@ -23,17 +28,25 @@ eval "$(ssh-agent -s)"
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
 
-  # allow env to override paths
+  # Allow environment vars set in Buildkite to override paths
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
   secrets_url_base="s3://${BUILDKITE_SECRETS_BUCKET}/${secrets_prefix}"
-  ssh_key_url="${secrets_url_base}/${SSH_KEY_NAME:-id_rsa_github}"
+  ssh_key_url="${secrets_url_base}/${SSH_KEY_NAME:-private_ssh_key}"
+  legacy_ssh_key_url="${secrets_url_base}/id_rsa_github"
+  shared_ssh_key_url="s3://${BUILDKITE_SECRETS_BUCKET}/${SHARED_SSH_KEY_NAME:-private_ssh_key}"
   env_url="${secrets_url_base}/env"
 
   if s3_exists "$ssh_key_url" ; then
     echo "Downloading ssh key from $ssh_key_url"
     ssh-add <(s3_download "$ssh_key_url")
+  elif s3_exists "$legacy_ssh_key_url" ; then
+    echo "Downloading ssh key from $legacy_ssh_key_url"
+    ssh-add <(s3_download "$legacy_ssh_key_url")
+  elif s3_exists "$shared_ssh_key_url" ; then
+    echo "Downloading ssh key from $shared_ssh_key_url"
+    ssh-add <(s3_download "$shared_ssh_key_url")
   else
-    echo "No SSH key found at $ssh_key_url"
+    echo "No SSH keys found in s3://${BUILDKITE_SECRETS_BUCKET}"
   fi
 
   if s3_exists "$env_url" ; then
