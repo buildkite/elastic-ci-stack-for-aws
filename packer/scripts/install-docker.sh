@@ -29,8 +29,11 @@ docker-compose --version
 
 echo "Downloading docker-gc..."
 curl -Lsf https://raw.githubusercontent.com/spotify/docker-gc/master/docker-gc > docker-gc
-sudo mv docker-gc /etc/cron.hourly/docker-gc
-sudo chmod +x /etc/cron.hourly/docker-gc
+sudo mv docker-gc /usr/bin/docker-gc
+
+echo "Adding docker-gc cron task..."
+sudo cp /tmp/conf/docker/cron.daily/docker-gc /etc/cron.daily/docker-gc
+sudo chmod +x /etc/cron.daily/docker-gc
 
 echo "Downloading jq..."
 sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
