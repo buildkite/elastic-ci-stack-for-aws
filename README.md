@@ -86,8 +86,8 @@ The stack has a `SecretsBucket` parameter which will allow your build agents to 
 The secrets bucket can contain the following files:
 
 * `/private_ssh_key` - An optional private key to use for Git SSH operations when there is no pipeline-specific key present
-* `/{PipelineSlug}/env` - An optional bash script to use as an [agent environment hook](https://buildkite.com/docs/agent/hooks)
-* `/{PipelineSlug}/private_ssh_key` - An optional pipeline-specific private key to use for Git SSH operations
+* `/{pipeline-slug}/env` - An optional bash script to use as an [agent environment hook](https://buildkite.com/docs/agent/hooks)
+* `/{pipeline-slug}/private_ssh_key` - An optional pipeline-specific private key to use for Git SSH operations
 
 The files in your secrets bucket should be encrypted with server-side object encryption to ensure they are reasonably secure. See the [Security](#security) section for more details.
 
@@ -120,13 +120,12 @@ For all other services you’ll need to perform your own `docker login` commands
 
 ## Security
 
-This repository hasn't been reviewed by security researchers, so exercise caution and careful thought with what credentials you make available to your builds. At present anyone with access to your CI machines or commit access to your codebase (including third-party pull-requests) will theoretically have access to your encrypted secrets. Anyone with access to your Buildkite Project Configuration will be able to retrieve the encryption key used to decrypt these. In combination, the attacker would have access to your decrypted secrets.
+This repository hasn't been reviewed by security researchers so exercise caution and careful thought with what credentials you make available to your builds.
 
-Presently the EC2 Metadata instance is available via HTTP request from builds, which means that builds have the same IAM access as the basic build host does.
+Anyone with commit access to your codebase (including third-party pull-requests if you've enabled them in Buildkite) will have access to your secrets bucket files, and anyone with access to the Buildkite pipeline settings will be able to access the pipeline’s secrets encryption key. In combination, the attacker would have access to your decrypted secrets.
+
+Also keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
 
 ## Questions?
 
-This is currently in supported beta, and is under heavy use at 99designs and Buildkite.
-
-Feel free to drop me an email to support@buildkite.com with questions, or checkout the `#aws` channel in [Buildkite Slack](https://chat.buildkite.com/).
-
+Feel free to drop me an email to support@buildkite.com with questions, or checkout the `#aws-stack` and `#aws` channels in [Buildkite Slack](https://chat.buildkite.com/).
