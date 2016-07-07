@@ -59,4 +59,4 @@ update-stack: config.json templates/mappings.yml build/aws-stack.json
 	--stack-name $(STACK_NAME) \
 	--template-body "file://$(PWD)/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
-	--parameters "$$(cat config.json)'
+	--parameters "$$(cat config.json)"
