@@ -2,7 +2,7 @@
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
-A simple to setup, best-practice, auto-scaling build cluster running in your own AWS VPC.
+A simple, flexible, auto-scaling build cluster running in your own AWS VPC.
 
 This stack is designed to run most projects your organization needs, whether it’s legacy backend application tests parallelized across hundreds of agents for faster build times, or running ops-related tasks with `aws-cli` or friends.
 
