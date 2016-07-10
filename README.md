@@ -20,13 +20,13 @@ This stack is designed to run most projects your organization needs, whether itâ
 
 ## Getting Started
 
-The easiest way is to launch the latest build of the stack is via:
+The easiest way is to launch the latest build of the stack template using this button:
 
 [![Launch Buildkite AWS Stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
 
 > Although the stack will create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billingâ€”see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
-If you'd like to use the CLI, download [`config.json.example`](config.json.example) to `config.json` and then run the below command to create a new stack.
+If you'd like to use the AWS CLI, download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
 
 ```bash
 aws cloudformation create-stack \
