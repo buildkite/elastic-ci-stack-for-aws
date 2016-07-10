@@ -1,14 +1,14 @@
-# Buildkite AWS Elastic Stack
+<h1><img alt="Elastic CI Stack for AWS" src="https://cdn.rawgit.com/buildkite/buildkite-aws-elastic-stack/master/logo.svg" width="600"></h1>
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
 A simple to setup, best-practice, auto-scaling build cluster running in your own AWS VPC.
 
-This stack is designed to run almost all of your organization’s projects, whether it’s legacy backend application tests parallelized across dozens or hundreds of agents for faster build times, or running ops-related tasks with your own tools or the `aws-cli`, you can run them all on this single stack.
+This stack is designed to run most projects your organization needs, whether it’s legacy backend application tests parallelized across hundreds of agents for faster build times, or running ops-related tasks with `aws-cli` or friends.
 
 * All major AWS regions
 * Configurable instance size
-* Configurable number of agents per instance
+* Configurable number of buildkite agents per instance
 * Configurable spot instance bid price
 * Configurable auto-scaling based on build activity
 * Docker and Docker Compose support
@@ -53,6 +53,7 @@ AWS_PROFILE="SOMETHING" make create-stack
 ## What’s On Each Machine?
 
 * [Amazon Linux](https://aws.amazon.com/amazon-linux-ami/)
+* [Buildkite Agent](https://buildkite.com/docs/agent)
 * [Docker](https://www.docker.com)
 * [Docker Compose](https://docs.docker.com/compose/)
 * [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
