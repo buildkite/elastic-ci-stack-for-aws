@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-LIFECYCLED_VERSION=v1.1.2
+LIFECYCLED_VERSION=v1.1.3
 
 echo "Downloading lifecycled..."
 
