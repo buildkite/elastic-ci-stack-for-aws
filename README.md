@@ -20,7 +20,7 @@ This stack is designed to run most projects your organization needs, whether itâ
 
 ## Getting Started
 
-The easiest way is to launch the latest built version via this button:
+The easiest way is to launch the latest build of the stack is via:
 
 [![Launch Buildkite AWS Stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
 
