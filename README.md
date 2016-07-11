@@ -2,7 +2,7 @@
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
-The Elastic CI Stack allows you to run a single stack for all your Docker-compatible build pipelines in your organization, easily parallelize your legacy tests across hundreds of build agents, or simply run AWS ops tasks.
+The Buildkite Elastic CI Stack gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize legacy tests across hundreds of nodes, run tests and deployments for all your Linux-based services and apps, or run AWS ops tasks.
 
 Features:
 
@@ -27,7 +27,7 @@ The latest build of the stack template can be launched in your AWS account with 
 
 > Although the stack will create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
-If you'd like to use the AWS CLI, download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
+If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
 
 ```bash
 aws cloudformation create-stack \
