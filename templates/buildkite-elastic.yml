@@ -8,10 +8,9 @@ Metadata:
         Parameters:
         - BuildkiteAgentRelease
         - BuildkiteAgentToken
-        - BuildkiteOrgSlug
         - BuildkiteQueue
+        - BuildkiteOrgSlug
         - BuildkiteApiAccessToken
-        - BuildkiteAgentsPerInstance
 
       - Label:
           default: Network Configuration
@@ -26,6 +25,7 @@ Metadata:
         Parameters:
         - ImageId
         - InstanceType
+        - BuildkiteAgentsPerInstance
         - KeyName
         - SpotPrice
         - SecretsBucket
@@ -48,47 +48,50 @@ Parameters:
     Description: The ssh keypair used to access the buildkite instances
     Type: AWS::EC2::KeyPair::KeyName
 
-  BuildkiteOrgSlug:
-    Description: Your Buildkite organization's slug
-    Type: String
-
   BuildkiteAgentRelease:
-    Description: The buildkite-agent release stream ("stable", "unstable" or "experimental")
     Type: String
+    AllowedValues:
+      - stable
+      - unstable
+      - experimental
     Default: "stable"
 
   BuildkiteAgentToken:
-    Description: Your Buildkite organization's agent token
+    Description: Your Buildkite Agent token
     Type: String
     NoEcho: true
 
+  BuildkiteOrgSlug:
+    Description: Optional Buildkite organization slug (required for autoscaling metrics)
+    Type: String
+
   BuildkiteApiAccessToken:
-    Description: Optional - A Buildkite API access token (with read_pipelines, read_builds and read_agents) used for gathering metrics
+    Description: Optional Buildkite API access token with read_pipelines, read_builds and read_agents (required for autoscaling metrics)
     Type: String
     NoEcho: true
 
   BuildkiteQueue:
-    Description: Name of the Buildkite agent queue that agents will use
+    Description: Queue name that agents will use, targetted in pipeline steps using "queue={value}"
     Type: String
     Default: elastic
 
   BuildkiteAgentsPerInstance:
-    Description: The number of Buildkite agents to run on each instance
+    Description: Number of Buildkite agents to run on each instance
     Type: Number
     Default: 1
 
   SecretsBucket:
-    Description: Optional - name of an S3 bucket containing provisioning files
+    Description: Optional - name of an existing S3 bucket containing pipeline secrets
     Type: String
     Default: ""
 
   ArtifactsBucket:
-    Description: Optional - name of an S3 bucket for build artifact storage
+    Description: Optional - name of an existing S3 bucket for build artifact storage
     Type: String
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - An url to periodically download ssh authorized_keys from
+    Description: Optional - S3 url to periodically download ssh authorized_keys from
     Type: String
     Default: ""
 
