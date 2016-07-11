@@ -1,4 +1,4 @@
-.PHONY: all clean build build-ami upload create-stack update-stack download-mappings
+.PHONY: all clean build build-ami upload create-stack update-stack download-mappings doctoc
 
 BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
@@ -60,3 +60,6 @@ update-stack: config.json templates/mappings.yml build/aws-stack.json
 	--template-body "file://$(PWD)/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
 	--parameters "$$(cat config.json)"
+
+doctoc:
+	docker run -it --rm -v "$$(pwd):/app" node bash -c "npm install -g markdown-toc && cd /app && markdown-toc -i Readme.md"

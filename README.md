@@ -6,18 +6,38 @@ The Buildkite Elastic CI Stack gives you a private, autoscaling [Buildkite Agent
 
 Features:
 
-* All major AWS regions
-* Configurable instance size
-* Configurable number of buildkite agents per instance
-* Configurable spot instance bid price
-* Configurable auto-scaling based on build activity
-* Docker and Docker Compose support
-* Per-pipeline S3 secret storage (with SSE encryption support)
-* Docker Registry push/pull support
-* CloudWatch logs for system and buildkite agent events
-* CloudWatch metrics from the Buildkite API
-* Support for stable, unstable or experimental Buildkite Agent releases
-* Create as many instances of the stack as you need
+- All major AWS regions
+- Configurable instance size
+- Configurable number of buildkite agents per instance
+- Configurable spot instance bid price
+- Configurable auto-scaling based on build activity
+- Docker and Docker Compose support
+- Per-pipeline S3 secret storage (with SSE encryption support)
+- Docker Registry push/pull support
+- CloudWatch logs for system and buildkite agent events
+- CloudWatch metrics from the Buildkite API
+- Support for stable, unstable or experimental Buildkite Agent releases
+- Create as many instances of the stack as you need
+- Rolling updates to stack instances to reduce interruption
+
+## Contents
+
+<!-- toc -->
+
+- [Getting Started](#getting-started)
+- [What’s On Each Machine?](#what’s-on-each-machine)
+- [Running Builds on your Stack](#running-builds-on-your-stack)
+- [Autoscaling Configuration](#autoscaling-configuration)
+- [Pipeline Configuration Environment Variables](#pipeline-configuration-environment-variables)
+- [Secrets Bucket Support](#secrets-bucket-support)
+- [Docker Registry Support](#docker-registry-support)
+- [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
+- [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
+- [Security](#security)
+- [Questions?](#questions)
+- [Licence](#licence)
+
+<!-- tocstop -->
 
 ## Getting Started
 
@@ -125,6 +145,51 @@ If you want to push or pull from Docker Hub you can use the `env` file in your s
 If you want to use [AWS ECR](https://aws.amazon.com/ecr/) instead of Docker Hub there's no need to worry about credentials, you simply ensure that your agent machines have the necessary IAM roles and permissions.
 
 For all other services you’ll need to perform your own `docker login` commands using the `env` hook.
+
+## Reading Instance and Agent Logs
+
+Each instance streams both system messages and Buildkite Agent logs to CloudWatch Logs under two log groups:
+
+* `/var/log/messages` - system logs
+* `/var/log/buildkite-agent.log` - Buildkite Agent logs
+
+Within each stream the logs are grouped by instance id.
+
+To debug an agent first find the instance id from the agent in Buildkite, head to your [CloudWatch Logs Dashboard](https://console.aws.amazon.com/cloudwatch/home?#logs:), choose either the system or Buildkite Agent log group, and then search for the instance id in the list of log streams.
+
+## Optimizing for Slow Docker Builds
+
+For large legacy applications the Docker build process might take a long time on new instances. For these cases it’s recommended to create an optimized "builder" stack which doesn't scale down, keeps a warm docker cache, is responsible for building and pushing the application to Docker Hub before running the parallel build jobs across your normal CI stack.
+
+To use this type of setup:
+
+1. Create a Docker Hub repository for pushing images to
+1. Create a builder stack with its own queue (i.e. `elastic-builders`)
+1. Use the Buildkite Agent `beta` release stream in your stacks (so you can use the [https://github.com/buildkite-plugins/docker-compose-buildkite-plugin](Docker Compose Buildkite Plugin) and [pre-building](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin#pre-building-the-image)
+
+Here is an example build pipeline based on a production Rails application:
+
+```yaml
+steps:
+  - name: ":docker: :package:"
+    plugins:
+      docker-compose:
+        build: app
+        image-repository: index.docker.io/my-docker-org/my-repo
+    agents:
+      queue: elastic-builders
+  - wait
+  - name: ":hammer:"
+    command: ".buildkite/steps/tests"
+    plugins:
+      docker-compose:
+        run: app
+    agents:
+      queue: elastic
+    parallelism: 75
+```
+
+See [Issue 81](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/81) for ideas on other solutions (contributions welcome!).
 
 ## Security
 
