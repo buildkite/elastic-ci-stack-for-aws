@@ -2,7 +2,7 @@
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
-The Elastic CI Stack for AWS is a simple, flexible, auto-scaling cluster of Buildkite agents running in it’s own AWS VPC. It allows you to run a single stack for all your Docker-compatible build pipelines in your organization, easily parallelize your legacy tests across hundreds of build agents, and easily run AWS ops tasks.
+The Elastic CI Stack allows you to run a single stack for all your Docker-compatible build pipelines in your organization, easily parallelize your legacy tests across hundreds of build agents, or simply run AWS ops tasks.
 
 Features:
 
@@ -38,7 +38,7 @@ aws cloudformation create-stack \
   --parameters <(cat config.json)
 ```
 
-Alternately if you prefer to use this repo or build it yourself, clone the repo and run the following commands
+If you’d prefer to use this repo or build it yourself, clone it and run the following commands:
 
 ```bash
 # To set up your local environment and build a template based on public AMIs
@@ -61,8 +61,9 @@ aws-vault exec some-profile -- make create-stack
 * [Docker](https://www.docker.com)
 * [Docker Compose](https://docs.docker.com/compose/)
 * [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
-* [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli
+* [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli or the Buildkite API
 * [docker-gc](https://github.com/spotify/docker-gc) - removes old docker images
+* [lifecycled](https://github.com/lox/lifecycled) - manages AWS autoscaling events
 
 ## Targetting your Stack’s Agents
 
