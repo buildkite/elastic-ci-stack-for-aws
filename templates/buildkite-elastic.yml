@@ -372,12 +372,10 @@ Resources:
 
                 # Setup logging first so we capture everything
 
-                mkdir -p /var/awslogs/etc/config/
-
                 for i in \$(seq 1 $(AgentsPerInstance)); do
                   touch /var/log/buildkite-agent-\${i}.log
 
-                  cat << EOF > /var/awslogs/etc/config/buildkite-agent-\${i}
+                  cat << EOF > /etc/awslogs/config/buildkite-agent-\${i}.conf
                 [/var/log/buildkite-agent-\${i}.log]
                 file = /var/log/buildkite-agent-\${i}.log
                 log_group_name = /var/log/buildkite-agent.log
