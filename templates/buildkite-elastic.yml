@@ -25,7 +25,7 @@ Metadata:
         Parameters:
         - ImageId
         - InstanceType
-        - BuildkiteAgentsPerInstance
+        - AgentsPerInstance
         - KeyName
         - SpotPrice
         - SecretsBucket
@@ -77,7 +77,7 @@ Parameters:
     Default: elastic
     MinLength: 1
 
-  BuildkiteAgentsPerInstance:
+  AgentsPerInstance:
     Description: Number of Buildkite agents to run on each instance
     Type: Number
     Default: 1
@@ -320,7 +320,7 @@ Resources:
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME=$(AWS::StackName)
                 BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
-                BUILDKITE_AGENTS_PER_INSTANCE=$(BuildkiteAgentsPerInstance)
+                BUILDKITE_AGENTS_PER_INSTANCE=$(AgentsPerInstance)
                 EOF
 
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
@@ -374,7 +374,7 @@ Resources:
 
                 mkdir -p /var/awslogs/etc/config/
 
-                for i in \$(seq 1 $(BuildkiteAgentsPerInstance)); do
+                for i in \$(seq 1 $(AgentsPerInstance)); do
                   touch /var/log/buildkite-agent-\${i}.log
 
                   cat << EOF > /var/awslogs/etc/config/buildkite-agent-\${i}
@@ -390,7 +390,7 @@ Resources:
 
                 # Setup and start services
 
-                for i in \$(seq 1 $(BuildkiteAgentsPerInstance)); do
+                for i in \$(seq 1 $(AgentsPerInstance)); do
                   cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
                   service buildkite-agent-\${i} start
                   chkconfig --add buildkite-agent-\${i}

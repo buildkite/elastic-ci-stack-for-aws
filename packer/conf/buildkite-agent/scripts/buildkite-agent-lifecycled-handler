@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-# Expose BUILDKITE_AGENTS_PER_INSTANCE
+# Import BUILDKITE_AGENTS_PER_INSTANCE
 eval "$(cat /var/lib/buildkite-agent/cfn-env)"
 
 echo "Stopping buildkite-agent gracefully"
