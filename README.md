@@ -28,7 +28,7 @@ Features:
 - [What’s On Each Machine?](#what’s-on-each-machine)
 - [Running Builds on your Stack](#running-builds-on-your-stack)
 - [Autoscaling Configuration](#autoscaling-configuration)
-- [Pipeline Configuration Environment Variables](#pipeline-configuration-environment-variables)
+- [Configuration Environment Variables](#configuration-environment-variables)
 - [Secrets Bucket Support](#secrets-bucket-support)
 - [Docker Registry Support](#docker-registry-support)
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
@@ -97,9 +97,9 @@ If you provided a `BuildkiteApiAccessToken` your build agents will autoscale. Au
 
 See [the autoscale.yml template](templates/autoscale.yml) for more details, or the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) project for how metrics are collected. 
 
-## Pipeline Configuration Environment Variables
+## Configuration Environment Variables
 
-The following environment variables can be set on the Buildkite pipeline or step to customize the behaviour of the stack:
+The following environment variables can be set on the Buildkite pipeline, or individual build step, to customize the behaviour of the stack:
 
 * `BUILDKITE_SECRETS_BUCKET` - the name of the S3 bucket where secrets are stored. Default: the value set in the stack parameter when the stack was created. Example: `my-secrets-bucket`
 * `BUILDKITE_SECRETS_KEY` - the encryption key used to decrypt objects from the secrets bucket. Default: nil. Example: `w2Uzhc4kXXbW//T9zaY3neoCbR9roQ10`
