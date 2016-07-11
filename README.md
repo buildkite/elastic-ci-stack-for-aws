@@ -2,9 +2,9 @@
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
 
-A simple, flexible, auto-scaling build cluster running in your own AWS VPC.
+The Elastic CI Stack for AWS is a simple, flexible, auto-scaling cluster of Buildkite agents running in it’s own AWS VPC. It allows you to run a single stack for all your Docker-compatible build pipelines in your organization, easily parallelize your legacy tests across hundreds of build agents, and easily run AWS ops tasks.
 
-This stack is designed to run most projects your organization needs, whether it’s legacy backend application tests parallelized across hundreds of agents for faster build times, or running ops-related tasks with `aws-cli` or friends.
+Features:
 
 * All major AWS regions
 * Configurable instance size
@@ -17,10 +17,11 @@ This stack is designed to run most projects your organization needs, whether it�
 * CloudWatch logs for system and buildkite agent events
 * CloudWatch metrics from the Buildkite API
 * Support for stable, unstable or experimental Buildkite Agent releases
+* Create as many instances of the stack as you need
 
 ## Getting Started
 
-The easiest way is to launch the latest build of the stack template using this button:
+The latest build of the stack template can be launched in your AWS account with the following button:
 
 [![Launch Buildkite AWS Stack](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
 
@@ -37,7 +38,7 @@ aws cloudformation create-stack \
   --parameters <(cat config.json)
 ```
 
-Alternately, if you prefer to use this repo, clone it and run the following command to set up things locally and create a remote stack.
+Alternately if you prefer to use this repo or build it yourself, clone the repo and run the following commands
 
 ```bash
 # To set up your local environment and build a template based on public AMIs
@@ -46,8 +47,11 @@ make setup download-mappings build
 # Or, to set things up locally and create the stack on AWS
 make create-stack
 
-# You can use any of the AWS... environment variables that the aws-cli supports.
-AWS_PROFILE="SOMETHING" make create-stack
+# You can use any of the AWS* environment variables that the aws-cli supports
+AWS_PROFILE="some-profile" make create-stack
+
+# You can also use aws-vault or similar
+aws-vault exec some-profile -- make create-stack
 ```
 
 ## What’s On Each Machine?
