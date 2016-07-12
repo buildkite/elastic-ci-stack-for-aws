@@ -36,7 +36,7 @@ Resources:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
       Namespace: Buildkite
-      Statistic: Average
+      Statistic: Maximum
       Period: 60
       EvaluationPeriods: 1
       Threshold: 0
@@ -49,12 +49,12 @@ Resources:
   AgentUtilizationAlarmLow:
    Type: AWS::CloudWatch::Alarm
    Properties:
-      AlarmDescription: Scale-down if BusyAgentCount == 0 for the last 6 minutes, every 2 minutes
-      MetricName: BusyAgentCount
+      AlarmDescription: Scale-down if UnfinishedJobs == 0 for 15 minutes
+      MetricName: UnfinishedJobsCount
       Namespace: Buildkite
       Statistic: Maximum
-      Period: 120
-      EvaluationPeriods: 3
+      Period: 900
+      EvaluationPeriods: 1
       Threshold: 0
       AlarmActions: [ $(AgentScaleDownPolicy) ]
       Dimensions:
