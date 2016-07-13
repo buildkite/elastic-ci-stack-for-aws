@@ -388,6 +388,7 @@ Resources:
 
                 for i in \$(seq 1 $(AgentsPerInstance)); do
                   cat /etc/buildkite-agent/init.d.tmpl | sed "s/buildkite-agent-%n/buildkite-agent-\${i}/g" > /etc/init.d/buildkite-agent-\${i}
+                  chmod 755 /etc/init.d/buildkite-agent-\${i}
                   chkconfig --add buildkite-agent-\${i}
                   chkconfig --level 345 buildkite-agent-\${i} on
                 done
