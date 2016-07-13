@@ -165,7 +165,7 @@ To use this type of setup:
 
 1. Create a Docker Hub repository for pushing images to
 1. Create a builder stack with its own queue (i.e. `elastic-builders`)
-1. Use the Buildkite Agent `beta` release stream in your stacks (so you can use the [https://github.com/buildkite-plugins/docker-compose-buildkite-plugin](Docker Compose Buildkite Plugin) and [pre-building](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin#pre-building-the-image)
+1. Use the Buildkite Agent `beta` release stream in your stacks (so you can use the [Docker Compose Buildkite Plugin](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin) and [pre-building](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin#pre-building-the-image))
 
 Here is an example build pipeline based on a production Rails application:
 
