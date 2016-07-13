@@ -370,7 +370,7 @@ Resources:
 
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-                # Setup logging first so we capture everything
+                # Setup awslogs
 
                 for i in \$(seq 1 $(AgentsPerInstance)); do
                   touch /var/log/buildkite-agent-\${i}.log
@@ -384,14 +384,12 @@ Resources:
                 EOF
                 done
 
-                service awslogs restart
-
-                # Setup and start services
+                # Setup the agent services
 
                 for i in \$(seq 1 $(AgentsPerInstance)); do
-                  cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
-                  service buildkite-agent-\${i} start
+                  cat /etc/buildkite-agent/init.d.tmpl | sed "s/buildkite-agent-%n/buildkite-agent-\${i}/g" > /etc/init.d/buildkite-agent-\${i}
                   chkconfig --add buildkite-agent-\${i}
+                  chkconfig --level 345 buildkite-agent-\${i} on
                 done
 
             03-fetch-authorized-users:
