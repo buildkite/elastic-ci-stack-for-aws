@@ -90,6 +90,14 @@ cat << EOF > config.json
   {
     "ParameterKey": "AvailabilityZones",
     "ParameterValue": "${az_ids}"
+  },
+  {
+    "ParameterKey": "MaxSize",
+    "ParameterValue": 1
+  },
+  {
+    "ParameterKey": "AgentsPerInstance",
+    "ParameterValue": 3
   }
 ]
 EOF
