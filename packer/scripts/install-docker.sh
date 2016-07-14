@@ -2,22 +2,13 @@
 
 set -eu -o pipefail
 
-DOCKER_VERSION=1.11.2
-DOCKER_SHA256=8c2e0c35e3cda11706f54b2d46c2521a6e9026a7b13c7d4b8ae1f3a706fc55e1
-
 sudo yum update -y -q
-sudo yum install -y -q docker
+sudo yum install -y -q docker-1.11.2
 sudo usermod -a -G docker ec2-user
-sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
-sudo service docker stop
 
-# Overwrite the yum packaged docker with the latest
-# Releases can be found at https://github.com/docker/docker/releases
-# shasums can be found at $URL.sha256
-echo "Downloading docker..."
-curl -Lsf -o /tmp/docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION.tgz
-echo "$DOCKER_SHA256 /tmp/docker.tgz" | sha256sum --check --strict
-sudo tar -xz -C /usr/bin --strip-components 1 -f /tmp/docker.tgz
+# Change storage driver from devicemapper to overlay
+sudo rm -rf /var/lib/docker/
+sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
 
 sudo service docker start || ( cat /var/log/docker && false )
 sudo docker info
