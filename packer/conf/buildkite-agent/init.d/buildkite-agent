@@ -82,9 +82,9 @@ case "$1" in
     ;;
     status)
     if is_running; then
-        echo "Running"
+        echo "${name} running (pid $(get_pid))"
     else
-        echo "Stopped"
+        echo "${name} is stopped"
         exit 1
     fi
     ;;
