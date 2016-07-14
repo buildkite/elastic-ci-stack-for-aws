@@ -159,7 +159,7 @@ To debug an agent first find the instance id from the agent in Buildkite, head t
 
 ## Optimizing for Slow Docker Builds
 
-For large legacy applications the Docker build process might take a long time on new instances. For these cases it’s recommended to create an optimized "builder" stack which doesn't scale down, keeps a warm docker cache, is responsible for building and pushing the application to Docker Hub before running the parallel build jobs across your normal CI stack.
+For large legacy applications the Docker build process might take a long time on new instances. For these cases it’s recommended to create an optimized "builder" stack which doesn't scale down, keeps a warm docker cache and is responsible for building and pushing the application to Docker Hub before running the parallel build jobs across your normal CI stack.
 
 To use this type of setup:
 
