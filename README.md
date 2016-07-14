@@ -93,10 +93,10 @@ aws-vault exec some-profile -- make create-stack
 This stack is designed to run your builds in a share-nothing pattern similar to the [12 factor application principals](http://12factor.net):
 
 * Each project should encapsulate it's dependencies via Docker and Docker Compose
-* Build pipeline steps should assume no state on the machine (and instead rely on Buildkite Agent’s meta-data, artifacts and S3 only)
+* Build pipeline steps should assume no state on the machine (and instead rely on [build meta-data](https://buildkite.com/docs/guides/build-meta-data), [build artifacts](https://buildkite.com/docs/guides/artifacts) or S3)
 * Secrets are configured via environment variables exposed using the S3 secrets bucket
 
-By following these simple conventions you get a scaleable, repeatable, source-controlled CI environment that any team within your organization can use.
+By following these simple conventions you get a scaleable, repeatable and source-controlled CI environment that any team within your organization can use.
 
 ## Multiple Instances of the Stack
 
