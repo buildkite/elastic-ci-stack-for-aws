@@ -25,7 +25,7 @@ Features:
 <!-- toc -->
 
 - [Getting Started](#getting-started)
-- [What’s On Each Machine?](#what’s-on-each-machine)
+- [What’s On Each Machine?](#whats-on-each-machine)
 - [What Type of Builds Does This Support?](#what-type-of-builds-does-this-support)
 - [Multiple Instances of the Stack](#multiple-instances-of-the-stack)
 - [Autoscaling Configuration](#autoscaling-configuration)
