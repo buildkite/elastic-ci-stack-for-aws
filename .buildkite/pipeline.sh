@@ -5,14 +5,14 @@ export queue_name="testqueue-$$"
 
 cat << EOF
 steps:
-  - command: ci/packer.sh
+  - command: .buildkite/packer.sh
     name: "Build packer image"
     agents:
       queue: aws-stack
 
   - wait
 
-  - command: ci/test.sh
+  - command: .buildkite/test.sh
     name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack
@@ -49,7 +49,7 @@ steps:
 
   - wait
 
-  - command: ci/publish.sh
+  - command: .buildkite/publish.sh
     name: "Publishing :cloudformation: stack"
     agents:
       queue: aws-stack
@@ -57,7 +57,7 @@ steps:
 
   - wait
 
-  - command: ci/cleanup.sh
+  - command: .buildkite/cleanup.sh
     name: "Cleanup"
     agents:
       queue: aws-stack
