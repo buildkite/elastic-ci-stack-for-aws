@@ -26,12 +26,14 @@ Features:
 
 - [Getting Started](#getting-started)
 - [What’s On Each Machine?](#what’s-on-each-machine)
-- [Running Builds on Your Stack](#running-builds-on-your-stack)
+- [What Type of Builds Does This Support?](#what-type-of-builds-does-this-support)
+- [Multiple Instances of the Stack](#multiple-instances-of-the-stack)
 - [Autoscaling Configuration](#autoscaling-configuration)
 - [Configuration Environment Variables](#configuration-environment-variables)
 - [Secrets Bucket Support](#secrets-bucket-support)
 - [Docker Registry Support](#docker-registry-support)
 - [Updating Your Stack](#updating-your-stack)
+- [CloudWatch Metrics](#cloudwatch-metrics)
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
 - [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
 - [Security](#security)
@@ -86,15 +88,27 @@ aws-vault exec some-profile -- make create-stack
 * [docker-gc](https://github.com/spotify/docker-gc) - removes old docker images
 * [lifecycled](https://github.com/lox/lifecycled) - manages AWS autoscaling events
 
-## Running Builds on Your Stack
+## What Type of Builds Does This Support?
 
-When you create the stack you specify a `BuildkiteQueue` parameter which is used to set agent’s queue, and ensures they will only accept jobs that specifically target them. This means you can easily experiment with entire new stacks without interuppting existing builds. See the [Agent Queues documentation](https://buildkite.com/docs/agent/queues) for how to target the agents in your pipelines.
+This stack is designed to run your builds in a share-nothing pattern similar to the [12 factor application principals](http://12factor.net):
 
-Note that if you’ve set `MinInstances` to 0 then you won’t see any agents in Buildkite until you create build jobs, causing the autoscaling metrics to trigger a scale out event.
+* Each project should encapsulate it's dependencies via Docker and Docker Compose
+* Build pipeline steps should assume no state on the machine (and instead rely on Buildkite Agent’s meta-data, artifacts and S3 only)
+* Secrets are configured via environment variables exposed using the S3 secrets bucket
+
+By following these simple conventions you get a scaleable, repeatable, source-controlled CI environment that any team within your organization can use.
+
+## Multiple Instances of the Stack
+
+If you need to optimize pipelines for your types of applications you can create multiple stack with different configurations, each with a different [Agent Queue](https://buildkite.com/docs/agent/queues).
+
+For example, you could have a `builders` stack that provides always on machines with warm Docker caches for building and pushing to a Docker registry at the start of a CI run. Or you could have a single `t2.nano` stack that is used for lightning fast `buildkite-agent pipeline upload` jobs.
+
+Because each stack can run in a different agent queue, and each one self-contained (potentially in completely different AWS accounts), you're free to experiment without interrupting existing builds.
 
 ## Autoscaling Configuration
 
-If you provided a `BuildkiteApiAccessToken` your build agents will autoscale. Autoscaling is designed to scale up quite quickly and then gradually scale down. When scaling down, instances wait until any running jobs on them have completed.
+If you provided a `BuildkiteApiAccessToken` your build agents will autoscale. Autoscaling is designed to scale up quite quickly and then gradually scale down. Scaling up happens when there are scheduled jobs exist that are waiting for agents. Scaling down happens when there are no more running jobs.
 
 See [the autoscale.yml template](templates/autoscale.yml) for more details, or the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) project for how metrics are collected. 
 
@@ -149,9 +163,21 @@ For all other services you’ll need to perform your own `docker login` commands
 
 ## Updating Your Stack
 
-To update your stack to the latest version, use CloudFormation's stack update tools with this url `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`
+To update your stack to the latest version use CloudFormation’s stack update tools with this S3 URL:
+
+`https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`
 
 After updating the stack you may need to recycle your machines by changing the auto-scale groups to 0, and then back to the desired number.
+
+Note: If you use spot pricing and a `MinSize` greater than 0 you’ll first need to first change `MinSize` to 0 before updating your stack using the above S3 URL.
+
+## CloudWatch Metrics
+
+This stack includes the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) nested within it, which runs a small instance to monitor the Buildkite API and report the metrics to CloudWatch.
+
+<img width="544" alt="cloudwatch" src="https://cloud.githubusercontent.com/assets/153/16836158/85abdbc6-49ff-11e6-814c-eaf2400e8333.png">
+
+You’ll find the stack’s metrics under "Custom Metrics > Buildkite" within CloudWatch.
 
 ## Reading Instance and Agent Logs
 
@@ -168,11 +194,11 @@ To debug an agent first find the instance id from the agent in Buildkite, head t
 
 For large legacy applications the Docker build process might take a long time on new instances. For these cases it’s recommended to create an optimized "builder" stack which doesn't scale down, keeps a warm docker cache and is responsible for building and pushing the application to Docker Hub before running the parallel build jobs across your normal CI stack.
 
-To use this type of setup:
+An example of how to set this up:
 
 1. Create a Docker Hub repository for pushing images to
-1. Create a builder stack with its own queue (i.e. `elastic-builders`)
-1. Use the Buildkite Agent `beta` release stream in your stacks (so you can use the [Docker Compose Buildkite Plugin](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin) and [pre-building](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin#pre-building-the-image))
+1. Update the pipeline’s `env` hook in your secrets bucket to perform a `docker login`
+1. Create a builder stack with its own queue (i.e. `elastic-builders`), making sure to use `beta` agents so you can use the [Docker Compose Buildkite Plugin](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin) and [pre-building](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin#pre-building-the-image)
 
 Here is an example build pipeline based on a production Rails application:
 
