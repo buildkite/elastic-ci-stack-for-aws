@@ -26,11 +26,12 @@ Features:
 
 - [Getting Started](#getting-started)
 - [What’s On Each Machine?](#what’s-on-each-machine)
-- [Running Builds on your Stack](#running-builds-on-your-stack)
+- [Running Builds on Your Stack](#running-builds-on-your-stack)
 - [Autoscaling Configuration](#autoscaling-configuration)
 - [Configuration Environment Variables](#configuration-environment-variables)
 - [Secrets Bucket Support](#secrets-bucket-support)
 - [Docker Registry Support](#docker-registry-support)
+- [Updating Your Stack](#updating-your-stack)
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
 - [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
 - [Security](#security)
@@ -85,7 +86,7 @@ aws-vault exec some-profile -- make create-stack
 * [docker-gc](https://github.com/spotify/docker-gc) - removes old docker images
 * [lifecycled](https://github.com/lox/lifecycled) - manages AWS autoscaling events
 
-## Running Builds on your Stack
+## Running Builds on Your Stack
 
 When you create the stack you specify a `BuildkiteQueue` parameter which is used to set agent’s queue, and ensures they will only accept jobs that specifically target them. This means you can easily experiment with entire new stacks without interuppting existing builds. See the [Agent Queues documentation](https://buildkite.com/docs/agent/queues) for how to target the agents in your pipelines.
 
@@ -145,6 +146,12 @@ If you want to push or pull from Docker Hub you can use the `env` file in your s
 If you want to use [AWS ECR](https://aws.amazon.com/ecr/) instead of Docker Hub there's no need to worry about credentials, you simply ensure that your agent machines have the necessary IAM roles and permissions.
 
 For all other services you’ll need to perform your own `docker login` commands using the `env` hook.
+
+## Updating Your Stack
+
+To update your stack to the latest version, use CloudFormation's stack update tools with this url `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`
+
+After updating the stack you may need to recycle your machines by changing the auto-scale groups to 0, and then back to the desired number.
 
 ## Reading Instance and Agent Logs
 
