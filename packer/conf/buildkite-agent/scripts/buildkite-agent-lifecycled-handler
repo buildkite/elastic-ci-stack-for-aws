@@ -9,11 +9,11 @@ echo "Stopping buildkite-agent gracefully"
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
   service "buildkite-agent-${i}" stop &
-done
 
-while pgrep buildkite-agent > /dev/null; do
-  echo "Waiting for buildkite-agent processes to finish..."
-  sleep 5
+  until service "buildkite-agent-${i}" status | grep -q stopped; do
+    echo "Waiting for service buildkite-agent-${i} to have stopped..."
+    sleep 5
+  done
 done
 
 echo "buildkite-agent stopped"
