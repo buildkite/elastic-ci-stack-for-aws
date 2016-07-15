@@ -50,32 +50,35 @@ The latest build of the stack template can be launched in your AWS account with 
 
 > Although the stack will create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
-If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
-
-```bash
-aws cloudformation create-stack \
+<details>
+ <summary>If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the following command:</summary>
+ ```shell
+ aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
   --capabilities CAPABILITY_IAM \
   --parameters <(cat config.json)
-```
+ ```
+</details>
 
-If you’d prefer to use this repo or build it yourself, clone it and run the following commands:
 
-```bash
-# To set up your local environment and build a template based on public AMIs
-make setup download-mappings build
-
-# Or, to set things up locally and create the stack on AWS
-make create-stack
-
-# You can use any of the AWS* environment variables that the aws-cli supports
-AWS_PROFILE="some-profile" make create-stack
-
-# You can also use aws-vault or similar
-aws-vault exec some-profile -- make create-stack
-```
+<details>
+ <summary>If you’d prefer to use this repo or build it yourself, clone it and run the following commands::</summary>
+ ```shell
+  # To set up your local environment and build a template based on public AMIs
+  make setup download-mappings build
+  
+  # Or, to set things up locally and create the stack on AWS
+  make create-stack
+  
+  # You can use any of the AWS* environment variables that the aws-cli supports
+  AWS_PROFILE="some-profile" make create-stack
+  
+  # You can also use aws-vault or similar
+  aws-vault exec some-profile -- make create-stack
+  ```
+</details>
 
 ## What’s On Each Machine?
 
@@ -136,22 +139,23 @@ The files in your secrets bucket should be encrypted with server-side object enc
 
 Encryption is done via the `BUILDKITE_SECRETS_KEY` environment variable set via the Buildkite pipeline settings, and can be the same, or different, for each pipeline.
 
-Here’s an an example (for OS X) that shows how to create and copy a random encyption passphrase, generate a private SSH key, and upload it with SSE encryption to an S3 bucket:
-
-```bash
-# generate a deploy key for your project
-ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
-pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
-
-# upload the private key, encrypted
-PASSPHRASE=$(head -c 24 /dev/urandom | base64)
-aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_buildkite "s3://{SecretsBucket}/private_ssh_key"
-pbcopy <<< "$PASSPHRASE" # paste passphrase into buildkite env as BUILDKITE_SECRETS_KEY
-
-# cleanup
-unset PASSPHRASE
-rm id_rsa_buildkite*
-```
+<details>
+ <summary>Here’s an an example (for OS X) that shows how to create and copy a random encyption passphrase, generate a private SSH key, and upload it with SSE encryption to an S3 bucket:</summary>
+  ```bash
+  # generate a deploy key for your project
+  ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
+  pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
+  
+  # upload the private key, encrypted
+  PASSPHRASE=$(head -c 24 /dev/urandom | base64)
+  aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_buildkite "s3://{SecretsBucket}/private_ssh_key"
+  pbcopy <<< "$PASSPHRASE" # paste passphrase into buildkite env as BUILDKITE_SECRETS_KEY
+  
+  # cleanup
+  unset PASSPHRASE
+  rm id_rsa_buildkite*
+  ```
+</details>
 
 ## Docker Registry Support
 
