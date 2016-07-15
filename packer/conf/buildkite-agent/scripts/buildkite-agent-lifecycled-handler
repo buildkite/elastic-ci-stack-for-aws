@@ -11,9 +11,9 @@ for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
   service "buildkite-agent-${i}" stop &
 done
 
-until pgrep buildkite-agent > /dev/null; do
+while pgrep buildkite-agent > /dev/null; do
   echo "Waiting for buildkite-agent processes to finish..."
-  sleep 0.5
+  sleep 5
 done
 
 echo "buildkite-agent stopped"
