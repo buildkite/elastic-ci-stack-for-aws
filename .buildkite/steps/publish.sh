@@ -14,6 +14,9 @@ DESTINATION_REGIONS=(
   sa-east-1
 )
 
+DESTINATION_AMIS=(
+)
+
 copy_ami_to_region() {
   local source_ami_id="$1"
   local source_region="$2"
@@ -76,7 +79,8 @@ copy_ami_and_create_mappings_yml() {
   local destination_yml="$2"
   local image_name
   local region
-  local copied_image_id
+  local region_ami
+  local i
 
   image_name=$(fetch_ami_name "$base_image_id" us-east-1)
 
@@ -87,16 +91,24 @@ Mappings:
 EOF
 
   if [[ $BUILDKITE_BRANCH == "master" ]] ; then
-    for region in ${DESTINATION_REGIONS[*]} ; do
+    for region in ${DESTINATION_REGIONS[*]}; do
       echo "--- Copying $image_id to $region"
 
-      copied_image_id=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
+      region_ami=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
 
-      wait_for_ami_to_be_available "$copied_image_id" "$region"
+      DESTINATION_AMIS+=("$region_ami")
+    done
 
-      make_ami_public "$copied_image_id" "$region"
+    echo "--- Waiting for AMIs to become available"
 
-      echo "    $region : { AMI: $copied_image_id }" >> "$destination_yml"
+    for ((i=0; i<${#DESTINATION_AMIS[*]}; i++)); do
+      region="${DESTINATION_REGIONS[i]}"
+      region_ami="${DESTINATION_AMIS[i]}"
+
+      wait_for_ami_to_be_available "$region_ami" "$region"
+      make_ami_public "$region_ami" "$region"
+
+      echo "    $region : { AMI: $region_ami }" >> "$destination_yml"
     done
   fi
 }
