@@ -142,7 +142,7 @@ Parameters:
     MinValue: 0
 
   ScaleDownAdjustment:
-    Description: The number of agents to remove on each scale down event (BusyAgentCount == 0 for the last 6 mins, every 2 mins)
+    Description: The number of agents to remove on each scale down event (UnfinishedJobs == 0 for 15 mins)
     Type: Number
     Default: -1
     MaxValue: 0
