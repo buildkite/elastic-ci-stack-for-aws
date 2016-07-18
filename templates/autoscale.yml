@@ -49,12 +49,12 @@ Resources:
   AgentUtilizationAlarmLow:
    Type: AWS::CloudWatch::Alarm
    Properties:
-      AlarmDescription: Scale-down if UnfinishedJobs == 0 for 15 minutes
+      AlarmDescription: Scale-down if UnfinishedJobs == 0 for 30 minutes
       MetricName: UnfinishedJobsCount
       Namespace: Buildkite
       Statistic: Maximum
-      Period: 900
-      EvaluationPeriods: 1
+      Period: 300
+      EvaluationPeriods: 6
       Threshold: 0
       AlarmActions: [ $(AgentScaleDownPolicy) ]
       Dimensions:
