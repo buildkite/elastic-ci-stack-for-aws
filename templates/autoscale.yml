@@ -19,7 +19,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown: 300
+      Cooldown: 120
       ScalingAdjustment : $(ScaleUpAdjustment)
 
   AgentScaleDownPolicy:
