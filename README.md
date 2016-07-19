@@ -185,6 +185,7 @@ Each instance streams both system messages and Buildkite Agent logs to CloudWatc
 
 * `/var/log/messages` - system logs
 * `/var/log/buildkite-agent.log` - Buildkite Agent logs
+* `/var/log/docker` - Docker daemon logs
 
 Within each stream the logs are grouped by instance id.
 
