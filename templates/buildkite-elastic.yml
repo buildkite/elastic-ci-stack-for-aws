@@ -337,7 +337,21 @@ Resources:
                 EOF
 
                 start lifecycled
-            02-install-buildkite:
+            02-restart-docker:
+              command: |
+                #!/bin/bash -eu
+
+                # Sometimes Docker can be unreponsive
+                # https://github.com/docker/docker/issues/23131
+                # https://github.com/buildkite/elastic-ci-stack-for-aws/issues/86
+                #
+                # As a workaround we'll restart the docker daemon before starting the buildkite-agent
+                service docker restart
+
+                # We'll also verify that docker commands work. If this fails, cloud-init will fail and
+                # the machine won't be marked as healthy
+                docker info
+            03-install-buildkite:
               command: |
                 #!/bin/bash -eu
 
@@ -394,7 +408,7 @@ Resources:
                   chkconfig --add buildkite-agent-\${i}
                 done
 
-            03-fetch-authorized-users:
+            04-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
                 #!/bin/bash -eu
