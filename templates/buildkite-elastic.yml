@@ -133,7 +133,7 @@ Parameters:
   MinSize:
     Description: The minumum number of agents to launch
     Type: Number
-    Default: 1
+    Default: 0
 
   ScaleUpAdjustment:
     Description: The number of agents to adjust by on each scale up event (ScheduledJobsCount > 0 for 1 min)
