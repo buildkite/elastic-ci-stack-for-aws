@@ -10,9 +10,6 @@ sudo usermod -a -G docker ec2-user
 sudo rm -rf /var/lib/docker/
 sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
 
-sudo service docker start || ( cat /var/log/docker && false )
-sudo docker info
-
 echo "Downloading docker-compose..."
 sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/1.7.1/docker-compose-Linux-x86_64
 sudo chmod +x /usr/bin/docker-compose
