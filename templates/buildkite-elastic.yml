@@ -341,16 +341,13 @@ Resources:
               command: |
                 #!/bin/bash -eu
 
-                # Sometimes Docker can be unreponsive
+                # Sometimes Docker can be unreponsive:
                 # https://github.com/docker/docker/issues/23131
                 # https://github.com/buildkite/elastic-ci-stack-for-aws/issues/86
                 #
-                # As a workaround we'll restart the docker daemon before starting the buildkite-agent
-                service docker restart
-
-                # We'll also verify that docker commands work. If this fails, cloud-init will fail and
-                # the machine won't be marked as healthy
-                docker info
+                # As a workaround we start the docker daemon, wait 10 seconds, and verify
+                service docker start || ( cat /var/log/docker && false )
+                sleep 10 && docker info
             03-install-buildkite:
               command: |
                 #!/bin/bash -eu
