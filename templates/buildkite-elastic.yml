@@ -47,6 +47,7 @@ Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
     Type: AWS::EC2::KeyPair::KeyName
+    MinLength: 1
 
   BuildkiteAgentRelease:
     Type: String
