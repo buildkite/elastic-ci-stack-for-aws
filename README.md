@@ -1,6 +1,6 @@
-<h1><img alt="Elastic CI Stack for AWS" src="https://cdn.rawgit.com/buildkite/buildkite-aws-elastic-stack/504f362/logo.svg" width="770" height="150"></h1>
+<h1><img alt="Elastic CI Stack for AWS" src="https://cdn.rawgit.com/buildkite/images/master/banner.png"></h1>
 
-[![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack)
+![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)
 
 The Buildkite Elastic CI Stack gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize legacy tests across hundreds of nodes, run tests and deployments for all your Linux-based services and apps, or run AWS ops tasks.
 
