@@ -1,4 +1,4 @@
-<h1><img alt="Elastic CI Stack for AWS" src="https://cdn.rawgit.com/buildkite/images/master/banner.png"></h1>
+<h1><img alt="Elastic CI Stack for AWS" src="https://cdn.rawgit.com/buildkite/elastic-ci-stack/images/master/banner.png"></h1>
 
 ![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)
 
