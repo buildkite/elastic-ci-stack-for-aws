@@ -19,6 +19,7 @@ Metadata:
         - Subnets
         - AvailabilityZones
         - SecurityGroupId
+        - ManagedPolicyArns
 
       - Label:
           default: Instance Configuration
@@ -165,6 +166,11 @@ Parameters:
     Description: Optional - Existing security group to associate the container instances. Creates one by default.
     Default: ""
 
+  ManagedPolicyArns:
+    Type: CommaDelimitedList
+    Description: Optional - ARNs of existing managed IAM policies to associate with the container instances.
+    Default: ""
+
   ImageId:
     Type: String
     Description: Optional - The AMI to use, otherwise uses the mapping built in
@@ -195,6 +201,9 @@ Conditions:
     CreateMetricsStack:
       !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
 
+    UseSpecifiedIamPolicies:
+      !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
+
 Outputs:
   AgentAutoScaleTopic:
     Value: $(AgentAutoScaleTopic)
@@ -213,6 +222,7 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
+      ManagedPolicyArns: !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
