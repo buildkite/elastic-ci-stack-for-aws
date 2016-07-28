@@ -9,12 +9,12 @@ echo "Stopping buildkite-agent gracefully"
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
   service "buildkite-agent-${i}" stop &
-
-  # Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycld handler script
-  while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
-    echo "Waiting for service buildkite-agent-${i} to have stopped..."
-    sleep 5
-  done
 done
 
-echo "buildkite-agent stopped"
+# Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycld handler script
+while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
+  echo "Waiting for all buildkite-agent processes to have stopped..."
+  sleep 5
+done
+
+echo "All buildkite-agent processes have stopped"
