@@ -18,7 +18,7 @@ s3_download() {
     aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
   fi
 
-  env -i aws s3 cp ${aws_s3_args[@]} "$1" /dev/stdout
+  env -i aws s3 cp --quiet ${aws_s3_args[@]} "$1" /dev/stdout
 }
 
 echo "~~~ :house_with_garden: Setting up the environment"
