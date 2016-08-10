@@ -77,6 +77,8 @@ AWS_PROFILE="some-profile" make create-stack
 aws-vault exec some-profile -- make create-stack
 ```
 
+Adding extra tags to the stack (including the EC2 instances) can be done via `extra_tags.json` (see [`extra_tags.json.example`](extra_tags.json.example) for usage).
+
 ## What’s On Each Machine?
 
 * [Amazon Linux](https://aws.amazon.com/amazon-linux-ami/)

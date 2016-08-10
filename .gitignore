@@ -5,4 +5,5 @@ templates/mappings.yml
 vendor/
 .bundle/
 *.bak
+extra_tags.json
 
