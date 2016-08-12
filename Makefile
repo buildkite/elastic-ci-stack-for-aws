@@ -39,14 +39,18 @@ upload: build/aws-stack.json
 config.json:
 	test -s config.json || $(error Please create a config.json file)
 
-create-stack: config.json build/aws-stack.json
+extra_tags.json:
+	touch extra_tags.json
+
+create-stack: config.json build/aws-stack.json extra_tags.json
 	aws cloudformation create-stack \
 	--output text \
 	--stack-name $(STACK_NAME) \
 	--disable-rollback \
 	--template-body "file://$(PWD)/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM \
-	--parameters "$$(cat config.json)"
+	--parameters "$$(cat config.json)" \
+	--tags "$$(cat extra_tags.json)"
 
 validate: build/aws-stack.json
 	aws cloudformation validate-template \

@@ -21,3 +21,8 @@ Resources:
           "$(Subnet0),$(Subnet1),$(Subnet2)",
           !Join [ ",", $(Subnets) ]
         ]
+      Tags:
+        - Key: Role
+          Value: buildkite-metrics
+        - Key: Name
+          Value: buildkite-metrics
