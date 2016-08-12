@@ -24,7 +24,5 @@ Resources:
       Tags:
         - Key: Role
           Value: buildkite-metrics
-          PropagateAtLaunch: true
         - Key: Name
           Value: buildkite-metrics
-          PropagateAtLaunch: true
