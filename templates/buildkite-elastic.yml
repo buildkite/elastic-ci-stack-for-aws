@@ -311,7 +311,7 @@ Resources:
         $(ImageId)
       ]
       BlockDeviceMappings:
-        - DeviceName: /dev/xvda
+        - DeviceName: /dev/sda1
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
       UserData: !Base64 |
         #!/bin/bash -xv
