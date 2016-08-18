@@ -32,6 +32,7 @@ Metadata:
         - SecretsBucket
         - ArtifactsBucket
         - AuthorizedUsersUrl
+        - BootstrapScriptUrl
         - RootVolumeSize
         - RootVolumeIops
 
@@ -97,6 +98,11 @@ Parameters:
 
   AuthorizedUsersUrl:
     Description: Optional - S3 url to periodically download ssh authorized_keys from
+    Type: String
+    Default: ""
+
+  BootstrapScriptUrl:
+    Description: Optional - S3 url to run on each instance during boot
     Type: String
     Default: ""
 
@@ -431,6 +437,12 @@ Resources:
                 chmod +x /etc/cron.hourly/authorized_keys
 
                 /etc/cron.hourly/authorized_keys
+            05-run-bootstrap-script:
+              test: test -n "$(BootstrapScriptUrl)"
+              command: |
+                #!/bin/bash -euo pipefail
+
+                curl --silent -f "$(BootstrapScriptUrl)" | bash
 
   AgentLifecycleQueue:
     Type: AWS::SQS::Queue
