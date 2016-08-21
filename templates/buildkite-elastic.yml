@@ -34,7 +34,6 @@ Metadata:
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
-        - RootVolumeIops
 
       - Label:
           default: Auto-scaling Configuration
@@ -160,12 +159,6 @@ Parameters:
     Type: Number
     Default: 250
     MinValue: 10
-
-  RootVolumeIops:
-    Description: Provisioned IOPS for the root volume. You get 3 free for each GB
-    Type: Number
-    Default: 750
-    MinValue: 0
 
   SecurityGroupId:
     Type: String
@@ -318,7 +311,7 @@ Resources:
       ]
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2, Iops: $(RootVolumeIops) }
+          Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
       UserData: !Base64 |
         #!/bin/bash -xv
         /opt/aws/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
