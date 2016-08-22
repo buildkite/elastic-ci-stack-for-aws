@@ -496,6 +496,9 @@ Resources:
             - GroupInServiceInstances
             - GroupTerminatingInstances
             - GroupPendingInstances
+      TerminationPolicies:
+        - OldestLaunchConfiguration
+        - ClosestToNextInstanceHour
       Tags:
         - Key: Role
           Value: buildkite-agent
