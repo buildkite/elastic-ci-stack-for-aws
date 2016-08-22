@@ -521,7 +521,10 @@ Resources:
       AutoScalingRollingUpdate:
         MinInstancesInService: $(MinSize)
         MaxBatchSize: 5
-        PauseTime: PT15M
+        # On rollback this might have to wait for an agent to finish
+        # a job. The agent's init script waits 30 minutes, so we wait
+        # a maximum of 40 minutes to be safe.
+        PauseTime: PT40M
         WaitOnResourceSignals: true
 
   SecurityGroup:
