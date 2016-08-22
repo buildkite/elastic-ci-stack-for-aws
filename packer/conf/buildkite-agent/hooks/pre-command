@@ -2,8 +2,6 @@
 
 set -eu -o pipefail
 
-[[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
-
 if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
   DOCKER_HUB_USER=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f1)
   DOCKER_HUB_PASSWORD=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f2)
@@ -12,8 +10,11 @@ fi
 
 if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
   echo "~~~ Authenticating with Docker Hub as ${DOCKER_HUB_USER}"
-  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}"
-fi
 
-unset DOCKER_HUB_USER
-unset DOCKER_HUB_PASSWORD
+  [[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
+
+  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}"
+
+  unset DOCKER_HUB_USER
+  unset DOCKER_HUB_PASSWORD
+fi
