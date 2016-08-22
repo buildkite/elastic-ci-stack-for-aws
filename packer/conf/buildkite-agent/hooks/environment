@@ -21,7 +21,7 @@ s3_download() {
   env -i aws s3 cp --quiet ${aws_s3_args[@]} "$1" /dev/stdout
 }
 
-echo "~~~ :house_with_garden: Setting up the environment"
+echo "~~~ Setting up the environment"
 
 eval "$(cat ~/cfn-env)"
 eval "$(ssh-agent -s)"
@@ -55,7 +55,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   fi
 fi
 
-echo "~~~ Waiting for :docker:"
+echo "~~~ Waiting for Docker"
 timeout 30 docker ps
 
 unset BUILDKITE_SECRETS_BUCKET
