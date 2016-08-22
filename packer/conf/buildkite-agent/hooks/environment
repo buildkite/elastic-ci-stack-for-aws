@@ -58,11 +58,6 @@ fi
 echo "~~~ Waiting for :docker:"
 timeout 30 docker ps
 
-if [[ $(docker ps -q | wc -l) -gt 0 ]] ; then
-  echo "~~~ Stopping existing :docker: containers"
-  docker stop $(docker ps -q)
-fi
-
 unset BUILDKITE_SECRETS_BUCKET
 unset BUILDKITE_SECRETS_KEY
 
