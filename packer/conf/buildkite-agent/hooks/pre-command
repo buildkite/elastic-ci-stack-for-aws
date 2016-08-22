@@ -3,7 +3,6 @@
 set -eu -o pipefail
 
 [[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
-[[ -f ~/.dockercfg ]] && rm ~/.dockercfg
 
 if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
   DOCKER_HUB_USER=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f1)
