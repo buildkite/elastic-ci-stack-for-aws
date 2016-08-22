@@ -2,6 +2,20 @@
 
 set -eu -o pipefail
 
+# AWS ECR login support
+
+# For logging into the current AWS account’s registry
+if [[ -n "${AWS_ECR_LOGIN:-}" ]] ; then
+  echo "~~~ Authenticating with AWS ECR"
+  eval "$(aws ecr get-login)"
+fi
+
+# For logging into other AWS account’s registries
+if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+  echo "~~~ Authenticating with AWS ECR"
+  eval "$(aws ecr get-login --registry_ids "${AWS_ECR_LOGIN_REGISTRY_IDS}")"
+fi
+
 # Generic docker login support
 
 : "${DOCKER_LOGIN_USER:-}"
