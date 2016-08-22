@@ -2,11 +2,18 @@
 
 set -eu -o pipefail
 
-if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
-  echo "~~~ Authenticating with Docker Hub as ${DOCKER_HUB_USER}"
+# Generic docker login support
 
-  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}"
+: "${DOCKER_LOGIN_USER:-}"
+: "${DOCKER_LOGIN_PASSWORD:-}"
+: "${DOCKER_LOGIN_SERVER:-}"
 
-  unset DOCKER_HUB_USER
-  unset DOCKER_HUB_PASSWORD
+if [[ -n "${DOCKER_LOGIN_USER:-}" && -n "${DOCKER_LOGIN_PASSWORD:-}" ]] ; then
+  echo "~~~ Authenticating with Docker server"
+
+  docker login --username="${DOCKER_LOGIN_USER}" --password="${DOCKER_LOGIN_PASSWORD}" "${DOCKER_LOGIN_SERVER}"
+
+  unset DOCKER_LOGIN_USER
+  unset DOCKER_LOGIN_PASSWORD
+  unset DOCKER_LOGIN_SERVER
 fi
