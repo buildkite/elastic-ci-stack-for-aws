@@ -442,7 +442,7 @@ Resources:
               command: |
                 #!/bin/bash -euo pipefail
 
-                curl --silent -f "$(BootstrapScriptUrl)" | bash
+                curl -sSL "$(BootstrapScriptUrl)" | bash
 
   AgentLifecycleQueue:
     Type: AWS::SQS::Queue
