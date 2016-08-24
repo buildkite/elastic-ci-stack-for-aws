@@ -2,27 +2,41 @@
 
 set -eu -o pipefail
 
+: "${AWS_ECR_LOGIN:-}"
+: "${AWS_ECR_LOGIN_REGISTRY_IDS:-}"
+: "${DOCKER_HUB_USER:-}"
+: "${DOCKER_HUB_PASSWORD:-}"
+: "${DOCKER_LOGIN_USER:-}"
+: "${DOCKER_LOGIN_PASSWORD:-}"
+: "${DOCKER_LOGIN_SERVER:-}"
+
 # AWS ECR login support
 
 # For logging into the current AWS account’s registry
-if [[ -n "${AWS_ECR_LOGIN:-}" ]] ; then
+if [[ -n "${AWS_ECR_LOGIN}" ]] ; then
   echo "~~~ Authenticating with AWS ECR"
   eval "$(aws ecr get-login)"
 fi
 
 # For logging into other AWS account’s registries
-if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS}" ]] ; then
   echo "~~~ Authenticating with AWS ECR"
   eval "$(aws ecr get-login --registry_ids "${AWS_ECR_LOGIN_REGISTRY_IDS}")"
 fi
 
+# DOCKER_HUB_* legacy config var support
+if [[ -n "${DOCKER_HUB_USER}" && -n "${DOCKER_HUB_PASSWORD}" ]]; then
+  echo "~~~ :warning: Deprecated DOCKER_HUB_* env variables"
+  echo "The following env hook environments variables need updating:"
+  echo "* DOCKER_HUB_USER is now DOCKER_LOGIN_USER"
+  echo "* DOCKER_HUB_PASSWORD is now DOCKER_LOGIN_PASSWORD"
+  DOCKER_LOGIN_USER="${DOCKER_HUB_USER}"
+  DOCKER_LOGIN_PASSWORD="${DOCKER_HUB_PASSWORD}"
+fi
+
 # Generic docker login support
 
-: "${DOCKER_LOGIN_USER:-}"
-: "${DOCKER_LOGIN_PASSWORD:-}"
-: "${DOCKER_LOGIN_SERVER:-}"
-
-if [[ -n "${DOCKER_LOGIN_USER:-}" && -n "${DOCKER_LOGIN_PASSWORD:-}" ]] ; then
+if [[ -n "${DOCKER_LOGIN_USER}" && -n "${DOCKER_LOGIN_PASSWORD}" ]] ; then
   echo "~~~ Authenticating with Docker server"
 
   docker login --username="${DOCKER_LOGIN_USER}" --password="${DOCKER_LOGIN_PASSWORD}" "${DOCKER_LOGIN_SERVER}"
