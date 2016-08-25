@@ -4,11 +4,13 @@ set -eu -o pipefail
 
 : "${AWS_ECR_LOGIN:-}"
 : "${AWS_ECR_LOGIN_REGISTRY_IDS:-}"
-: "${DOCKER_HUB_USER:-}"
-: "${DOCKER_HUB_PASSWORD:-}"
 : "${DOCKER_LOGIN_USER:-}"
 : "${DOCKER_LOGIN_PASSWORD:-}"
 : "${DOCKER_LOGIN_SERVER:-}"
+
+# Legacy envs
+: "${DOCKER_HUB_USER:-}"
+: "${DOCKER_HUB_PASSWORD:-}"
 
 # AWS ECR login support
 
