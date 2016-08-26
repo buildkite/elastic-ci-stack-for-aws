@@ -11,7 +11,7 @@ sudo rm -rf /var/lib/docker/
 sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
 
 echo "Downloading docker-compose..."
-sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/1.7.1/docker-compose-Linux-x86_64
+sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/1.8.0/docker-compose-Linux-x86_64
 sudo chmod +x /usr/bin/docker-compose
 docker-compose --version
 
