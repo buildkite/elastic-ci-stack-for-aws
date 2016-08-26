@@ -221,7 +221,7 @@ steps:
     plugins:
       docker-compose:
         build: app
-        image-repository: index.docker.io/my-docker-org/my-repo
+        image-repository: my-docker-org/my-repo
     agents:
       queue: elastic-builders
   - wait
