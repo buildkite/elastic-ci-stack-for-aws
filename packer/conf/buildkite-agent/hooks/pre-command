@@ -31,7 +31,11 @@ fi
 if [[ -n "${DOCKER_LOGIN_USER:-}" && -n "${DOCKER_LOGIN_PASSWORD:-}" ]] ; then
   echo "~~~ Authenticating with Docker server"
 
-  docker login --username="${DOCKER_LOGIN_USER}" --password="${DOCKER_LOGIN_PASSWORD}" "${DOCKER_LOGIN_SERVER:-}"
+  if [[ -n "${DOCKER_LOGIN_SERVER:-}" ]] ; then
+    docker login --username="${DOCKER_LOGIN_USER}" --password="${DOCKER_LOGIN_PASSWORD}" "${DOCKER_LOGIN_SERVER}"
+  else
+    docker login --username="${DOCKER_LOGIN_USER}" --password="${DOCKER_LOGIN_PASSWORD}"
+  fi
 
   unset DOCKER_LOGIN_USER
   unset DOCKER_LOGIN_PASSWORD
