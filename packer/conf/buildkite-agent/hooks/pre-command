@@ -2,24 +2,38 @@
 
 set -eu -o pipefail
 
-[[ -f ~/.docker/config.json ]] && rm ~/.docker/config.json
-[[ -f ~/.dockercfg ]] && rm ~/.dockercfg
+# AWS ECR login support
 
-if [[ -n "${DOCKER_HUB_AUTH:-}" ]] ; then
-  DOCKER_HUB_USER=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f1)
-  DOCKER_HUB_PASSWORD=$(jq -r '."https://index.docker.io/v1/".auth' <<< "$DOCKER_HUB_AUTH" | base64 --decode | cut -d: -f2)
-  DOCKER_HUB_EMAIL=$(jq -r '."https://index.docker.io/v1/".email' <<< "$DOCKER_HUB_AUTH")
-  unset DOCKER_HUB_AUTH
+# For logging into the current AWS account’s registry
+if [[ -n "${AWS_ECR_LOGIN:-}" ]] ; then
+  echo "~~~ Authenticating with AWS ECR"
+  eval "$(aws ecr get-login)"
 fi
 
-if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" && -n "${DOCKER_HUB_EMAIL:-}" ]] ; then
-  echo "~~~ Authenticating with :docker: hub as ${DOCKER_HUB_USER}"
-  docker login --username="${DOCKER_HUB_USER}" --password="${DOCKER_HUB_PASSWORD}" --email="${DOCKER_HUB_EMAIL}"
-elif [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]] ; then
-  echo "Missing DOCKER_HUB_EMAIL."
-  exit 1
+# For logging into other AWS account’s registries
+if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+  echo "~~~ Authenticating with AWS ECR"
+  eval "$(aws ecr get-login --registry_ids "${AWS_ECR_LOGIN_REGISTRY_IDS}")"
 fi
 
-unset DOCKER_HUB_USER
-unset DOCKER_HUB_PASSWORD
-unset DOCKER_HUB_EMAIL
+# DOCKER_HUB_* legacy config var support
+if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]]; then
+  echo "~~~ :warning: Deprecated DOCKER_HUB_* env variables"
+  echo "The following env hook environments variables need updating:"
+  echo "* DOCKER_HUB_USER is now DOCKER_LOGIN_USER"
+  echo "* DOCKER_HUB_PASSWORD is now DOCKER_LOGIN_PASSWORD"
+  DOCKER_LOGIN_USER="${DOCKER_HUB_USER}"
+  DOCKER_LOGIN_PASSWORD="${DOCKER_HUB_PASSWORD}"
+fi
+
+# Generic docker login support
+
+if [[ -n "${DOCKER_LOGIN_USER:-}" && -n "${DOCKER_LOGIN_PASSWORD:-}" ]] ; then
+  echo "~~~ Authenticating with Docker server"
+
+  docker login --username="${DOCKER_LOGIN_USER}" --password="${DOCKER_LOGIN_PASSWORD}" "${DOCKER_LOGIN_SERVER:-}"
+
+  unset DOCKER_LOGIN_USER
+  unset DOCKER_LOGIN_PASSWORD
+  unset DOCKER_LOGIN_SERVER
+fi
