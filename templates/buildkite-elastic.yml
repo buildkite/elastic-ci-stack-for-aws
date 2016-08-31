@@ -423,14 +423,6 @@ Resources:
 
                 service awslogs restart
 
-                # Setup and start services
-
-                for i in \$(seq 1 $(AgentsPerInstance)); do
-                  cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
-                  service buildkite-agent-\${i} start
-                  chkconfig --add buildkite-agent-\${i}
-                done
-
             05-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
@@ -453,6 +445,16 @@ Resources:
                 #!/bin/bash -euo pipefail
 
                 curl -sSL "$(BootstrapScriptUrl)" | bash
+
+            07-start-agent:
+              command: |
+                # Setup and start services
+
+                for i in \$(seq 1 $(AgentsPerInstance)); do
+                  cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
+                  service buildkite-agent-\${i} start
+                  chkconfig --add buildkite-agent-\${i}
+                done
 
   AgentLifecycleQueue:
     Type: AWS::SQS::Queue
