@@ -428,7 +428,7 @@ Resources:
                                        --query AutoScalingInstances[].LifecycleState --output text)"
                   logger -t lifecycled "Lifecycle state for \$INSTANCE_ID: \$LIFECYCLE_STATE"
                   if [[ "\$LIFECYCLE_STATE" == "Terminating:Wait" ]]; then
-                    logger -t lifecycled "Time to shut it all down!"
+                    logger -t lifecycled "Time to shut it all down"
                     break
                   else
                     sleep 15 # seconds
