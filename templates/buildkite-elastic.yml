@@ -246,8 +246,8 @@ Resources:
             Resource: "*"
           - Effect: Allow
             Action:
-              - sqs:*
-            Resource: $(AgentLifecycleQueue[Arn])
+              - sns:*
+            Resource: $(AgentLifecycleTopic[Arn])
           - Effect: Allow
             Action:
               - logs:CreateLogGroup
@@ -345,11 +345,21 @@ Resources:
               command: |
                 #!/bin/bash -eu
 
+                INSTANCE_ID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
+
+                # Create an SQS queue for this instance
+                SQS_QUEUE_NAME="$(AWS::StackId)-autoscaling-\${INSTANCE_ID}"
+                SQS_QUEUE_URL=\$(aws sqs create-queue --queue-name "\${SQS_QUEUE_NAME}" --output text)
+                SQS_QUEUE_ARN=\$(aws sqs get-queue-attributes --queue-url "\${SQS_QUEUE_URL}" --attribute-names QueueArn --output text --query 'Attributes.QueueArn')
+
+                # Subscribe the queue to SNS autoscaling notifications
+                aws sns subscribe --topic "$(AgentAutoScaleTopic[Arn])" --protocol sqs --notification-endpoint "\${SQS_QUEUE_ARN}"
+
                 cat << EOF > /etc/lifecycled
                 AWS_REGION=$(AWS::Region)
                 LIFECYCLED_DEBUG=true
-                LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
-                LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
+                LIFECYCLED_QUEUE=\${SQS_QUEUE}
+                LIFECYCLED_INSTANCEID=\${INSTANCE_ID}
                 LIFECYCLED_HANDLER=/usr/bin/buildkite-agent-lifecycled-handler
                 EOF
 
@@ -444,9 +454,6 @@ Resources:
 
                 curl -sSL "$(BootstrapScriptUrl)" | bash
 
-  AgentLifecycleQueue:
-    Type: AWS::SQS::Queue
-
   AgentLifecycleHookRole:
     Type: AWS::IAM::Role
     Properties:
@@ -462,8 +469,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - sqs:*
-                Resource: $(AgentLifecycleQueue[Arn])
+                  - sns:*
+                Resource: $(AgentAutoScaleTopic[Arn])
       Path: /
 
   AgentLifecycleHook:
@@ -471,7 +478,7 @@ Resources:
     Properties:
       AutoScalingGroupName: $(AgentAutoScaleGroup)
       LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
-      NotificationTargetARN: $(AgentLifecycleQueue[Arn])
+      NotificationTargetARN: $(AgentAutoScaleTopic[Arn])
       RoleARN: $(AgentLifecycleHookRole[Arn])
 
   AgentAutoScaleTopic:
@@ -488,13 +495,6 @@ Resources:
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
-      NotificationConfigurations:
-        - TopicARN: $(AgentAutoScaleTopic)
-          NotificationTypes:
-            - "autoscaling:EC2_INSTANCE_LAUNCH"
-            - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
-            - "autoscaling:EC2_INSTANCE_TERMINATE"
-            - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
       MetricsCollection:
         - Granularity: 1Minute
           Metrics:
