@@ -314,9 +314,15 @@ Resources:
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
       UserData: !Base64 |
         #!/bin/bash -xv
-        /opt/aws/bin/cfn-init -s $(AWS::StackId) -r AgentLaunchConfiguration --region $(AWS::Region)
-        /opt/aws/bin/cfn-signal -e \$? -r 'cfn-init finished' \
-          --stack $(AWS::StackName) --resource 'AgentAutoScaleGroup' --region $(AWS::Region)
+        /opt/aws/bin/cfn-init \
+          --region "$(AWS::Region)" \
+          --stack "$(AWS::StackId)" \
+          --resource "AgentLaunchConfiguration"
+        /opt/aws/bin/cfn-signal \
+          --region "$(AWS::Region)" \
+          --stack "$(AWS::StackName)" \
+          --resource "AgentAutoScaleGroup" \
+          --exit-code \$?
         # Here we put any params we want to trigger a restart
         # $(BuildkiteAgentToken)
         # $(BuildkiteAgentRelease)
