@@ -40,7 +40,7 @@ config.json:
 	test -s config.json || $(error Please create a config.json file)
 
 extra_tags.json:
-	touch extra_tags.json
+	echo "{}" > extra_tags.json
 
 create-stack: config.json build/aws-stack.json extra_tags.json
 	aws cloudformation create-stack \
