@@ -341,7 +341,8 @@ Resources:
                 EOF
 
                 chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
-            01-write-lifecycled-config:
+
+            02-write-lifecycled-config:
               command: |
                 #!/bin/bash -eu
 
@@ -354,7 +355,8 @@ Resources:
                 EOF
 
                 start lifecycled
-            02-restart-docker:
+
+            03-restart-docker:
               command: |
                 #!/bin/bash -eu
 
@@ -365,7 +367,8 @@ Resources:
                 # As a workaround we start the docker daemon, wait 10 seconds, and verify
                 service docker start || ( cat /var/log/docker && false )
                 sleep 10 && docker info
-            03-install-buildkite:
+
+            04-install-buildkite:
               command: |
                 #!/bin/bash -eu
 
@@ -422,7 +425,7 @@ Resources:
                   chkconfig --add buildkite-agent-\${i}
                 done
 
-            04-fetch-authorized-users:
+            05-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
                 #!/bin/bash -eu
@@ -437,7 +440,8 @@ Resources:
                 chmod +x /etc/cron.hourly/authorized_keys
 
                 /etc/cron.hourly/authorized_keys
-            05-run-bootstrap-script:
+
+            06-run-bootstrap-script:
               test: test -n "$(BootstrapScriptUrl)"
               command: |
                 #!/bin/bash -euo pipefail
