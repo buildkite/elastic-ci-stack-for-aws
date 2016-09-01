@@ -203,13 +203,6 @@ Conditions:
     UseSpecifiedIamPolicies:
       !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
 
-Outputs:
-  AgentAutoScaleTopic:
-    Value: $(AgentAutoScaleTopic)
-
-  AgentAutoScaleTopicName:
-    Value: $(AgentAutoScaleTopic[TopicName])
-
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
   IAMInstanceProfile:
@@ -241,21 +234,18 @@ Resources:
               - cloudwatch:PutMetricData
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
-              - autoscaling:CompleteLifecycleAction
+              - autoscaling:DescribeAutoScalingInstances
+              - autoscaling:DescribeLifecycleHooks
               - autoscaling:RecordLifecycleActionHeartbeat
+              - autoscaling:CompleteLifecycleAction
             Resource: "*"
-          - Effect: Allow
-            Action:
-              - sqs:*
-            Resource: $(AgentLifecycleQueue[Arn])
           - Effect: Allow
             Action:
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
               - logs:DescribeLogStreams
-            Resource:
-              - "arn:aws:logs:*:*:*"
+            Resource: "*"
 
       Roles:
         - $(IAMRole)
@@ -341,28 +331,14 @@ Resources:
                 #!/bin/bash -eu
 
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
-                BUILDKITE_STACK_NAME=$(AWS::StackName)
-                BUILDKITE_SECRETS_BUCKET=$(SecretsBucket)
-                BUILDKITE_AGENTS_PER_INSTANCE=$(AgentsPerInstance)
+                BUILDKITE_STACK_NAME="$(AWS::StackName)"
+                BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
+                BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
                 EOF
 
-                chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
+                chown buildkite-agent /var/lib/buildkite-agent/cfn-env
 
-            02-write-lifecycled-config:
-              command: |
-                #!/bin/bash -eu
-
-                cat << EOF > /etc/lifecycled
-                AWS_REGION=$(AWS::Region)
-                LIFECYCLED_DEBUG=true
-                LIFECYCLED_QUEUE=$(AgentLifecycleQueue)
-                LIFECYCLED_INSTANCEID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
-                LIFECYCLED_HANDLER=/usr/bin/buildkite-agent-lifecycled-handler
-                EOF
-
-                start lifecycled
-
-            03-restart-docker:
+            02-restart-docker:
               command: |
                 #!/bin/bash -eu
 
@@ -374,16 +350,14 @@ Resources:
                 service docker start || ( cat /var/log/docker && false )
                 sleep 10 && docker info
 
-            04-install-buildkite:
+            03-install-buildkite:
               command: |
                 #!/bin/bash -eu
 
                 # Choose the right binary
-
                 ln -s /usr/bin/buildkite-agent-$(BuildkiteAgentRelease) /usr/bin/buildkite-agent
 
                 # Setup the buildkite-agent config
-
                 INSTANCE_ID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
                 DOCKER_VERSION=\$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
@@ -408,7 +382,6 @@ Resources:
                 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
                 # Setup logging first so we capture everything
-
                 for i in \$(seq 1 $(AgentsPerInstance)); do
                   touch /var/log/buildkite-agent-\${i}.log
 
@@ -422,6 +395,57 @@ Resources:
                 done
 
                 service awslogs restart
+
+            04-replace-lifecycled:
+              command: |
+                #!/bin/bash -eu
+
+                cat <<"EOF" >/usr/bin/lifecycled
+                #!/bin/bash -eu
+
+                set -o pipefail
+
+                logger -t lifecycled "Starting lifecycle monitor"
+
+                AWS_REGION="\$(/opt/aws/bin/ec2-metadata --availability-zone | cut -d " " -f 2 | head -c -2)"
+                INSTANCE_ID="\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)"
+                logger -t lifecycled "INSTANCE_ID=\$INSTANCE_ID"
+
+                AUTO_SCALING_GROUP_NAME="\$(aws --region "\$AWS_REGION" ec2 describe-tags \
+                                              --filters "Name=resource-id,Values=\$INSTANCE_ID" \
+                                                        "Name=key,Values=aws:autoscaling:groupName" \
+                                               --query "Tags[].Value" --output text)"
+                logger -t lifecycled "AUTO_SCALING_GROUP_NAME=\$AUTO_SCALING_GROUP_NAME"
+
+                LIFECYCLE_HOOK_NAME="\$(aws --region "\$AWS_REGION" autoscaling describe-lifecycle-hooks \
+                                         --auto-scaling-group-name "\$AUTO_SCALING_GROUP_NAME" \
+                                         --query "LifecycleHooks[].LifecycleHookName" --output text)"
+                logger -t lifecycled "LIFECYCLE_HOOK_NAME=\$LIFECYCLE_HOOK_NAME"
+
+                while true; do
+                  LIFECYCLE_STATE="\$(aws --region "\$AWS_REGION" autoscaling describe-auto-scaling-instances \
+                                       --instance-ids "\$INSTANCE_ID" \
+                                       --query AutoScalingInstances[].LifecycleState --output text)"
+                  logger -t lifecycled "Lifecycle state for \$INSTANCE_ID: \$LIFECYCLE_STATE"
+                  if [[ "\$LIFECYCLE_STATE" == "Terminating:Wait" ]]; then
+                    logger -t lifecycled "Time to shut it all down!"
+                    break
+                  else
+                    sleep 15 # seconds
+                  fi
+                done
+
+                logger -t lifecycled "Running lifecycle handler"
+                /usr/bin/buildkite-agent-lifecycled-handler
+
+                logger -t lifecycled "Completing lifecycle action"
+                aws --region "\$AWS_REGION" autoscaling complete-lifecycle-action \
+                  --auto-scaling-group-name "\$AUTO_SCALING_GROUP_NAME" \
+                  --lifecycle-hook-name "\$LIFECYCLE_HOOK_NAME" \
+                  --instance-id "\$INSTANCE_ID" \
+                  --lifecycle-action-result CONTINUE
+                EOF
+                chmod +x /usr/bin/lifecycled
 
             05-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
@@ -442,13 +466,15 @@ Resources:
             06-run-bootstrap-script:
               test: test -n "$(BootstrapScriptUrl)"
               command: |
-                #!/bin/bash -euo pipefail
+                #!/bin/bash -eu
 
                 curl -sSL "$(BootstrapScriptUrl)" | bash
 
-            07-start-agent:
+            07-start-the-world:
               command: |
-                # Setup and start services
+                #!/bin/bash -eu
+
+                # Start services
 
                 for i in \$(seq 1 $(AgentsPerInstance)); do
                   cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
@@ -456,8 +482,12 @@ Resources:
                   chkconfig --add buildkite-agent-\${i}
                 done
 
-  AgentLifecycleQueue:
-    Type: AWS::SQS::Queue
+                start lifecycled
+
+  # XXX: We don't even want a topic or role, but CloudFormation requires them
+  # to create a lifecycle hook.
+  AgentLifecycleTopic:
+    Type: AWS::SNS::Topic
 
   AgentLifecycleHookRole:
     Type: AWS::IAM::Role
@@ -474,8 +504,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - sqs:*
-                Resource: $(AgentLifecycleQueue[Arn])
+                  - sns:Publish
+                Resource: $(AgentLifecycleTopic)
       Path: /
 
   AgentLifecycleHook:
@@ -483,11 +513,9 @@ Resources:
     Properties:
       AutoScalingGroupName: $(AgentAutoScaleGroup)
       LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
-      NotificationTargetARN: $(AgentLifecycleQueue[Arn])
+      DefaultResult: CONTINUE
+      NotificationTargetARN: $(AgentLifecycleTopic)
       RoleARN: $(AgentLifecycleHookRole[Arn])
-
-  AgentAutoScaleTopic:
-    Type: AWS::SNS::Topic
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -500,13 +528,6 @@ Resources:
       LaunchConfigurationName: $(AgentLaunchConfiguration)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
-      NotificationConfigurations:
-        - TopicARN: $(AgentAutoScaleTopic)
-          NotificationTypes:
-            - "autoscaling:EC2_INSTANCE_LAUNCH"
-            - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
-            - "autoscaling:EC2_INSTANCE_TERMINATE"
-            - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
       MetricsCollection:
         - Granularity: 1Minute
           Metrics:
