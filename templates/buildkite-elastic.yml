@@ -400,7 +400,7 @@ Resources:
               command: |
                 #!/bin/bash -eu
 
-                cat <<"EOF" >/usr/bin/lifecycled
+                cat << "EOF" > /usr/bin/lifecycled
                 #!/bin/bash -eu
 
                 set -o pipefail
