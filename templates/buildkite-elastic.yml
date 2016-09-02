@@ -233,7 +233,6 @@ Resources:
   IAMPolicies:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: InstancePolicy
       PolicyDocument:
         Statement:
           - Effect: Allow
