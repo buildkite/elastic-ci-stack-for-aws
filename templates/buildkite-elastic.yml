@@ -396,58 +396,8 @@ Resources:
 
                 service awslogs restart
 
-            04-replace-lifecycled:
-              command: |
-                #!/bin/bash -eu
 
-                cat << "EOF" > /usr/bin/lifecycled
-                #!/bin/bash -eu
-
-                set -o pipefail
-
-                logger -t lifecycled "Starting lifecycle monitor"
-
-                AWS_REGION="\$(/opt/aws/bin/ec2-metadata --availability-zone | cut -d " " -f 2 | head -c -2)"
-                INSTANCE_ID="\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)"
-                logger -t lifecycled "INSTANCE_ID=\$INSTANCE_ID"
-
-                AUTO_SCALING_GROUP_NAME="\$(aws --region "\$AWS_REGION" ec2 describe-tags \
-                                              --filters "Name=resource-id,Values=\$INSTANCE_ID" \
-                                                        "Name=key,Values=aws:autoscaling:groupName" \
-                                               --query "Tags[].Value" --output text)"
-                logger -t lifecycled "AUTO_SCALING_GROUP_NAME=\$AUTO_SCALING_GROUP_NAME"
-
-                LIFECYCLE_HOOK_NAME="\$(aws --region "\$AWS_REGION" autoscaling describe-lifecycle-hooks \
-                                         --auto-scaling-group-name "\$AUTO_SCALING_GROUP_NAME" \
-                                         --query "LifecycleHooks[].LifecycleHookName" --output text)"
-                logger -t lifecycled "LIFECYCLE_HOOK_NAME=\$LIFECYCLE_HOOK_NAME"
-
-                while true; do
-                  LIFECYCLE_STATE="\$(aws --region "\$AWS_REGION" autoscaling describe-auto-scaling-instances \
-                                       --instance-ids "\$INSTANCE_ID" \
-                                       --query AutoScalingInstances[].LifecycleState --output text)"
-                  logger -t lifecycled "Lifecycle state for \$INSTANCE_ID: \$LIFECYCLE_STATE"
-                  if [[ "\$LIFECYCLE_STATE" == "Terminating:Wait" ]]; then
-                    logger -t lifecycled "Time to shut it all down"
-                    break
-                  else
-                    sleep 15 # seconds
-                  fi
-                done
-
-                logger -t lifecycled "Running lifecycle handler"
-                /usr/bin/buildkite-agent-lifecycled-handler
-
-                logger -t lifecycled "Completing lifecycle action"
-                aws --region "\$AWS_REGION" autoscaling complete-lifecycle-action \
-                  --auto-scaling-group-name "\$AUTO_SCALING_GROUP_NAME" \
-                  --lifecycle-hook-name "\$LIFECYCLE_HOOK_NAME" \
-                  --instance-id "\$INSTANCE_ID" \
-                  --lifecycle-action-result CONTINUE
-                EOF
-                chmod +x /usr/bin/lifecycled
-
-            05-fetch-authorized-users:
+            04-fetch-authorized-users:
               test: test -n "$(AuthorizedUsersUrl)"
               command: |
                 #!/bin/bash -eu
@@ -463,14 +413,14 @@ Resources:
 
                 /etc/cron.hourly/authorized_keys
 
-            06-run-bootstrap-script:
+            05-run-bootstrap-script:
               test: test -n "$(BootstrapScriptUrl)"
               command: |
                 #!/bin/bash -eu
 
                 curl -sSL "$(BootstrapScriptUrl)" | bash
 
-            07-start-the-world:
+            06-start-the-world:
               command: |
                 #!/bin/bash -eu
 

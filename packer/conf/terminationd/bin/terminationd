@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+# This script is a daemon that monitors for the instance’s autoscaling state
+# group to put it into a `terminating:wait` state, and then runs a hook before
+# telling the autoscaling group to proceed with the termination. This allows
+# us to wait for all buildkite-agent jobs to complete on the instance before
+# termination.
+#
+# Expects /etc/terminationd/hook to be installed and executable
+
+AWS_REGION="$(/opt/aws/bin/ec2-metadata --availability-zone | cut -d " " -f 2 | head -c -2)"
+INSTANCE_ID="$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)"
+
+echo "Monitoring instance state for ${INSTANCE_ID}"
+
+while true; do
+  LIFECYCLE_STATE="$(aws --region "${AWS_REGION}" autoscaling describe-auto-scaling-instances \
+                       --instance-ids "${INSTANCE_ID}" \
+                       --query AutoScalingInstances[].LifecycleState --output text)"
+
+  echo "Lifecycle state is ${LIFECYCLE_STATE}"
+
+  if [[ "${LIFECYCLE_STATE}" == "Terminating:Wait" ]]; then
+    break
+  else
+    sleep 15 # seconds
+  fi
+done
+
+echo "Running terminationd hook"
+
+/etc/terminationd/hook || true
+
+echo "Fetching autoscaling group name"
+
+AUTO_SCALING_GROUP_NAME="$(aws --region "${AWS_REGION}" ec2 describe-tags \
+                              --filters "Name=resource-id,Values=${INSTANCE_ID}" \
+                                        "Name=key,Values=aws:autoscaling:groupName" \
+                               --query "Tags[].Value" --output text)"
+
+echo "Fetching lifecycle hook name"
+
+LIFECYCLE_HOOK_NAME="$(aws --region "${AWS_REGION}" autoscaling describe-lifecycle-hooks \
+                         --auto-scaling-group-name "${AUTO_SCALING_GROUP_NAME}" \
+                         --query "LifecycleHooks[].LifecycleHookName" --output text)"
+
+echo "Completing lifecycle action for ${AUTO_SCALING_GROUP_NAME} ${LIFECYCLE_HOOK_NAME}"
+
+aws --region "${AWS_REGION}" autoscaling complete-lifecycle-action \
+  --auto-scaling-group-name "${AUTO_SCALING_GROUP_NAME}" \
+  --lifecycle-hook-name "${LIFECYCLE_HOOK_NAME}" \
+  --instance-id "${INSTANCE_ID}" \
+  --lifecycle-action-result CONTINUE

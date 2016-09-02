@@ -28,7 +28,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
+      "script": "scripts/install-terminationd.sh"
     },
     {
       "type": "shell",
