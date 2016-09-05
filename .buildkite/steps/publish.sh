@@ -129,6 +129,8 @@ generate_mappings() {
   fi
 }
 
+make clean
+
 echo "--- Generating mappings"
 
 generate_mappings
