@@ -61,3 +61,6 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 echo "Adding init.d template..."
 sudo cp /tmp/conf/buildkite-agent/init.d/buildkite-agent /etc/buildkite-agent/init.d.tmpl
+
+echo "Adding termationd hook..."
+sudo cp /tmp/conf/buildkite-agent/terminationd/hook /etc/terminationd/hook

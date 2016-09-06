@@ -88,7 +88,6 @@ Adding extra tags to the stack (including the EC2 instances) can be done via `ex
 * [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
 * [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli or the Buildkite API
 * [docker-gc](https://github.com/spotify/docker-gc) - removes old docker images
-* [lifecycled](https://github.com/lox/lifecycled) - manages AWS autoscaling events
 
 ## What Type of Builds Does This Support?
 

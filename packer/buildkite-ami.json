@@ -8,7 +8,7 @@
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
       "ami_name": "buildkite-stack-{{isotime | clean_ami_name}}",
-      "ami_description": "Buildkite CloudFormation Stack base image (Amazon Linux, buildkite-agent, docker, docker-compose, docker-gc, jq, lifecycled)",
+      "ami_description": "Buildkite CloudFormation Stack base image (Amazon Linux, buildkite-agent, docker, docker-compose, docker-gc, jq)",
       "ami_groups": ["all"]
     }
   ],
@@ -28,7 +28,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
+      "script": "scripts/install-terminationd.sh"
     },
     {
       "type": "shell",
