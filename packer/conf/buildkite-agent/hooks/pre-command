@@ -13,7 +13,7 @@ fi
 # For logging into other AWS account’s registries
 if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
   echo "~~~ Authenticating with AWS ECR"
-  eval "$(aws ecr get-login --registry_ids "${AWS_ECR_LOGIN_REGISTRY_IDS}")"
+  eval "$(aws ecr get-login --registry-ids "${AWS_ECR_LOGIN_REGISTRY_IDS}")"
 fi
 
 # DOCKER_HUB_* legacy config var support
