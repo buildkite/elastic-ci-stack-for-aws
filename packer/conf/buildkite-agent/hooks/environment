@@ -61,4 +61,4 @@ timeout 30 docker ps
 unset BUILDKITE_SECRETS_BUCKET
 unset BUILDKITE_SECRETS_KEY
 
-sudo /usr/bin/fix-buildkite-agent-builds-permissions
+sudo /usr/bin/fix-buildkite-agent-builds-permissions "${BUILDKITE_BUILD_CHECKOUT_PATH}"
