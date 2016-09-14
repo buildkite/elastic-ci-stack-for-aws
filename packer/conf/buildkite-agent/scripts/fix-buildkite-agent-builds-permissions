@@ -16,80 +16,66 @@ set -eu -o pipefail
 # also need to control security and make sure arbitrary folders can't be
 # chmoded.
 #
-# The agent builds path isn't exposed nicely by itself. The agent name also
-# doesn't quite map to its builds path. We do have a complete checkout path,
-# but we need to chop it up, safely. The path looks like:
-#
-#   BUILDKITE_BUILD_CHECKOUT_PATH="/var/lib/buildkite-agent/builds/my-agent-1/my-pipeline-blah"
-#
-# It should be passed as the first argument to this script.
-BUILD_PATH="$1"
-
-# We know the beginning of this path:
-BUILDS_PATH="/var/lib/buildkite-agent/builds"
-
-# So we can calculate the suffix (we know prefix has no pattern chars):
-BUILD_PATH_SUFFIX="${BUILD_PATH#${BUILDS_PATH}/}"
-# => "my-agent-1/my-pipeline-blah"
-
-# Then we can grab just the first path component by removing the longest suffix starting with a slash:
-AGENT_BUILDS_NAME="${BUILD_PATH_SUFFIX%%/*}"
+# We prepare the agent build directory basename in the environment hook and
+# pass it as the first argument. In here we just need to check that it contains
+# no slashes and isn't a traversal component.
+AGENT_BUILDS_NAME="$1"
 # => "my-agent-1"
 
-# Now we know this component has only non-slash characters
+# Make sure it doesn't contain any slashes by substituting slashes with nothing
+# and making sure it doesn't change
+if [[ "${AGENT_BUILDS_NAME//\//}" != "${AGENT_BUILDS_NAME}" ]]; then
+	exit 1
+fi
+
+# Now we know this name has only non-slash characters.
 #
 # We just need to check that it's not "." or ".." to prevent traversal:
 if [[ "${AGENT_BUILDS_NAME}" == "." || "${AGENT_BUILDS_NAME}" == ".." ]]; then
-	exit 1
+	exit 2
 fi
 
 # We also need to make sure it's not empty so we don't collide with other agents:
 if [[ -z "${AGENT_BUILDS_NAME}" ]]; then
-	exit 2
+	exit 3
 fi
+
+# We know the builds path:
+BUILDS_PATH="/var/lib/buildkite-agent/builds"
 
 # And now we can reconstruct the full agent builds path:
 AGENT_BUILDS_PATH="${BUILDS_PATH}/${AGENT_BUILDS_NAME}"
 # => "/var/lib/buildkite-agent/builds/my-agent-1"
 
-if [[ -e "${AGENT_BUILDS_PATH}" ]] ; then
+if [[ -e "${AGENT_BUILDS_PATH}" ]]; then
 	chown -R buildkite-agent:buildkite-agent "${AGENT_BUILDS_PATH}"
 fi
 
 # Manual tests (anybody know a good way to test this?):
 #
-# ./fix-buildkite-agent-builds-permissions ""
-# => exit 2 (BUILD_PATH_SUFFIX="", AGENT_BUILDS_NAME="")
-#
 # ./fix-buildkite-agent-builds-permissions "/"
-# => exit 2 (BUILD_PATH_SUFFIX="/", AGENT_BUILDS_NAME="")
+# => exit 1
+#
+# ./fix-buildkite-agent-builds-permissions "one/"
+# => exit 1
+#
+# ./fix-buildkite-agent-builds-permissions "/two"
+# => exit 1
+#
+# ./fix-buildkite-agent-builds-permissions "one/two"
+# => exit 1
+#
+# ./fix-buildkite-agent-builds-permissions "one/two/three"
+# => exit 1
+#
+# ./fix-buildkite-agent-builds-permissions "/two/"
+# => exit 1
 #
 # ./fix-buildkite-agent-builds-permissions "."
-# => exit 1 (BUILD_PATH_SUFFIX=".", AGENT_BUILDS_NAME=".")
+# => exit 2
 #
 # ./fix-buildkite-agent-builds-permissions ".."
-# => exit 1 (BUILD_PATH_SUFFIX="..", AGENT_BUILDS_NAME="..")
+# => exit 2
 #
-# ./fix-buildkite-agent-builds-permissions "./"
-# => exit 1 (BUILD_PATH_SUFFIX="./", AGENT_BUILDS_NAME=".")
-#
-# ./fix-buildkite-agent-builds-permissions "../"
-# => exit 1 (BUILD_PATH_SUFFIX="../", AGENT_BUILDS_NAME="..")
-#
-# ./fix-buildkite-agent-builds-permissions "/var/lib/buildkite-agent/./somewhere/else"
-# => exit 1 (BUILD_PATH_SUFFIX="./somewhere/else", AGENT_BUILDS_NAME=".")
-#
-# ./fix-buildkite-agent-builds-permissions "/var/lib/buildkite-agent/../somewhere/else"
-# => exit 1 (BUILD_PATH_SUFFIX="../somewhere/else", AGENT_BUILDS_NAME="..")
-#
-# ./fix-buildkite-agent-builds-permissions "/var/lib/buildkite-agent//somewhere/else"
-# => exit 2 (BUILD_PATH_SUFFIX="/somewhere/else", AGENT_BUILDS_NAME="")
-#
-# ./fix-buildkite-agent-builds-permissions "./somewhere/else"
-# => exit 1 (BUILD_PATH_SUFFIX="./somewhere/else", AGENT_BUILDS_NAME=".")
-#
-# ./fix-buildkite-agent-builds-permissions "../somewhere/else"
-# => exit 1 (BUILD_PATH_SUFFIX="../somewhere/else", AGENT_BUILDS_NAME="..")
-#
-# ./fix-buildkite-agent-builds-permissions "/somewhere/else"
-# => exit 2 (BUILD_PATH_SUFFIX="/somewhere/else", AGENT_BUILDS_NAME="")
+# ./fix-buildkite-agent-builds-permissions ""
+# => exit 3
