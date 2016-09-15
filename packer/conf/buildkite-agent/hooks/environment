@@ -76,7 +76,7 @@ unset BUILDKITE_SECRETS_KEY
 #   BUILDKITE_BUILD_PATH="/var/lib/buildkite-agent/builds"
 
 # So we can calculate the suffix as a substring:
-BUILD_PATH_SUFFIX="${BUILDKITE_BUILD_CHECKOUT_PATH:${#BUILDKITE_BUILD_PATH}}"
+BUILD_PATH_SUFFIX="${BUILDKITE_BUILD_CHECKOUT_PATH#${BUILDKITE_BUILD_PATH}/}"
 # => "my-agent-1/my-pipeline-blah"
 
 # Then we can grab just the first path component by removing the longest suffix starting with a slash:
