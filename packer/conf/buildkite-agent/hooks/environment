@@ -23,10 +23,17 @@ s3_download() {
 
 echo "~~~ Setting up the environment"
 
+echo "Sourcing CloudFormation environment..."
 eval "$(cat ~/cfn-env)"
+echo
+
+echo "Starting an SSH Agent..."
 eval "$(ssh-agent -s)"
+echo
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
+  echo "Downloading secrets..."
+  echo
 
   # Allow environment vars set in Buildkite to override paths
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
@@ -48,15 +55,18 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   else
     echo "No SSH keys found in s3://${BUILDKITE_SECRETS_BUCKET}"
   fi
+  echo
 
   if s3_exists "$env_url" ; then
     echo "Downloading env from $env_url"
     eval "$(s3_download $env_url)"
+    echo
   fi
 fi
 
-echo "~~~ Waiting for Docker"
+echo "Waiting for Docker..."
 timeout 30 docker ps
+echo
 
 unset BUILDKITE_SECRETS_BUCKET
 unset BUILDKITE_SECRETS_KEY
@@ -84,4 +94,6 @@ AGENT_BUILD_NAME="${BUILD_PATH_SUFFIX%%/*}"
 # => "my-agent-1"
 
 # Now we can pass this to the sudo script which will validate it before safely chmodding:
+echo "Fixing permissions for '${AGENT_BUILD_NAME}'..."
 sudo /usr/bin/fix-buildkite-agent-builds-permissions "${AGENT_BUILD_NAME}"
+echo
