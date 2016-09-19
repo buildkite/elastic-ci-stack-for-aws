@@ -41,3 +41,21 @@ if [[ -n "${DOCKER_LOGIN_USER:-}" && -n "${DOCKER_LOGIN_PASSWORD:-}" ]] ; then
   unset DOCKER_LOGIN_PASSWORD
   unset DOCKER_LOGIN_SERVER
 fi
+
+
+# Docker compose layer caching
+
+if [[ -n "${BUILDKITE_DOCKER_COMPOSE_CONTAINER:-}" ]] ; then
+    echo "~~~ Fetching cached docker images"
+
+    (
+        # unset any aws keys so we use the machine policy
+        unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
+
+        # see if we are missing any of the images locally, and load them if we are
+        images_file=s3://$BUILDKITE_IMAGE_CACHE_BUCKET/$BUILDKITE_PIPELINE_SLUG.images
+        if aws s3 ls $images_file && ! docker inspect $(aws s3 cp $images_file -) > /dev/null ; then
+            aws s3 cp s3://$BUILDKITE_IMAGE_CACHE_BUCKET/$BUILDKITE_PIPELINE_SLUG.tar.gz - | gunzip -c | docker load
+        fi
+    )
+fi

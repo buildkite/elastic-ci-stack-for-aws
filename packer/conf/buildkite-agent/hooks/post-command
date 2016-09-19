@@ -1,3 +1,27 @@
 #!/bin/bash
 
+set -eux -o pipefail
+
 ssh-agent -k
+
+if [[ -n "${BUILDKITE_DOCKER_COMPOSE_CONTAINER:-}" && -n ${DOCKER_CACHE_IMAGES_PUSH:-} && BUILDKITE_COMMAND_EXIT_STATUS -eq 0 ]] ; then
+    echo "~~~ Pushing cached docker images"
+    (
+        # clear any aws env vars so the machine profile is used
+        unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
+
+        slug=/tmp/docker-cache/$BUILDKITE_PIPELINE_SLUG.tar.gz
+        images_file=s3://$BUILDKITE_IMAGE_CACHE_BUCKET/$BUILDKITE_PIPELINE_SLUG.images
+        images=$(echo $(docker images -a | grep $(echo $BUILDKITE_JOB_ID | sed 's/-//g') | awk '{print $1}' | xargs -n 1 docker history -q | grep -v '<missing>'))
+
+        if [[ -n $images ]] && ( ! aws s3 ls $images_file || [[ "$images" != $(aws s3 cp $images_file -) ]]) ; then
+            rm -rf /tmp/docker-cache
+            mkdir -p /tmp/docker-cache
+
+            docker save $images | gzip -c > $slug
+
+            aws s3 cp $slug s3://$BUILDKITE_IMAGE_CACHE_BUCKET/$BUILDKITE_PIPELINE_SLUG.tar.gz
+            echo "$images" | aws s3 cp - s3://$BUILDKITE_IMAGE_CACHE_BUCKET/$BUILDKITE_PIPELINE_SLUG.images
+        fi
+    )
+fi
