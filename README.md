@@ -247,7 +247,7 @@ Also keep in mind the EC2 HTTP metadata server is available from within builds, 
 
 ## Questions?
 
-Feel free to drop me an email to support@buildkite.com with questions, or checkout the `#aws-stack` and `#aws` channels in [Buildkite Slack](https://chat.buildkite.com/).
+Feel free to drop an email to support@buildkite.com with questions, or checkout the `#aws-stack` and `#aws` channels in [Buildkite Slack](https://chat.buildkite.com/).
 
 ## Releasing
 
