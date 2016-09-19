@@ -38,6 +38,7 @@ Features:
 - [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
 - [Security](#security)
 - [Questions?](#questions)
+- [Releasing](#releasing)
 - [Licence](#licence)
 
 <!-- tocstop -->
@@ -247,6 +248,12 @@ Also keep in mind the EC2 HTTP metadata server is available from within builds, 
 ## Questions?
 
 Feel free to drop me an email to support@buildkite.com with questions, or checkout the `#aws-stack` and `#aws` channels in [Buildkite Slack](https://chat.buildkite.com/).
+
+## Releasing
+
+* Create and push `v${VERSION}` tag (e.g. `v10.0`)
+* Upload stack JSON and mapping YML artifacts to `buildkite-aws-stack` S3 bucket
+* Create GitHub release (following previous release as a template) w/ stack JSON and mapping YML attached.
 
 ## Licence
 
