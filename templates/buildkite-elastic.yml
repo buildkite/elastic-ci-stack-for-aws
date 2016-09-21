@@ -112,7 +112,7 @@ Parameters:
 
   Subnets:
     Type: CommaDelimitedList
-    Description: Optional - Comma separated list of three existing VPC Subnet Ids where ECS instances will run.  Required if setting VpcId.
+    Description: Optional - Comma separated list of three existing VPC Subnet Ids where EC2 instances will run.  Required if setting VpcId.
     Default: ""
 
   AvailabilityZones:
