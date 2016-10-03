@@ -36,7 +36,7 @@ Resources:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
       Namespace: Buildkite
-      Statistic: Maximum
+      Statistic: Minimum
       Period: 60
       EvaluationPeriods: 1
       Threshold: 0
