@@ -32,6 +32,7 @@ Metadata:
         - SecretsBucket
         - ArtifactsBucket
         - AuthorizedUsersUrl
+        - AuthorizedUsersS3Path
         - BootstrapScriptUrl
         - RootVolumeSize
 
@@ -96,7 +97,12 @@ Parameters:
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - S3 url to periodically download ssh authorized_keys from
+    Description: Optional - http(s) url to periodically download ssh authorized_keys from
+    Type: String
+    Default: ""
+
+  AuthorizedUsersS3Path:
+    Description: Optional - S3 path to periodically copy ssh authorized_keys from
     Type: String
     Default: ""
 
@@ -405,6 +411,26 @@ Resources:
                 cat << EOF > /etc/cron.hourly/authorized_keys
                 curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys
                 mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
+                chmod 600 /home/ec2-user/.ssh/authorized_keys
+                chown ec2-user: /home/ec2-user/.ssh/authorized_keys
+                EOF
+
+                chmod +x /etc/cron.hourly/authorized_keys
+
+                /etc/cron.hourly/authorized_keys
+
+            04-fetch-and-merge-authorized-users-s3:
+              test: test -n "$(AuthorizedUsersS3Path)"
+              command: |
+                #!/bin/bash -eu
+
+                cat << EOF > /etc/cron.hourly/authorized_keys
+                aws s3 cp "$(AuthorizedUsersS3Path)" /tmp/authorized_keys
+
+                touch /home/ec2-user/.ssh/authorized_keys
+                cp /home/ec2-user/.ssh/authorized_keys /tmp/original_keys
+                (cat /tmp/original_keys; echo; cat /tmp/authorized_keys; echo) | sort | uniq > /home/ec2-user/.ssh/authorized_keys
+
                 chmod 600 /home/ec2-user/.ssh/authorized_keys
                 chown ec2-user: /home/ec2-user/.ssh/authorized_keys
                 EOF
