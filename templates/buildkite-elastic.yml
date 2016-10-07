@@ -427,9 +427,11 @@ Resources:
                 cat << EOF > /etc/cron.hourly/authorized_keys
                 aws s3 cp "$(AuthorizedUsersS3Path)" /tmp/authorized_keys
 
-                touch /home/ec2-user/.ssh/authorized_keys
-                cp /home/ec2-user/.ssh/authorized_keys /tmp/original_keys
-                (cat /tmp/original_keys; echo; cat /tmp/authorized_keys; echo) | sort | uniq > /home/ec2-user/.ssh/authorized_keys
+                if [ ! -f /home/ec2-user/.ssh/original_authorized_keys ]; then
+                   cp /home/ec2-user/.ssh/authorized_keys /home/ec2-user/.ssh/original_authorized_keys
+                fi
+
+                (cat /tmp/authorized_keys; echo; cat /home/ec2-user/.ssh/original_authorized_keys; echo) | sort | uniq > /home/ec2-user/.ssh/authorized_keys
 
                 chmod 600 /home/ec2-user/.ssh/authorized_keys
                 chown ec2-user: /home/ec2-user/.ssh/authorized_keys
