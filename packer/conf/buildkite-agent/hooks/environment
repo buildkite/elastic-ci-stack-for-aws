@@ -16,6 +16,8 @@ s3_download() {
 
   if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
     aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
+  elif [[ -n "${BUILDKITE_USE_KMS:-}" ]] ; then
+    aws_s3_args+=("--sse" "aws:kms")
   fi
 
   env -i aws s3 cp --quiet ${aws_s3_args[@]} "$1" /dev/stdout
