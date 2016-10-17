@@ -411,7 +411,6 @@ Resources:
                 esac
 
                 mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
-                
                 chmod 600 /home/ec2-user/.ssh/authorized_keys
                 chown ec2-user: /home/ec2-user/.ssh/authorized_keys
                 EOF
