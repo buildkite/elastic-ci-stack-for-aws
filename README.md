@@ -136,7 +136,19 @@ The secrets bucket can contain the following files:
 
 The files in your secrets bucket should be encrypted with server-side object encryption to ensure they are reasonably secure. See the [Security](#security) section for more details.
 
-Encryption is done via the `BUILDKITE_SECRETS_KEY` environment variable set via the Buildkite pipeline settings, and can be the same, or different, for each pipeline.
+This can be achieved with the aid of [Amazon's KMS Service](https://aws.amazon.com/kms/) by setting the pipeline environment variable `BUILDKITE_USE_KMS`. This allows your agents to use Encryption Keys managed by Amazon to decrypt sensitive information stored in your `secretsBucket`. At the moment the only suported key is the default `AWS/S3` key.
+
+Here's an example that shows how to generate a private SSH key, and upload it with KMS encryption to an S3 bucket:
+
+```bash
+# generate a deploy key for your project
+ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
+pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
+
+aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key" 
+```
+
+Alternatively you may choose to manage a passphrase via the `BUILDKITE_SECRETS_KEY` environment variable set in the Buildkite pipeline settings, which can be the same, or different, for each pipeline.
 
 Here’s an an example (for OS X) that shows how to create and copy a random encyption passphrase, generate a private SSH key, and upload it with SSE encryption to an S3 bucket:
 
