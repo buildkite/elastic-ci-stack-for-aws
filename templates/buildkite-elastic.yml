@@ -34,6 +34,7 @@ Metadata:
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
+        - AsgRoleArn
 
       - Label:
           default: Auto-scaling Configuration
@@ -160,6 +161,10 @@ Parameters:
     Default: 250
     MinValue: 10
 
+  AsgRoleArn:
+    Description: Optional - A precreated custom IAM role to use for the Buildkite agents.
+    Default: ""
+
   SecurityGroupId:
     Type: String
     Description: Optional - Existing security group to associate the container instances. Creates one by default.
@@ -200,6 +205,9 @@ Conditions:
     CreateMetricsStack:
       !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
 
+    UseCustomRole:
+      !Not [ !Equals [ $(AsgRoleArn), "" ] ]
+
     UseSpecifiedIamPolicies:
       !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
 
@@ -209,10 +217,13 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
-      Roles: [ $(IAMRole) ]
+      Roles: [
+        !If [ "UseCustomRole", $(AsgRoleArn), $(IAMRole) ]
+      ]
 
   IAMRole:
     Type: AWS::IAM::Role
+    Condition: !Not [ "UseCustomRole" ]
     Properties:
       ManagedPolicyArns: !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
@@ -248,7 +259,7 @@ Resources:
             Resource: "*"
 
       Roles:
-        - $(IAMRole)
+        - !If [ "UseCustomRole", $(AsgRoleArn), $(IAMRole) ]
 
   SecretsBucketPolicies:
     Type: AWS::IAM::Policy
@@ -266,7 +277,7 @@ Resources:
               - "arn:aws:s3:::$(SecretsBucket)/*"
               - "arn:aws:s3:::$(SecretsBucket)"
       Roles:
-        - $(IAMRole)
+        - !If [ "UseCustomRole", $(AsgRoleArn), $(IAMRole) ]
 
   ArtifactsBucketPolicies:
     Type: AWS::IAM::Policy
@@ -283,7 +294,7 @@ Resources:
               - "arn:aws:s3:::$(ArtifactsBucket)/*"
               - "arn:aws:s3:::$(ArtifactsBucket)"
       Roles:
-        - $(IAMRole)
+        - !If [ "UseCustomRole", $(AsgRoleArn), $(IAMRole) ]
 
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
