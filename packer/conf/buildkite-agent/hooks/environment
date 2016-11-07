@@ -44,6 +44,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   legacy_ssh_key_url="${secrets_url_base}/id_rsa_github"
   shared_ssh_key_url="s3://${BUILDKITE_SECRETS_BUCKET}/${SHARED_SSH_KEY_NAME:-private_ssh_key}"
   env_url="${secrets_url_base}/env"
+  shared_env_url="s3://${BUILDKITE_SECRETS_BUCKET}/env"
 
   if s3_exists "$ssh_key_url" ; then
     echo "Downloading ssh key from $ssh_key_url"
@@ -62,8 +63,11 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   if s3_exists "$env_url" ; then
     echo "Downloading env from $env_url"
     eval "$(s3_download $env_url)"
-    echo
+  elif s3_exists "$shared_env_url" ; then
+    echo "Downloading env from $shared_env_url"
+    eval "$(s3_download $shared_env_url)"
   fi
+  echo
 fi
 
 echo "Waiting for Docker..."
