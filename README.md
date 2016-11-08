@@ -130,8 +130,8 @@ The stack has a `SecretsBucket` parameter which will allow your build agents to 
 
 The secrets bucket can contain the following files:
 
-* `/private_ssh_key` - An optional private key to use for Git SSH operations when there is no pipeline-specific key present
 * `/env` - An optional bash script to use as a global [agent environment hook](https://buildkite.com/docs/agent/hooks)
+* `/private_ssh_key` - An optional private key to use for Git SSH operations when there is no pipeline-specific key present
 * `/{pipeline-slug}/env` - An optional bash script to use as an [agent environment hook](https://buildkite.com/docs/agent/hooks)
 * `/{pipeline-slug}/private_ssh_key` - An optional pipeline-specific private key to use for Git SSH operations
 
