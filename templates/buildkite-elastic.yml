@@ -325,6 +325,17 @@ Resources:
       # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
       AWS::CloudFormation::Init:
         config:
+          files:
+            /etc/awslogs/awscli.conf:
+              content: |
+                [plugins]
+                cwlogs = cwlogs
+                [default]
+                region = $(AWS::Region)
+              mode: "000444"
+              owner: root
+              group: root
+
           commands:
             01-write-buildkite-env:
               command: |
