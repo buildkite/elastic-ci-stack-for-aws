@@ -60,14 +60,14 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   fi
   echo
 
-  if s3_exists "$env_url" ; then
-    echo "Downloading env from $env_url"
-    eval "$(s3_download $env_url)"
-    echo
-  fi
   if s3_exists "$shared_env_url" ; then
     echo "Downloading shared env from $shared_env_url"
     eval "$(s3_download $shared_env_url)"
+    echo
+  fi
+  if s3_exists "$env_url" ; then
+    echo "Downloading env from $env_url"
+    eval "$(s3_download $env_url)"
     echo
   fi
 fi
