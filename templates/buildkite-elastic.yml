@@ -327,14 +327,14 @@ Resources:
         config:
           files:
             /etc/awslogs/awscli.conf:
-            content: |
-              [plugins]
-              cwlogs = cwlogs
-              [default]
-              region = $(AWS::Region)
-            mode: 000444
-            owner: root
-            group: root
+              content: |
+                [plugins]
+                cwlogs = cwlogs
+                [default]
+                region = $(AWS::Region)
+              mode: 000444
+              owner: root
+              group: root
 
           commands:
             01-write-buildkite-env:
