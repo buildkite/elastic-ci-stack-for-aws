@@ -332,7 +332,7 @@ Resources:
                 cwlogs = cwlogs
                 [default]
                 region = $(AWS::Region)
-              mode: 000444
+              mode: "000444"
               owner: root
               group: root
 
