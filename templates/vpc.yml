@@ -47,18 +47,6 @@ Resources:
       CidrBlock: 10.0.2.0/24
       VpcId: $(Vpc)
 
-  Subnet2:
-    Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
-    Properties:
-      AvailabilityZone: !If [
-        "UseSpecifiedAvailabilityZones",
-        !Select [ 2, $(AvailabilityZones) ],
-        !Select [ 2, !GetAZs '$(AWS::Region)' ]
-      ]
-      CidrBlock: 10.0.3.0/24
-      VpcId: $(Vpc)
-
   Routes:
     Type: AWS::EC2::RouteTable
     Condition: CreateVpcResources
@@ -85,11 +73,4 @@ Resources:
     Condition: CreateVpcResources
     Properties:
       SubnetId: $(Subnet1)
-      RouteTableId: $(Routes)
-
-  Subnet2Routes:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
-    Properties:
-      SubnetId: $(Subnet2)
       RouteTableId: $(Routes)

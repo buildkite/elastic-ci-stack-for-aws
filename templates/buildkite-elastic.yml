@@ -490,7 +490,7 @@ Resources:
     Properties:
       VPCZoneIdentifier: !If [
         "CreateVpcResources",
-        [ $(Subnet0), $(Subnet1), $(Subnet2) ],
+        [ $(Subnet0), $(Subnet1) ],
         $(Subnets)
       ]
       LaunchConfigurationName: $(AgentLaunchConfiguration)
