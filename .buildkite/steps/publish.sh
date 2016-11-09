@@ -2,7 +2,9 @@
 
 set -eu
 
+# us-east-1 is the base image
 DESTINATION_REGIONS=(
+  us-east-2
   us-west-1
   us-west-2
   eu-west-1
