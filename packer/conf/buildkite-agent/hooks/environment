@@ -26,7 +26,7 @@ s3_download() {
 echo "~~~ Setting up the environment"
 
 echo "Sourcing CloudFormation environment..."
-eval "$(cat ~/cfn-env)"
+source ~/cfn-env
 echo
 
 echo "Starting an SSH Agent..."
