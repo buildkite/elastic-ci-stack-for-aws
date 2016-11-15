@@ -175,6 +175,15 @@ Parameters:
     Description: Optional - The AMI to use, otherwise uses the mapping built in
     Default: ""
 
+  AccessLevelForElasticContainerRegistry:
+    Type: String
+    AllowedValues:
+      - none
+      - readonly
+      - poweruser
+      - full
+    Default: "poweruser"
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -203,6 +212,13 @@ Conditions:
     UseSpecifiedIamPolicies:
       !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
 
+Mappings:
+  ECRManagedPolicy:
+    none      : { Policy: '$(AWS::NoValue)' }
+    readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess' }
+    poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2PowerUserAccess' }
+    full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2FullAccess' }
+
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
   IAMInstanceProfile:
@@ -214,7 +230,9 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
-      ManagedPolicyArns: !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
+      ManagedPolicyArns:
+         - !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
+         - $(ECRManagedPolicy[AccessLevelForElasticContainerRegistry])
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
