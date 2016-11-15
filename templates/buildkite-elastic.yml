@@ -234,7 +234,7 @@ Resources:
     Properties:
       ManagedPolicyArns:
          - !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
-         - !If [ "UseECR", "$(ECRManagedPolicy[ElasticContainerRegistryAccess])", '$(AWS::NoValue)' ]
+         - !If [ "UseECR", "$(ECRManagedPolicy[$(ElasticContainerRegistryAccess)][Policy])", '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
