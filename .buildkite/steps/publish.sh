@@ -139,7 +139,7 @@ generate_mappings
 
 echo "--- Building and publishing stack"
 
-make setup build
+make build
 
 if [[ $BUILDKITE_BRANCH == "master" ]] ; then
   aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
