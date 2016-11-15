@@ -175,7 +175,7 @@ Parameters:
     Description: Optional - The AMI to use, otherwise uses the mapping built in
     Default: ""
 
-  AccessLevelForElasticContainerRegistry:
+  ElasticContainerRegistryAccess:
     Type: String
     AllowedValues:
       - none
@@ -212,6 +212,9 @@ Conditions:
     UseSpecifiedIamPolicies:
       !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
 
+    UseECR:
+      !Not [ !Equals [ $(ElasticContainerRegistryAccess), "none" ] ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '$(AWS::NoValue)' }
@@ -232,7 +235,7 @@ Resources:
     Properties:
       ManagedPolicyArns:
          - !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
-         - $(ECRManagedPolicy[AccessLevelForElasticContainerRegistry])
+         - $(ECRManagedPolicy[ElasticContainerRegistryAccess])
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -363,11 +366,18 @@ Resources:
                 BUILDKITE_STACK_NAME="$(AWS::StackName)"
                 BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
                 BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
-                AWS_DEFAULT_REGION="$(AWS::Region)"
-                AWS_REGION="$(AWS::Region)"
+                AWS_DEFAULT_REGION=$(AWS::Region)
+                AWS_REGION=$(AWS::Region)
                 EOF
 
                 chown buildkite-agent /var/lib/buildkite-agent/cfn-env
+
+
+            01-write-ecr-env:
+              condition: UseECR
+              command: |
+                #!/bin/bash -eu
+                printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
 
             02-restart-docker:
               command: |
