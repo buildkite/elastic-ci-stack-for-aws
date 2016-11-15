@@ -7,17 +7,12 @@ SHELL=/bin/bash -o pipefail
 TEMPLATES=templates/buildkite-elastic.yml templates/autoscale.yml templates/metrics.yml templates/vpc.yml
 STACKFILE=build/aws-stack.yml
 
-all: setup build
-
 build: $(STACKFILE)
 
 .DELETE_ON_ERROR:
 $(STACKFILE): $(TEMPLATES) templates/mappings.yml
 	-mkdir -p build/
 	cat $^ | awk '/^(\s+|$$)/ || !seen[$$0]++' > $(STACKFILE)
-
-setup:
-	npm i -g markdown-toc
 
 clean:
 	-rm -f build/*

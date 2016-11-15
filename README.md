@@ -66,7 +66,7 @@ If you’d prefer to use this repo or build it yourself, clone it and run the fo
 
 ```bash
 # To set up your local environment and build a template based on public AMIs
-make setup download-mappings build
+make download-mappings build
 
 # Or, to set things up locally and create the stack on AWS
 make create-stack
