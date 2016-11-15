@@ -217,7 +217,6 @@ Conditions:
 
 Mappings:
   ECRManagedPolicy:
-    none      : { Policy: '$(AWS::NoValue)' }
     readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess' }
     poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2PowerUserAccess' }
     full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2FullAccess' }
@@ -235,7 +234,7 @@ Resources:
     Properties:
       ManagedPolicyArns:
          - !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
-         - $(ECRManagedPolicy[ElasticContainerRegistryAccess])
+         - !If [ "UseECR", "$(ECRManagedPolicy[ElasticContainerRegistryAccess])", '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
