@@ -4,18 +4,20 @@ BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 STACK_NAME ?= buildkite
 SHELL=/bin/bash -o pipefail
+TEMPLATES=templates/buildkite-elastic.yml templates/autoscale.yml templates/metrics.yml templates/vpc.yml
+STACKFILE=build/aws-stack.yml
 
 all: setup build
 
-build: build/aws-stack.json
+build: $(STACKFILE)
 
 .DELETE_ON_ERROR:
-build/aws-stack.json: $(wildcard templates/*.yml) templates/mappings.yml
+$(STACKFILE): $(TEMPLATES) templates/mappings.yml
 	-mkdir -p build/
-	bundle exec cfoo $^ > $@
+	cat $^ | awk '/^(\s+|$$)/ || !seen[$$0]++' > $(STACKFILE)
 
 setup:
-	bundle check || ((which bundle || gem install bundler --no-ri --no-rdoc) && bundle install --path vendor/bundle)
+	npm i -g markdown-toc
 
 clean:
 	-rm -f build/*
@@ -33,7 +35,7 @@ build-ami:
 	cp templates/mappings.yml.template templates/mappings.yml
 	sed -i.bak "s/packer_image_id/$$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2)/" templates/mappings.yml
 
-upload: build/aws-stack.json
+upload: $(STACKFILE)
 	aws s3 sync --acl public-read build s3://$(BUILDKITE_STACK_BUCKET)/
 
 config.json:
@@ -42,26 +44,26 @@ config.json:
 extra_tags.json:
 	echo "{}" > extra_tags.json
 
-create-stack: config.json build/aws-stack.json extra_tags.json
+create-stack: config.json $(STACKFILE) extra_tags.json
 	aws cloudformation create-stack \
 	--output text \
 	--stack-name $(STACK_NAME) \
 	--disable-rollback \
-	--template-body "file://$(PWD)/build/aws-stack.json" \
+	--template-body "file://$(PWD)/$(STACKFILE)" \
 	--capabilities CAPABILITY_IAM \
 	--parameters "$$(cat config.json)" \
 	--tags "$$(cat extra_tags.json)"
 
-validate: build/aws-stack.json
+validate: $(STACKFILE)
 	aws cloudformation validate-template \
 	--output table \
-	--template-body "file://$(PWD)/build/aws-stack.json"
+	--template-body "file://$(PWD)/$(STACKFILE)"
 
-update-stack: config.json templates/mappings.yml build/aws-stack.json
+update-stack: config.json templates/mappings.yml $(STACKFILE)
 	aws cloudformation update-stack \
 	--output text \
 	--stack-name $(STACK_NAME) \
-	--template-body "file://$(PWD)/build/aws-stack.json" \
+	--template-body "file://$(PWD)/$(STACKFILE)" \
 	--capabilities CAPABILITY_IAM \
 	--parameters "$$(cat config.json)"
 
