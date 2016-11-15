@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 mkdir -p build
 buildkite-agent artifact download "build/buildkite-lifecycle-agent" build/
