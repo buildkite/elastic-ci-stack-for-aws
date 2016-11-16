@@ -44,6 +44,11 @@ Metadata:
         - ScaleDownAdjustment
         - AutoscaleStrategy
 
+      - Label:
+          default: Docker Registry Configuration
+        Parameters:
+        - ECRAccessPolicy
+
 Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
@@ -175,14 +180,15 @@ Parameters:
     Description: Optional - The AMI to use, otherwise uses the mapping built in
     Default: ""
 
-  ElasticContainerRegistryAccess:
+  ECRAccessPolicy:
     Type: String
+    Description: The ECR access policy to give container instances
     AllowedValues:
       - none
       - readonly
       - poweruser
       - full
-    Default: "poweruser"
+    Default: "none"
 
 Conditions:
     UseSpotInstances:
@@ -213,7 +219,7 @@ Conditions:
       !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
 
     UseECR:
-      !Not [ !Equals [ $(ElasticContainerRegistryAccess), "none" ] ]
+      !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
 
 Mappings:
   ECRManagedPolicy:
@@ -234,7 +240,7 @@ Resources:
     Properties:
       ManagedPolicyArns:
          - !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
-         - !If [ "UseECR", "$(ECRManagedPolicy[$(ElasticContainerRegistryAccess)][Policy])", '$(AWS::NoValue)' ]
+         - !If [ "UseECR", "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])", '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow

@@ -169,7 +169,7 @@ rm id_rsa_buildkite*
 
 ## Docker Registry Support
 
-If you want to push or pull from registries such as Docker Hub or Quay you can use the `env` file in your secrets bucket to export the following environment variables:
+If you want to push or pull from registries such as [Docker Hub](https://hub.docker.com/) or [Quay](https://quay.io/) you can use the `env` file in your secrets bucket to export the following environment variables:
 
 * `DOCKER_LOGIN_USER="the-user-name"`
 * `DOCKER_LOGIN_PASSWORD="the-password"`
@@ -177,13 +177,11 @@ If you want to push or pull from registries such as Docker Hub or Quay you can u
 
 Setting these will perform a `docker login` before each pipeline step is run, allowing you to `docker push` to them from within your build scripts.
 
-AWS ECR login can be performed by exporting the following variable from your `env` file or pipeline’s build steps:
+If you are using [Amazon ECR](https://aws.amazon.com/ecr/) you can set the `ECRAccessPolicy` parameter to the stack to either `readonly`, `poweruser`, or `full` depending on [the access level you want](http://docs.aws.amazon.com/AmazonECR/latest/userguide/ecr_managed_policies.html) your builds to have
 
-* `AWS_ECR_LOGIN=true`
+You can disable this in individual pipelines by setting `AWS_ECR_LOGIN=false`.
 
-If you want to login to an ECR server on another AWS account, use the following environment variable instead:
-
-* `AWS_ECR_LOGIN_REGISTRY_IDS="id1,id2,id3"`
+If you want to login to an ECR server on another AWS account, you can set `AWS_ECR_LOGIN_REGISTRY_IDS="id1,id2,id3"`.
 
 ## Updating Your Stack
 
