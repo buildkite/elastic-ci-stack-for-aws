@@ -217,9 +217,9 @@ Conditions:
 
 Mappings:
   ECRManagedPolicy:
-    readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess' }
-    poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2PowerUserAccess' }
-    full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2FullAccess' }
+    readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
+    poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
+    full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
