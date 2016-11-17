@@ -1,4 +1,3 @@
-
 Resources:
   MetricsStack:
     Condition: CreateMetricsStack
@@ -6,20 +5,20 @@ Resources:
     Properties:
       TemplateURL: https://s3.amazonaws.com/buildkite-cloudwatch-metrics-publisher/master/cloudwatch-metrics-publisher.json
       Parameters:
-        BuildkiteApiAccessToken: $(BuildkiteApiAccessToken)
-        BuildkiteOrgSlug: $(BuildkiteOrgSlug)
-        KeyName: $(KeyName)
-        QueueName: $(BuildkiteQueue)
+        BuildkiteApiAccessToken: !Ref BuildkiteApiAccessToken
+        BuildkiteOrgSlug: !Ref BuildkiteOrgSlug
+        KeyName: !Ref KeyName
+        QueueName: !Ref BuildkiteQueue
         PollInterval: 15s
         VpcId: !If [
           "CreateVpcResources",
-          $(Vpc),
-          $(VpcId)
+          !Ref Vpc,
+          !Ref VpcId
         ]
         Subnets: !If [
           "CreateVpcResources",
-          "$(Subnet0),$(Subnet1)",
-          !Join [ ",", $(Subnets) ]
+          !Join [ ",", [!Ref Subnet0, !Ref Subnet1]],
+          !Join [ ",", !Ref Subnets ]
         ]
       Tags:
         - Key: Role

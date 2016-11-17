@@ -6,14 +6,14 @@ export queue_name="testqueue-$$"
 cat << EOF
 steps:
   - command: .buildkite/steps/packer.sh
-    name: "Build packer image"
+    name: ":packer:"
     agents:
       queue: aws-stack
 
   - wait
 
   - command: .buildkite/steps/test.sh
-    name: "Launch :cloudformation: stack"
+    name: ":cloudformation:"
     agents:
       queue: aws-stack
     artifact_paths: "build/*.json"
@@ -21,25 +21,7 @@ steps:
   - wait
 
   - command: sleep 5
-    name: "Run a command on :buildkite: agent"
-    timeout_in_minutes: 5
-    env:
-      BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
-    agents:
-      stack: $stack_name
-      queue: $queue_name
-
-  - command: sleep 15
-    name: "Run a command on :buildkite: agent"
-    timeout_in_minutes: 5
-    env:
-      BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
-    agents:
-      stack: $stack_name
-      queue: $queue_name
-
-  - command: sleep 25
-    name: "Run a command on :buildkite: agent"
+    name: ":buildkite:"
     timeout_in_minutes: 5
     env:
       BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
@@ -50,7 +32,7 @@ steps:
   - wait
 
   - command: .buildkite/steps/publish.sh
-    name: "Publishing :cloudformation: stack"
+    name: ":rocket: :cloudformation:"
     agents:
       queue: aws-stack
     artifact_paths: "templates/mappings.yml;build/aws-stack.json"
@@ -58,7 +40,7 @@ steps:
   - wait
 
   - command: .buildkite/steps/cleanup.sh
-    name: "Cleanup"
+    name: ":closed_book:"
     agents:
       queue: aws-stack
 EOF

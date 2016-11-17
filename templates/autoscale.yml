@@ -1,4 +1,3 @@
-
 Resources:
   MissingMetricsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -11,24 +10,24 @@ Resources:
       Threshold: 0
       Dimensions:
         - Name: Queue
-          Value: $(BuildkiteQueue)
+          Value: !Ref BuildkiteQueue
       ComparisonOperator: LessThanOrEqualToThreshold
 
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
       AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: $(AgentAutoScaleGroup)
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
       Cooldown: 120
-      ScalingAdjustment : $(ScaleUpAdjustment)
+      ScalingAdjustment : !Ref ScaleUpAdjustment
 
   AgentScaleDownPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
       AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: $(AgentAutoScaleGroup)
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
       Cooldown : 60
-      ScalingAdjustment: $(ScaleDownAdjustment)
+      ScalingAdjustment: !Ref ScaleDownAdjustment
 
   AgentUtilizationAlarmHigh:
    Type: AWS::CloudWatch::Alarm
@@ -40,10 +39,10 @@ Resources:
       Period: 60
       EvaluationPeriods: 1
       Threshold: 0
-      AlarmActions: [ $(AgentScaleUpPolicy) ]
+      AlarmActions: [ !Ref AgentScaleUpPolicy ]
       Dimensions:
         - Name: Queue
-          Value: $(BuildkiteQueue)
+          Value: !Ref BuildkiteQueue
       ComparisonOperator: GreaterThanThreshold
 
   AgentUtilizationAlarmLow:
@@ -56,8 +55,9 @@ Resources:
       Period: 300
       EvaluationPeriods: 6
       Threshold: 0
-      AlarmActions: [ $(AgentScaleDownPolicy) ]
+      AlarmActions: [ !Ref AgentScaleDownPolicy ]
       Dimensions:
         - Name: Queue
-          Value: $(BuildkiteQueue)
+          Value: !Ref BuildkiteQueue
       ComparisonOperator: LessThanOrEqualToThreshold
+
