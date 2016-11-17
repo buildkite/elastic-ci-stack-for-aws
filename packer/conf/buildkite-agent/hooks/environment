@@ -2,17 +2,8 @@
 
 set -eu -o pipefail
 
-s3_bucket_region() {
-  aws s3api get-bucket-location \
-      --bucket "$1" \
-      --query LocationConstraint \
-      --output text
-}
-
 s3_exists() {
-  local bucket_region
-  bucket_region=$(s3_bucket_region "$1") || return 1
-  env -i aws s3 ls "$1" --summarize --human-readable --region "$bucket_region" | \
+  env -i aws s3 ls "$1" --summarize --human-readable --region "$AWS_DEFAULT_REGION" | \
     # `s3 ls` does wildcard matching, so `private_ssh_key` matches `private_ssh_key_old`, e.g.:
     # 2016-03-01 17:40:53    1.6 KiB private_ssh_key_old
     #
@@ -21,9 +12,7 @@ s3_exists() {
 }
 
 s3_download() {
-  local bucket_region
-  local aws_s3_args=("--quiet" "--region=$bucket_region")
-  bucket_region=$(s3_bucket_region "$1") || exit 1
+  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
 
   if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
     aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
