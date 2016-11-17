@@ -2,8 +2,17 @@
 
 set -eu -o pipefail
 
+s3_bucket_region() {
+  aws s3api get-bucket-location \
+      --bucket "$1" \
+      --query LocationConstraint \
+      --output text
+}
+
 s3_exists() {
-  env -i aws s3 ls "$1" --summarize --human-readable | \
+  local bucket_region
+  bucket_region=$(s3_bucket_region "$1") || return 1
+  env -i aws s3 ls "$1" --summarize --human-readable --region "$bucket_region" | \
     # `s3 ls` does wildcard matching, so `private_ssh_key` matches `private_ssh_key_old`, e.g.:
     # 2016-03-01 17:40:53    1.6 KiB private_ssh_key_old
     #
@@ -12,7 +21,9 @@ s3_exists() {
 }
 
 s3_download() {
-  local aws_s3_args=("--quiet")
+  local bucket_region
+  local aws_s3_args=("--quiet" "--region=$bucket_region")
+  bucket_region=$(s3_bucket_region "$1") || exit 1
 
   if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
     aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
@@ -20,7 +31,9 @@ s3_download() {
     aws_s3_args+=("--sse" "aws:kms")
   fi
 
-  env -i aws s3 cp --quiet ${aws_s3_args[@]} "$1" /dev/stdout
+  if ! env -i aws s3 cp ${aws_s3_args[@]} "$1" /dev/stdout ; then
+    exit 1
+  fi
 }
 
 echo "~~~ Setting up the environment"
@@ -34,7 +47,7 @@ eval "$(ssh-agent -s)"
 echo
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
-  echo "Downloading secrets..."
+  echo "Downloading secrets from ${BUILDKITE_SECRETS_BUCKET}..."
   echo
 
   # Allow environment vars set in Buildkite to override paths

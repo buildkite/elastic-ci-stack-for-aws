@@ -345,6 +345,8 @@ Resources:
                 BUILDKITE_STACK_NAME="$(AWS::StackName)"
                 BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
                 BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
+                AWS_DEFAULT_REGION="$(AWS::Region)"
+                AWS_REGION="$(AWS::Region)"
                 EOF
 
                 chown buildkite-agent /var/lib/buildkite-agent/cfn-env
