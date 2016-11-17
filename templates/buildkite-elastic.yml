@@ -44,6 +44,11 @@ Metadata:
         - ScaleDownAdjustment
         - AutoscaleStrategy
 
+      - Label:
+          default: Docker Registry Configuration
+        Parameters:
+        - ECRAccessPolicy
+
 Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
@@ -175,6 +180,16 @@ Parameters:
     Description: Optional - The AMI to use, otherwise uses the mapping built in
     Default: ""
 
+  ECRAccessPolicy:
+    Type: String
+    Description: The ECR access policy to give container instances
+    AllowedValues:
+      - none
+      - readonly
+      - poweruser
+      - full
+    Default: "none"
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -203,6 +218,16 @@ Conditions:
     UseSpecifiedIamPolicies:
       !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
 
+    UseECR:
+      !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
+
+Mappings:
+  ECRManagedPolicy:
+    none      : { Policy: 'none' }
+    readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
+    poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
+    full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
+
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
   IAMInstanceProfile:
@@ -214,7 +239,9 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
-      ManagedPolicyArns: !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
+      ManagedPolicyArns:
+         - !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
+         - !If [ "UseECR", "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])", '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -345,11 +372,18 @@ Resources:
                 BUILDKITE_STACK_NAME="$(AWS::StackName)"
                 BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
                 BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
-                AWS_DEFAULT_REGION="$(AWS::Region)"
-                AWS_REGION="$(AWS::Region)"
+                AWS_DEFAULT_REGION=$(AWS::Region)
+                AWS_REGION=$(AWS::Region)
                 EOF
 
                 chown buildkite-agent /var/lib/buildkite-agent/cfn-env
+
+
+            01-write-ecr-env:
+              condition: UseECR
+              command: |
+                #!/bin/bash -eu
+                printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
 
             02-restart-docker:
               command: |
