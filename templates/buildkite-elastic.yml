@@ -215,11 +215,14 @@ Conditions:
     CreateMetricsStack:
       !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
 
-    UseSpecifiedIamPolicies:
+    UseSpecifiedIAMPolicies:
       !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
 
     UseECR:
       !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
+
+    UseECRAndSpecifiedIAMPolicies:
+      !And [ { Condition: "UseSpecifiedIAMPolicies" }, { Condition: "UseECR" } ]
 
 Mappings:
   ECRManagedPolicy:
@@ -241,7 +244,7 @@ Resources:
     Properties:
       ManagedPolicyArns:
         - !If
-          - !And UseSpecifiedIamPolicies, UseECR
+          - UseECRAndSpecifiedIAMPolicies
           - [ $(ManagedPolicyArns), "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])" ]
           - !If
             - UseSpecifiedIamPolicies
