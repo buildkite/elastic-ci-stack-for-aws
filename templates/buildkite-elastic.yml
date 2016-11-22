@@ -221,6 +221,9 @@ Conditions:
     UseECR:
       !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
 
+    UseECRAndSpecifiedIamPolicies:
+      !And [ { Condition: "UseSpecifiedIamPolicies" }, { Condition: "UseECR" } ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: 'none' }
@@ -240,8 +243,16 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       ManagedPolicyArns:
-         - !If [ "UseSpecifiedIamPolicies", $(ManagedPolicyArns), '$(AWS::NoValue)' ]
-         - !If [ "UseECR", "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])", '$(AWS::NoValue)' ]
+        - !If
+          - UseECRAndSpecifiedIamPolicies
+          - [ $(ManagedPolicyArns), "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])" ]
+          - !If
+            - UseSpecifiedIamPolicies
+            - [ $(ManagedPolicyArns) ]
+            - !If
+              - UseECR
+              - [ "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])" ]
+              - $(AWS::NoValue)
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
