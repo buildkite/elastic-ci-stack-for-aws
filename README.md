@@ -148,25 +148,6 @@ pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
 aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key" 
 ```
 
-Alternatively you may choose to manage a passphrase via the `BUILDKITE_SECRETS_KEY` environment variable set in the Buildkite pipeline settings, which can be the same, or different, for each pipeline.
-
-Here’s an an example (for OS X) that shows how to create and copy a random encyption passphrase, generate a private SSH key, and upload it with SSE encryption to an S3 bucket:
-
-```bash
-# generate a deploy key for your project
-ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
-pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
-
-# upload the private key, encrypted
-PASSPHRASE=$(head -c 24 /dev/urandom | base64)
-aws s3 cp --acl private --sse-c --sse-c-key "$PASSPHRASE" id_rsa_buildkite "s3://{SecretsBucket}/private_ssh_key"
-pbcopy <<< "$PASSPHRASE" # paste passphrase into buildkite env as BUILDKITE_SECRETS_KEY
-
-# cleanup
-unset PASSPHRASE
-rm id_rsa_buildkite*
-```
-
 ## Docker Registry Support
 
 If you want to push or pull from registries such as [Docker Hub](https://hub.docker.com/) or [Quay](https://quay.io/) you can use the `env` file in your secrets bucket to export the following environment variables:
@@ -251,7 +232,7 @@ See [Issue 81](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/81) 
 
 This repository hasn't been reviewed by security researchers so exercise caution and careful thought with what credentials you make available to your builds.
 
-Anyone with commit access to your codebase (including third-party pull-requests if you've enabled them in Buildkite) will have access to your secrets bucket files, and anyone with access to the Buildkite pipeline settings will be able to access the pipeline’s secrets encryption key. In combination, the attacker would have access to your decrypted secrets.
+Anyone with commit access to your codebase (including third-party pull-requests if you've enabled them in Buildkite) will have access to your secrets bucket files.
 
 Also keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
 
