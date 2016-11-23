@@ -221,12 +221,9 @@ Conditions:
     UseECR:
       !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
 
-    UseECRAndSpecifiedIamPolicies:
-      !And [ { Condition: "UseSpecifiedIamPolicies" }, { Condition: "UseECR" } ]
-
 Mappings:
   ECRManagedPolicy:
-    none      : { Policy: 'none' }
+    none      : { Policy: '' }
     readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
     poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
@@ -237,22 +234,12 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
-      Roles: [ $(IAMRole) ]
+      Roles: !If [ UseECR, [ $(IAMRole), $(ECRAccessRole) ], [ $(IAMRole) ] ]
 
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
-      ManagedPolicyArns:
-        - !If
-          - UseECRAndSpecifiedIamPolicies
-          - [ $(ManagedPolicyArns), "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])" ]
-          - !If
-            - UseSpecifiedIamPolicies
-            - [ $(ManagedPolicyArns) ]
-            - !If
-              - UseECR
-              - [ "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])" ]
-              - $(AWS::NoValue)
+      ManagedPolicyArns: !If [ UseSpecifiedIamPolicies, $(ManagedPolicyArns), '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -260,6 +247,12 @@ Resources:
               Service: [ ec2.amazonaws.com ]
             Action: sts:AssumeRole
       Path: /
+
+  ECRAccessRole:
+    Type: AWS::IAM::Role
+    Condition: UseECR
+    Properties:
+      ManagedPolicyArns: !If [ UseECR, ['$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])'], '$(AWS::NoValue)' ]
 
   IAMPolicies:
     Type: AWS::IAM::Policy
