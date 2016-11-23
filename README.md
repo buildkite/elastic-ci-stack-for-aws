@@ -32,6 +32,7 @@ Features:
 - [Configuration Environment Variables](#configuration-environment-variables)
 - [Secrets Bucket Support](#secrets-bucket-support)
 - [Docker Registry Support](#docker-registry-support)
+- [Versions](#versions)
 - [Updating Your Stack](#updating-your-stack)
 - [CloudWatch Metrics](#cloudwatch-metrics)
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
@@ -48,6 +49,8 @@ Features:
 See the [Elastic CI Stack for AWS guide](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, or jump straight in:
 
 [![Launch Buildkite AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
+
+(See [Versions](#versions) for the beta stack, or older versions)
 
 > Although the stack will create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
@@ -164,15 +167,19 @@ You can disable this in individual pipelines by setting `AWS_ECR_LOGIN=false`.
 
 If you want to login to an ECR server on another AWS account, you can set `AWS_ECR_LOGIN_REGISTRY_IDS="id1,id2,id3"`.
 
+## Versions
+
+The latest stable version of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`, however we also publish a stack for each commit in the `master` branch in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.json` in case you need to use an older version.
+
+Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.json`. Prior to merging to master, new features are often available in `https://s3.amazonaws.com/buildkite-aws-stack/beta/aws-stack.json`.
+
 ## Updating Your Stack
 
-To update your stack to the latest version use CloudFormation’s stack update tools with this S3 URL:
-
-`https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`
+To update your stack to the latest version use CloudFormation’s stack update tools with one of the urls in the [Versions](#versions) section.
 
 After updating the stack you may need to recycle your machines by changing the auto-scale groups to 0, and then back to the desired number.
 
-Note: If you use spot pricing and a `MinSize` greater than 0 you’ll first need to first change `MinSize` to 0 before updating your stack using the above S3 URL.
+Note: If you use spot pricing and a `MinSize` greater than 0 you’ll first need to first change `MinSize` to 0 before updating your stack using the above S3 URL
 
 ## CloudWatch Metrics
 
@@ -227,6 +234,8 @@ steps:
 ```
 
 See [Issue 81](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/81) for ideas on other solutions (contributions welcome!).
+
+```
 
 ## Security
 
