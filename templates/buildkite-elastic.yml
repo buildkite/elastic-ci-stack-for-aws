@@ -253,6 +253,13 @@ Resources:
     Condition: UseECR
     Properties:
       ManagedPolicyArns: !If [ UseECR, ['$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])'], '$(AWS::NoValue)' ]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ec2.amazonaws.com ]
+            Action: sts:AssumeRole
+      Path: /
 
   IAMPolicies:
     Type: AWS::IAM::Policy
