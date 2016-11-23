@@ -2,17 +2,28 @@
 
 set -eu -o pipefail
 
-s3_exists() {
-  env -i aws s3 ls "$1" --summarize --human-readable --region "$AWS_DEFAULT_REGION" | \
-    # `s3 ls` does wildcard matching, so `private_ssh_key` matches `private_ssh_key_old`, e.g.:
-    # 2016-03-01 17:40:53    1.6 KiB private_ssh_key_old
-    #
-    # So we need to grep the output for an exact filename match
-    grep "$(basename "$1")\$"
+s3_download() {
+  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
+  local bucket="$1"
+  local key="$2"
+  local bucket_region
+
+  if ! bucket_region=$(s3_bucket_region "$1") ; then
+    return $?
+  fi
+
+  if ! env -i aws s3api head-object --bucket "$bucket" --key "$key" 1>/dev/null ; then
+    return 1
+  fi
 }
 
 s3_download() {
-  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
+  local bucket="$1"
+  local key="$2"
+  local bucket_region
+  local aws_s3_args=("--quiet" "--region=$bucket_region")
+
+  bucket_region=$(s3_bucket_region "$1") || exit 1
 
   if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
     echo "~~~ :warning: Deprecated BUILDKITE_SECRETS_KEY env variable"
@@ -44,31 +55,34 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
 
   # Allow environment vars set in Buildkite to override paths
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
-  secrets_url_base="s3://${BUILDKITE_SECRETS_BUCKET}/${secrets_prefix}"
-  ssh_key_url="${secrets_url_base}/${SSH_KEY_NAME:-private_ssh_key}"
-  legacy_ssh_key_url="${secrets_url_base}/id_rsa_github"
-  shared_ssh_key_url="s3://${BUILDKITE_SECRETS_BUCKET}/${SHARED_SSH_KEY_NAME:-private_ssh_key}"
-  env_url="${secrets_url_base}/env"
 
-  if s3_exists "$ssh_key_url" ; then
-    echo "Downloading ssh key from $ssh_key_url"
-    ssh-add <(s3_download "$ssh_key_url")
-  elif s3_exists "$legacy_ssh_key_url" ; then
-    echo "Downloading ssh key from $legacy_ssh_key_url"
-    ssh-add <(s3_download "$legacy_ssh_key_url")
-  elif s3_exists "$shared_ssh_key_url" ; then
-    echo "Downloading ssh key from $shared_ssh_key_url"
-    ssh-add <(s3_download "$shared_ssh_key_url")
-  else
-    echo "No SSH keys found in s3://${BUILDKITE_SECRETS_BUCKET}"
-  fi
-  echo
+  # Locations to check for ssh keys
+  ssh_key_paths=(
+    "$secrets_prefix/${SSH_KEY_NAME:-private_ssh_key}"
+    "$secrets_prefix/id_rsa_github"
+    "${SHARED_SSH_KEY_NAME:-private_ssh_key}"
+    "id_rsa_github"
+  )
 
-  if s3_exists "$env_url" ; then
-    echo "Downloading env from $env_url"
-    eval "$(s3_download $env_url)"
-    echo
-  fi
+  for key in ${ssh_key_paths[*]} ; do
+    if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
+      echo "Downloading ssh-key $key"
+      SSH_ASKPASS="/bin/false" ssh-add <(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key")
+      break
+    fi
+  done
+
+  env_paths=(
+    "env"
+    "${secrets_prefix}/env"
+  )
+
+  for key in ${env_paths[*]} ; do
+    if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
+      echo "Downloading env $key"
+      eval "$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key")"
+    fi
+  done
 fi
 
 echo "Waiting for Docker..."
