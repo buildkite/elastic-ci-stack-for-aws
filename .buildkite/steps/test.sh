@@ -73,7 +73,7 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "InstanceType",
-    "ParameterValue": "t2.micro"
+    "ParameterValue": "t2.nano"
   },
   {
     "ParameterKey": "SecretsBucket",
@@ -98,6 +98,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "AgentsPerInstance",
     "ParameterValue": "3"
+  },
+  {
+    "ParameterKey": "ECRAccessPolicy",
+    "ParameterValue": "readonly"
   }
 ]
 EOF
