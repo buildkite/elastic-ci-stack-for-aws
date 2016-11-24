@@ -48,11 +48,11 @@ Features:
 
 See the [Elastic CI Stack for AWS guide](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, or jump straight in:
 
-[![Launch Buildkite AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
+[![Launch Buildkite AWS Stack v1.1.1](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/v1.1.1/aws-stack.json)
 
-(See [Versions](#versions) for the beta stack, or older versions)
+Current version is v1.1.1. See [Releases](https://github.com/buildkite/elastic-ci-stack-for-aws/releases) for older releases, or [Versions](#versions) for development version
 
-> Although the stack will create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
+> Although the stack w.ill create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
 If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
 
@@ -60,7 +60,7 @@ If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`conf
 aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
-  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
+  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/v1.1.1/aws-stack.json" \
   --capabilities CAPABILITY_IAM \
   --parameters $(cat config.json)
 ```
@@ -169,9 +169,11 @@ If you want to login to an ECR server on another AWS account, you can set `AWS_E
 
 ## Versions
 
-The latest stable version of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`, however we also publish a stack for each commit in the `master` branch in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.json` in case you need to use an older version.
+We recommend running the latest release, which is a url in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${VERSION}/aws-stack.json` that can be found on the [releases page](https://github.com/buildkite/elastic-ci-stack-for-aws/releases).
 
-Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.json`. Prior to merging to master, new features are often available in `https://s3.amazonaws.com/buildkite-aws-stack/beta/aws-stack.json`.
+The latest build of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`, along with a version for each commit in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.json`. 
+
+Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.json`. 
 
 ## Updating Your Stack
 
