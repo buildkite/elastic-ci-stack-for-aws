@@ -30,7 +30,7 @@ s3_download() {
     echo "AWS KMS is now the supported method for decrypting files from your secrets bucket."
     echo "See https://github.com/buildkite/elastic-ci-stack-for-aws#secrets-bucket-support"
     aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
-  elif [[ -n "${BUILDKITE_USE_KMS:-}" ]] ; then
+  elif [[ "${BUILDKITE_USE_KMS:-1}" != "0" ]] ; then
     aws_s3_args+=("--sse" "aws:kms")
   fi
 
