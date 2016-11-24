@@ -237,8 +237,6 @@ steps:
 
 See [Issue 81](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/81) for ideas on other solutions (contributions welcome!).
 
-```
-
 ## Security
 
 This repository hasn't been reviewed by security researchers so exercise caution and careful thought with what credentials you make available to your builds.
