@@ -170,14 +170,14 @@ Parameters:
     Description: Optional - Existing security group to associate the container instances. Creates one by default.
     Default: ""
 
-  ManagedPolicyArns:
-    Type: CommaDelimitedList
-    Description: Optional - ARNs of existing managed IAM policies to associate with the container instances.
-    Default: ""
-
   ImageId:
     Type: String
     Description: Optional - The AMI to use, otherwise uses the mapping built in
+    Default: ""
+
+  ManagedPolicyARN:
+    Type: String
+    Description: Optional - ARN of an existing managed IAM policies to associate with instances
     Default: ""
 
   ECRAccessPolicy:
@@ -215,8 +215,8 @@ Conditions:
     CreateMetricsStack:
       !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
 
-    UseSpecifiedIamPolicies:
-      !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
+    UseManagedPolicyARN:
+      !Not [ !Equals [ $(ManagedPolicyARN), "" ] ]
 
     UseECR:
       !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
@@ -234,25 +234,14 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
-      Roles: !If [ UseECR, [ $(IAMRole), $(ECRAccessRole) ], [ $(IAMRole) ] ]
+      Roles: [ $(IAMRole) ]
 
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
-      ManagedPolicyArns: !If [ UseSpecifiedIamPolicies, $(ManagedPolicyArns), '$(AWS::NoValue)' ]
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ ec2.amazonaws.com ]
-            Action: sts:AssumeRole
-      Path: /
-
-  ECRAccessRole:
-    Type: AWS::IAM::Role
-    Condition: UseECR
-    Properties:
-      ManagedPolicyArns: !If [ UseECR, ['$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])'], '$(AWS::NoValue)' ]
+      ManagedPolicyArns:
+        - !If [ UseManagedPolicyARN, $(ManagedPolicyARN), '$(AWS::NoValue)' ]
+        - !If [ UseECR, '$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])', '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
