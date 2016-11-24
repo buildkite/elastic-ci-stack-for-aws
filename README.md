@@ -30,7 +30,7 @@ Features:
 - [Multiple Instances of the Stack](#multiple-instances-of-the-stack)
 - [Autoscaling Configuration](#autoscaling-configuration)
 - [Configuration Environment Variables](#configuration-environment-variables)
-- [Secrets Bucket Support](#secrets-bucket-support)
+- [Build Secrets](#build-secrets)
 - [Docker Registry Support](#docker-registry-support)
 - [Versions](#versions)
 - [Updating Your Stack](#updating-your-stack)
@@ -122,14 +122,13 @@ See [the autoscale.yml template](templates/autoscale.yml) for more details, or t
 The following environment variables can be set on the Buildkite pipeline, or individual build step, to customize the behaviour of the stack:
 
 * `BUILDKITE_SECRETS_BUCKET` - the name of the S3 bucket where secrets are stored. Default: the value set in the stack parameter when the stack was created. Example: `my-secrets-bucket`
-* `BUILDKITE_SECRETS_KEY` - the encryption key used to decrypt objects from the secrets bucket. Default: nil. Example: `w2Uzhc4kXXbW//T9zaY3neoCbR9roQ10`
 * `BUILDKITE_SECRETS_PREFIX` - the folder within the secrets bucket. Default: the build pipeline's slug. Example: `my-great-pipeline`
 * `SSH_KEY_NAME` - the filename of the SSH key inside this pipeline’s folder in the secrets bucket. Default: `private_ssh_key`. Example: `other_ssh_key`
 * `SHARED_SSH_KEY_NAME` - the filename of the SSH key in the root of the secrets bucket if there's no pipeline-specific SSH key present. Default: `private_ssh_key`. Example: `other_ssh_key`
 
-## Secrets Bucket Support
+## Build Secrets
 
-The stack has a `SecretsBucket` parameter which will allow your build agents to automatically get access to SSH private keys and environment hooks for exposing environment variables to builds. The stack doesn't create the bucket for you, you need to do this yourself, but it does create a role that gives read access to the build machines. 
+The stack refers to a `SecretsBucket` parameter which will allow your build agents to automatically get access to SSH private keys and environment hooks for exposing environment variables to builds. The stack doesn't create the bucket for you, you need to do this yourself, but it does give read access to the build machines. 
 
 The secrets bucket can contain the following files:
 
@@ -138,9 +137,7 @@ The secrets bucket can contain the following files:
 * `/{pipeline-slug}/env` - An optional bash script to use as an [agent environment hook](https://buildkite.com/docs/agent/hooks)
 * `/{pipeline-slug}/private_ssh_key` - An optional pipeline-specific private key to use for Git SSH operations
 
-The files in your secrets bucket should be encrypted with server-side object encryption to ensure they are reasonably secure. See the [Security](#security) section for more details.
-
-This can be achieved with the aid of [Amazon's KMS Service](https://aws.amazon.com/kms/) by setting the pipeline environment variable `BUILDKITE_USE_KMS`. This allows your agents to use Encryption Keys managed by Amazon to decrypt sensitive information stored in your `secretsBucket`. At the moment the only suported key is the default `AWS/S3` key.
+These files are encrypted using [Amazon's KMS Service](https://aws.amazon.com/kms/). See the [Security](#security) section for more details.
 
 Here's an example that shows how to generate a private SSH key, and upload it with KMS encryption to an S3 bucket:
 
@@ -151,6 +148,8 @@ pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
 
 aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key" 
 ```
+
+If you really want to disable KMS encryption, you can set `BUILDKITE_USE_KMS=false`.
 
 ## Docker Registry Support
 
