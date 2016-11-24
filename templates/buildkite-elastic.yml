@@ -170,19 +170,19 @@ Parameters:
     Description: Optional - Existing security group to associate the container instances. Creates one by default.
     Default: ""
 
-  ManagedPolicyArns:
-    Type: CommaDelimitedList
-    Description: Optional - ARNs of existing managed IAM policies to associate with the container instances.
-    Default: ""
-
   ImageId:
     Type: String
     Description: Optional - The AMI to use, otherwise uses the mapping built in
     Default: ""
 
+  ManagedPolicyARN:
+    Type: String
+    Description: Optional - ARN of an existing managed IAM policy that will be attached to the instance role
+    Default: ""
+
   ECRAccessPolicy:
     Type: String
-    Description: The ECR access policy to give container instances
+    Description: Optional - The ECR access policy to give container instances
     AllowedValues:
       - none
       - readonly
@@ -215,18 +215,15 @@ Conditions:
     CreateMetricsStack:
       !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
 
-    UseSpecifiedIamPolicies:
-      !Not [ !Equals [ !Join [ "", $(ManagedPolicyArns) ], "" ]  ]
+    UseManagedPolicyARN:
+      !Not [ !Equals [ $(ManagedPolicyARN), "" ] ]
 
     UseECR:
       !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
 
-    UseECRAndSpecifiedIamPolicies:
-      !And [ { Condition: "UseSpecifiedIamPolicies" }, { Condition: "UseECR" } ]
-
 Mappings:
   ECRManagedPolicy:
-    none      : { Policy: 'none' }
+    none      : { Policy: '' }
     readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
     poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
@@ -242,17 +239,10 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: "$(AWS::StackName)-Role"
       ManagedPolicyArns:
-        - !If
-          - UseECRAndSpecifiedIamPolicies
-          - [ $(ManagedPolicyArns), "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])" ]
-          - !If
-            - UseSpecifiedIamPolicies
-            - [ $(ManagedPolicyArns) ]
-            - !If
-              - UseECR
-              - [ "$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])" ]
-              - $(AWS::NoValue)
+        - !If [ UseManagedPolicyARN, $(ManagedPolicyARN), '$(AWS::NoValue)' ]
+        - !If [ UseECR, '$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])', '$(AWS::NoValue)' ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow

@@ -61,7 +61,7 @@ aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/v1.1.1/aws-stack.json" \
-  --capabilities CAPABILITY_IAM \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters $(cat config.json)
 ```
 
