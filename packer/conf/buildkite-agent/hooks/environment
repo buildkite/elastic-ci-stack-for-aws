@@ -42,7 +42,7 @@ s3_download() {
 echo "~~~ Setting up the environment"
 
 echo "Sourcing CloudFormation environment..."
-eval "$(cat ~/cfn-env)"
+source ~/cfn-env
 echo
 
 echo "Starting an SSH Agent..."
@@ -80,7 +80,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   for key in ${env_paths[*]} ; do
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
       echo "Downloading env $key"
-      eval "$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key")"
+      source <(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key")
     fi
   done
 fi
