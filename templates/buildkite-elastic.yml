@@ -122,7 +122,7 @@ Parameters:
 
   AvailabilityZones:
     Type: CommaDelimitedList
-    Description: Optional - Comma-delimited list of VPC availability zones in which to create subnets. Required if setting VpcId.
+    Description: Optional - defines the AZs that subnets are created in if Subnets parameter is not specified.
     Default: ""
 
   InstanceType:
