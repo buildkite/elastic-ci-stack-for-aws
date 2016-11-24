@@ -239,6 +239,7 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: "$(AWS::StackName)-Role"
       ManagedPolicyArns:
         - !If [ UseManagedPolicyARN, $(ManagedPolicyARN), '$(AWS::NoValue)' ]
         - !If [ UseECR, '$(ECRManagedPolicy[$(ECRAccessPolicy)][Policy])', '$(AWS::NoValue)' ]
