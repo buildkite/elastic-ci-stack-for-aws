@@ -120,7 +120,7 @@ aws cloudformation create-stack \
   --stack-name "$stack_name" \
   --disable-rollback \
   --template-body "file://${PWD}/build/aws-stack.json" \
-  --capabilities CAPABILITY_IAM \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 
 echo "--- Waiting for stack to complete"
