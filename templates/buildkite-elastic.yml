@@ -177,12 +177,12 @@ Parameters:
 
   ManagedPolicyARN:
     Type: String
-    Description: Optional - ARN of an existing managed IAM policies to associate with instances
+    Description: Optional - ARN of an existing managed IAM policy that will be attached to the instance role
     Default: ""
 
   ECRAccessPolicy:
     Type: String
-    Description: The ECR access policy to give container instances
+    Description: Optional - The ECR access policy to give container instances
     AllowedValues:
       - none
       - readonly
