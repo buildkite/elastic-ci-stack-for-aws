@@ -15,8 +15,7 @@ s3_exists() {
 s3_download() {
   local bucket="$1"
   local key="$2"
-  local bucket_region
-  local aws_s3_args=("--quiet" "--region=$bucket_region")
+  local aws_s3_args="--quiet"
 
   if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
     echo "~~~ :warning: Deprecated BUILDKITE_SECRETS_KEY env variable"
@@ -27,7 +26,7 @@ s3_download() {
     aws_s3_args+=("--sse" "aws:kms")
   fi
 
-  if ! env -i aws s3 cp ${aws_s3_args[@]} "$1" /dev/stdout ; then
+  if ! env -i aws s3 cp ${aws_s3_args[@]} "s3://$1/$2" /dev/stdout ; then
     exit 1
   fi
 }
