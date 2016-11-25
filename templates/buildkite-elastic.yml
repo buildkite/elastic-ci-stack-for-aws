@@ -278,6 +278,27 @@ Resources:
       Roles:
         - $(IAMRole)
 
+  ImageCacheBucket:
+      Type: AWS::S3::Bucket
+
+  ImageCacheBucketPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ImageCacheBucketPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:Get*
+              - s3:Get
+              - s3:Put*
+              - s3:List*
+            Resource:
+              - "arn:aws:s3:::$(ImageCacheBucket)/*"
+              - "arn:aws:s3:::$(ImageCacheBucket)"
+      Roles:
+        - $(IAMRole)
+
   SecretsBucketPolicies:
     Type: AWS::IAM::Policy
     Condition: UseSecretsBucket
@@ -372,6 +393,7 @@ Resources:
                 cat << EOF > /var/lib/buildkite-agent/cfn-env
                 BUILDKITE_STACK_NAME="$(AWS::StackName)"
                 BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
+                BUILDKITE_IMAGE_CACHE_BUCKET="$(ImageCacheBucket)"
                 BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
                 AWS_DEFAULT_REGION=$(AWS::Region)
                 AWS_REGION=$(AWS::Region)
