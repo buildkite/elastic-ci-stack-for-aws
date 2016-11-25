@@ -48,7 +48,7 @@ AGENT_BUILDS_PATH="${BUILDS_PATH}/${AGENT_BUILDS_NAME}"
 # => "/var/lib/buildkite-agent/builds/my-agent-1"
 
 if [[ -e "${AGENT_BUILDS_PATH}" ]]; then
-	/bin/chmod -R buildkite-agent:buildkite-agent "${AGENT_BUILDS_PATH}"
+	/bin/chown -R buildkite-agent:buildkite-agent "${AGENT_BUILDS_PATH}"
 fi
 
 # Manual tests (anybody know a good way to test this?):
