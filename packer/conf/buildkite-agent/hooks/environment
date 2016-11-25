@@ -12,7 +12,6 @@ s3_exists() {
   fi
 
   if ! env -i aws s3api head-object ${aws_s3_args[@]} --bucket "$bucket" --key "$key" &>/dev/null ; then
-    echo "$bucket/$key in :s3: doesn't exist :no_good:"
     return 1
   fi
 }
@@ -75,7 +74,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     fi
   done
 
-  if [[ -z "${key_found:-}" ]] ; then
+  if [[ -z "${key_found:-}" ]] && [[ "${BUILDKITE_REPO:]}" =~ ^git ]] ; then
     echo "~~~ :warning: Failed to find an SSH key in secret bucket"
     exit 1
   fi
