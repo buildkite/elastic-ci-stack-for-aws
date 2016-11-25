@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 s3_exists() {
-  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
+  local aws_s3_args=("--region=$AWS_DEFAULT_REGION")
   local bucket="$1"
   local key="$2"
 
