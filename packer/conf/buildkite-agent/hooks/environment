@@ -60,9 +60,15 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
       echo "Downloading ssh-key $key"
       SSH_ASKPASS="/bin/false" ssh-add <(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key")
+      key_found=1
       break
     fi
   done
+
+  if [[ -z $key_found ]] ; then
+    echo "~~~ :warning: Failed to find an SSH key in secret bucket"
+    exit 1
+  fi
 
   env_paths=(
     "env"
