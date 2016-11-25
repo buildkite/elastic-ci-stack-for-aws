@@ -5,7 +5,7 @@ set -eu -o pipefail
 # AWS ECR login support
 
 # For logging into the current AWS account’s registry
-if [[ "${AWS_ECR_LOGIN:-true}" =~ ^(true|1)$ ]] ; then
+if [[ "${AWS_ECR_LOGIN:-}" =~ ^(true|1)$ ]] ; then
   echo "~~~ Authenticating with AWS ECR"
   eval "$(aws ecr get-login)"
 fi
