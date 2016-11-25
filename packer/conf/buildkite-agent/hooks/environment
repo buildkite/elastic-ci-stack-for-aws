@@ -3,11 +3,12 @@
 set -eu -o pipefail
 
 s3_exists() {
-  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
+  local aws_s3_args=("--region=$AWS_DEFAULT_REGION")
   local bucket="$1"
   local key="$2"
 
-  if ! env -i aws s3api head-object --bucket "$bucket" --key "$key" 1>/dev/null ; then
+  echo -n "Checking if $bucket/$key exists: "
+  if ! env -i aws s3api head-object ${aws_s3_args[@]} --bucket "$bucket" --key "$key" 1>/dev/null ; then
     return 1
   fi
 }
@@ -15,7 +16,7 @@ s3_exists() {
 s3_download() {
   local bucket="$1"
   local key="$2"
-  local aws_s3_args="--quiet"
+  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
 
   if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
     echo "~~~ :warning: Deprecated BUILDKITE_SECRETS_KEY env variable"
