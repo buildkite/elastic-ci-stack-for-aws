@@ -3,7 +3,6 @@
 set -eu -o pipefail
 
 s3_exists() {
-  local aws_s3_args=("--region=$AWS_DEFAULT_REGION")
   local bucket="$1"
   local key="$2"
 
@@ -16,18 +15,8 @@ s3_exists() {
 s3_download() {
   local bucket="$1"
   local key="$2"
-  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
 
-  if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
-    echo "~~~ :warning: Deprecated BUILDKITE_SECRETS_KEY env variable"
-    echo "AWS KMS is now the supported method for decrypting files from your secrets bucket."
-    echo "See https://github.com/buildkite/elastic-ci-stack-for-aws#secrets-bucket-support"
-    aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
-  elif [[ "${BUILDKITE_USE_KMS:-true}" =~ ^(true|1)$ ]] ; then
-    aws_s3_args+=("--sse" "aws:kms")
-  fi
-
-  if ! env -i aws s3 cp ${aws_s3_args[@]} "s3://$1/$2" /dev/stdout ; then
+  if ! env -i aws s3 cp --quiet ${aws_s3_args[@]} "s3://$1/$2" /dev/stdout ; then
     exit 1
   fi
 }
@@ -45,6 +34,17 @@ echo
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   echo "Downloading secrets from ${BUILDKITE_SECRETS_BUCKET}..."
   echo
+
+  aws_s3_args=("--region=$AWS_DEFAULT_REGION")
+
+  if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
+    echo "~~~ :warning: Deprecated BUILDKITE_SECRETS_KEY env variable"
+    echo "AWS KMS is now the supported method for decrypting files from your secrets bucket."
+    echo "See https://github.com/buildkite/elastic-ci-stack-for-aws#secrets-bucket-support"
+    aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
+  elif [[ "${BUILDKITE_USE_KMS:-true}" =~ ^(true|1)$ ]] ; then
+    aws_s3_args+=("--sse" "aws:kms")
+  fi
 
   # Allow environment vars set in Buildkite to override paths
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
