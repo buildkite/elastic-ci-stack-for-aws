@@ -11,12 +11,10 @@ s3_exists() {
     aws_s3_args+=("--sse-customer-algorithm" "AES256" "--sse-customer-key" "${BUILDKITE_SECRETS_KEY}")
   fi
 
-  echo -n "Checking if :s3: $bucket/$key exists: "
-  if ! output=$(env -i aws s3api head-object ${aws_s3_args[@]} --bucket "$bucket" --key "$key" 1>/dev/null) ; then
-    echo ":no_good: $output"
+  if ! env -i aws s3api head-object ${aws_s3_args[@]} --bucket "$bucket" --key "$key" &>/dev/null ; then
+    echo "$bucket/$key in :s3: doesn't exist :no_good:"
     return 1
   fi
-  echo ":thumbsup:"
 }
 
 s3_download() {
@@ -55,6 +53,8 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     echo "See https://github.com/buildkite/elastic-ci-stack-for-aws#secrets-bucket-support"
   fi
 
+  echo "~~~ Downloading secrets"
+
   # Allow environment vars set in Buildkite to override paths
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
 
@@ -84,6 +84,8 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     "env"
     "${secrets_prefix}/env"
   )
+
+  echo "~~~ Downloading env files"
 
   for key in ${env_paths[*]} ; do
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
