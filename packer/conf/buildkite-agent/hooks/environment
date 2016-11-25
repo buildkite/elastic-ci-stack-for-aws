@@ -65,7 +65,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     fi
   done
 
-  if [[ -z $key_found ]] ; then
+  if [[ -z "${key_found:-}" ]] ; then
     echo "~~~ :warning: Failed to find an SSH key in secret bucket"
     exit 1
   fi
