@@ -106,9 +106,9 @@ cat << EOF > config.json
 ]
 EOF
 
-if ! version=$(git describe --tags --exact-match) ; then
+if ! version=$(git describe --tags --exact-match 2>/dev/null) ; then
   latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
-  version=$(sprintf "%s-%s-%d" "$latest_tag" "$BUILDKITE_BRANCH" "$BUILDKITE_BUILD_NUMBER")
+  version=$(printf "%s-%s-%d" "$latest_tag" "$BUILDKITE_BRANCH" "$BUILDKITE_BUILD_NUMBER")
 fi
 
 cat << EOF > templates/description.yml
