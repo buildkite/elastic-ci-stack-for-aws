@@ -106,6 +106,18 @@ cat << EOF > config.json
 ]
 EOF
 
+if ! version=$(git describe --tags --exact-match) ; then
+  latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+  version=$(sprintf "%s-%s-%d" "$latest_tag" "$BUILDKITE_BRANCH" "$BUILDKITE_BUILD_NUMBER")
+fi
+
+cat << EOF > templates/description.yml
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite stack v${version}"
+
+EOF
+
 cat << EOF > templates/mappings.yml
 Mappings:
   AWSRegion2AMI:
@@ -114,7 +126,7 @@ EOF
 
 make setup build validate
 
-echo "--- Creating stack $stack_name"
+echo "--- Creating stack $stack_name ($version)"
 aws cloudformation create-stack \
   --output text \
   --stack-name "$stack_name" \
