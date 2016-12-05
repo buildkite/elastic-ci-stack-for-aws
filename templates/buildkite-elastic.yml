@@ -38,11 +38,11 @@ Metadata:
       - Label:
           default: Auto-scaling Configuration
         Parameters:
+        - DesiredSize
         - MinSize
         - MaxSize
         - ScaleUpAdjustment
         - ScaleDownAdjustment
-        - AutoscaleStrategy
 
       - Label:
           default: Docker Registry Configuration
@@ -126,35 +126,35 @@ Parameters:
     Default: ""
 
   InstanceType:
-    Description: The type of instance to use for the agent
+    Description: The type of instance to use for the instances
     Type: String
     Default: t2.nano
     MinLength: 1
 
   SpotPrice:
-    Description: Optional - Spot price to use for the agents. 0 means normal (non-spot) instances are used
+    Description: Optional - Spot price to use for the instances. 0 means normal (non-spot) instances are used
     Type: String
     Default: 0
 
   MaxSize:
-    Description: The maximum number of agents to launch
+    Description: The maximum number of instances to launch
     Type: Number
     Default: 10
     MinValue: 1
 
   MinSize:
-    Description: The minumum number of agents to launch
+    Description: The minumum number of instances to launch
     Type: Number
     Default: 0
 
   ScaleUpAdjustment:
-    Description: The number of agents to adjust by on each scale up event (ScheduledJobsCount > 0 for 1 min)
+    Description: The number of instances to adjust by on each scale up event (ScheduledJobsCount > 0 for 1 min)
     Type: Number
     Default: 5
     MinValue: 0
 
   ScaleDownAdjustment:
-    Description: The number of agents to remove on each scale down event (UnfinishedJobs == 0 for 30 mins)
+    Description: The number of instances to remove on each scale down event (UnfinishedJobs == 0 for 30 mins)
     Type: Number
     Default: -1
     MaxValue: 0
@@ -212,14 +212,17 @@ Conditions:
     UseDefaultAMI:
       !Equals [ $(ImageId), "" ]
 
-    CreateMetricsStack:
-      !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ]
-
     UseManagedPolicyARN:
       !Not [ !Equals [ $(ManagedPolicyARN), "" ] ]
 
     UseECR:
       !Not [ !Equals [ $(ECRAccessPolicy), "none" ] ]
+
+    UseAutoscaling:
+      !Not [ !Equals [ $(MaxSize), $(MinSize) ] ]
+
+    CreateMetricsStack:
+      !And [ Condition: UseAutoscaling, !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ] ]
 
 Mappings:
   ECRManagedPolicy:
@@ -531,6 +534,7 @@ Resources:
         $(Subnets)
       ]
       LaunchConfigurationName: $(AgentLaunchConfiguration)
+      DesiredCapacity: $(MinSize)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
       MetricsCollection:
