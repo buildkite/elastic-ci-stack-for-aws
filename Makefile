@@ -4,13 +4,18 @@ BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 STACK_NAME ?= buildkite
 SHELL=/bin/bash -o pipefail
+TEMPLATES=templates/description.yml \
+  templates/buildkite-elastic.yml \
+  templates/autoscale.yml \
+  templates/vpc.yml \
+  templates/metrics.yml
 
 all: setup build
 
 build: build/aws-stack.json
 
 .DELETE_ON_ERROR:
-build/aws-stack.json: $(wildcard templates/*.yml) templates/mappings.yml
+build/aws-stack.json: $(TEMPLATES) templates/mappings.yml
 	-mkdir -p build/
 	bundle exec cfoo $^ > $@
 

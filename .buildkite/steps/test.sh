@@ -106,6 +106,15 @@ cat << EOF > config.json
 ]
 EOF
 
+version=$(git describe --tags --candidates=1)
+
+cat << EOF > templates/description.yml
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite stack v${version}"
+
+EOF
+
 cat << EOF > templates/mappings.yml
 Mappings:
   AWSRegion2AMI:
@@ -114,7 +123,7 @@ EOF
 
 make setup build validate
 
-echo "--- Creating stack $stack_name"
+echo "--- Creating stack $stack_name ($version)"
 aws cloudformation create-stack \
   --output text \
   --stack-name "$stack_name" \
