@@ -48,7 +48,7 @@ create-stack: config.json build/aws-stack.json extra_tags.json
 	--stack-name $(STACK_NAME) \
 	--disable-rollback \
 	--template-body "file://$(PWD)/build/aws-stack.json" \
-	--capabilities CAPABILITY_IAM \
+	--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
 	--parameters "$$(cat config.json)" \
 	--tags "$$(cat extra_tags.json)"
 
@@ -62,7 +62,7 @@ update-stack: config.json templates/mappings.yml build/aws-stack.json
 	--output text \
 	--stack-name $(STACK_NAME) \
 	--template-body "file://$(PWD)/build/aws-stack.json" \
-	--capabilities CAPABILITY_IAM \
+	--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
 	--parameters "$$(cat config.json)"
 
 toc:
