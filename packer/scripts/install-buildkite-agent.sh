@@ -16,17 +16,17 @@ sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
-echo "Downloading buildkite-agent unstable..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-unstable \
+echo "Downloading buildkite-agent beta..."
+sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
   "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64"
-sudo chmod +x /usr/bin/buildkite-agent-unstable
-buildkite-agent-unstable --version
+sudo chmod +x /usr/bin/buildkite-agent-beta
+buildkite-agent-beta --version
 
-echo "Downloading buildkite-agent experimental..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-experimental \
+echo "Downloading buildkite-agent edge..."
+sudo curl -Lsf -o /usr/bin/buildkite-agent-edge \
   "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
-sudo chmod +x /usr/bin/buildkite-agent-experimental
-buildkite-agent-experimental --version
+sudo chmod +x /usr/bin/buildkite-agent-edge
+buildkite-agent-edge --version
 
 echo "Downloading legacy bootstrap.sh for v2 stable agent..."
 sudo mkdir -p /etc/buildkite-agent
