@@ -224,6 +224,9 @@ Conditions:
     CreateMetricsStack:
       !And [ Condition: UseAutoscaling, !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ] ]
 
+    AllowZeroInstancesDuringScaling:
+      !Equals [ $(MaxSize), "1" ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
@@ -568,7 +571,11 @@ Resources:
         Count: $(MinSize)
     UpdatePolicy:
       AutoScalingRollingUpdate:
-        MinInstancesInService: $(MinSize)
+        MinInstancesInService: !If [
+          "AllowZeroInstancesDuringScaling",
+          0,
+          $(MinSize)
+        ]
         MaxBatchSize: 5
         # On rollback this might have to wait for an agent to finish
         # a job. The agent's init script waits 30 minutes, so we wait
