@@ -363,6 +363,18 @@ Resources:
               mode: "000444"
               owner: root
               group: root
+            /usr/local/bin/fetch-s3-or-http:
+              content: |
+                #!/bin/bash
+                case "\$1" in
+                    s3://*)
+                      exec aws s3 cp "\$1" "\$2";;
+                    *)
+                      exec curl -Lfs -o "\$2" "\$1";;
+                esac
+              mode: "000666"
+              owner: root
+              group: root
 
           commands:
             01-write-buildkite-env:
@@ -451,28 +463,21 @@ Resources:
                 #!/bin/bash -eu
 
                 cat << EOF > /etc/cron.hourly/authorized_keys
-                case "$(AuthorizedUsersUrl)" in
-                    s3://*)
-                      aws s3 cp "$(AuthorizedUsersUrl)" /tmp/authorized_keys;;
-                    *)
-                      curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys;;
-                esac
-
+                /usr/local/bin/fetch-s3-or-http "$(AuthorizedUsersUrl)" /tmp/authorized_keys
                 mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
                 chmod 600 /home/ec2-user/.ssh/authorized_keys
                 chown ec2-user: /home/ec2-user/.ssh/authorized_keys
                 EOF
 
                 chmod +x /etc/cron.hourly/authorized_keys
-
                 /etc/cron.hourly/authorized_keys
 
             05-run-bootstrap-script:
               test: test -n "$(BootstrapScriptUrl)"
               command: |
                 #!/bin/bash -eu
-
-                curl -sSL "$(BootstrapScriptUrl)" | bash
+                /usr/local/bin/fetch-s3-or-http "$(BootstrapScriptUrl)" /tmp/bootstrap.sh
+                source /tmp/bootstrap.sh
 
             06-start-the-world:
               command: |
