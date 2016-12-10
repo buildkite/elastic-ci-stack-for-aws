@@ -193,7 +193,7 @@ Parameters:
 
   AssociatePublicIpAddress:
     Type: String
-    Description: Optional - associate a public IP saddress with the agent instance (default true)
+    Description: Optional - Associate a public IP address with the agent instance (default true)
     AllowedValues:
       - true
       - false
