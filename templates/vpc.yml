@@ -80,7 +80,7 @@ Resources:
     Condition: CreateVpcResources
     DependsOn: NatGatewayEIP
     Properties:
-      AllocationId: $(NatGatewayEIP.AllocationId)
+      AllocationId: !GetAtt [ NatGatewayEIP, AllocationId ]
       SubnetId: $(Subnet2)
 
   RoutesPublic:
