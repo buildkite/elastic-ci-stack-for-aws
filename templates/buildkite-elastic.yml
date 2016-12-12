@@ -475,7 +475,12 @@ Resources:
               command: |
                 #!/bin/bash -eu
 
-                curl -sSL "$(BootstrapScriptUrl)" | bash
+                case "$(BootstrapScriptUrl)" in
+                    s3://*)
+                      aws s3 cp "$(BootstrapScriptUrl)" - | bash
+                    *)
+                      curl -sSL "$(BootstrapScriptUrl)" | bash
+                esac
 
             06-start-the-world:
               command: |
