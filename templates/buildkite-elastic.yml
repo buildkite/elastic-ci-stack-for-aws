@@ -59,8 +59,8 @@ Parameters:
     Type: String
     AllowedValues:
       - stable
-      - unstable
-      - experimental
+      - beta
+      - edge
     Default: "stable"
 
   BuildkiteAgentToken:
