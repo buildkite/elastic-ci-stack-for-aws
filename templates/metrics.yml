@@ -52,7 +52,7 @@ Resources:
         Variables:
           BUILDKITE_TOKEN: $(BuildkiteApiAccessToken)
           BUILDKITE_ORG: $(BuildkiteOrgSlug)
-          BUILDKITE_QUEUE: $(QueueName)
+          BUILDKITE_QUEUE: $(BuildkiteQueue)
 
   ScheduledRule:
     Type: "AWS::Events::Rule"
