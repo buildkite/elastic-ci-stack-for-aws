@@ -1,28 +1,79 @@
 
 Resources:
-  MetricsStack:
-    Condition: CreateMetricsStack
-    Type: AWS::CloudFormation::Stack
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
     Properties:
-      TemplateURL: https://s3.amazonaws.com/buildkite-cloudwatch-metrics-publisher/master/cloudwatch-metrics-publisher.json
-      Parameters:
-        BuildkiteApiAccessToken: $(BuildkiteApiAccessToken)
-        BuildkiteOrgSlug: $(BuildkiteOrgSlug)
-        KeyName: $(KeyName)
-        QueueName: $(BuildkiteQueue)
-        PollInterval: 15s
-        VpcId: !If [
-          "CreateVpcResources",
-          $(Vpc),
-          $(VpcId)
-        ]
-        Subnets: !If [
-          "CreateVpcResources",
-          "$(Subnet0),$(Subnet1)",
-          !Join [ ",", $(Subnets) ]
-        ]
-      Tags:
-        - Key: Role
-          Value: buildkite-metrics
-        - Key: Name
-          Value: buildkite-metrics
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+
+  LambdaExecutionPolicy:
+    DependsOn: LambdaExecutionRole
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AccessToCloudwatchForBuildkiteMetrics
+      Roles:
+      - $(LambdaExecutionRole)
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - cloudwatch:PutMetricData
+          - autoscaling:SetInstanceHealth
+          Resource:
+          - "*"
+
+  BuildkiteMetricsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn:
+    - LambdaExecutionRole
+    - LambdaExecutionPolicy
+    Properties:
+      Code:
+        S3Bucket: buildkite-metrics
+        S3Key: buildkite-metrics-v1.2.0-29-gc4d48c4-lambda.zip
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Timeout: 60
+      Handler: handler.handle
+      Runtime: python2.7
+      MemorySize: 128
+      Environment:
+        Variables:
+          BUILDKITE_TOKEN: $(BuildkiteApiAccessToken)
+          BUILDKITE_ORG: $(BuildkiteOrgSlug)
+          BUILDKITE_QUEUE: $(QueueName)
+
+  ScheduledRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Description: "ScheduledRule"
+      ScheduleExpression: "rate(1 minute)"
+      State: "ENABLED"
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - "BuildkiteMetricsFunction"
+              - "Arn"
+          Id: "TargetBuildkiteMetricsFunction"
+
+  PermissionForEventsToInvokeLambda:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName: $(BuildkiteMetricsFunction)
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "ScheduledRule"
+          - "Arn"
