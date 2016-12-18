@@ -26,6 +26,9 @@ Resources:
         Statement:
         - Effect: Allow
           Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
           - cloudwatch:PutMetricData
           - autoscaling:SetInstanceHealth
           Resource:
