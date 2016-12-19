@@ -34,6 +34,7 @@ Metadata:
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
+        - AssociatePublicIpAddress
 
       - Label:
           default: Auto-scaling Configuration
@@ -190,6 +191,14 @@ Parameters:
       - full
     Default: "none"
 
+  AssociatePublicIpAddress:
+    Type: String
+    Description: Optional - Associate a public IP address with the agent instance (default true)
+    AllowedValues:
+      - true
+      - false
+    Default: "true"
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -322,7 +331,7 @@ Resources:
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      AssociatePublicIpAddress: true
+      AssociatePublicIpAddress: $(AssociatePublicIpAddress)
       SecurityGroups: [ !If [ "CreateSecurityGroup", $(SecurityGroup), $(SecurityGroupId) ] ]
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
