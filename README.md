@@ -179,13 +179,11 @@ Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-st
 
 To update your stack to the latest version use CloudFormation’s stack update tools with one of the urls in the [Versions](#versions) section.
 
-After updating the stack you may need to recycle your machines by changing the auto-scale groups to 0, and then back to the desired number.
-
-Note: If you use spot pricing and a `MinSize` greater than 0 you’ll first need to first change `MinSize` to 0 before updating your stack using the above S3 URL
+Prior to updating, it's a good idea to set the desired instance size on the AutoscalingGroup to 0 manually. 
 
 ## CloudWatch Metrics
 
-This stack includes the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) nested within it, which runs a small instance to monitor the Buildkite API and report the metrics to CloudWatch.
+Metrics are calculated every minute from the Buildkite API using a lambda function. 
 
 <img width="544" alt="cloudwatch" src="https://cloud.githubusercontent.com/assets/153/16836158/85abdbc6-49ff-11e6-814c-eaf2400e8333.png">
 
