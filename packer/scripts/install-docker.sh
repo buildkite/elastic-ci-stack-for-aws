@@ -38,6 +38,7 @@ docker-compose --version
 echo "Downloading docker-gc..."
 curl -Lsf https://raw.githubusercontent.com/spotify/docker-gc/master/docker-gc > docker-gc
 sudo mv docker-gc /usr/bin/docker-gc
+sudo chmod +x /usr/bin/docker-gc
 
 echo "Adding docker-gc cron task..."
 sudo cp /tmp/conf/docker/cron.daily/docker-gc /etc/cron.daily/docker-gc
