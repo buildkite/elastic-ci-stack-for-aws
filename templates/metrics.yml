@@ -42,7 +42,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: buildkite-metrics
-        S3Key: buildkite-metrics-v1.3.0-lambda.zip
+        S3Key: buildkite-metrics-v1.3.0-10-gba24f8e-lambda.zip
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
