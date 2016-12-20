@@ -360,8 +360,7 @@ Resources:
         BUILDKITE_ECR_POLICY=$(ECRAccessPolicy) \
         AWS_DEFAULT_REGION=$(AWS::Region) \
         AWS_REGION=$(AWS::Region) \
-        AWS_STACK=$(AWS::StackId) \
-        /usr/local/bin/bk-install-elastic-stack.sh
+          /usr/local/bin/bk-install-elastic-stack.sh
 
         /opt/aws/bin/cfn-signal \
           --region "$(AWS::Region)" \

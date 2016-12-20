@@ -43,9 +43,9 @@ else
 fi;
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-name="${AWS_STACK}-${INSTANCE_ID}-%n"
+name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
 token="${BUILDKITE_AGENT_TOKEN}"
-meta-data=$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "${BUILDKITE_QUEUE}" "${DOCKER_VERSION}" "${AWS_STACK}")
+meta-data=$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "${BUILDKITE_QUEUE}" "${DOCKER_VERSION}" "${BUILDKITE_STACK_NAME}")
 meta-data-ec2=true
 bootstrap-script="${BOOTSTRAP_SCRIPT}"
 hooks-path=/etc/buildkite-agent/hooks
