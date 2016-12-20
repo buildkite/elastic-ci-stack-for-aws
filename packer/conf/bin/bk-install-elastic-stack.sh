@@ -24,7 +24,7 @@ AWS_DEFAULT_REGION=$AWS_REGION
 AWS_REGION=$AWS_REGION
 EOF
 
-if [[ -n "$BUILDKITE_USE_ECR" ]] ; then
+if [[ "${BUILDKITE_ECR_POLICY:-none}" != "none" ]] ; then
 	printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
 fi
 

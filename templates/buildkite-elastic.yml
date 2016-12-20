@@ -109,7 +109,7 @@ Parameters:
     Default: ""
 
   BootstrapScriptUrl:
-    Description: Optional - S3 url to run on each instance during boot
+    Description: Optional - http(s) url or S3 url to run on each instance during boot
     Type: String
     Default: ""
 
@@ -349,19 +349,20 @@ Resources:
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
       UserData: !Base64 |
         #!/bin/bash -xv
-        export BUILDKITE_STACK_NAME="$(AWS::StackName)"
-        export BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
-        export BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)"
-        export BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
-        export BUILDKITE_AGENT_RELEASE="$(BuildkiteAgentRelease)"
-        export BUILDKITE_QUEUE="$(BuildkiteQueue)"
-        export BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="$(BootstrapScriptUrl)"
-        export BUILDKITE_AUTHORIZED_USERS_URL="$(AuthorizedUsersUrl)"
-        export BUILDKITE_USE_ECR=$(UseECR)
-        export AWS_DEFAULT_REGION=$(AWS::Region)
-        export AWS_REGION=$(AWS::Region)
-        export AWS_STACK=$(AWS::StackId)
+        BUILDKITE_STACK_NAME="$(AWS::StackName)" \
+        BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)" \
+        BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)" \
+        BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)" \
+        BUILDKITE_AGENT_RELEASE="$(BuildkiteAgentRelease)" \
+        BUILDKITE_QUEUE="$(BuildkiteQueue)" \
+        BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="$(BootstrapScriptUrl)" \
+        BUILDKITE_AUTHORIZED_USERS_URL="$(AuthorizedUsersUrl)" \
+        BUILDKITE_ECR_POLICY=$(ECRAccessPolicy) \
+        AWS_DEFAULT_REGION=$(AWS::Region) \
+        AWS_REGION=$(AWS::Region) \
+        AWS_STACK=$(AWS::StackId) \
         /usr/local/bin/bk-install-elastic-stack.sh
+
         /opt/aws/bin/cfn-signal \
           --region "$(AWS::Region)" \
           --stack "$(AWS::StackName)" \
