@@ -33,7 +33,7 @@ service docker start || ( cat /var/log/docker && false )
 docker ps > /dev/null
 
 # Choose the right agent binary
-ln -s /usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE} /usr/bin/buildkite-agent
+ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
 
 # Once 3.0 is stable we can just remove this and let the agent do the right thing
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "stable" ]]; then
@@ -55,7 +55,7 @@ EOF
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-for i in $(seq 1 ${BUILDKITE_AGENTS_PER_INSTANCE}); do
+for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	touch "/var/log/buildkite-agent-${i}.log"
 
 	# Setup logging first so we capture everything
@@ -89,10 +89,10 @@ if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 fi
 
 # Start services
-for i in $(seq 1 ${BUILDKITE_AGENTS_PER_INSTANCE}); do
-	cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-${i}
-	service buildkite-agent-${i} start
-	chkconfig --add buildkite-agent-${i}
+for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
+	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
+	service "buildkite-agent-${i}" start
+	chkconfig --add "buildkite-agent-${i}"
 done
 
 # Make sure terminationd is started if it isn't
