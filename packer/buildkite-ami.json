@@ -19,11 +19,6 @@
       "destination": "/tmp"
     },
     {
-      "type": "file",
-      "source": "conf/bin",
-      "destination": "/usr/local/"
-    },
-    {
       "type": "shell",
       "script": "scripts/install-utils.sh"
     },
