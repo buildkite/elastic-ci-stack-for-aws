@@ -1,19 +1,5 @@
 
 Resources:
-  MissingMetricsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      MetricName: ScheduledJobsCount
-      Namespace: Buildkite
-      Statistic: SampleCount
-      Period: 300
-      EvaluationPeriods: 1
-      Threshold: 0
-      Dimensions:
-        - Name: Queue
-          Value: $(BuildkiteQueue)
-      ComparisonOperator: LessThanOrEqualToThreshold
-
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Condition: UseAutoscaling
