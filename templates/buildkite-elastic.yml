@@ -349,167 +349,25 @@ Resources:
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
       UserData: !Base64 |
         #!/bin/bash -xv
-        /opt/aws/bin/cfn-init \
-          --region "$(AWS::Region)" \
-          --stack "$(AWS::StackId)" \
-          --resource "AgentLaunchConfiguration"
+        export BUILDKITE_STACK_NAME="$(AWS::StackName)"
+        export BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
+        export BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)"
+        export BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
+        export BUILDKITE_AGENT_RELEASE="$(BuildkiteAgentRelease)"
+        export BUILDKITE_QUEUE="$(BuildkiteQueue)"
+        export BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="$(BootstrapScriptUrl)"
+        export BUILDKITE_AUTHORIZED_USERS_URL="$(AuthorizedUsersUrl)"
+        export BUILDKITE_USE_ECR=$(UseECR)
+        export AWS_DEFAULT_REGION=$(AWS::Region)
+        export AWS_REGION=$(AWS::Region)
+        export AWS_STACK=$(AWS::StackId)
+        /usr/local/bin/bk-install-elastic-stack.sh
         /opt/aws/bin/cfn-signal \
           --region "$(AWS::Region)" \
           --stack "$(AWS::StackName)" \
           --resource "AgentAutoScaleGroup" \
           --exit-code \$?
-        # Here we put any params we want to trigger a restart
-        # $(BuildkiteAgentToken)
-        # $(BuildkiteAgentRelease)
-        # $(BuildkiteQueue)
-        # $(AgentsPerInstance)
-        # $(SecretsBucket)
-        # $(BootstrapScriptUrl)
 
-    Metadata:
-      # see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
-      AWS::CloudFormation::Init:
-        config:
-          files:
-            /etc/awslogs/awscli.conf:
-              content: |
-                [plugins]
-                cwlogs = cwlogs
-                [default]
-                region = $(AWS::Region)
-              mode: "000444"
-              owner: root
-              group: root
-
-          commands:
-            01-write-buildkite-env:
-              command: |
-                #!/bin/bash -eu
-
-                cat << EOF > /var/lib/buildkite-agent/cfn-env
-                BUILDKITE_STACK_NAME="$(AWS::StackName)"
-                BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)"
-                BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)"
-                AWS_DEFAULT_REGION=$(AWS::Region)
-                AWS_REGION=$(AWS::Region)
-                EOF
-
-                chown buildkite-agent /var/lib/buildkite-agent/cfn-env
-
-
-            01-write-ecr-env:
-              condition: UseECR
-              command: |
-                #!/bin/bash -eu
-                printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
-
-            02-restart-docker:
-              command: |
-                #!/bin/bash -eu
-
-                # Sometimes Docker can be unreponsive:
-                # https://github.com/docker/docker/issues/23131
-                # https://github.com/buildkite/elastic-ci-stack-for-aws/issues/86
-                #
-                # As a workaround we start the docker daemon, wait 10 seconds, and verify
-                service docker start || ( cat /var/log/docker && false )
-                sleep 10 && docker info
-
-            03-install-buildkite:
-              command: |
-                #!/bin/bash -eu
-
-                # Choose the right binary
-                ln -s /usr/bin/buildkite-agent-$(BuildkiteAgentRelease) /usr/bin/buildkite-agent
-
-                # Setup the buildkite-agent config
-                INSTANCE_ID=\$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
-                DOCKER_VERSION=\$(docker --version | cut -f3 -d' ' | sed 's/,//')
-
-                # Once 3.0 is stable we can just remove this and let the agent do the right thing
-                if [[ "$(BuildkiteAgentRelease)" == "stable" ]]; then
-                  BOOTSTRAP_SCRIPT="/etc/buildkite-agent/bootstrap.sh"
-                else
-                  BOOTSTRAP_SCRIPT="buildkite-agent bootstrap"
-                fi;
-
-                cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-                name="$(AWS::StackName)-\$INSTANCE_ID-%n"
-                token="$(BuildkiteAgentToken)"
-                meta-data=\$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack' "$(BuildkiteQueue)" "\$DOCKER_VERSION" "$(AWS::StackName)")
-                meta-data-ec2=true
-                bootstrap-script="\$BOOTSTRAP_SCRIPT"
-                hooks-path=/etc/buildkite-agent/hooks
-                build-path=/var/lib/buildkite-agent/builds
-                plugins-path=/var/lib/buildkite-agent/plugins
-                EOF
-
-                chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
-
-                # Setup logging first so we capture everything
-                for i in \$(seq 1 $(AgentsPerInstance)); do
-                  touch /var/log/buildkite-agent-\${i}.log
-
-                  cat << EOF > /etc/awslogs/config/buildkite-agent-\${i}.conf
-                [/var/log/buildkite-agent-\${i}.log]
-                file = /var/log/buildkite-agent-\${i}.log
-                log_group_name = /var/log/buildkite-agent.log
-                log_stream_name = {instance_id}-\${i}
-                datetime_format = %Y-%m-%d %H:%M:%S
-                EOF
-                done
-
-                service awslogs restart
-
-
-            04-fetch-authorized-users:
-              test: test -n "$(AuthorizedUsersUrl)"
-              command: |
-                #!/bin/bash -eu
-
-                cat << EOF > /etc/cron.hourly/authorized_keys
-                case "$(AuthorizedUsersUrl)" in
-                    s3://*)
-                      aws s3 cp "$(AuthorizedUsersUrl)" /tmp/authorized_keys;;
-                    *)
-                      curl --silent -f "$(AuthorizedUsersUrl)" > /tmp/authorized_keys;;
-                esac
-
-                mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
-                chmod 600 /home/ec2-user/.ssh/authorized_keys
-                chown ec2-user: /home/ec2-user/.ssh/authorized_keys
-                EOF
-
-                chmod +x /etc/cron.hourly/authorized_keys
-
-                /etc/cron.hourly/authorized_keys
-
-            05-run-bootstrap-script:
-              test: test -n "$(BootstrapScriptUrl)"
-              command: |
-                #!/bin/bash -eu
-
-                case "$(BootstrapScriptUrl)" in
-                    s3://*)
-                      aws s3 cp "$(BootstrapScriptUrl)" - | bash
-                    *)
-                      curl -sSL "$(BootstrapScriptUrl)" | bash
-                esac
-
-            06-start-the-world:
-              command: |
-                #!/bin/bash -eu
-
-                # Start services
-
-                for i in \$(seq 1 $(AgentsPerInstance)); do
-                  cp /etc/buildkite-agent/init.d.tmpl /etc/init.d/buildkite-agent-\${i}
-                  service buildkite-agent-\${i} start
-                  chkconfig --add buildkite-agent-\${i}
-                done
-
-                # Make sure terminationd is started if it isn't
-                start terminationd || true
 
   # XXX: We don't even want a topic or role, but CloudFormation requires them
   # to create a lifecycle hook.
