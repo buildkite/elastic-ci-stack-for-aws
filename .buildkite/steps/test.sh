@@ -108,13 +108,6 @@ EOF
 
 version=$(git describe --tags --candidates=1)
 
-cat << EOF > templates/description.yml
----
-AWSTemplateFormatVersion: "2010-09-09"
-Description: "Buildkite stack v${version}"
-
-EOF
-
 cat << EOF > templates/mappings.yml
 Mappings:
   AWSRegion2AMI:

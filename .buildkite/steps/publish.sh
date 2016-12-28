@@ -132,7 +132,18 @@ generate_mappings() {
   fi
 }
 
+version=$(git describe --tags --candidates=1)
+
 make clean
+
+echo "--- Generating description for version ${version}"
+
+cat << EOF > templates/description.yml
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite stack ${version}"
+
+EOF
 
 echo "--- Generating mappings"
 
