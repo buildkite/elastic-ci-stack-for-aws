@@ -26,14 +26,6 @@ if [[ "${BUILDKITE_ECR_POLICY:-none}" != "none" ]] ; then
 	printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
 fi
 
-# Sometimes Docker can be unreponsive:
-# https://github.com/docker/docker/issues/23131
-# https://github.com/buildkite/elastic-ci-stack-for-aws/issues/86
-#
-# As a workaround we start the docker daemon, wait 10 seconds, and verify
-service docker start || ( cat /var/log/docker && false )
-sleep 10 && docker info
-
 # Choose the right agent binary
 ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
 
