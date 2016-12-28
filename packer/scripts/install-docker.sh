@@ -17,8 +17,8 @@ sudo groupadd docker
 sudo usermod -a -G docker ec2-user
 
 # Manual install ala https://docs.docker.com/engine/installation/binaries/
-curl -Lsf https://get.docker.com/builds/Linux/x86_64/docker-1.12.1.tgz > docker-1.12.1.tgz
-tar -xvzf docker-1.12.1.tgz
+curl -Lsf https://get.docker.com/builds/Linux/x86_64/docker-1.12.5.tgz > docker-1.12.5.tgz
+tar -xvzf docker-1.12.5.tgz
 sudo mv docker/* /usr/bin
 
 # Install the init.d script that
@@ -31,7 +31,7 @@ sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
 sudo chkconfig docker on
 
 echo "Downloading docker-compose..."
-sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/1.8.1/docker-compose-Linux-x86_64
+sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/1.9.0/docker-compose-Linux-x86_64
 sudo chmod +x /usr/bin/docker-compose
 docker-compose --version
 
