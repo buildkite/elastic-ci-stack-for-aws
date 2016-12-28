@@ -349,6 +349,8 @@ Resources:
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
       UserData: !Base64 |
         #!/bin/bash -xv
+        exec > /var/log/elastic-stack.log 2>&1
+
         BUILDKITE_STACK_NAME="$(AWS::StackName)" \
         BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)" \
         BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)" \

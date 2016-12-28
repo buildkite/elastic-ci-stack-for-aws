@@ -1,12 +1,10 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 ## Installs the Buildkite Agent, run from the CloudFormation template
 
 INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
-
-env
 
 # Cloudwatch logs needs a region specifically configured
 cat << EOF > /etc/awslogs/awscli.conf
@@ -28,9 +26,13 @@ if [[ "${BUILDKITE_ECR_POLICY:-none}" != "none" ]] ; then
 	printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
 fi
 
-# Start docker up
+# Sometimes Docker can be unreponsive:
+# https://github.com/docker/docker/issues/23131
+# https://github.com/buildkite/elastic-ci-stack-for-aws/issues/86
+#
+# As a workaround we start the docker daemon, wait 10 seconds, and verify
 service docker start || ( cat /var/log/docker && false )
-docker ps > /dev/null
+sleep 10 && docker info
 
 # Choose the right agent binary
 ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
