@@ -83,7 +83,7 @@ if [[ -n "${BUILDKITE_AUTHORIZED_USERS_URL}" ]] ; then
 fi
 
 if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
-	/usr/local/bin/bk-fetch.sh "${BUILDKITE_AUTHORIZED_USERS_URL}" /tmp/elastic_bootstrap
+	/usr/local/bin/bk-fetch.sh "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" /tmp/elastic_bootstrap
 	bash < /tmp/elastic_bootstrap
 	rm /tmp/elastic_bootstrap
 fi
