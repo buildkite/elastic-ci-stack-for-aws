@@ -19,7 +19,6 @@ Metadata:
         - Subnets
         - AvailabilityZones
         - SecurityGroupId
-        - ManagedPolicyArns
 
       - Label:
           default: Instance Configuration
@@ -35,6 +34,7 @@ Metadata:
         - BootstrapScriptUrl
         - RootVolumeSize
         - AssociatePublicIpAddress
+        - ManagedPolicyARN
 
       - Label:
           default: Auto-scaling Configuration
@@ -49,6 +49,12 @@ Metadata:
           default: Docker Registry Configuration
         Parameters:
         - ECRAccessPolicy
+
+      - Label:
+          default: Metrics Configuration
+        Parameters:
+        - MetricsLambdaS3Bucket
+        - MetricsLambdaS3Key
 
 Parameters:
   KeyName:
@@ -200,6 +206,16 @@ Parameters:
       - true
       - false
     Default: "true"
+
+  MetricsLambdaS3Bucket:
+    Type: String
+    Description: The s3 bucket to fetch the lambda function for metrics polling from
+    Default: "buildkite-metrics"
+
+  MetricsLambdaS3Key:
+    Type: String
+    Description: The s3 key to fetch the lambda function for metrics polling from
+    Default: "buildkite-metrics-v1.4.1-lambda.zip"
 
 Conditions:
     UseSpotInstances:

@@ -41,8 +41,8 @@ Resources:
     - LambdaExecutionPolicy
     Properties:
       Code:
-        S3Bucket: buildkite-metrics
-        S3Key: buildkite-metrics-v1.4.1-lambda.zip
+        S3Bucket: $(MetricsLambdaS3Bucket)
+        S3Key: $(MetricsLambdaS3Key)
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
