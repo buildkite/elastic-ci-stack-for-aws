@@ -6,6 +6,15 @@ set -euxo pipefail
 INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
+on_error() {
+	echo "Marking instance $INSTANCE_ID unhealthy"
+	aws autoscaling set-instance-health \
+	--instance-id "$INSTANCE_ID" \
+	--health-status Unhealthy
+}
+
+trap on_error ERROR
+
 # Cloudwatch logs needs a region specifically configured
 cat << EOF > /etc/awslogs/awscli.conf
 [plugins]
