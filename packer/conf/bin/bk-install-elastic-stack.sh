@@ -13,7 +13,7 @@ on_error() {
 	--health-status Unhealthy
 }
 
-trap on_error ERROR
+trap on_error exit
 
 # Cloudwatch logs needs a region specifically configured
 cat << EOF > /etc/awslogs/awscli.conf
