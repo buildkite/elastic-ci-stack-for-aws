@@ -2,7 +2,6 @@
 set -euo pipefail
 
 mkdir -p build
-buildkite-agent artifact download "build/buildkite-lifecycle-agent" build/
 
 packer_files_sha=$(find packer/ -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
 echo "Packer files hash is $packer_files_sha"
