@@ -1,7 +1,6 @@
 #!/usr/bin/env bats
 
-@test "Check buildkite-agent is running" {
-	ps ax >&2
-	run pgrep -a buildkite-agent
+@test "Check buildkite-agent-1 is running" {
+	run service "buildkite-agent-1" status
 	[ $status = 0 ]
 }
