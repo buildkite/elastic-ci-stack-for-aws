@@ -210,12 +210,12 @@ Parameters:
   MetricsLambdaS3Bucket:
     Type: String
     Description: The s3 bucket to fetch the lambda function for metrics polling from
-    Default: "buildkite-metrics"
+    Default: ""
 
   MetricsLambdaS3Key:
     Type: String
     Description: The s3 key to fetch the lambda function for metrics polling from
-    Default: "buildkite-metrics-v1.4.1-lambda.zip"
+    Default: ""
 
 Conditions:
     UseSpotInstances:
@@ -254,12 +254,30 @@ Conditions:
     AllowZeroInstancesDuringScaling:
       !Equals [ $(MaxSize), "1" ]
 
+    UseCustomMetricsLambda:
+      !Not [ !Equals [ $(MetricsLambdaS3Key), "" ] ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
     readonly  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
     poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
+
+  MetricsLambdaBucket:
+    us-east-1 : { Bucket: "buildkite-metrics" }
+    us-east-2 : { Bucket: "buildkite-metrics-us-east-2" }
+    us-west-1 : { Bucket: "buildkite-metrics-us-west-1" }
+    us-west-2 : { Bucket: "buildkite-metrics-us-west-2" }
+    eu-west-1 : { Bucket: "buildkite-metrics-eu-west-1" }
+    eu-central-1 : { Bucket: "buildkite-metrics-eu-central-1" }
+    ap-northeast-1 : { Bucket: "buildkite-metrics-ap-northeast-1" }
+    ap-northeast-2 : { Bucket: "buildkite-metrics-ap-northeast-2" }
+    ap-southeast-1 : { Bucket: "buildkite-metrics-ap-southeast-1" }
+    ap-southeast-2 : { Bucket: "buildkite-metrics-ap-southeast-2" }
+    ap-south-1 : { Bucket: "buildkite-metrics-ap-south-1" }
+    sa-east-1 : { Bucket: "buildkite-metrics-sa-east-1" }
+
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies

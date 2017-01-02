@@ -41,8 +41,14 @@ Resources:
     - LambdaExecutionPolicy
     Properties:
       Code:
-        S3Bucket: $(MetricsLambdaS3Bucket)
-        S3Key: $(MetricsLambdaS3Key)
+        S3Bucket: !If
+          - UseCustomMetricsLambda
+          - $(MetricsLambdaS3Bucket)
+          - "$(MetricsLambdaBucket[$(AWS::Region)][Bucket])"
+        S3Key: !If
+          - UseCustomMetricsLambda
+          - $(MetricsLambdaS3Key)
+          - "buildkite-metrics-v1.4.1-lambda.zip"
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
