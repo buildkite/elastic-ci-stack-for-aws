@@ -20,7 +20,7 @@ steps:
 
   - wait
 
-  - command: "/usr/local/bin/bats tests"
+  - command: "/usr/local/bin/bats --pretty tests"
     name: "Run tests on :buildkite: agent"
     timeout_in_minutes: 5
     env:
