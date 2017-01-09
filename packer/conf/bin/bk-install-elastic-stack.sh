@@ -71,8 +71,6 @@ for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	EOF
 done
 
-service awslogs restart
-
 if [[ -n "${BUILDKITE_AUTHORIZED_USERS_URL}" ]] ; then
 	cat <<- EOF > /etc/cron.hourly/authorized_keys
 	/usr/local/bin/bk-fetch.sh "${BUILDKITE_AUTHORIZED_USERS_URL}" /tmp/authorized_keys
@@ -91,12 +89,11 @@ if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 	rm /tmp/elastic_bootstrap
 fi
 
-# Start services
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
 	service "buildkite-agent-${i}" start
 	chkconfig --add "buildkite-agent-${i}"
 done
 
-# Make sure terminationd is started if it isn't
-start terminationd || true
+status terminationd | start terminationd
+service awslogs status | service awslogs start

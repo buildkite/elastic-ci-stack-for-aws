@@ -6,6 +6,6 @@
 }
 
 @test "Check terminationd is running" {
-	run service "terminationd" status
+	run status "terminationd"
 	[ $status = 0 ]
 }
