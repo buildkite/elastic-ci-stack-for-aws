@@ -50,12 +50,6 @@ Metadata:
         Parameters:
         - ECRAccessPolicy
 
-      - Label:
-          default: Metrics Configuration
-        Parameters:
-        - MetricsLambdaS3Bucket
-        - MetricsLambdaS3Key
-
 Parameters:
   KeyName:
     Description: The ssh keypair used to access the buildkite instances
