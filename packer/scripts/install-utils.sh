@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -eu -o pipefail
 
 echo "Installing zip utils..."
