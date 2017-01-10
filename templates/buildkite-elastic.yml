@@ -94,7 +94,7 @@ Parameters:
     MinValue: 1
 
   SecretsBucket:
-    Description: Optional - Name of an existing S3 bucket containing pipeline secrets
+    Description: Optional - Name of an existing S3 bucket containing pipeline secrets (Created if left blank)
     Type: String
     Default: ""
 
@@ -207,6 +207,10 @@ Parameters:
       - false
     Default: "true"
 
+Outputs:
+  SecretsBucket:
+    Value: !If [CreateSecretsBucket, $(ManagedSecretsBucket), $(SecretsBucket)]
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -217,11 +221,11 @@ Conditions:
     CreateSecurityGroup:
       !Equals [ $(SecurityGroupId), "" ]
 
+    CreateSecretsBucket:
+      !Equals [ $(SecretsBucket), "" ]
+
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", $(AvailabilityZones) ], "" ]  ]
-
-    UseSecretsBucket:
-      !Not [ !Equals [ $(SecretsBucket), "" ] ]
 
     UseArtifactsBucket:
       !Not [ !Equals [ $(ArtifactsBucket), "" ] ]
@@ -315,9 +319,18 @@ Resources:
       Roles:
         - $(IAMRole)
 
+  ManagedSecretsBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateSecretsBucket
+    DeletionPolicy: Retain
+    Properties:
+      LoggingConfiguration:
+        LogFilePrefix: logs/
+      VersioningConfiguration:
+        Status: Enabled
+
   SecretsBucketPolicies:
     Type: AWS::IAM::Policy
-    Condition: UseSecretsBucket
     Properties:
       PolicyName: SecretsBucketPolicy
       PolicyDocument:
@@ -328,8 +341,8 @@ Resources:
               - s3:Get
               - s3:List*
             Resource:
-              - "arn:aws:s3:::$(SecretsBucket)/*"
-              - "arn:aws:s3:::$(SecretsBucket)"
+              - !If [CreateSecretsBucket, "arn:aws:s3:::$(ManagedSecretsBucket)/*", "arn:aws:s3:::$(SecretsBucket)/*"]
+              - !If [CreateSecretsBucket, "arn:aws:s3:::$(ManagedSecretsBucket)", "arn:aws:s3:::$(SecretsBucket)"]
       Roles:
         - $(IAMRole)
 
