@@ -1,19 +1,30 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 ## Installs the Buildkite Agent, run from the CloudFormation template
 
-INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
-DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
+exec > /var/log/elastic-stack.log 2>&1 # Logs to elastic-stack.log
 
 on_error() {
-	echo "Marking instance $INSTANCE_ID unhealthy"
+	local exitCode="$?"
+	local errorLine="$1"
+
+	/opt/aws/bin/cfn-signal \
+		--region "$AWS_REGION" \
+		--stack "$BUILDKITE_STACK_NAME" \
+		--reason "Error on line $errorLine: $(tail -n 1 /var/log/elastic-stack.log)" \
+		--resource "AgentAutoScaleGroup" \
+		--exit-code "$exitCode"
+
 	aws autoscaling set-instance-health \
-	--instance-id "$INSTANCE_ID" \
-	--health-status Unhealthy
+		--instance-id "$INSTANCE_ID" \
+		--health-status Unhealthy
 }
 
-trap on_error exit
+trap 'on_error $LINENO' exit
+
+INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
+DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
 # Cloudwatch logs needs a region specifically configured
 cat << EOF > /etc/awslogs/awscli.conf
@@ -98,3 +109,9 @@ done
 # my kingdom for a decent init system
 start terminationd || true
 service awslogs start || true
+
+/opt/aws/bin/cfn-signal \
+	--region "$AWS_REGION" \
+	--stack "$BUILDKITE_STACK_NAME" \
+	--resource "AgentAutoScaleGroup" \
+	--exit-code 0

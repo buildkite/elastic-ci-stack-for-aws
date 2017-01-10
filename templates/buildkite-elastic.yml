@@ -378,8 +378,6 @@ Resources:
           Ebs: { VolumeSize: $(RootVolumeSize), VolumeType: gp2 }
       UserData: !Base64 |
         #!/bin/bash -xv
-        exec > /var/log/elastic-stack.log 2>&1
-
         BUILDKITE_STACK_NAME="$(AWS::StackName)" \
         BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)" \
         BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)" \
@@ -392,13 +390,6 @@ Resources:
         AWS_DEFAULT_REGION=$(AWS::Region) \
         AWS_REGION=$(AWS::Region) \
           /usr/local/bin/bk-install-elastic-stack.sh
-
-        /opt/aws/bin/cfn-signal \
-          --region "$(AWS::Region)" \
-          --stack "$(AWS::StackName)" \
-          --resource "AgentAutoScaleGroup" \
-          --exit-code \$?
-
 
   # XXX: We don't even want a topic or role, but CloudFormation requires them
   # to create a lifecycle hook.
