@@ -44,14 +44,8 @@ Resources:
     Condition: CreateMetricsStack
     Properties:
       Code:
-        S3Bucket: !If
-          - UseCustomMetricsLambda
-          - $(MetricsLambdaS3Bucket)
-          - "$(MetricsLambdaBucket[$(AWS::Region)][Bucket])"
-        S3Key: !If
-          - UseCustomMetricsLambda
-          - $(MetricsLambdaS3Key)
-          - "buildkite-metrics-v1.4.1-lambda.zip"
+        S3Bucket: $(MetricsLambdaBucket[$(AWS::Region)][Bucket])
+        S3Key: "buildkite-metrics-v1.4.1-lambda.zip"
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
