@@ -2,8 +2,11 @@
 
 set -eu -o pipefail
 
-echo "Installing zip utils..."
+echo "Updating Amazon Linux..."
+cat /etc/issue
 sudo yum update -y -q
+
+echo "Installing zip utils..."
 sudo yum install -y zip unzip
 
 echo "Installing bats..."
