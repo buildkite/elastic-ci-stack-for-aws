@@ -201,16 +201,6 @@ Parameters:
       - false
     Default: "true"
 
-  MetricsLambdaS3Bucket:
-    Type: String
-    Description: The s3 bucket to fetch the lambda function for metrics polling from
-    Default: ""
-
-  MetricsLambdaS3Key:
-    Type: String
-    Description: The s3 key to fetch the lambda function for metrics polling from
-    Default: ""
-
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ $(SpotPrice), 0 ] ]
@@ -247,9 +237,6 @@ Conditions:
 
     AllowZeroInstancesDuringScaling:
       !Equals [ $(MaxSize), "1" ]
-
-    UseCustomMetricsLambda:
-      !Not [ !Equals [ $(MetricsLambdaS3Key), "" ] ]
 
 Mappings:
   ECRManagedPolicy:
