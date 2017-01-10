@@ -311,6 +311,7 @@ Resources:
               - autoscaling:DescribeLifecycleHooks
               - autoscaling:RecordLifecycleActionHeartbeat
               - autoscaling:CompleteLifecycleAction
+              - autoscaling:SetInstanceHealth
             Resource: "*"
           - Effect: Allow
             Action:
