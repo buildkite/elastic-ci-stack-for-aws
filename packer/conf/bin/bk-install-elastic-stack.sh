@@ -95,5 +95,6 @@ for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	chkconfig --add "buildkite-agent-${i}"
 done
 
-status terminationd | start terminationd
-service awslogs status | service awslogs start
+# my kingdom for a decent init system
+start terminationd || true
+service awslogs start || true
