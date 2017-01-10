@@ -487,6 +487,8 @@ Resources:
         # a maximum of 40 minutes to be safe.
         PauseTime: PT40M
         WaitOnResourceSignals: true
+        # Ignore scaling alarms during update
+        SuspendProcesses: [ AlarmNotification ]
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
