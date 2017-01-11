@@ -35,9 +35,10 @@ s3_download() {
 echo "~~~ Setting up the environment"
 
 echo "Sourcing CloudFormation environment..."
-set -o allexport
 source ~/cfn-env
-set +o allexport
+
+export AWS_REGION
+export AWS_DEFAULT_REGION
 
 echo "Starting an SSH Agent..."
 eval "$(ssh-agent -s)"
