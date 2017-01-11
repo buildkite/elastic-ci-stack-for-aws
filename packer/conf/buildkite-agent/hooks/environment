@@ -35,9 +35,10 @@ s3_download() {
 echo "~~~ Setting up the environment"
 
 echo "Sourcing CloudFormation environment..."
-set -o allexport
 source ~/cfn-env
-set +o allexport
+
+export AWS_REGION
+export AWS_DEFAULT_REGION
 
 echo "Starting an SSH Agent..."
 eval "$(ssh-agent -s)"
@@ -66,7 +67,11 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   for key in ${ssh_key_paths[*]} ; do
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
       echo "Downloading ssh-key $key"
-      SSH_ASKPASS="/bin/false" ssh-add <(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key")
+      if ! ssh_key=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
+        echo "~~~ :warning: Failed to download ssh-key $key"
+        exit 1
+      fi
+      SSH_ASKPASS="/bin/false" ssh-add <(echo "$ssh_key")
       key_found=1
       break
     fi
@@ -86,8 +91,12 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
 
   for key in ${env_paths[*]} ; do
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
+      if ! envvars=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
+        echo "~~~ :warning: Failed to download env from $key"
+        exit 1
+      fi
       echo "Downloading env $key"
-      eval "$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key")"
+      eval "$envvars"
     fi
   done
 fi
