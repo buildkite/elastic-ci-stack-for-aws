@@ -71,7 +71,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
         echo "~~~ :warning: Failed to download ssh-key $key"
         exit 1
       fi
-      SSH_ASKPASS="/bin/false" ssh-add <(cat $ssh_key)
+      SSH_ASKPASS="/bin/false" ssh-add <(echo "$ssh_key")
       key_found=1
       break
     fi
