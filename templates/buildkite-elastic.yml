@@ -340,6 +340,7 @@ Resources:
             Action:
               - s3:Put*
               - s3:List*
+              - s3:Get*
             Resource:
               - "arn:aws:s3:::$(ArtifactsBucket)/*"
               - "arn:aws:s3:::$(ArtifactsBucket)"
