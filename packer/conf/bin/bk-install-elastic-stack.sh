@@ -108,7 +108,7 @@ done
 
 # my kingdom for a decent init system
 start terminationd || true
-service awslogs start || true
+service awslogs restart || true
 
 /opt/aws/bin/cfn-signal \
 	--region "$AWS_REGION" \
