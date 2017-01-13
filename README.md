@@ -16,7 +16,7 @@ Features:
 - Docker Registry push/pull support
 - CloudWatch logs for system and buildkite agent events
 - CloudWatch metrics from the Buildkite API
-- Support for stable, unstable or experimental Buildkite Agent releases
+- Support for stable, beta or edge Buildkite Agent releases
 - Create as many instances of the stack as you need
 - Rolling updates to stack instances to reduce interruption
 
@@ -65,30 +65,39 @@ aws cloudformation create-stack \
   --parameters $(cat config.json)
 ```
 
-If you’d prefer to use this repo or build it yourself, clone it and run the following commands:
+## Build Secrets
+
+The stack refers to a `SecretsBucket` parameter which will allow your agents to access SSH private keys for source control, and environment hooks to provide secrets to your builds.
+
+> You will need to create this S3 bucket yourself, but the stack will automatically create permissions for access to it. 
+
+The following paths in the bucket are checked. 
+
+* `/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks)
+* `/private_ssh_key` - A private key that is added to ssh-agent for your builds
+* `/{pipeline-slug}/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks), specific to a pipeline
+* `/{pipeline-slug}/private_ssh_key` - A private key that is added to ssh-agent for your builds, specific to the pipeline
+
+These files are encrypted using [Amazon's KMS Service](https://aws.amazon.com/kms/). See the [Security](#security) section for more details.
+
+Here's an example that shows how to generate a private SSH key, and upload it with KMS encryption to an S3 bucket:
 
 ```bash
-# To set up your local environment and build a template based on public AMIs
-make setup download-mappings build
+# generate a deploy key for your project
+ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
+pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
 
-# Or, to set things up locally and create the stack on AWS
-make create-stack
-
-# You can use any of the AWS* environment variables that the aws-cli supports
-AWS_PROFILE="some-profile" make create-stack
-
-# You can also use aws-vault or similar
-aws-vault exec some-profile -- make create-stack
+aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key" 
 ```
 
-Adding extra tags to the stack (including the EC2 instances) can be done via `extra_tags.json` (see [`extra_tags.json.example`](extra_tags.json.example) for usage).
+If you really want to disable KMS encryption, you can set `BUILDKITE_USE_KMS=false`.
 
 ## What’s On Each Machine?
 
-* [Amazon Linux](https://aws.amazon.com/amazon-linux-ami/)
+* [Amazon Linux 2016.09.1](https://aws.amazon.com/amazon-linux-ami/)
 * [Buildkite Agent](https://buildkite.com/docs/agent)
-* [Docker](https://www.docker.com)
-* [Docker Compose](https://docs.docker.com/compose/)
+* [Docker 1.12.5](https://www.docker.com)
+* [Docker Compose 1.9.0](https://docs.docker.com/compose/)
 * [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
 * [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli or the Buildkite API
 * [docker-gc](https://github.com/spotify/docker-gc) - removes old docker images
@@ -105,55 +114,25 @@ By following these simple conventions you get a scaleable, repeatable and source
 
 ## Multiple Instances of the Stack
 
-If you need to optimize pipelines for your types of applications you can create multiple stack with different configurations, each with a different [Agent Queue](https://buildkite.com/docs/agent/queues).
+If you need to different instances sizes and scaling characteristics between pipelines, you can create multiple stack. Each can run on a different [Agent Queue](https://buildkite.com/docs/agent/queues), with it's own configuration, or even in a different AWS account. 
 
-For example, you could have a `builders` stack that provides always on machines with warm Docker caches for building and pushing to a Docker registry at the start of a CI run. Or you could have a single `t2.nano` stack that is used for lightning fast `buildkite-agent pipeline upload` jobs.
+Examples:
 
-Because each stack can run in a different agent queue, and each one self-contained (potentially in completely different AWS accounts), you're free to experiment without interrupting existing builds.
+* A `docker-builders` stack that provides always-on workers with hot docker caches
+* A `pipeline-uploaders` stack with tiny, always-on instances for lightning fast `buildkite-agent pipeline upload` jobs.
+* A `deploy` stack with added credentials and permissions specifically for deployment.
 
-## Autoscaling Configuration
+## Autoscaling
 
-If you provided a `BuildkiteApiAccessToken` your build agents will autoscale. Autoscaling is designed to scale up quite quickly and then gradually scale down. Scaling up happens when there are scheduled jobs exist that are waiting for agents. Scaling down happens when there are no more running jobs.
+If you have provided `BuildkiteApiAccessToken` and your `MinSize` < `MaxSize`, the stack will automatically scale up and down based on the number of scheduled jobs. 
 
-See [the autoscale.yml template](templates/autoscale.yml) for more details, or the [Buildkite Metrics Publisher](https://github.com/buildkite/buildkite-cloudwatch-metrics-publisher) project for how metrics are collected. 
+This means you can scale down to zero when idle, which means you can use larger instances for the same cost. 
 
-## Configuration Environment Variables
-
-The following environment variables can be set on the Buildkite pipeline, or individual build step, to customize the behaviour of the stack:
-
-* `BUILDKITE_SECRETS_BUCKET` - the name of the S3 bucket where secrets are stored. Default: the value set in the stack parameter when the stack was created. Example: `my-secrets-bucket`
-* `BUILDKITE_SECRETS_PREFIX` - the folder within the secrets bucket. Default: the build pipeline's slug. Example: `my-great-pipeline`
-* `SSH_KEY_NAME` - the filename of the SSH key inside this pipeline’s folder in the secrets bucket. Default: `private_ssh_key`. Example: `other_ssh_key`
-* `SHARED_SSH_KEY_NAME` - the filename of the SSH key in the root of the secrets bucket if there's no pipeline-specific SSH key present. Default: `private_ssh_key`. Example: `other_ssh_key`
-
-## Build Secrets
-
-The stack refers to a `SecretsBucket` parameter which will allow your build agents to automatically get access to SSH private keys and environment hooks for exposing environment variables to builds. The stack doesn't create the bucket for you, you need to do this yourself, but it does give read access to the build machines. 
-
-The secrets bucket can contain the following files:
-
-* `/env` - An optional bash script to use as a global [agent environment hook](https://buildkite.com/docs/agent/hooks)
-* `/private_ssh_key` - An optional private key to use for Git SSH operations when there is no pipeline-specific key present
-* `/{pipeline-slug}/env` - An optional bash script to use as an [agent environment hook](https://buildkite.com/docs/agent/hooks)
-* `/{pipeline-slug}/private_ssh_key` - An optional pipeline-specific private key to use for Git SSH operations
-
-These files are encrypted using [Amazon's KMS Service](https://aws.amazon.com/kms/). See the [Security](#security) section for more details.
-
-Here's an example that shows how to generate a private SSH key, and upload it with KMS encryption to an S3 bucket:
-
-```bash
-# generate a deploy key for your project
-ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
-pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
-
-aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key" 
-```
-
-If you really want to disable KMS encryption, you can set `BUILDKITE_USE_KMS=false`.
+Metrics are collected with a Lambda function, polling every minute.
 
 ## Docker Registry Support
 
-If you want to push or pull from registries such as [Docker Hub](https://hub.docker.com/) or [Quay](https://quay.io/) you can use the `env` file in your secrets bucket to export the following environment variables:
+If you want to push or pull from registries such as [Docker Hub](https://hub.docker.com/) or [Quay](https://quay.io/) you can use the `environment` hook in your secrets bucket to export the following environment variables:
 
 * `DOCKER_LOGIN_USER="the-user-name"`
 * `DOCKER_LOGIN_PASSWORD="the-password"`
@@ -193,9 +172,10 @@ You’ll find the stack’s metrics under "Custom Metrics > Buildkite" within Cl
 
 Each instance streams both system messages and Buildkite Agent logs to CloudWatch Logs under two log groups:
 
-* `/var/log/messages` - system logs
+* `/var/log/messages` - System logs
 * `/var/log/buildkite-agent.log` - Buildkite Agent logs
 * `/var/log/docker` - Docker daemon logs
+* `/var/log/elastic-stack.log` - Boot process logs
 
 Within each stream the logs are grouped by instance id.
 
@@ -243,15 +223,33 @@ Anyone with commit access to your codebase (including third-party pull-requests 
 
 Also keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
 
-## Questions?
+## Development
+
+To get started with customizing your own stack, or contributing fixes and features:
+
+```bash
+# To set up your local environment and build a template based on public AMIs
+make setup download-mappings build
+
+# Or, to set things up locally and create the stack on AWS
+make create-stack
+
+# You can use any of the AWS* environment variables that the aws-cli supports
+AWS_PROFILE="some-profile" make create-stack
+
+# You can also use aws-vault or similar
+aws-vault exec some-profile -- make create-stack
+```
+
+If you need to build your own AMI (because you've changed something in the `packer` directory), run:
+
+```bash
+make clean build-ami
+```
+
+## Questions and Support
 
 Feel free to drop an email to support@buildkite.com with questions, or checkout the `#aws-stack` and `#aws` channels in [Buildkite Slack](https://chat.buildkite.com/).
-
-## Releasing
-
-* Create and push `v${VERSION}` tag (e.g. `v10.0`)
-* Upload stack JSON and mapping YML artifacts to `buildkite-aws-stack` S3 bucket
-* Create GitHub release (following previous release as a template) w/ stack JSON and mapping YML attached.
 
 ## Licence
 
