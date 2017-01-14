@@ -2,6 +2,7 @@
 
 BUILDKITE_STACK_BUCKET ?= buildkite-aws-stack
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
+VERSION ?= $(shell git describe --tags --candidates=1)
 STACK_NAME ?= buildkite
 SHELL=/bin/bash -o pipefail
 TEMPLATES=templates/description.yml \
@@ -18,6 +19,7 @@ build: build/aws-stack.json
 build/aws-stack.json: $(TEMPLATES) templates/mappings.yml
 	-mkdir -p build/
 	bundle exec cfoo $^ > $@
+	sed -i.bak "s/BUILDKITE_STACK_VERSION=dev/BUILDKITE_STACK_VERSION=$(VERSION)/" $@
 
 setup:
 	bundle check || ((which bundle || gem install bundler --no-ri --no-rdoc) && bundle install --path vendor/bundle)
