@@ -39,6 +39,7 @@ source ~/cfn-env
 
 export AWS_REGION
 export AWS_DEFAULT_REGION
+export AWS_ECR_LOGIN
 
 echo "Starting an SSH Agent..."
 eval "$(ssh-agent -s)"
