@@ -25,12 +25,11 @@ Features:
 <!-- toc -->
 
 - [Getting Started](#getting-started)
+- [Build Secrets](#build-secrets)
 - [What’s On Each Machine?](#whats-on-each-machine)
 - [What Type of Builds Does This Support?](#what-type-of-builds-does-this-support)
 - [Multiple Instances of the Stack](#multiple-instances-of-the-stack)
-- [Autoscaling Configuration](#autoscaling-configuration)
-- [Configuration Environment Variables](#configuration-environment-variables)
-- [Build Secrets](#build-secrets)
+- [Autoscaling](#autoscaling)
 - [Docker Registry Support](#docker-registry-support)
 - [Versions](#versions)
 - [Updating Your Stack](#updating-your-stack)
@@ -38,8 +37,8 @@ Features:
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
 - [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
 - [Security](#security)
-- [Questions?](#questions)
-- [Releasing](#releasing)
+- [Development](#development)
+- [Questions and Support](#questions-and-support)
 - [Licence](#licence)
 
 <!-- tocstop -->
