@@ -113,6 +113,7 @@ timeout 30 docker ps
 echo
 
 unset BUILDKITE_SECRETS_BUCKET
+unset BUILDKITE_ARTIFACTS_BUCKET
 unset BUILDKITE_SECRETS_KEY
 
 # We need to scope the next bit to only the currently running agent's builds,
