@@ -2,27 +2,9 @@
 
 set -eu -o pipefail
 
-# This performs a manual install of Docker 1.12. The init.d script is from the
-# 1.11 yum package
-
-sudo yum update -y -q
-
 echo "Installing docker..."
-
-# Only dep to install (found by doing a yum install of 1.11)
-sudo yum install -y xfsprogs
-
-# Add docker group
-sudo groupadd docker
+sudo yum install -y docker
 sudo usermod -a -G docker ec2-user
-
-# Manual install ala https://docs.docker.com/engine/installation/binaries/
-curl -Lsf https://get.docker.com/builds/Linux/x86_64/docker-1.12.5.tgz > docker-1.12.5.tgz
-tar -xvzf docker-1.12.5.tgz
-sudo mv docker/* /usr/bin
-
-# Install the init.d script that
-sudo cp /tmp/conf/docker/init.d/docker /etc/init.d/docker
 
 # Use the overlay2 driver
 sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
