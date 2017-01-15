@@ -41,6 +41,12 @@ export AWS_REGION
 export AWS_DEFAULT_REGION
 export AWS_ECR_LOGIN
 
+if [[ -n "${BUILDKITE_ARTIFACTS_BUCKET:-}" ]] ; then
+  echo "Setting up custom artifacts bucket in ${BUILDKITE_ARTIFACTS_BUCKET}"
+  export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="s3://${BUILDKITE_ARTIFACTS_BUCKET}/$BUILDKITE_JOB_ID"
+  export BUILDKITE_S3_DEFAULT_REGION="${AWS_DEFAULT_REGION}"
+fi
+
 echo "Starting an SSH Agent..."
 eval "$(ssh-agent -s)"
 echo
