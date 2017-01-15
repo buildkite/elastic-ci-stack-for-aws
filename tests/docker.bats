@@ -6,7 +6,6 @@
 }
 
 @test "Check docker is version 1.12.6" {
-	run docker --version
+	run sh -c  "docker --version | grep 'Docker version 1.12.6,'"
 	[ $status = 0 ]
-	[ "$output" = "Docker version 1.12.6, build 78d1802" ]
 }
