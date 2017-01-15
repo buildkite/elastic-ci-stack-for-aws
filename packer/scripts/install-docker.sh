@@ -4,9 +4,6 @@ set -eu -o pipefail
 
 echo "Installing docker..."
 sudo yum install -y docker
-
-# Add docker group
-sudo groupadd docker
 sudo usermod -a -G docker ec2-user
 
 # Use the overlay2 driver
