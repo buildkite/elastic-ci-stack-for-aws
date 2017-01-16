@@ -453,7 +453,7 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Timeout: PT5M
-        Count: $(MinSize)
+        Count: 1
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: !If [
