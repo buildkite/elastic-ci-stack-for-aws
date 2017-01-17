@@ -267,6 +267,9 @@ Conditions:
     AllowZeroInstancesDuringScaling:
       !Equals [ $(MaxSize), "1" ]
 
+    CreateDockerBuilders:
+      !Not [ !Equals [ $(DockerBuilderSize), 0 ] ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }

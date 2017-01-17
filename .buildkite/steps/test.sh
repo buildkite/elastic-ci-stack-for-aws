@@ -102,6 +102,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "ECRAccessPolicy",
     "ParameterValue": "readonly"
+  },
+  {
+    "ParameterKey": "DockerBuilderSize",
+    "ParameterValue": "1"
   }
 ]
 EOF
