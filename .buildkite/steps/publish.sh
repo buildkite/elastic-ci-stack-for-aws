@@ -153,8 +153,8 @@ echo "--- Building and publishing stack"
 
 make setup build
 
-# Publish the top-level mappings only on version tagged releases
-if [[ "$BUILDKITE_TAG" =~ ^v ]] ; then
+# Publish the top-level mappings only on when we see the most recent tag on master
+if [[ "$BUILDKITE_TAG" =~ $(git describe origin/master --tags --match="v*") ]] ; then
   aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
   aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
 fi
