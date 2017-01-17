@@ -1,3 +1,5 @@
+
+Resources:
   DockerBuilderLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Condition: CreateDockerBuilders
