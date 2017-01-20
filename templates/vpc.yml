@@ -13,7 +13,10 @@ Resources:
   Gateway:
     Type: AWS::EC2::InternetGateway
     Condition: CreateVpcResources
-    Properties: {}
+    Properties:
+      Tags:
+        - Key: Name
+          Value: $(AWS::StackName)
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -34,6 +37,9 @@ Resources:
       ]
       CidrBlock: 10.0.1.0/24
       VpcId: $(Vpc)
+      Tags:
+        - Key: Name
+          Value: $(AWS::StackName)
 
   Subnet1:
     Type: AWS::EC2::Subnet
@@ -46,12 +52,18 @@ Resources:
       ]
       CidrBlock: 10.0.2.0/24
       VpcId: $(Vpc)
+      Tags:
+        - Key: Name
+          Value: $(AWS::StackName)
 
   Routes:
     Type: AWS::EC2::RouteTable
     Condition: CreateVpcResources
     Properties:
       VpcId: $(Vpc)
+      Tags:
+        - Key: Name
+          Value: $(AWS::StackName)
 
   RouteDefault:
     Type: AWS::EC2::Route
