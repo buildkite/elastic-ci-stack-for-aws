@@ -1,0 +1,70 @@
+
+Resources:
+  DockerBuilderLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Condition: CreateDockerBuilders
+    Properties:
+      AssociatePublicIpAddress: $(AssociatePublicIpAddress)
+      SecurityGroups: [ !If [ "CreateSecurityGroup", $(SecurityGroup), $(SecurityGroupId) ] ]
+      KeyName : $(KeyName)
+      IamInstanceProfile: $(IAMInstanceProfile)
+      InstanceType: $(DockerBuilderInstanceType)
+      ImageId : !If [
+        "UseDefaultAMI",
+        "$(AWSRegion2AMI[$(AWS::Region)][AMI])",
+        $(ImageId)
+      ]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: { VolumeSize: $(DockerBuilderRootVolumeSize), VolumeType: gp2 }
+      UserData: !Base64 |
+        #!/bin/bash -xv
+        BUILDKITE_STACK_NAME="$(AWS::StackName)" \
+        BUILDKITE_STACK_VERSION=dev \
+        BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)" \
+        BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)" \
+        BUILDKITE_AGENTS_PER_INSTANCE=1 \
+        BUILDKITE_AGENT_RELEASE="$(BuildkiteAgentRelease)" \
+        BUILDKITE_QUEUE="$(DockerBuilderQueue)" \
+        BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="$(BootstrapScriptUrl)" \
+        BUILDKITE_AUTHORIZED_USERS_URL="$(AuthorizedUsersUrl)" \
+        BUILDKITE_ECR_POLICY=$(ECRAccessPolicy) \
+        AWS_DEFAULT_REGION=$(AWS::Region) \
+        AWS_REGION=$(AWS::Region) \
+          /usr/local/bin/bk-install-elastic-stack.sh
+
+  DockerBuilderAutoScaleGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Condition: CreateDockerBuilders
+    Properties:
+      VPCZoneIdentifier: !If [
+        "CreateVpcResources",
+        [ $(Subnet0), $(Subnet1) ],
+        $(Subnets)
+      ]
+      LaunchConfigurationName: $(DockerBuilderLaunchConfiguration)
+      DesiredCapacity: $(DockerBuilderSize)
+      MinSize: $(DockerBuilderSize)
+      MaxSize: $(DockerBuilderSize)
+      Tags:
+        - Key: Role
+          Value: buildkite-docker-builder
+          PropagateAtLaunch: true
+        - Key: Name
+          Value: buildkite-docker-builder
+          PropagateAtLaunch: true
+        - Key: BuildkiteAgentRelease
+          Value: $(BuildkiteAgentRelease)
+          PropagateAtLaunch: true
+        - Key: BuildkiteQueue
+          Value: $(DockerBuilderQueue)
+          PropagateAtLaunch: true
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+        Count: $(MinSize)
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 0
+        PauseTime: PT40M
+        WaitOnResourceSignals: true

@@ -7,6 +7,7 @@ STACK_NAME ?= buildkite
 SHELL=/bin/bash -o pipefail
 TEMPLATES=templates/description.yml \
   templates/buildkite-elastic.yml \
+  templates/docker-builders.yml \
   templates/autoscale.yml \
   templates/vpc.yml \
   templates/metrics.yml

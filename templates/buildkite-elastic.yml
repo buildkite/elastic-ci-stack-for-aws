@@ -39,16 +39,22 @@ Metadata:
       - Label:
           default: Auto-scaling Configuration
         Parameters:
-        - DesiredSize
         - MinSize
         - MaxSize
         - ScaleUpAdjustment
         - ScaleDownAdjustment
 
       - Label:
-          default: Docker Registry Configuration
+          default: AWS Integration
         Parameters:
         - ECRAccessPolicy
+
+      - Label:
+          default: Docker Configuration
+        Parameters:
+        - DockerBuilderSize
+        - DockerBuilderRootVolumeSize
+        - DockerBuilderInstanceType
 
 Parameters:
   KeyName:
@@ -165,7 +171,7 @@ Parameters:
   RootVolumeSize:
     Description: Size of each instance's root EBS volume (in GB)
     Type: Number
-    Default: 250
+    Default: 40
     MinValue: 10
 
   SecurityGroupId:
@@ -200,6 +206,29 @@ Parameters:
       - true
       - false
     Default: "true"
+
+  DockerBuilderSize:
+    Description: The size of the optional dedicated pool of docker builder instances
+    Type: Number
+    Default: 0
+
+  DockerBuilderQueue:
+    Description: Queue name that docker-builder agents will use, targeted in pipeline steps using "queue={value}"
+    Type: String
+    Default: docker-builder
+    MinLength: 1
+
+  DockerBuilderInstanceType:
+    Description: Instance type of docker builders
+    Type: String
+    Default: t2.nano
+    MinLength: 1
+
+  DockerBuilderRootVolumeSize:
+    Description: Size of each docker builder's root EBS volume (in GB)
+    Type: Number
+    Default: 250
+    MinValue: 10
 
 Conditions:
     UseSpotInstances:
@@ -237,6 +266,9 @@ Conditions:
 
     AllowZeroInstancesDuringScaling:
       !Equals [ $(MaxSize), "1" ]
+
+    CreateDockerBuilders:
+      !Not [ !Equals [ $(DockerBuilderSize), 0 ] ]
 
 Mappings:
   ECRManagedPolicy:
