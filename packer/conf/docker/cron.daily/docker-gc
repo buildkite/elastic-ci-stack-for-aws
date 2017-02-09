@@ -1,15 +1,5 @@
 #!/bin/bash
-
 set -euo pipefail
 
-# For parameters, see:
-# https://github.com/spotify/docker-gc
-
-# Remove images older than 7 days (60*60*24*7)
-export GRACE_PERIOD_SECONDS=604800
-
-# This makes sure to remove images even if they've been pushed to an external
-# registry (Docker doesn't remove these by default)
-export FORCE_IMAGE_REMOVAL=1
-
-/usr/bin/docker-gc
+# prune stopped containers and images older than 7 days
+docker system prune –force –filter "until=10080m"
