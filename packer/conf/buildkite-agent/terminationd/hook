@@ -2,19 +2,9 @@
 
 set -eu -o pipefail
 
-# Import BUILDKITE_AGENTS_PER_INSTANCE
-eval "$(cat /var/lib/buildkite-agent/cfn-env)"
-
 echo "Stopping buildkite-agent gracefully"
+cd /var/lib/buildkite-agent
 
-for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-  service "buildkite-agent-${i}" stop &
-done
-
-# Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycld handler script
-while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
-  echo "Waiting for all buildkite-agent processes to have stopped..."
-  sleep 5
-done
+docker-compose down
 
 echo "All buildkite-agent processes have stopped"
