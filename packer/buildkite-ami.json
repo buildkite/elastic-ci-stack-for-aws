@@ -3,12 +3,12 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "source_ami": "ami-9be6f38c",
+      "source_ami": "ami-b2df2ca4",
       "region": "us-east-1",
       "instance_type": "c4.large",
       "ssh_username": "ec2-user",
-      "ami_name": "buildkite-stack-{{isotime | clean_ami_name}}",
-      "ami_description": "Buildkite CloudFormation Stack base image (Amazon Linux, buildkite-agent, docker, docker-compose, docker-gc, jq)",
+      "ami_name": "buildkite-for-aws-{{isotime | clean_ami_name}}",
+      "ami_description": "buildkite/elastic-ci-stack-for-aws",
       "ami_groups": ["all"]
     }
   ],

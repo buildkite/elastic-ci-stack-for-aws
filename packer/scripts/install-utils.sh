@@ -16,3 +16,8 @@ sudo mv /tmp/conf/bin/bk-* /usr/local/bin
 
 echo "Configuring awscli to use v4 signatures..."
 sudo aws configure set s3.signature_version s3v4
+
+echo "Downloading jq..."
+sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+sudo chmod +x /usr/bin/jq
+jq --version
