@@ -10,6 +10,8 @@ steps:
     agents:
       queue: aws-stack
 
+  - wait
+
   - command: .buildkite/steps/packer.sh
     name: "Build packer image"
     agents:
