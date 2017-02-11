@@ -5,6 +5,13 @@ export queue_name="testqueue-$$"
 
 cat << EOF
 steps:
+  - command: .buildkite/steps/lint.sh
+    name: "Run linting on shell scripts"
+    agents:
+      queue: aws-stack
+
+  - wait
+
   - command: .buildkite/steps/packer.sh
     name: "Build packer image"
     agents:

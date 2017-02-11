@@ -11,7 +11,7 @@ s3_exists() {
     aws_s3_args+=("--sse-customer-algorithm" "AES256" "--sse-customer-key" "${BUILDKITE_SECRETS_KEY}")
   fi
 
-  if ! env -i aws s3api head-object ${aws_s3_args[@]} --bucket "$bucket" --key "$key" &>/dev/null ; then
+  if ! env -i aws s3api head-object "${aws_s3_args[@]}" --bucket "$bucket" --key "$key" &>/dev/null ; then
     return 1
   fi
 }
@@ -27,7 +27,7 @@ s3_download() {
     aws_s3_args+=("--sse" "aws:kms")
   fi
 
-  if ! env -i aws s3 cp ${aws_s3_args[@]} "s3://$1/$2" /dev/stdout ; then
+  if ! env -i aws s3 cp "${aws_s3_args[@]}" "s3://$1/$2" /dev/stdout ; then
     exit 1
   fi
 }
@@ -35,6 +35,8 @@ s3_download() {
 echo "~~~ Setting up the environment"
 
 echo "Sourcing CloudFormation environment..."
+
+# shellcheck source=/dev/null
 source ~/cfn-env
 
 export AWS_REGION
@@ -78,7 +80,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     fi
   done
 
-  if [[ -z "${key_found:-}" ]] && [[ "${BUILDKITE_REPO:]}" =~ ^git ]] ; then
+  if [[ -z "${key_found:-}" ]] && [[ "${BUILDKITE_REPO:-}" =~ ^git ]] ; then
     echo "~~~ :warning: Failed to find an SSH key in secret bucket"
     exit 1
   fi
