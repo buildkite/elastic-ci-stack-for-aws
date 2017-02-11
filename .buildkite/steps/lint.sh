@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 grep -rl '^#!/.*sh' . | while read -r file ; do
   [[ $file =~ \.git ]] && continue
