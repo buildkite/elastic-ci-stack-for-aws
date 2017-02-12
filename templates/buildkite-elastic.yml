@@ -248,6 +248,7 @@ Mappings:
     us-west-1 : { Bucket: "buildkite-metrics-us-west-1" }
     us-west-2 : { Bucket: "buildkite-metrics-us-west-2" }
     eu-west-1 : { Bucket: "buildkite-metrics-eu-west-1" }
+    eu-west-2 : { Bucket: "buildkite-metrics-eu-west-2" }
     eu-central-1 : { Bucket: "buildkite-metrics-eu-central-1" }
     ap-northeast-1 : { Bucket: "buildkite-metrics-ap-northeast-1" }
     ap-northeast-2 : { Bucket: "buildkite-metrics-ap-northeast-2" }
