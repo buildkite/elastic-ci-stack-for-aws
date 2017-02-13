@@ -6,6 +6,6 @@
 }
 
 @test "Check terminationd is running" {
-	run status "terminationd"
+	run sudo status "terminationd"
 	[ $status = 0 ]
 }
