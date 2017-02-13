@@ -462,7 +462,9 @@ Resources:
         PauseTime: PT40M
         WaitOnResourceSignals: true
         # Ignore scaling alarms during update
-        SuspendProcesses: [ AlarmNotification ]
+        SuspendProcesses:
+          - AlarmNotification
+          - ScheduledActions
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
