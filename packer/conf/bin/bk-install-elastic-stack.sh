@@ -21,7 +21,7 @@ on_error() {
 		--health-status Unhealthy
 }
 
-trap 'on_error $LINENO' exit
+trap 'on_error $LINENO' ERR
 
 INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
