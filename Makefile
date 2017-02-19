@@ -37,7 +37,7 @@ download-mappings:
 	touch templates/mappings.yml
 
 build-ami:
-	cd packer/; packer build buildkite-ami.json | tee ../packer.output
+	cd packer/; packer build $(PACKER_ARGS) buildkite-ami.json | tee ../packer.output
 	cp templates/mappings.yml.template templates/mappings.yml
 	sed -i.bak "s/packer_image_id/$$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2)/" templates/mappings.yml
 
