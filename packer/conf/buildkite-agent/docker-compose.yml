@@ -8,6 +8,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - buildkite-builds:/buildkite/builds
       - /etc/buildkite-agent/hooks:/buildkite/hooks
+      - ./entrypoint.sh:/docker-entrypoint.d/elastic-stack
     environment:
       - BUILDKITE_AGENT_TOKEN
       - BUILDKITE_AGENT_META_DATA
