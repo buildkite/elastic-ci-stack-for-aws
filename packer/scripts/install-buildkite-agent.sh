@@ -16,9 +16,6 @@ sudo chown buildkite-agent: /var/lib/buildkite-agent/docker-compose.yml
 sudo touch /var/lib/buildkite-agent/.env
 sudo chown buildkite-agent: /var/lib/buildkite-agent/.env
 
-echo "Pulling buildkite-agent images..."
-sudo docker-compose -f /var/lib/buildkite-agent/docker-compose.yml pull
-
 echo "Creating hooks dir..."
 sudo mkdir -p /etc/buildkite-agent/hooks
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
