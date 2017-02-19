@@ -111,6 +111,11 @@ done
 start terminationd || true
 service awslogs restart || true
 
+# restart docker, see buildkite/elastic-ci-stack-for-aws#236
+service docker restart
+sleep 2
+docker ps
+
 /opt/aws/bin/cfn-signal \
 	--region "$AWS_REGION" \
 	--stack "$BUILDKITE_STACK_NAME" \
