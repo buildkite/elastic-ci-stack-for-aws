@@ -79,6 +79,7 @@ done
 
 export COMPOSE_FILE=/var/lib/buildkite-agent/docker-compose.yml
 
+cd /var/lib/buildkite-agent
 docker-compose up -d
 docker-compose scale "agent=$BUILDKITE_AGENTS_PER_INSTANCE"
 
