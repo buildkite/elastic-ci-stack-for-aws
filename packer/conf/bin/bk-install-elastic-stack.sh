@@ -39,6 +39,7 @@ BUILDKITE_SECRETS_BUCKET=$BUILDKITE_SECRETS_BUCKET
 BUILDKITE_AGENT_RELEASE=$BUILDKITE_AGENT_RELEASE
 BUILDKITE_AGENTS_PER_INSTANCE=$BUILDKITE_AGENTS_PER_INSTANCE
 BUILDKITE_AGENT_ACCESS_TOKEN=${BUILDKITE_AGENT_TOKEN}
+BUILDKITE_AGENT_TOKEN=${BUILDKITE_AGENT_TOKEN}
 BUILDKITE_AGENT_NAME=${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n
 BUILDKITE_AGENT_META_DATA=$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack=%s' "${BUILDKITE_QUEUE}" "${DOCKER_VERSION}" "${BUILDKITE_STACK_NAME}" "${BUILDKITE_STACK_VERSION}")
 BUILDKITE_AGENT_META_DATA_EC2=true
@@ -78,8 +79,8 @@ done
 
 export COMPOSE_FILE=/var/lib/buildkite-agent/docker-compose.yml
 
-docker-compose --verbose up -d
-docker-compose --verbose scale "agent=$BUILDKITE_AGENTS_PER_INSTANCE"
+docker-compose up -d
+docker-compose scale "agent=$BUILDKITE_AGENTS_PER_INSTANCE"
 
 # my kingdom for a decent init system
 start terminationd || true
