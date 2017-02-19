@@ -76,8 +76,14 @@ until docker ps || [ $next_wait_time -eq 5 ]; do
    sleep $(( next_wait_time++ ))
 done
 
-docker-compose -f /var/lib/buildkite-agent/docker-compose.yml up -d
-docker-compose -f /var/lib/buildkite-agent/docker-compose.yml scale "agent=$BUILDKITE_AGENTS_PER_INSTANCE"
+export COMPOSE_FILE=/var/lib/buildkite-agent/docker-compose.yml
+
+docker-compose --verbose up -d
+docker-compose --verbose scale "agent=$BUILDKITE_AGENTS_PER_INSTANCE"
+
+# my kingdom for a decent init system
+start terminationd || true
+service awslogs restart || true
 
 /opt/aws/bin/cfn-signal \
 	--region "$AWS_REGION" \
