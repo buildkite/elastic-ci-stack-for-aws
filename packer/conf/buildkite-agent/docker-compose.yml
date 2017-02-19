@@ -1,0 +1,17 @@
+version: '2.1'
+
+services:
+  agent:
+    image: "lox24/buildkite-agent:${BUILDKITE_AGENT_RELEASE:-stable}"
+    restart: onerror
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - buildkite-builds:/buildkite/builds
+      - /etc/buildkite-agent/hooks:/buildkite/hooks
+    environment:
+      - BUILDKITE_AGENT_TOKEN
+      - BUILDKITE_AGENT_META_DATA
+      - BUILDKITE_VOLUME=buildkite-data
+
+volumes:
+  buildkite-builds:

@@ -35,13 +35,7 @@ s3_download() {
 echo "~~~ Setting up the environment"
 
 echo "Sourcing CloudFormation environment..."
-
-# shellcheck source=/dev/null
-source ~/cfn-env
-
-export AWS_REGION
-export AWS_DEFAULT_REGION
-export AWS_ECR_LOGIN
+env
 
 echo "Starting an SSH Agent..."
 eval "$(ssh-agent -s)"
@@ -124,36 +118,5 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
 
 fi
 
-echo "Waiting for Docker..."
-timeout 30 docker ps
-echo
-
 unset BUILDKITE_SECRETS_BUCKET
 unset BUILDKITE_SECRETS_KEY
-
-# We need to scope the next bit to only the currently running agent's builds,
-# but we also need to control security and make sure arbitrary folders can't be
-# chmoded.
-#
-# The agent builds path isn't exposed nicely by itself. The agent name also
-# doesn't quite map to its builds path. We do have a complete checkout path,
-# but we need to chop it up, safely. The path looks like:
-#
-#   BUILDKITE_BUILD_CHECKOUT_PATH="/var/lib/buildkite-agent/builds/my-agent-1/my-pipeline-blah"
-#
-# We know the beginning of this path, it's in BUILDKITE_BUILD_PATH:
-#
-#   BUILDKITE_BUILD_PATH="/var/lib/buildkite-agent/builds"
-
-# So we can calculate the suffix as a substring:
-BUILD_PATH_SUFFIX="${BUILDKITE_BUILD_CHECKOUT_PATH#${BUILDKITE_BUILD_PATH}/}"
-# => "my-agent-1/my-pipeline-blah"
-
-# Then we can grab just the first path component by removing the longest suffix starting with a slash:
-AGENT_BUILD_NAME="${BUILD_PATH_SUFFIX%%/*}"
-# => "my-agent-1"
-
-# Now we can pass this to the sudo script which will validate it before safely chmodding:
-echo "Fixing permissions for '${AGENT_BUILD_NAME}'..."
-sudo /usr/bin/fix-buildkite-agent-builds-permissions "${AGENT_BUILD_NAME}"
-echo
