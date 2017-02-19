@@ -13,6 +13,8 @@ sudo usermod -a -G docker buildkite-agent
 echo "Adding docker-compose.yml for buildkite..."
 sudo cp /tmp/conf/buildkite-agent/docker-compose.yml /var/lib/buildkite-agent/
 sudo chown buildkite-agent: /var/lib/buildkite-agent/docker-compose.yml
+sudo cp /tmp/conf/buildkite-agent/entrypoint.sh /var/lib/buildkite-agent/
+sudo chown buildkite-agent: /var/lib/buildkite-agent/entrypoint.sh
 sudo touch /var/lib/buildkite-agent/.env
 sudo chown buildkite-agent: /var/lib/buildkite-agent/.env
 
