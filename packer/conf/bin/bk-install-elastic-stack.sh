@@ -9,10 +9,6 @@ on_error() {
 	local exitCode="$?"
 	local errorLine="$1"
 
-	# aws autoscaling set-instance-health \
-	# 	--instance-id "$INSTANCE_ID" \
-	# 	--health-status Unhealthy
-
 	/opt/aws/bin/cfn-signal \
 		--region "$AWS_REGION" \
 		--stack "$BUILDKITE_STACK_NAME" \
