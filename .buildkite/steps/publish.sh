@@ -21,6 +21,10 @@ DESTINATION_REGIONS=(
 DESTINATION_AMIS=(
 )
 
+is_latest_tag() {
+   [[ "$BUILDKITE_TAG" = $(git describe origin/master --tags --match='v*') ]]
+}
+
 copy_ami_to_region() {
   local source_ami_id="$1"
   local source_region="$2"
@@ -94,7 +98,7 @@ Mappings:
     us-east-1 : { AMI: $base_image_id }
 EOF
 
-  if [[ $BUILDKITE_BRANCH == "master" ]] ; then
+  if [[ $BUILDKITE_BRANCH == "master" ]] || is_latest_tag ; then
     for region in ${DESTINATION_REGIONS[*]}; do
       echo "--- Copying $image_id to $region"
 
@@ -156,7 +160,7 @@ echo "--- Building and publishing stack"
 make setup build
 
 # Publish the top-level mappings only on when we see the most recent tag on master
-if [[ "$BUILDKITE_TAG" = $(git describe origin/master --tags --match='v*') ]] ; then
+if is_latest_tag ; then
   aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
   aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
 else
