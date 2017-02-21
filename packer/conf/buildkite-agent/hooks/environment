@@ -102,6 +102,26 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
       eval "$envvars"
     fi
   done
+
+  git_credentials_paths=(
+    "git-credentials"
+    "${secrets_prefix}/git-credentials"
+  )
+
+  echo "~~~ Downloading git-credentials files"
+
+  for key in ${git_credentials_paths[*]} ; do
+    if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
+      if ! envvars=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
+        echo "~~~ :warning: Failed to download git-credentials from $key"
+        exit 1
+      fi
+      echo "Downloading git-credentials $key"
+      mv "$key" .git-credentials
+      git config credential.helper "store --file=$PWD/.git-credentials"
+    fi
+  done
+
 fi
 
 echo "Waiting for Docker..."
