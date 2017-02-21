@@ -15,10 +15,6 @@ on_error() {
 		--reason "Error on line $errorLine: $(tail -n 1 /var/log/elastic-stack.log)" \
 		--resource "AgentAutoScaleGroup" \
 		--exit-code "$exitCode"
-
-	aws autoscaling set-instance-health \
-		--instance-id "$INSTANCE_ID" \
-		--health-status Unhealthy
 }
 
 trap 'on_error $LINENO' ERR
