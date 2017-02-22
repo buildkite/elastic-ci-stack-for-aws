@@ -1,5 +1,5 @@
 #!/bin/bash
 set -euo pipefail
 
-# prune stopped containers and images older than 7 days
-docker system prune –force –filter "until=10080m"
+# prune stopped containers and images
+docker system prune -f
