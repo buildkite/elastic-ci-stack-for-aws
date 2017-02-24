@@ -98,27 +98,25 @@ Mappings:
     us-east-1 : { AMI: $base_image_id }
 EOF
 
-  if [[ $BUILDKITE_BRANCH == "master" ]] || is_latest_tag ; then
-    for region in ${DESTINATION_REGIONS[*]}; do
-      echo "--- Copying $image_id to $region"
+  for region in ${DESTINATION_REGIONS[*]}; do
+    echo "--- Copying $image_id to $region"
 
-      region_ami=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
+    region_ami=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
 
-      DESTINATION_AMIS+=("$region_ami")
-    done
+    DESTINATION_AMIS+=("$region_ami")
+  done
 
-    echo "--- Waiting for AMIs to become available"
+  echo "--- Waiting for AMIs to become available"
 
-    for ((i=0; i<${#DESTINATION_AMIS[*]}; i++)); do
-      region="${DESTINATION_REGIONS[i]}"
-      region_ami="${DESTINATION_AMIS[i]}"
+  for ((i=0; i<${#DESTINATION_AMIS[*]}; i++)); do
+    region="${DESTINATION_REGIONS[i]}"
+    region_ami="${DESTINATION_AMIS[i]}"
 
-      wait_for_ami_to_be_available "$region_ami" "$region"
-      make_ami_public "$region_ami" "$region"
+    wait_for_ami_to_be_available "$region_ami" "$region"
+    make_ami_public "$region_ami" "$region"
 
-      echo "    $region : { AMI: $region_ami }" >> "$destination_yml"
-    done
-  fi
+    echo "    $region : { AMI: $region_ami }" >> "$destination_yml"
+  done
 }
 
 generate_mappings() {
