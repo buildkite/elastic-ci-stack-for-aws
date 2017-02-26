@@ -3,7 +3,7 @@ set -euo pipefail
 
 mkdir -p build
 
-packer_files_sha=$(find packer/ -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
+packer_files_sha=$(find packer/ .buildkite/steps/packer.sh -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
 echo "Packer files hash is $packer_files_sha"
 
 stable_agent_sha=$(curl -Lfs https://download.buildkite.com/agent/stable/latest/buildkite-agent-linux-amd64.sha256)
