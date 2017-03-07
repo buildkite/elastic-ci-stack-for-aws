@@ -1,8 +1,11 @@
 #!/bin/sh
 #
+# chkconfig:   2345 86 05
+# description: The Buildkite Build Agent
+
 ### BEGIN INIT INFO
 # Provides:          buildkite-agent
-# Required-Start:    $network $local_fs $remote_fs
+# Required-Start:    $network $local_fs $remote_fs docker
 # Required-Stop:     $remote_fs
 # Should-Start:      $named
 # Should-Stop:

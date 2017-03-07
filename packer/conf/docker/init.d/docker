@@ -4,13 +4,13 @@
 #
 #       Daemon for docker.com
 #
-# chkconfig:   2345 95 05
+# chkconfig:   2345 85 05
 # description: Daemon for docker.com
 
 ### BEGIN INIT INFO
 # Provides:       docker
 # Required-Start: $network cgconfig
-# Required-Stop:
+# Required-Stop: buildkite-agent
 # Should-Start:
 # Should-Stop:
 # Default-Start: 2 3 4 5
