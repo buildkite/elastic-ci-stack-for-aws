@@ -9,7 +9,8 @@ TEMPLATES=templates/description.yml \
   templates/buildkite-elastic.yml \
   templates/autoscale.yml \
   templates/vpc.yml \
-  templates/metrics.yml
+  templates/metrics.yml \
+  templates/outputs.yml
 
 all: setup build
 
