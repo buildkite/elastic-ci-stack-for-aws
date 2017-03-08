@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   agent:
-    image: "lox24/buildkite-agent:${BUILDKITE_AGENT_RELEASE:-stable}"
+    image: "buildkite/agent:${BUILDKITE_AGENT_RELEASE:-stable}"
     restart: on-failure:10
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
