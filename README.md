@@ -95,7 +95,7 @@ If you really want to disable KMS encryption, you can set `BUILDKITE_USE_KMS=fal
 
 ## What’s On Each Machine?
 
-* [Amazon Linux 2016.09.1](https://aws.amazon.com/amazon-linux-ami/)
+* [Amazon Linux 2016.03.3](https://aws.amazon.com/amazon-linux-ami/)
 * [Buildkite Agent](https://buildkite.com/docs/agent)
 * [Docker 17.03.0-ce](https://www.docker.com)
 * [Docker Compose 1.11.2](https://docs.docker.com/compose/)
