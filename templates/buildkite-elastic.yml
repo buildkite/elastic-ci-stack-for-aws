@@ -39,7 +39,7 @@ Metadata:
       - Label:
           default: Auto-scaling Configuration
         Parameters:
-        - DesiredSize
+        - DesiredCapacity
         - MinSize
         - MaxSize
         - ScaleUpAdjustment
@@ -138,6 +138,12 @@ Parameters:
     Description: Spot bid price to use for the instances. 0 means normal (non-spot) instances
     Type: String
     Default: 0
+
+  DesiredCapacity:
+    Description: Desired number of instances to start with
+    Type: Number
+    Default: 0
+    MinValue: 0
 
   MaxSize:
     Description: Maximum number of instances
@@ -420,7 +426,7 @@ Resources:
         $(Subnets)
       ]
       LaunchConfigurationName: $(AgentLaunchConfiguration)
-      DesiredCapacity: $(MinSize)
+      DesiredCapacity: $(DesiredCapacity)
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
       MetricsCollection:
