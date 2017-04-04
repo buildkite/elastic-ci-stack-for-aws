@@ -25,7 +25,7 @@ while true; do
   if [[ "${LIFECYCLE_STATE}" == "Terminating:Wait" ]]; then
     break
   else
-    sleep 15 # seconds
+    sleep 60 # seconds
   fi
 done
 
