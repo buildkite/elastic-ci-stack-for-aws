@@ -70,7 +70,7 @@ aws cloudformation create-stack \
 
 The stack refers to a `SecretsBucket` parameter which will allow your agents to access SSH private keys for source control, and environment hooks to provide secrets to your builds.
 
-> You will need to create this S3 bucket yourself, but the stack will automatically create permissions for access to it. 
+> You will need to create this S3 bucket yourself, but the stack will automatically create permissions for access to it. Make sure to create the bucket in the same region as your stack.
 
 The following paths in the bucket are checked. 
 
