@@ -4,7 +4,7 @@ set -eu -o pipefail
 DOCKER_VERSION=17.03.0-ce
 DOCKER_COMPOSE_VERSION=1.11.2
 
-# This performs a manual install of Docker 1.12. The init.d script is from the
+# This performs a manual install of Docker. The init.d script is from the
 # 1.11 yum package
 
 echo "Installing docker..."
@@ -24,6 +24,7 @@ rm docker.tgz
 
 sudo cp /tmp/conf/docker/init.d/docker /etc/init.d/docker
 sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
+sudo chkconfig docker off
 
 echo "Downloading docker-compose..."
 sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64

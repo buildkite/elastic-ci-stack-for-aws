@@ -102,8 +102,8 @@ start terminationd || true
 service awslogs restart || true
 
 # start up docker, wait for it to initialize
-chkconfig docker on
 service docker start
+chkconfig docker on
 docker ps
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
