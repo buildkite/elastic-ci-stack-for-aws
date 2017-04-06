@@ -51,6 +51,12 @@ Metadata:
         - ECRAccessPolicy
 
 Parameters:
+  Debug:
+    Description: Enables docker and buildkite debugging
+    AllowedValues: [ "true", "false" ]
+    Default: "false"
+    Type: String
+
   KeyName:
     Description: SSH keypair used to access the buildkite instances
     Type: AWS::EC2::KeyPair::KeyName
@@ -372,6 +378,7 @@ Resources:
         #!/bin/bash -xv
         BUILDKITE_STACK_NAME="$(AWS::StackName)" \
         BUILDKITE_STACK_VERSION=dev \
+        STACK_DEBUG="$(Debug)" \
         BUILDKITE_SECRETS_BUCKET="$(SecretsBucket)" \
         BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)" \
         BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)" \
