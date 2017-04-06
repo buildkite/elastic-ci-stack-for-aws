@@ -97,20 +97,20 @@ if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 	rm /tmp/elastic_bootstrap
 fi
 
+# my kingdom for a decent init system
+start terminationd || true
+service awslogs restart || true
+
+# start up docker, wait for it to initialize
+chkconfig docker on
+service docker start
+docker ps
+
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
 	service "buildkite-agent-${i}" start
 	chkconfig --add "buildkite-agent-${i}"
 done
-
-# my kingdom for a decent init system
-start terminationd || true
-service awslogs restart || true
-
-# restart docker, see buildkite/elastic-ci-stack-for-aws#236
-service docker restart
-sleep 2
-docker ps
 
 /opt/aws/bin/cfn-signal \
 	--region "$AWS_REGION" \
