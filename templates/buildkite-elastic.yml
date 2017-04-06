@@ -51,7 +51,7 @@ Metadata:
         - ECRAccessPolicy
 
 Parameters:
-  KeyName:
+  Debug:
     Description: Enables docker and buildkite debugging
     Type: Boolean
     Default: false
