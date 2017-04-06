@@ -21,8 +21,12 @@ DESTINATION_REGIONS=(
 DESTINATION_AMIS=(
 )
 
+is_tag_build() {
+   [[ "$BUILDKITE_TAG" = "$BUILDKITE_BRANCH" ]]
+}
+
 is_latest_tag() {
-   [[ "$BUILDKITE_TAG" = $(git describe origin/master --tags --match='v*') ]]
+   [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
 }
 
 copy_ami_to_region() {
@@ -98,7 +102,7 @@ Mappings:
     us-east-1 : { AMI: $base_image_id }
 EOF
 
-  if [[ $BUILDKITE_BRANCH == "master" ]] || is_latest_tag ; then
+  if [[ $BUILDKITE_BRANCH == "master" ]] || is_tag_build ; then
     for region in ${DESTINATION_REGIONS[*]}; do
       echo "--- Copying $image_id to $region"
 

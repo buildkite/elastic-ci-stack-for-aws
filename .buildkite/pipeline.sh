@@ -43,6 +43,8 @@ steps:
     agents:
       queue: aws-stack
     artifact_paths: "templates/mappings.yml;build/aws-stack.json"
+    concurrency_group: "aws-stack-publish"
+    concurrency: 1
 
   - wait
 
