@@ -53,8 +53,9 @@ Metadata:
 Parameters:
   Debug:
     Description: Enables docker and buildkite debugging
-    Type: Boolean
-    Default: false
+    AllowedValues: [ "true", "false" ]
+    Default: "false"
+    Type: String
 
   KeyName:
     Description: SSH keypair used to access the buildkite instances
