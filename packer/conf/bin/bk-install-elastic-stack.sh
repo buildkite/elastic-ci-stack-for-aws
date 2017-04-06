@@ -62,6 +62,7 @@ bootstrap-script="${BOOTSTRAP_SCRIPT}"
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
+debug=${STACK_DEBUG:-false}
 EOF
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
@@ -106,6 +107,13 @@ done
 # my kingdom for a decent init system
 start terminationd || true
 service awslogs restart || true
+
+# conditionally set debug in docker
+test "$STACK_DEBUG" = "true" && cat << EOF > /etc/docker/daemon.json
+{
+    "debug": true
+}
+EOF
 
 # restart docker, see buildkite/elastic-ci-stack-for-aws#236
 service docker restart
