@@ -26,7 +26,7 @@ is_tag_build() {
 }
 
 is_latest_tag() {
-   [[ "$BUILDKITE_TAG" = $(git describe origin/master --tags --match='v*') ]]
+   [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
 }
 
 copy_ami_to_region() {
