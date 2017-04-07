@@ -102,7 +102,7 @@ start terminationd || true
 service awslogs restart || true
 
 # start up docker, wait for it to initialize
-service docker start
+service docker start || true
 chkconfig docker on
 docker ps
 
