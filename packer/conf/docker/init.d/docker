@@ -66,6 +66,7 @@ start() {
     fi
 
     check_for_cleanup
+    set -x
 
     if ! [ -f $pidfile ]; then
         prestart
