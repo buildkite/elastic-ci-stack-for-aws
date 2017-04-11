@@ -24,7 +24,7 @@ rm docker.tgz
 
 sudo cp /tmp/conf/docker/init.d/docker /etc/init.d/docker
 sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
-sudo chkconfig docker off
+sudo chkconfig docker on
 
 echo "Downloading docker-compose..."
 sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64

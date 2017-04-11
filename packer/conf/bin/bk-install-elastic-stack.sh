@@ -101,10 +101,11 @@ fi
 start terminationd || true
 service awslogs restart || true
 
-# start up docker, wait for it to initialize
-service docker start || true
-chkconfig docker on
-docker ps
+# wait for docker to start
+next_wait_time=0
+until docker ps || [ $next_wait_time -eq 5 ]; do
+   sleep $(( next_wait_time++ ))
+done
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
