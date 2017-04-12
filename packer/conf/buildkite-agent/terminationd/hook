@@ -5,7 +5,7 @@ set -eu -o pipefail
 export COMPOSE_FILE=/var/lib/buildkite-agent/docker-compose.yml
 
 cd /var/lib/buildkite-agent
-docker-compose stop agent
+docker-compose kill -s SIGTERM agent
 
 while test -n "$(docker-compose ps -q)" ; do
   echo "Waiting for all buildkite-agent containers to have stopped..."
