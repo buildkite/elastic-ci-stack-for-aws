@@ -140,7 +140,7 @@ Parameters:
     Default: 0
 
   DesiredCapacity:
-    Description: Desired number of instances to start with
+    Description: Desired number of instances to start with, or zero for unset
     Type: Number
     Default: 0
     MinValue: 0
@@ -240,6 +240,9 @@ Conditions:
 
     CreateMetricsStack:
       !And [ Condition: UseAutoscaling, !Not [ !Equals [ $(BuildkiteApiAccessToken), "" ] ] ]
+
+    UseDesiredCapacity:
+      !Not [ !Equals [ $(DesiredCapacity), 0 ] ]
 
 Mappings:
   ECRManagedPolicy:
@@ -426,7 +429,11 @@ Resources:
         $(Subnets)
       ]
       LaunchConfigurationName: $(AgentLaunchConfiguration)
-      DesiredCapacity: $(DesiredCapacity)
+      DesiredCapacity: !If [
+        "UseDesiredCapacity",
+        $(DesiredCapacity),
+        '$(AWS::NoValue)'
+      ]
       MinSize: $(MinSize)
       MaxSize: $(MaxSize)
       MetricsCollection:
