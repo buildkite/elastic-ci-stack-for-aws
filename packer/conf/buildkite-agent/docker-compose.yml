@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   agent:
-    image: "${BUILDKITE_AGENT_IMAGE-buildkite/agent}:${BUILDKITE_AGENT_RELEASE:-stable}"
+    image: "${BUILDKITE_AGENT_IMAGE:-buildkite/agent}:${BUILDKITE_AGENT_RELEASE:-stable}"
     restart: on-failure:10
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
