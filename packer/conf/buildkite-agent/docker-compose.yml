@@ -12,7 +12,7 @@ services:
     environment:
       - BUILDKITE_AGENT_TOKEN
       - BUILDKITE_AGENT_META_DATA
-      - BUILDKITE_VOLUME=buildkite-data
+      - BUILDKITE_BUILDS_VOLUME=buildkite-builds
 
 volumes:
   buildkite-builds:
