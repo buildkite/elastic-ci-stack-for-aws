@@ -7,6 +7,7 @@ Metadata:
           default: Buildkite Configuration
         Parameters:
         - BuildkiteAgentRelease
+        - BuildkiteAgentImage
         - BuildkiteAgentToken
         - BuildkiteQueue
         - BuildkiteOrgSlug
@@ -56,12 +57,18 @@ Parameters:
     MinLength: 1
 
   BuildkiteAgentRelease:
+    Description: The release of the Buildkite agent to use, corresponds to a tag from https://hub.docker.com/r/buildkite/agent/tags/
     Type: String
     AllowedValues:
       - stable
       - beta
       - edge
     Default: "stable"
+
+  BuildkiteAgentImage:
+    Description: The docker image to use for the agents
+    Type: String
+    Default: "buildkite/agent"
 
   BuildkiteAgentToken:
     Description: Buildkite agent token
