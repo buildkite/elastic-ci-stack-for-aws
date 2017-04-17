@@ -394,6 +394,7 @@ Resources:
         BUILDKITE_AGENT_TOKEN="$(BuildkiteAgentToken)" \
         BUILDKITE_AGENTS_PER_INSTANCE="$(AgentsPerInstance)" \
         BUILDKITE_AGENT_RELEASE="$(BuildkiteAgentRelease)" \
+        BUILDKITE_AGENT_IMAGE="$(BuildkiteAgentImage)" \
         BUILDKITE_QUEUE="$(BuildkiteQueue)" \
         BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="$(BootstrapScriptUrl)" \
         BUILDKITE_AUTHORIZED_USERS_URL="$(AuthorizedUsersUrl)" \
