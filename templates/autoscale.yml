@@ -6,7 +6,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown: 120
+      Cooldown: 300
       ScalingAdjustment : $(ScaleUpAdjustment)
 
   AgentScaleDownPolicy:
@@ -15,7 +15,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: $(AgentAutoScaleGroup)
-      Cooldown: 60
+      Cooldown: 300
       ScalingAdjustment: $(ScaleDownAdjustment)
 
   AgentUtilizationAlarmHigh:
@@ -39,12 +39,12 @@ Resources:
    Type: AWS::CloudWatch::Alarm
    Condition: UseAutoscaling
    Properties:
-      AlarmDescription: Scale-down if UnfinishedJobs == 0 for 30 minutes
+      AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
       MetricName: UnfinishedJobsCount
       Namespace: Buildkite
       Statistic: Maximum
-      Period: 300
-      EvaluationPeriods: 6
+      Period: $(ScaleDownPeriod)
+      EvaluationPeriods: 1
       Threshold: 0
       AlarmActions: [ $(AgentScaleDownPolicy) ]
       Dimensions:
