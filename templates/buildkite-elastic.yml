@@ -469,18 +469,8 @@ Resources:
         Timeout: PT5M
         Count: $(MinSize)
     UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: 0
-        MaxBatchSize: 5
-        # On rollback this might have to wait for an agent to finish
-        # a job. The agent's init script waits 30 minutes, so we wait
-        # a maximum of 40 minutes to be safe.
-        PauseTime: PT40M
-        WaitOnResourceSignals: true
-        # Ignore scaling alarms during update
-        SuspendProcesses:
-          - AlarmNotification
-          - ScheduledActions
+      AutoScalingReplacingUpdate:
+        WillReplace: true
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
