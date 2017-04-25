@@ -61,7 +61,7 @@ Parameters:
       - stable
       - beta
       - edge
-    Default: "stable"
+    Default: "beta"
 
   BuildkiteAgentToken:
     Description: Buildkite agent token
