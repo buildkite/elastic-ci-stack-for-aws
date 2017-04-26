@@ -1,11 +1,20 @@
 
+Mappings:
+  SubnetConfig:
+    VPC: { CIDR: 10.0.0.0/16 }
+    Subnet0: { CIDR: 10.0.1.0/24 }
+    Subnet1: { CIDR: 10.0.2.0/24 }
+    Subnet2: { CIDR: 10.0.3.0/24 }
+
 Resources:
   Vpc:
     Type: AWS::EC2::VPC
     Condition: CreateVpcResources
     Properties:
-      CidrBlock: 10.0.0.0/16
+      CidrBlock: !FindInMap [ SubnetConfig, VPC, CIDR ]
       InstanceTenancy: default
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
       Tags:
         - Key: Name
           Value: $(AWS::StackName)
@@ -33,9 +42,9 @@ Resources:
       AvailabilityZone: !If [
         "UseSpecifiedAvailabilityZones",
         !Select [ 0, $(AvailabilityZones) ],
-        !Select [ 0, !GetAZs '$(AWS::Region)' ]
+        !Select [ 0, !GetAZs '' ]
       ]
-      CidrBlock: 10.0.1.0/24
+      CidrBlock: !FindInMap [ SubnetConfig, Subnet0, CIDR ]
       VpcId: $(Vpc)
       Tags:
         - Key: Name
@@ -48,15 +57,39 @@ Resources:
       AvailabilityZone: !If [
         "UseSpecifiedAvailabilityZones",
         !Select [ 1, $(AvailabilityZones) ],
-        !Select [ 1, !GetAZs '$(AWS::Region)' ]
+        !Select [ 1, !GetAZs '' ]
       ]
-      CidrBlock: 10.0.2.0/24
+      CidrBlock: !FindInMap [ SubnetConfig, Subnet1, CIDR ]
       VpcId: $(Vpc)
-      Tags:
-        - Key: Name
-          Value: $(AWS::StackName)
 
-  Routes:
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Condition: CreateVpcResources
+    Properties:
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !If [
+        "UseSpecifiedAvailabilityZones",
+        !Select [ 0, $(AvailabilityZones) ],
+        !Select [ 0, !GetAZs '' ]
+      ]
+      CidrBlock: !FindInMap [ SubnetConfig, Subnet2, CIDR ]
+      VpcId: $(Vpc)
+
+  NatGatewayEIP:
+    Type: 'AWS::EC2::EIP'
+    Condition: CreateVpcResources
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: 'AWS::EC2::NatGateway'
+    Condition: CreateVpcResources
+    DependsOn: NatGatewayEIP
+    Properties:
+      AllocationId: !GetAtt [ NatGatewayEIP, AllocationId ]
+      SubnetId: $(Subnet2)
+
+  RoutesPublic:
     Type: AWS::EC2::RouteTable
     Condition: CreateVpcResources
     Properties:
@@ -65,24 +98,48 @@ Resources:
         - Key: Name
           Value: $(AWS::StackName)
 
-  RouteDefault:
+  RoutesPrivate:
+    Type: AWS::EC2::RouteTable
+    Condition: CreateVpcResources
+    Properties:
+      VpcId: $(Vpc)
+      Tags:
+        - Key: Name
+          Value: $(AWS::StackName)
+
+  DefaultGatewayRoute:
     Type: AWS::EC2::Route
     Condition: CreateVpcResources
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: $(Gateway)
-      RouteTableId: $(Routes)
+      RouteTableId: $(RoutesPublic)
+
+  NatGatewayRoute:
+    Type: AWS::EC2::Route
+    Condition: CreateVpcResources
+    Properties:
+      RouteTableId: $(RoutesPrivate)
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: $(NatGateway)
 
   Subnet0Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: CreateVpcResources
     Properties:
       SubnetId: $(Subnet0)
-      RouteTableId: $(Routes)
+      RouteTableId: $(RoutesPrivate)
 
   Subnet1Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: CreateVpcResources
     Properties:
       SubnetId: $(Subnet1)
-      RouteTableId: $(Routes)
+      RouteTableId: $(RoutesPrivate)
+
+  Subnet2Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVpcResources
+    Properties:
+      SubnetId: $(Subnet2)
+      RouteTableId: $(RoutesPublic)
