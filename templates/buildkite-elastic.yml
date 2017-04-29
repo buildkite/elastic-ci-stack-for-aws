@@ -25,6 +25,7 @@ Metadata:
         Parameters:
         - ImageId
         - InstanceType
+        - EBSOptimized
         - AgentsPerInstance
         - KeyName
         - SpotPrice
@@ -132,6 +133,11 @@ Parameters:
     Type: String
     Default: t2.nano
     MinLength: 1
+
+  EBSOptimized:
+    Description: Optional - Enabled EBSOptimized for the instance
+    Type: String
+    Default: "false"
 
   SpotPrice:
     Description: Spot bid price to use for the instances. 0 means normal (non-spot) instances
@@ -370,6 +376,7 @@ Resources:
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
       InstanceType: $(InstanceType)
+      EBSOptimized: $(EBSOptimized)
       SpotPrice: !If [ "UseSpotInstances", $(SpotPrice), '$(AWS::NoValue)' ]
       ImageId : !If [
         "UseDefaultAMI",
