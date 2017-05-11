@@ -8,7 +8,7 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value: $(AWS::StackName)
+          Value: !Ref 'AWS::StackName'
 
   Gateway:
     Type: AWS::EC2::InternetGateway
@@ -16,15 +16,15 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: $(AWS::StackName)
+          Value: !Ref 'AWS::StackName'
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     DependsOn: Gateway
     Condition: CreateVpcResources
     Properties:
-      InternetGatewayId: $(Gateway)
-      VpcId: $(Vpc)
+      InternetGatewayId: !Ref Gateway
+      VpcId: !Ref Vpc
 
   Subnet0:
     Type: AWS::EC2::Subnet
@@ -32,14 +32,14 @@ Resources:
     Properties:
       AvailabilityZone: !If [
         "UseSpecifiedAvailabilityZones",
-        !Select [ 0, $(AvailabilityZones) ],
-        !Select [ 0, !GetAZs '$(AWS::Region)' ]
+        !Select [ 0, !Ref AvailabilityZones ],
+        !Select [ 0, !GetAZs '' ]
       ]
       CidrBlock: 10.0.1.0/24
-      VpcId: $(Vpc)
+      VpcId: !Ref Vpc
       Tags:
         - Key: Name
-          Value: $(AWS::StackName)
+          Value: !Ref 'AWS::StackName'
 
   Subnet1:
     Type: AWS::EC2::Subnet
@@ -47,42 +47,42 @@ Resources:
     Properties:
       AvailabilityZone: !If [
         "UseSpecifiedAvailabilityZones",
-        !Select [ 1, $(AvailabilityZones) ],
-        !Select [ 1, !GetAZs '$(AWS::Region)' ]
+        !Select [ 1, !Ref AvailabilityZones ],
+        !Select [ 1, !GetAZs '' ]
       ]
       CidrBlock: 10.0.2.0/24
-      VpcId: $(Vpc)
+      VpcId: !Ref Vpc
       Tags:
         - Key: Name
-          Value: $(AWS::StackName)
+          Value: !Ref 'AWS::StackName'
 
   Routes:
     Type: AWS::EC2::RouteTable
     Condition: CreateVpcResources
     Properties:
-      VpcId: $(Vpc)
+      VpcId: !Ref Vpc
       Tags:
         - Key: Name
-          Value: $(AWS::StackName)
+          Value: !Ref 'AWS::StackName'
 
   RouteDefault:
     Type: AWS::EC2::Route
     Condition: CreateVpcResources
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: $(Gateway)
-      RouteTableId: $(Routes)
+      GatewayId: !Ref Gateway
+      RouteTableId: !Ref Routes
 
   Subnet0Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: CreateVpcResources
     Properties:
-      SubnetId: $(Subnet0)
-      RouteTableId: $(Routes)
+      SubnetId: !Ref Subnet0
+      RouteTableId: !Ref Routes
 
   Subnet1Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: CreateVpcResources
     Properties:
-      SubnetId: $(Subnet1)
-      RouteTableId: $(Routes)
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref Routes
