@@ -1,4 +1,4 @@
----
+
 Outputs:
   AutoScalingGroupName:
-    Value: !Ref AgentAutoScaleGroup
+    Value: { Ref: AgentAutoScaleGroup }

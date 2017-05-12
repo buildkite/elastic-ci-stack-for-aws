@@ -5,18 +5,18 @@ Resources:
     Condition: UseAutoscaling
     Properties:
       AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
       Cooldown: 300
-      ScalingAdjustment : !Ref ScaleUpAdjustment
+      ScalingAdjustment : { Ref: ScaleUpAdjustment }
 
   AgentScaleDownPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Condition: UseAutoscaling
     Properties:
       AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
       Cooldown: 300
-      ScalingAdjustment: !Ref ScaleDownAdjustment
+      ScalingAdjustment: { Ref: ScaleDownAdjustment }
 
   AgentUtilizationAlarmHigh:
    Type: AWS::CloudWatch::Alarm
@@ -29,10 +29,10 @@ Resources:
       Period: 60
       EvaluationPeriods: 1
       Threshold: 0
-      AlarmActions: [ !Ref AgentScaleUpPolicy ]
+      AlarmActions: [ { Ref: AgentScaleUpPolicy } ]
       Dimensions:
         - Name: Queue
-          Value: !Ref BuildkiteQueue
+          Value: { Ref: BuildkiteQueue }
       ComparisonOperator: GreaterThanThreshold
 
   AgentUtilizationAlarmLow:
@@ -43,11 +43,11 @@ Resources:
       MetricName: UnfinishedJobsCount
       Namespace: Buildkite
       Statistic: Maximum
-      Period: !Ref ScaleDownPeriod
+      Period: { Ref: ScaleDownPeriod }
       EvaluationPeriods: 1
       Threshold: 0
-      AlarmActions: [ !Ref AgentScaleDownPolicy ]
+      AlarmActions: [ { Ref: AgentScaleDownPolicy } ]
       Dimensions:
         - Name: Queue
-          Value: !Ref BuildkiteQueue
+          Value: { Ref: BuildkiteQueue }
       ComparisonOperator: LessThanOrEqualToThreshold

@@ -8,7 +8,7 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value: !Ref 'AWS::StackName'
+          Value: { Ref: 'AWS::StackName' }
 
   Gateway:
     Type: AWS::EC2::InternetGateway
@@ -16,73 +16,73 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref 'AWS::StackName'
+          Value: { Ref: 'AWS::StackName' }
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     DependsOn: Gateway
     Condition: CreateVpcResources
     Properties:
-      InternetGatewayId: !Ref Gateway
-      VpcId: !Ref Vpc
+      InternetGatewayId: { Ref: Gateway }
+      VpcId: { Ref: Vpc }
 
   Subnet0:
     Type: AWS::EC2::Subnet
     Condition: CreateVpcResources
     Properties:
-      AvailabilityZone: !If [
-        "UseSpecifiedAvailabilityZones",
-        !Select [ 0, !Ref AvailabilityZones ],
-        !Select [ 0, !GetAZs '' ]
-      ]
+      AvailabilityZone:
+        "Fn::If":
+          - "UseSpecifiedAvailabilityZones"
+          - { "Fn::Select": [ 0, { Ref: AvailabilityZones } ] }
+          - { "Fn::Select": [ 0, { "Fn::GetAZs": '' } ] }
       CidrBlock: 10.0.1.0/24
-      VpcId: !Ref Vpc
+      VpcId: { Ref: Vpc }
       Tags:
         - Key: Name
-          Value: !Ref 'AWS::StackName'
+          Value: { Ref: 'AWS::StackName' }
 
   Subnet1:
     Type: AWS::EC2::Subnet
     Condition: CreateVpcResources
     Properties:
-      AvailabilityZone: !If [
-        "UseSpecifiedAvailabilityZones",
-        !Select [ 1, !Ref AvailabilityZones ],
-        !Select [ 1, !GetAZs '' ]
-      ]
+      AvailabilityZone:
+        "Fn::If":
+          - "UseSpecifiedAvailabilityZones"
+          - { "Fn::Select": [ 1, { Ref: AvailabilityZones } ] }
+          - { "Fn::Select": [ 1, { "Fn::GetAZs": '' } ] }
       CidrBlock: 10.0.2.0/24
-      VpcId: !Ref Vpc
+      VpcId: { Ref: Vpc }
       Tags:
         - Key: Name
-          Value: !Ref 'AWS::StackName'
+          Value: { Ref: 'AWS::StackName' }
 
   Routes:
     Type: AWS::EC2::RouteTable
     Condition: CreateVpcResources
     Properties:
-      VpcId: !Ref Vpc
+      VpcId: { Ref: Vpc }
       Tags:
         - Key: Name
-          Value: !Ref 'AWS::StackName'
+          Value: { Ref: 'AWS::StackName' }
 
   RouteDefault:
     Type: AWS::EC2::Route
     Condition: CreateVpcResources
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref Gateway
-      RouteTableId: !Ref Routes
+      GatewayId: { Ref: Gateway }
+      RouteTableId: { Ref: Routes }
 
   Subnet0Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: CreateVpcResources
     Properties:
-      SubnetId: !Ref Subnet0
-      RouteTableId: !Ref Routes
+      SubnetId: { Ref: Subnet0 }
+      RouteTableId: { Ref: Routes }
 
   Subnet1Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: CreateVpcResources
     Properties:
-      SubnetId: !Ref Subnet1
-      RouteTableId: !Ref Routes
+      SubnetId: { Ref: Subnet1 }
+      RouteTableId: { Ref: Routes }
