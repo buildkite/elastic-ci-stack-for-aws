@@ -2,6 +2,18 @@ const fs = require('fs');
 const glob = require('glob');
 const yaml = require('js-yaml');
 const extendify = require('extendify');
+const proc = require('child_process');
+
+const sortOrder = [
+  'AWSTemplateFormatVersion',
+  'Description',
+  'Parameters',
+  'Mappings',
+  'Conditions',
+  'Resources',
+  'Metadata',
+  'Outputs',
+]
 
 glob("templates/*.yml", function (er, files) {
   const contents = files.map(f => {
@@ -11,9 +23,29 @@ glob("templates/*.yml", function (er, files) {
     inPlace: false,
     isDeep: true
   });
-  const merged = contents.reduce(extend);
-  console.log("Generating build/aws-stack.json");
+
+  var merged = contents.reduce(extend);
+  var sorted = {};
+
+  // sort by a specific key order
+  var keys = Object.keys(merged).sort(function(a,b){
+    return sortOrder.indexOf(a) - sortOrder.indexOf(b);
+  });
+
+  for(var index in keys) {
+    var key = keys[index];
+    sorted[key] = merged[key];
+  }
+
+  const version = proc.execSync('git describe --tags --candidates=1');
+
+  // set a description
+  sorted.Description = "Buildkite stack " + String(version).trim();
+
   fs.existsSync("build") || fs.mkdirSync("build");
-  fs.writeFileSync("build/aws-stack.yaml", yaml.safeDump(merged));
-  fs.writeFileSync("build/aws-stack.json", JSON.stringify(merged, null, 2));
+  console.log("Generating build/aws-stack.yml");
+  fs.writeFileSync("build/aws-stack.yml", yaml.safeDump(sorted));
+
+  console.log("Generating build/aws-stack.json");
+  fs.writeFileSync("build/aws-stack.json", JSON.stringify(sorted, null, 2));
 });
