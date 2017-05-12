@@ -18,12 +18,11 @@ build: build/aws-stack.json
 
 .DELETE_ON_ERROR:
 build/aws-stack.json: $(TEMPLATES) templates/mappings.yml
-	-mkdir -p build/
-	bundle exec cfoo $^ > $@
+	npm start
 	sed -i.bak "s/BUILDKITE_STACK_VERSION=dev/BUILDKITE_STACK_VERSION=$(VERSION)/" $@
 
 setup:
-	bundle check || ((which bundle || gem install bundler --no-ri --no-rdoc) && bundle install --path vendor/bundle)
+	yarn install
 
 clean:
 	-rm -f build/*
@@ -72,6 +71,9 @@ update-stack: config.json templates/mappings.yml build/aws-stack.json
 	--template-body "file://$(PWD)/build/aws-stack.json" \
 	--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
 	--parameters "$$(cat config.json)"
+
+yaml:
+	docker run -it --rm -v "$$(pwd):/app" node:slim bash -c "yarn install && npm run toc"
 
 toc:
 	docker run -it --rm -v "$$(pwd):/app" node:slim bash -c "npm install -g markdown-toc && cd /app && markdown-toc -i Readme.md"
