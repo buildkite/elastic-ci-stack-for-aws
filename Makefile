@@ -16,9 +16,9 @@ all: setup build
 
 build: build/aws-stack.json
 
-.DELETE_ON_ERROR:
 build/aws-stack.json: $(TEMPLATES) templates/mappings.yml
-	npm start
+	docker run -it --rm -w /app -v "$$(pwd):/app" node:slim bash \
+		-c "yarn install && npm start $(VERSION)"
 	sed -i.bak "s/BUILDKITE_STACK_VERSION=dev/BUILDKITE_STACK_VERSION=$(VERSION)/" $@
 
 setup:
@@ -72,8 +72,6 @@ update-stack: config.json templates/mappings.yml build/aws-stack.json
 	--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
 	--parameters "$$(cat config.json)"
 
-yaml:
-	docker run -it --rm -v "$$(pwd):/app" node:slim bash -c "yarn install && npm run toc"
-
 toc:
-	docker run -it --rm -v "$$(pwd):/app" node:slim bash -c "npm install -g markdown-toc && cd /app && markdown-toc -i Readme.md"
+	docker run -it --rm -v "$$(pwd):/app" node:slim bash \
+		-c "npm install -g markdown-toc && cd /app && markdown-toc -i Readme.md"

@@ -2,7 +2,6 @@ const fs = require('fs');
 const glob = require('glob');
 const yaml = require('js-yaml');
 const extendify = require('extendify');
-const proc = require('child_process');
 
 const sortOrder = [
   'AWSTemplateFormatVersion',
@@ -37,7 +36,7 @@ glob("templates/*.yml", function (er, files) {
     sorted[key] = merged[key];
   }
 
-  const version = proc.execSync('git describe --tags --candidates=1');
+  const version = process.argv[1] || 'dev';
 
   // set a description
   sorted.Description = "Buildkite stack " + String(version).trim();
