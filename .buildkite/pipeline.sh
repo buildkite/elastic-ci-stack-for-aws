@@ -27,8 +27,8 @@ steps:
 
   - wait
 
-  - command: "/usr/local/bin/bats --pretty tests"
-    name: "Run tests on :buildkite: agent"
+  - command: "sleep 2"
+    name: "Run sleep 2 on :buildkite: agent"
     timeout_in_minutes: 5
     env:
       BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY

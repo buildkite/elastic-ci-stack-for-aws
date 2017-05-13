@@ -1,0 +1,18 @@
+version: '2.1'
+
+services:
+  agent:
+    image: "${BUILDKITE_AGENT_IMAGE:-buildkite/agent}:${BUILDKITE_AGENT_RELEASE:-stable}"
+    restart: on-failure:10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - buildkite-builds:/buildkite/builds
+      - /etc/buildkite-agent/hooks:/buildkite/hooks
+      - ./entrypoint.sh:/docker-entrypoint.d/elastic-stack
+    environment:
+      - BUILDKITE_AGENT_TOKEN
+      - BUILDKITE_AGENT_META_DATA
+      - BUILDKITE_BUILDS_VOLUME=buildkite-builds
+
+volumes:
+  buildkite-builds:
