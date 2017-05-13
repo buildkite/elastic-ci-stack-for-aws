@@ -59,11 +59,7 @@ Parameters:
   BuildkiteAgentRelease:
     Description: The release of the Buildkite agent to use, corresponds to a tag from https://hub.docker.com/r/buildkite/agent/tags/
     Type: String
-    AllowedValues:
-      - stable
-      - beta
-      - edge
-    Default: "stable"
+    Default: "3"
 
   BuildkiteAgentImage:
     Description: The docker image to use for the agents
