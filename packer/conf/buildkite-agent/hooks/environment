@@ -9,9 +9,16 @@ set -a
 source ~/cfn-env
 set +a
 
-echo "Waiting for Docker..."
-timeout 30 docker ps
-echo
+export AWS_REGION
+export AWS_DEFAULT_REGION
+export AWS_ECR_LOGIN
+
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+  export BUILDKITE_PLUGIN_SECRETS_S3_BUCKET="$BUILDKITE_SECRETS_BUCKET"
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/environment
+fi
 
 # We need to scope the next bit to only the currently running agent's builds,
 # but we also need to control security and make sure arbitrary folders can't be

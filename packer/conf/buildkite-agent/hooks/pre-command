@@ -7,12 +7,16 @@ if [[ -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/pre-command.sh
 fi
 
-if [[ -n "${ECR_PLUGIN_ENABLED:-1}" ]] ; then
+if [[ -n "${AWS_ECR_LOGIN:-}" && -n "${ECR_PLUGIN_ENABLED:-1}" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command
 fi
 
-if [[ -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+  export BUILDKITE_PLUGIN_SECRETS_S3_BUCKET="$BUILDKITE_SECRETS_BUCKET"
+
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/pre-command
 fi
