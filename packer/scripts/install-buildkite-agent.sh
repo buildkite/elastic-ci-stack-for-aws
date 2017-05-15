@@ -69,5 +69,3 @@ echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
 sudo cp -a /tmp/plugins/* /usr/local/buildkite-aws-stack/plugins/
 sudo chown -R buildkite-agent: /usr/local/buildkite-aws-stack
-ls -al /tmp/plugins
-ls -al /usr/local/buildkite-aws-stack/plugins/

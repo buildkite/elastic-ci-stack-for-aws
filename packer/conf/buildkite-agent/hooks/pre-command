@@ -9,7 +9,12 @@ fi
 
 if [[ -n "${ECR_PLUGIN_ENABLED:-1}" ]] ; then
   # shellcheck source=/dev/null
-  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command.sh
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command
+fi
+
+if [[ -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/pre-command
 fi
 
 # DOCKER_HUB_* legacy config var support
