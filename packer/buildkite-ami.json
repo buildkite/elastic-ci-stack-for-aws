@@ -18,6 +18,11 @@
       "destination": "/tmp"
     },
     {
+      "type": "file",
+      "source": "../plugins",
+      "destination": "/usr/local/buildkite-aws-stack/plugins"
+    },
+    {
       "type": "shell",
       "script": "scripts/install-utils.sh"
     },

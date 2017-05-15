@@ -1,11 +1,6 @@
 #!/bin/bash
 
-if [[ -n "${SSH_AGENT_PID:-}" ]] && ps -p "$SSH_AGENT_PID" &>/dev/null; then
-  echo "~~~ Stopping ssh-agent ${SSH_AGENT_PID}"
-  ssh-agent -k
-fi
-
-if [[ -n "${GIT_CREDENTIALS_FILE:-}" ]] ; then
-  echo "~~~ Cleaning up git credentials"
-  rm "$GIT_CREDENTIALS_FILE"
+if [[ -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/post-command.sh
 fi

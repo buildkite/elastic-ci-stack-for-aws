@@ -2,150 +2,16 @@
 
 set -eu -o pipefail
 
-s3_exists() {
-  local bucket="$1"
-  local key="$2"
-  local aws_s3_args=("--region=$AWS_DEFAULT_REGION")
-
-  if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
-    aws_s3_args+=("--sse-customer-algorithm" "AES256" "--sse-customer-key" "${BUILDKITE_SECRETS_KEY}")
-  fi
-
-  if ! env -i aws s3api head-object "${aws_s3_args[@]}" --bucket "$bucket" --key "$key" &>/dev/null ; then
-    return 1
-  fi
-}
-
-s3_download() {
-  local bucket="$1"
-  local key="$2"
-  local aws_s3_args=("--quiet" "--region=$AWS_DEFAULT_REGION")
-
-  if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
-    aws_s3_args+=("--sse-c" "AES256" "--sse-c-key" "${BUILDKITE_SECRETS_KEY}")
-  elif [[ "${BUILDKITE_USE_KMS:-true}" =~ ^(true|1)$ ]] ; then
-    aws_s3_args+=("--sse" "aws:kms")
-  fi
-
-  if ! env -i aws s3 cp "${aws_s3_args[@]}" "s3://$1/$2" /dev/stdout ; then
-    exit 1
-  fi
-}
-
-echo "~~~ Setting up the environment"
-
 echo "Sourcing CloudFormation environment..."
 
+set -a
 # shellcheck source=/dev/null
 source ~/cfn-env
-
-TMPDIR=${TMPDIR:-/tmp}
-export AWS_REGION
-export AWS_DEFAULT_REGION
-export AWS_ECR_LOGIN
-
-echo "Starting an SSH Agent..."
-eval "$(ssh-agent -s)"
-echo
-
-if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
-  if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
-    echo "~~~ :warning: Deprecated BUILDKITE_SECRETS_KEY env variable"
-    echo "AWS KMS is now the supported method for decrypting files from your secrets bucket."
-    echo "See https://github.com/buildkite/elastic-ci-stack-for-aws#secrets-bucket-support"
-  fi
-
-  echo "~~~ Downloading secrets from :s3: ${BUILDKITE_SECRETS_BUCKET}"
-
-  # Allow environment vars set in Buildkite to override paths
-  secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
-
-  # Locations to check for ssh keys
-  ssh_key_paths=(
-    "$secrets_prefix/${SSH_KEY_NAME:-private_ssh_key}"
-    "$secrets_prefix/id_rsa_github"
-    "${SHARED_SSH_KEY_NAME:-private_ssh_key}"
-    "id_rsa_github"
-  )
-
-  for key in ${ssh_key_paths[*]} ; do
-    if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
-      echo "Downloading ssh-key $key"
-      if ! ssh_key=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
-        echo "+++ :warning: Failed to download ssh-key $key"
-        exit 1
-      fi
-      echo "Downloaded ${#ssh_key} bytes"
-      SSH_ASKPASS="/bin/false" ssh-add <(echo "$ssh_key")
-      key_found=1
-      break
-    fi
-  done
-
-  if [[ -z "${key_found:-}" ]] && [[ "${BUILDKITE_REPO:-}" =~ ^git ]] ; then
-    echo "+++ :warning: Failed to find an SSH key in secret bucket"
-    exit 1
-  fi
-
-  env_paths=(
-    "env"
-    "${secrets_prefix}/env"
-  )
-
-  for key in ${env_paths[*]} ; do
-    if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
-      echo "Downloading env files from ${key}" >&2;
-      if ! envvars=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
-        echo "+++ :warning: Failed to download env from $key"
-        exit 1
-      fi
-      echo "Downloaded ${#envvars} bytes"
-      set -o allexport
-      eval "$envvars"
-      set +o allexport
-    fi
-  done
-
-  git_credentials_paths=(
-    "git-credentials"
-    "${secrets_prefix}/git-credentials"
-  )
-
-  for key in ${git_credentials_paths[*]} ; do
-    if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
-      echo "Downloading git-credentials files from ${key}" >&2;
-      if ! credentials=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
-        echo "+++ :warning: Failed to download git-credentials from $key" >&2;
-        exit 1
-      fi
-      echo "Downloaded ${#credentials} bytes"
-
-      # create a temporary credential file the first time
-      if [[ -z "${GIT_CREDENTIALS_FILE:-}" ]] ; then
-        GIT_CREDENTIALS_FILE="$(mktemp "$TMPDIR/git-credentials.XXXXXXXXXXX")"
-        export GIT_CREDENTIALS_FILE
-      fi
-
-      # combine credential files into one
-      echo "$credentials" >> "$GIT_CREDENTIALS_FILE"
-
-      if [[ ! -d "$BUILDKITE_BUILD_CHECKOUT_PATH/.git" ]] ; then
-        echo "Checkout path doesn't exist, setting credential.helper on clone"
-        export BUILDKITE_GIT_CLONE_FLAGS="${BUILDKITE_GIT_CLONE_FLAGS:--v} --config credential.helper='store --file=$GIT_CREDENTIALS_FILE'"
-      else
-        echo "Checkout path exists, updating credential.helper in local git config"
-        GIT_DIR="$BUILDKITE_BUILD_CHECKOUT_PATH/.git" git config --local credential.helper "store --file=$GIT_CREDENTIALS_FILE"
-      fi
-    fi
-  done
-fi
+set +a
 
 echo "Waiting for Docker..."
 timeout 30 docker ps
 echo
-
-unset BUILDKITE_SECRETS_BUCKET
-unset BUILDKITE_SECRETS_KEY
 
 # We need to scope the next bit to only the currently running agent's builds,
 # but we also need to control security and make sure arbitrary folders can't be

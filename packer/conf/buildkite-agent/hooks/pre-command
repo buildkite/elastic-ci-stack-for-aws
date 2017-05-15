@@ -2,26 +2,14 @@
 
 set -eu -o pipefail
 
-# AWS ECR login support
-
-# For logging into the current AWS account’s registry
-if [[ "${AWS_ECR_LOGIN:-}" =~ ^(true|1)$ ]] ; then
-  echo "~~~ Authenticating with AWS ECR"
-  if ! ecr_login=$(aws ecr get-login) ; then
-    echo echo "~~~ :warning: ECR login failed"
-    exit 1
-  fi
-  eval "$ecr_login"
+if [[ -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/pre-command.sh
 fi
 
-# For logging into other AWS account’s registries
-if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
-  echo "~~~ Authenticating with AWS ECR"
-  if ! ecr_login=$(aws ecr get-login --registry-ids "${AWS_ECR_LOGIN_REGISTRY_IDS}") ; then
-    echo echo "~~~ :warning: ECR login failed"
-    exit 1
-  fi
-  eval "$ecr_login"
+if [[ -n "${ECR_PLUGIN_ENABLED:-1}" ]] ; then
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command.sh
 fi
 
 # DOCKER_HUB_* legacy config var support
