@@ -1,6 +1,6 @@
 [submodule "plugins/secrets"]
 	path = plugins/secrets
-	url = https://github.com/lox/secrets-buildkite-plugin.git
+	url = git@github.com:buildkite/s3-secrets-buildkite-plugin.git
 [submodule "plugins/ecr"]
 	path = plugins/ecr
-	url = https://github.com/lox/ecr-buildkite-plugin.git
+	url = git@github.com:buildkite/ecr-buildkite-plugin.git
