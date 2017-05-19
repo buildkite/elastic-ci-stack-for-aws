@@ -3,6 +3,7 @@ packer.output
 config.json
 templates/mappings.yml
 vendor/
+node_modules/
 .bundle/
 *.bak
 extra_tags.json

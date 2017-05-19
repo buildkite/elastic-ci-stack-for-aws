@@ -142,18 +142,7 @@ generate_mappings() {
 }
 
 git fetch --tags
-version=$(git describe --tags --candidates=1)
-
 make clean
-
-echo "--- Generating description for version ${version}"
-
-cat << EOF > templates/description.yml
----
-AWSTemplateFormatVersion: "2010-09-09"
-Description: "Buildkite stack ${version}"
-
-EOF
 
 echo "--- Generating mappings"
 
@@ -167,6 +156,7 @@ make setup build
 if is_latest_tag ; then
   aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
   aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
+  aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/aws-stack.yml"
 else
   echo "Skipping publishing latest, '$BUILDKITE_TAG' doesn't match '$(git describe origin/master --tags --match='v*')'"
 fi
@@ -174,7 +164,9 @@ fi
 # Publish the most recent commit from each branch
 aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/mappings.yml"
 aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.json"
+aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.yml"
 
 # Publish each build to a unique URL, to let people roll back to old versions
 aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.mappings.yml"
 aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.aws-stack.json"
+aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.aws-stack.yml"

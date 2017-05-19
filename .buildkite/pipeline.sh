@@ -23,7 +23,9 @@ steps:
     name: "Launch :cloudformation: stack"
     agents:
       queue: aws-stack
-    artifact_paths: "build/*.json"
+    artifact_paths:
+      - "build/*.json"
+      - "build/*.yml"
 
   - wait
 
