@@ -222,6 +222,9 @@ Conditions:
     CreateSecretsBucket:
       "Fn::Equals": [ { Ref: SecretsBucket }, "" ]
 
+    UseSpecifiedSecretsBucket:
+      "Fn::Not": [ "Fn::Equals": [ { Ref: SecretsBucket }, "" ] ]
+
     UseSpecifiedAvailabilityZones:
       "Fn::Not": [ "Fn::Equals": [ "Fn::Join": [ "", { Ref: AvailabilityZones } ], "" ]  ]
 
@@ -333,8 +336,28 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-  SecretsBucketPolicies:
+  ManagedSecretsBucketPolicy:
     Type: AWS::IAM::Policy
+    Condition: CreateSecretsBucket
+    Properties:
+      PolicyName: SecretsBucketPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:Get*
+              - s3:Get
+              - s3:List*
+              - s3:PutObject
+            Resource:
+              - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}/*" }
+              - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}" }
+      Roles:
+        - { Ref: IAMRole }
+
+  UnmanagedSecretsBucketPolicy:
+    Type: AWS::IAM::Policy
+    Condition: UseSpecifiedSecretsBucket
     Properties:
       PolicyName: SecretsBucketPolicy
       PolicyDocument:
@@ -345,14 +368,8 @@ Resources:
               - s3:Get
               - s3:List*
             Resource:
-              - "Fn::If":
-                - CreateSecretsBucket
-                - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}/*" }
-                - { "Fn::Sub": "arn:aws:s3:::${SecretsBucket}/*" }
-              - "Fn::If":
-                - CreateSecretsBucket
-                - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}" }
-                - { "Fn::Sub": "arn:aws:s3:::${SecretsBucket}" }
+              - { "Fn::Sub": "arn:aws:s3:::${SecretsBucket}/*" }
+              - { "Fn::Sub": "arn:aws:s3:::${SecretsBucket}" }
       Roles:
         - { Ref: IAMRole }
 
