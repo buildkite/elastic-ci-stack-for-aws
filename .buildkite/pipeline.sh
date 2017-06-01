@@ -9,6 +9,7 @@ steps:
     command: .buildkite/steps/lint.sh
     plugins:
       docker-compose#v1.3.2:
+        config: .buildkite/docker-compose.yml
         run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -19,6 +20,7 @@ steps:
     name: "Build packer image"
     plugins:
       docker-compose#v1.3.2:
+        config: .buildkite/docker-compose.yml
         run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -29,6 +31,7 @@ steps:
     name: "Launch :cloudformation: stack"
     plugins:
       docker-compose#v1.3.2:
+        config: .buildkite/docker-compose.yml
         run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -53,6 +56,7 @@ steps:
     name: "Publishing :cloudformation: stack"
     plugins:
       docker-compose#v1.3.2:
+        config: .buildkite/docker-compose.yml
         run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -66,6 +70,7 @@ steps:
     name: "Cleanup"
     plugins:
       docker-compose#v1.3.2:
+        config: .buildkite/docker-compose.yml
         run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -73,4 +78,3 @@ EOF
 
 buildkite-agent meta-data set stack_name "$stack_name"
 buildkite-agent meta-data set queue_name "$queue_name"
-
