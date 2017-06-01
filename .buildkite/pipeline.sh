@@ -5,8 +5,11 @@ export queue_name="testqueue-$$"
 
 cat << EOF
 steps:
-  - command: .buildkite/steps/lint.sh
-    name: "Run linting on shell scripts"
+  - name: "Run linting on shell scripts"
+    command: .buildkite/steps/lint.sh
+    plugins:
+      docker-compose#v1.3.2:
+        run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
@@ -14,6 +17,9 @@ steps:
 
   - command: .buildkite/steps/packer.sh
     name: "Build packer image"
+    plugins:
+      docker-compose#v1.3.2:
+        run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
@@ -21,6 +27,9 @@ steps:
 
   - command: .buildkite/steps/test.sh
     name: "Launch :cloudformation: stack"
+    plugins:
+      docker-compose#v1.3.2:
+        run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths:
@@ -42,6 +51,9 @@ steps:
 
   - command: .buildkite/steps/publish.sh
     name: "Publishing :cloudformation: stack"
+    plugins:
+      docker-compose#v1.3.2:
+        run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "templates/mappings.yml;build/aws-stack.json"
@@ -52,6 +64,9 @@ steps:
 
   - command: .buildkite/steps/cleanup.sh
     name: "Cleanup"
+    plugins:
+      docker-compose#v1.3.2:
+        run: test
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 EOF
