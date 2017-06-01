@@ -76,10 +76,6 @@ cat << EOF > config.json
     "ParameterValue": "t2.nano"
   },
   {
-    "ParameterKey": "SecretsBucket",
-    "ParameterValue": "${BUILDKITE_AWS_STACK_BUCKET}"
-  },
-  {
     "ParameterKey": "VpcId",
     "ParameterValue": "${vpc_id}"
   },
