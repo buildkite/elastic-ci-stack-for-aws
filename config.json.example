@@ -14,5 +14,9 @@
   {
     "ParameterKey": "KeyName",
     "ParameterValue": "default"
+  },
+  {
+    "ParameterKey": "ImageId",
+    "ParameterValue": ""
   }
 ]
