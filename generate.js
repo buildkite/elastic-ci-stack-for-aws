@@ -2,6 +2,7 @@ const fs = require('fs');
 const glob = require('glob');
 const yaml = require('js-yaml');
 const extendify = require('extendify');
+const replace = require("replace");
 
 const sortOrder = [
   'AWSTemplateFormatVersion',
@@ -36,10 +37,11 @@ glob("templates/*.yml", function (er, files) {
     sorted[key] = merged[key];
   }
 
-  const version = process.argv[1] || 'dev';
+  const version = process.argv[2] || 'dev';
 
   // set a description
   sorted.Description = "Buildkite stack " + String(version).trim();
+  console.log(sorted.Description);
 
   fs.existsSync("build") || fs.mkdirSync("build");
   console.log("Generating build/aws-stack.yml");
@@ -47,4 +49,13 @@ glob("templates/*.yml", function (er, files) {
 
   console.log("Generating build/aws-stack.json");
   fs.writeFileSync("build/aws-stack.json", JSON.stringify(sorted, null, 2));
+
+  console.log("Updating BUILDKITE_STACK_VERSION to %s", version);
+  replace({
+    regex: "BUILDKITE_STACK_VERSION=dev",
+    replacement: "BUILDKITE_STACK_VERSION="+version,
+    paths: ['build/aws-stack.json','build/aws-stack.yml'],
+    recursive: false,
+    silent: true,
+  });
 });

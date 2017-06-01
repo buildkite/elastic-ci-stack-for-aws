@@ -114,7 +114,7 @@ Mappings:
     us-east-1     : { AMI: $image_id }
 EOF
 
-make setup build validate
+make build validate
 
 echo "--- Creating stack $stack_name ($version)"
 aws cloudformation create-stack \

@@ -12,39 +12,29 @@ TEMPLATES=templates/description.yml \
   templates/metrics.yml \
   templates/outputs.yml
 
-all: setup build
+all: build
 
 build: build/aws-stack.json
 
-build/aws-stack.json: $(TEMPLATES) templates/mappings.yml
-	docker run -it --rm -w /app -v "$$(pwd):/app" node:slim bash \
-		-c "yarn install && npm start $(VERSION)"
-	sed -i.bak "s/BUILDKITE_STACK_VERSION=dev/BUILDKITE_STACK_VERSION=$(VERSION)/" $@
-
-setup:
-	yarn install
+build/aws-stack.json: $(TEMPLATES)
+	docker run --rm -w /app -v "$(PWD):/app" node:slim bash \
+		-c "yarn install --non-interactive && npm start $(VERSION)"
 
 clean:
 	-rm -f build/*
 
-templates/mappings.yml:
-	$(error Either run `make build-ami` to build the ami, or `make download-mappings` to download the latest public mappings)
+config.json:
+	cp config.json.example config.json
 
-download-mappings:
-	echo "Downloading templates/mappings.yml for branch $(BRANCH)"
-	curl -Lf -o templates/mappings.yml https://s3.amazonaws.com/buildkite-aws-stack/$(BRANCH)/mappings.yml
-	touch templates/mappings.yml
-
-build-ami:
+build-ami: config.json
 	cd packer/; packer build buildkite-ami.json | tee ../packer.output
-	cp templates/mappings.yml.template templates/mappings.yml
-	sed -i.bak "s/packer_image_id/$$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2)/" templates/mappings.yml
+	jq --arg ImageId $$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2) \
+		'[ .[] | select(.ParameterKey != "ImageId") ] + [{ParameterKey: "ImageId", ParameterValue: $$ImageId}]' \
+		config.json  > config.json.temp
+	mv config.json.temp config.json
 
 upload: build/aws-stack.json
 	aws s3 sync --acl public-read build s3://$(BUILDKITE_STACK_BUCKET)/
-
-config.json:
-	test -s config.json || $(error Please create a config.json file)
 
 extra_tags.json:
 	echo "{}" > extra_tags.json

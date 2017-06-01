@@ -145,12 +145,10 @@ git fetch --tags
 make clean
 
 echo "--- Generating mappings"
-
 generate_mappings
 
 echo "--- Building and publishing stack"
-
-make setup build
+make build
 
 # Publish the top-level mappings only on when we see the most recent tag on master
 if is_latest_tag ; then

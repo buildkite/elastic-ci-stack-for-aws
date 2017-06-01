@@ -5,24 +5,24 @@ export queue_name="testqueue-$$"
 
 cat << EOF
 steps:
-  - command: .buildkite/steps/lint.sh
-    name: "Run linting on shell scripts"
+  - name: "Run linting on shell scripts"
+    command: .buildkite/steps/lint.sh
     agents:
-      queue: aws-stack
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
   - wait
 
   - command: .buildkite/steps/packer.sh
     name: "Build packer image"
     agents:
-      queue: aws-stack
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
   - wait
 
   - command: .buildkite/steps/test.sh
     name: "Launch :cloudformation: stack"
     agents:
-      queue: aws-stack
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths:
       - "build/*.json"
       - "build/*.yml"
@@ -43,7 +43,7 @@ steps:
   - command: .buildkite/steps/publish.sh
     name: "Publishing :cloudformation: stack"
     agents:
-      queue: aws-stack
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "templates/mappings.yml;build/aws-stack.json"
     concurrency_group: "aws-stack-publish"
     concurrency: 1
@@ -53,9 +53,8 @@ steps:
   - command: .buildkite/steps/cleanup.sh
     name: "Cleanup"
     agents:
-      queue: aws-stack
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 EOF
 
 buildkite-agent meta-data set stack_name "$stack_name"
 buildkite-agent meta-data set queue_name "$queue_name"
-
