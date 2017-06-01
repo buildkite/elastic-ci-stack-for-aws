@@ -326,11 +326,20 @@ Resources:
       Roles:
         - { Ref: IAMRole }
 
+  ManagedSecretsLoggingBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateSecretsBucket
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: LogDeliveryWrite
+
   ManagedSecretsBucket:
     Type: AWS::S3::Bucket
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
+      LoggingConfiguration:
+        DestinationBucketName: { Ref: ManagedSecretsLoggingBucket }
       VersioningConfiguration:
         Status: Enabled
 
@@ -346,7 +355,6 @@ Resources:
               - s3:Get*
               - s3:Get
               - s3:List*
-              - s3:Put*
             Resource:
               - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}/*" }
               - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}" }
