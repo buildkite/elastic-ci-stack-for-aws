@@ -17,7 +17,6 @@ all: build
 build: build/aws-stack.json
 
 build/aws-stack.json: $(TEMPLATES)
-	mkdir -p build/
 	docker run --rm -w /app -v "$(PWD):/app" node:slim bash \
 		-c "yarn install --non-interactive && npm start $(VERSION)"
 
