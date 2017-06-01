@@ -17,7 +17,7 @@ all: setup build
 build: build/aws-stack.json
 
 build/aws-stack.json: $(TEMPLATES)
-	docker run --rm -w /app -v "$$(pwd):/app" -u "$(id -u):$(id -g)" node:slim bash \
+	docker run --rm -w /app -v "$$(pwd):/app" -u "$$(id -u):$$(id -g)" node:slim bash \
 		-c "yarn install --non-interactive && npm start $(VERSION)"
 	sed -i.bak "s/BUILDKITE_STACK_VERSION=dev/BUILDKITE_STACK_VERSION=$(VERSION)/" $@
 
