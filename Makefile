@@ -21,9 +21,6 @@ build/aws-stack.json: $(TEMPLATES)
 		-c "yarn install --non-interactive && npm start $(VERSION)"
 	sed -i.bak "s/BUILDKITE_STACK_VERSION=dev/BUILDKITE_STACK_VERSION=$(VERSION)/" $@
 
-setup:
-	yarn install --non-interactive
-
 clean:
 	-rm -f build/*
 
