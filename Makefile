@@ -30,10 +30,9 @@ clean:
 config.json:
 	cp config.json.example config.json
 
-IMAGE_ID = $(shell grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2)
 build-ami: config.json
 	cd packer/; packer build buildkite-ami.json | tee ../packer.output
-	jq --arg ImageId $(IMAGE_ID) \
+	jq --arg ImageId $$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2) \
 		'[ .[] | select(.ParameterKey != "ImageId") ] + [{ParameterKey: "ImageId", ParameterValue: $$ImageId}]' \
 		config.json  > config.json.temp
 	mv config.json.temp config.json
