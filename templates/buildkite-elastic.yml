@@ -331,8 +331,6 @@ Resources:
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
-      LoggingConfiguration:
-        LogFilePrefix: logs/
       VersioningConfiguration:
         Status: Enabled
 
