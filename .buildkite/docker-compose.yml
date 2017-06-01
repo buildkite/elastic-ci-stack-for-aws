@@ -3,8 +3,8 @@ version: '2'
 services:
   test:
     build:
-      context: ..
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: .buildkite/Dockerfile
     working_dir: /src
     volumes:
       - ./:/src
