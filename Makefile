@@ -12,7 +12,7 @@ TEMPLATES=templates/description.yml \
   templates/metrics.yml \
   templates/outputs.yml
 
-all: setup build
+all: build
 
 build: build/aws-stack.json
 

@@ -228,8 +228,8 @@ Also keep in mind the EC2 HTTP metadata server is available from within builds, 
 To get started with customizing your own stack, or contributing fixes and features:
 
 ```bash
-# To set up your local environment and build a template based on public AMIs
-make setup download-mappings build
+# Build an AMI
+make build
 
 # Or, to set things up locally and create the stack on AWS
 make create-stack
