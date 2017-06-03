@@ -1,7 +1,7 @@
 [submodule "plugins/secrets"]
 	path = plugins/secrets
-	url = git@github.com:buildkite-plugins/s3-secrets-buildkite-plugin.git
+	url = https://github.com/buildkite-plugins/s3-secrets-buildkite-plugin.git
 
 [submodule "plugins/ecr"]
 	path = plugins/ecr
-	url = git@github.com:buildkite-plugins/ecr-buildkite-plugin.git
+	url = https://github.com/buildkite-plugins/ecr-buildkite-plugin.git
