@@ -27,7 +27,10 @@ config.json:
 	cp config.json.example config.json
 
 build-ami: config.json
-	cd packer/; packer build buildkite-ami.json | tee ../packer.output
+	docker run  -e AWS_DEFAULT_REGION  -e AWS_ACCESS_KEY_ID  -e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
+		--rm --workdir /src -v "$(PWD)/packer:/src" -w /src hashicorp/packer:light \
+			build buildkite-ami.json | tee packer.output
 	jq --arg ImageId $$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2) \
 		'[ .[] | select(.ParameterKey != "ImageId") ] + [{ParameterKey: "ImageId", ParameterValue: $$ImageId}]' \
 		config.json  > config.json.temp
@@ -63,5 +66,5 @@ update-stack: config.json templates/mappings.yml build/aws-stack.json
 	--parameters "$$(cat config.json)"
 
 toc:
-	docker run -it --rm -v "$$(pwd):/app" node:slim bash \
+	docker run -it --rm -v "$(PWD):/app" node:slim bash \
 		-c "npm install -g markdown-toc && cd /app && markdown-toc -i Readme.md"
