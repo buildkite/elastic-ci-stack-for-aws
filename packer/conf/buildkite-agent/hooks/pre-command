@@ -15,7 +15,7 @@ if [[ -n "${AWS_ECR_LOGIN:-}" && -n "${ECR_PLUGIN_ENABLED:-1}" ]] ; then
 fi
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
-  export BUILDKITE_PLUGIN_SECRETS_S3_BUCKET="$BUILDKITE_SECRETS_BUCKET"
+  export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/pre-command

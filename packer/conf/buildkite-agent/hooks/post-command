@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if [[ -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+  export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
+
   # shellcheck source=/dev/null
-  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/post-command.sh
+  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/post-command
 fi
