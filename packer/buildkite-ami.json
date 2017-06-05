@@ -3,40 +3,20 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-1",
-      "source_ami": "ami-c58c1dd3",
-      "region": "us-east-1",
+      "source_ami": "ami-17106201",
       "instance_type": "c4.large",
-      "ssh_username": "ec2-user",
-      "ami_name": "buildkite-stack-{{isotime | clean_ami_name}}",
-      "ami_description": "Buildkite CloudFormation Stack base image (Amazon Linux, buildkite-agent, docker, docker-compose, docker-gc, jq)",
+      "ami_name": "buildkite-stack-windows-{{isotime | clean_ami_name}}",
+      "user_data_file": "scripts/ec2-userdata.ps1",
+      "communicator": "winrm",
+      "winrm_username": "Administrator",
+      "ami_description": "Buildkite CloudFormation Stack base image (Windows-Server-2016-English-Full-Containers, buildkite-agent, docker-compose, docker-gc, jq)",
       "ami_groups": ["all"]
     }
   ],
   "provisioners": [
-    {
-      "type": "file",
-      "source": "conf",
-      "destination": "/tmp"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-utils.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-awslogs.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-terminationd.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-docker.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-buildkite-agent.sh"
-    }
+       {
+           "type": "powershell",
+           "script": "scripts/windows-init.ps1"
+       }
   ]
 }
