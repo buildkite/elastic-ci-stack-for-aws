@@ -14,6 +14,13 @@
     }
   ],
   "provisioners": [
+      {
+           "type": "powershell",
+           "inline": [
+              "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))",
+              "choco install -y 7zip git"
+           ]
+       },
        {
            "type": "powershell",
            "script": "scripts/windows-init.ps1"
