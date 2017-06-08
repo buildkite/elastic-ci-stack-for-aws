@@ -414,21 +414,25 @@ Resources:
           Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
       UserData:
         "Fn::Base64":
-          "Fn::Sub": |
-            #!/bin/bash -xv
-            BUILDKITE_STACK_NAME="${AWS::StackName}" \
-            BUILDKITE_STACK_VERSION=dev \
-            BUILDKITE_SECRETS_BUCKET="${SecretsBucket}" \
-            BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
-            BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
-            BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
-            BUILDKITE_QUEUE="${BuildkiteQueue}" \
-            BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
-            BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
-            BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
-            AWS_DEFAULT_REGION=${AWS::Region} \
-            AWS_REGION=${AWS::Region} \
-              /usr/local/bin/bk-install-elastic-stack.sh
+          "Fn::Sub":
+            - |
+              #!/bin/bash -xv
+              BUILDKITE_STACK_NAME="${AWS::StackName}" \
+              BUILDKITE_STACK_VERSION=dev \
+              BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
+              BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
+              BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+              BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
+              BUILDKITE_QUEUE="${BuildkiteQueue}" \
+              BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+              BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
+              BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
+              AWS_DEFAULT_REGION=${AWS::Region} \
+              AWS_REGION=${AWS::Region} \
+                /usr/local/bin/bk-install-elastic-stack.sh
+            - {
+              LocalSecretsBucket: !If [ CreateSecretsBucket, { Ref: ManagedSecretsBucket }, { Ref: SecretsBucket } ]
+              }
 
   # XXX: We don't even want a topic or role, but CloudFormation requires them
   # to create a lifecycle hook.
