@@ -5,6 +5,7 @@
 [submodule "plugins/ecr"]
 	path = plugins/ecr
 	url = https://github.com/buildkite-plugins/ecr-buildkite-plugin.git
+
 [submodule "plugins/docker-login"]
 	path = plugins/docker-login
-	url = git@github.com:buildkite-plugins/docker-login-buildkite-plugin.git
+	url = https://github.com/buildkite-plugins/docker-login-buildkite-plugin.git
