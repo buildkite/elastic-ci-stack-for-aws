@@ -13,7 +13,7 @@ export AWS_REGION
 export AWS_DEFAULT_REGION
 export AWS_ECR_LOGIN
 
-if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  -n "${SECRETS_PLUGIN_ENABLED:-1}" ]] ; then
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
   # shellcheck source=/dev/null
