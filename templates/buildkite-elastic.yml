@@ -49,6 +49,14 @@ Metadata:
         Parameters:
         - ECRAccessPolicy
 
+      - Label:
+          default: Plugin Configuration
+        Parameters:
+        - EnableSecretsPlugin
+        - EnableECRPlugin
+        - EnableDockerLoginPlugin
+
+
 Parameters:
   KeyName:
     Description: SSH keypair used to access the buildkite instances
