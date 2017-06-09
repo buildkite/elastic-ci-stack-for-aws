@@ -430,9 +430,11 @@ Resources:
               AWS_DEFAULT_REGION=${AWS::Region} \
               AWS_REGION=${AWS::Region} \
                 /usr/local/bin/bk-install-elastic-stack.sh
-            - {
-              LocalSecretsBucket: !If [ CreateSecretsBucket, { Ref: ManagedSecretsBucket }, { Ref: SecretsBucket } ]
-              }
+            - LocalSecretsBucket:
+                "Fn::If":
+                  - CreateSecretsBucket
+                  - { Ref: ManagedSecretsBucket }
+                  - { Ref: SecretsBucket }
 
   # XXX: We don't even want a topic or role, but CloudFormation requires them
   # to create a lifecycle hook.
