@@ -1,7 +1,7 @@
 {
   "main": "generate.js",
   "scripts": {
-    "start": "node generate.js"
+    "generate": "node generate.js"
   },
   "dependencies": {
     "cfn-lint": "^1.1.3",

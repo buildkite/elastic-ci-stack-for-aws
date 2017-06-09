@@ -17,8 +17,14 @@ const sortOrder = [
 
 glob("templates/*.yml", function (er, files) {
   const contents = files.map(f => {
-    return yaml.safeLoad(fs.readFileSync(f, 'utf8'));
+    try {
+      return yaml.safeLoad(fs.readFileSync(f, 'utf8'));
+    } catch (e) {
+      console.error("Failed to parse %s", f, e);
+      process.exit(1);
+    }
   });
+
   const extend = extendify({
     inPlace: false,
     isDeep: true
