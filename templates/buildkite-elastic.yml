@@ -42,6 +42,7 @@ Metadata:
         - MaxSize
         - ScaleUpAdjustment
         - ScaleDownAdjustment
+        - ScaleDownPeriod
 
       - Label:
           default: Docker Registry Configuration
