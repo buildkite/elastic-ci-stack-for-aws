@@ -74,7 +74,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
         echo "+++ :warning: Failed to download ssh-key $key"
         exit 1
       fi
-      echo "Downloaded ${#ssh_key} bytes of ssh key"
+      echo "Downloaded ${#ssh_key} bytes"
       SSH_ASKPASS="/bin/false" ssh-add <(echo "$ssh_key")
       key_found=1
       break
@@ -98,7 +98,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
         echo "+++ :warning: Failed to download env from $key"
         exit 1
       fi
-      echo "Downloaded ${#credentials} bytes of credentials"
+      echo "Downloaded ${#envvars} bytes"
       set -o allexport
       eval "$envvars"
       set +o allexport
@@ -117,7 +117,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
         echo "+++ :warning: Failed to download git-credentials from $key" >&2;
         exit 1
       fi
-      echo "Downloaded ${#credentials} bytes of credentials"
+      echo "Downloaded ${#credentials} bytes"
 
       # create a temporary credential file the first time
       if [[ -z "${GIT_CREDENTIALS_FILE:-}" ]] ; then
