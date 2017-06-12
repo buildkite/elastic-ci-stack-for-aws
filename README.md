@@ -70,7 +70,7 @@ aws cloudformation create-stack \
 
 The stack will have created an S3 bucket for you (or used the one you provided as the `SecretsBucket` parameter). This will be where the agent will fetch your SSH private keys for source control, and environment hooks to provide other secrets to your builds.
 
-The following s3 objects are downloaded and processes:
+The following s3 objects are downloaded and processed:
 
 * `/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks)
 * `/private_ssh_key` - A private key that is added to ssh-agent for your builds
