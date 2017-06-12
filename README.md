@@ -70,7 +70,7 @@ aws cloudformation create-stack \
 
 The stack will have created an S3 bucket for you (or used the one you provided as the `SecretsBucket` parameter). This will be where the agent will fetch your SSH private keys for source control, and environment hooks to provide other secrets to your builds.
 
-The following paths in the bucket are checked. 
+The following s3 objects are downloaded and processes:
 
 * `/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks)
 * `/private_ssh_key` - A private key that is added to ssh-agent for your builds
@@ -91,7 +91,17 @@ pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
 aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key" 
 ```
 
-If you really want to disable KMS encryption, you can set `BUILDKITE_USE_KMS=false`.
+If you want to set secrets that your build can access, create a file that sets environment variables and upload it:
+
+```bash
+echo "export MY_ENV_VAR=something secret" > myenv
+aws s3 cp --acl private --sse aws:kms myenv "s3://${SecretsBucket}/env"
+rm myenv 
+```
+
+**Note: Currently only using the default KMS key for s3 can be used, follow [#235](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/235) for progress on using specific KMS keys** 
+
+If you really want to store your secrets unencrypted, you can disable it entirely with `BUILDKITE_USE_KMS=false`.
 
 ## What’s On Each Machine?
 
