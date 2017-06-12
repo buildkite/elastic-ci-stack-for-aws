@@ -54,7 +54,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     echo "See https://github.com/buildkite/elastic-ci-stack-for-aws#secrets-bucket-support"
   fi
 
-  echo "~~~ Downloading secrets from ${BUILDKITE_SECRETS_BUCKET}"
+  echo "~~~ Downloading secrets from :s3: ${BUILDKITE_SECRETS_BUCKET}"
 
   # Allow environment vars set in Buildkite to override paths
   secrets_prefix="${BUILDKITE_SECRETS_PREFIX:-$BUILDKITE_PIPELINE_SLUG}"
@@ -71,9 +71,10 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
       echo "Downloading ssh-key $key"
       if ! ssh_key=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
-        echo "~~~ :warning: Failed to download ssh-key $key"
+        echo "+++ :warning: Failed to download ssh-key $key"
         exit 1
       fi
+      echo "Downloaded ${#ssh_key} bytes of ssh key"
       SSH_ASKPASS="/bin/false" ssh-add <(echo "$ssh_key")
       key_found=1
       break
@@ -81,7 +82,7 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   done
 
   if [[ -z "${key_found:-}" ]] && [[ "${BUILDKITE_REPO:-}" =~ ^git ]] ; then
-    echo "~~~ :warning: Failed to find an SSH key in secret bucket"
+    echo "+++ :warning: Failed to find an SSH key in secret bucket"
     exit 1
   fi
 
@@ -90,16 +91,17 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     "${secrets_prefix}/env"
   )
 
-  echo "~~~ Downloading env files"
-
   for key in ${env_paths[*]} ; do
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
+      echo "Downloading env files from ${key}" >&2;
       if ! envvars=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
-        echo "~~~ :warning: Failed to download env from $key"
+        echo "+++ :warning: Failed to download env from $key"
         exit 1
       fi
-      echo "Downloading env $key"
+      echo "Downloaded ${#credentials} bytes of credentials"
+      set -o allexport
       eval "$envvars"
+      set +o allexport
     fi
   done
 
@@ -108,20 +110,33 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
     "${secrets_prefix}/git-credentials"
   )
 
-  echo "~~~ Downloading git-credentials files"
-
   for key in ${git_credentials_paths[*]} ; do
     if s3_exists "${BUILDKITE_SECRETS_BUCKET}" "$key" ; then
-      if ! envvars=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
-        echo "~~~ :warning: Failed to download git-credentials from $key"
+      echo "Downloading git-credentials files from ${key}" >&2;
+      if ! credentials=$(s3_download "${BUILDKITE_SECRETS_BUCKET}" "$key") ; then
+        echo "+++ :warning: Failed to download git-credentials from $key" >&2;
         exit 1
       fi
-      echo "Downloading git-credentials $key"
-      mv "$key" .git-credentials
-      git config credential.helper "store --file=$PWD/.git-credentials"
+      echo "Downloaded ${#credentials} bytes of credentials"
+
+      # create a temporary credential file the first time
+      if [[ -z "${GIT_CREDENTIALS_FILE:-}" ]] ; then
+        GIT_CREDENTIALS_FILE="$(mktemp "$TMPDIR/git-credentials.XXXXXXXXXXX")"
+        export GIT_CREDENTIALS_FILE
+      fi
+
+      # combine credential files into one
+      echo "$credentials" >> "$GIT_CREDENTIALS_FILE"
+
+      if [[ ! -d "$BUILDKITE_BUILD_CHECKOUT_PATH/.git" ]] ; then
+        echo "Checkout path doesn't exist, setting credential.helper on clone"
+        export BUILDKITE_GIT_CLONE_FLAGS="${BUILDKITE_GIT_CLONE_FLAGS:--v} --config credential.helper='store --file=$GIT_CREDENTIALS_FILE'"
+      else
+        echo "Checkout path exists, updating credential.helper in local git config"
+        GIT_DIR="$BUILDKITE_BUILD_CHECKOUT_PATH/.git" git config --local credential.helper "store --file=$GIT_CREDENTIALS_FILE"
+      fi
     fi
   done
-
 fi
 
 echo "Waiting for Docker..."
