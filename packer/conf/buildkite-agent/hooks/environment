@@ -39,6 +39,7 @@ echo "Sourcing CloudFormation environment..."
 # shellcheck source=/dev/null
 source ~/cfn-env
 
+TMPDIR=${TMPDIR:-/tmp}
 export AWS_REGION
 export AWS_DEFAULT_REGION
 export AWS_ECR_LOGIN
