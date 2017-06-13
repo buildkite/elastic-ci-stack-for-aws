@@ -1,24 +1,28 @@
-#!/bin/bash
+env:
+  AWS_STACK_NAME: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
+  AWS_STACK_QUEUE_NAME: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
-export stack_name="buildkite-aws-stack-test-$$"
-export queue_name="testqueue-$$"
-
-cat << EOF
 steps:
   - name: "Run linting on shell scripts"
     command: .buildkite/steps/lint.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
-  - wait
+  - label: ":bash: :hammer:"
+    command: "bats tests/unit"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    plugins:
+      docker-compose#v1.3.2:
+        run: tests
 
+  - wait
   - command: .buildkite/steps/packer.sh
     name: "Build packer image"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
   - wait
-
   - command: .buildkite/steps/test.sh
     name: "Launch :cloudformation: stack"
     agents:
@@ -28,18 +32,16 @@ steps:
       - "build/*.yml"
 
   - wait
-
-  - command: "/usr/local/bin/bats --pretty tests"
+  - command: "/usr/local/bin/bats --pretty tests/instance"
     name: "Run tests on :buildkite: agent"
     timeout_in_minutes: 5
     env:
       BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
     agents:
-      stack: $stack_name
-      queue: $queue_name
+      stack: ${AWS_STACK_NAME}
+      queue: ${AWS_STACK_QUEUE_NAME}
 
   - wait
-
   - command: .buildkite/steps/publish.sh
     name: "Publishing :cloudformation: stack"
     agents:
@@ -49,12 +51,7 @@ steps:
     concurrency: 1
 
   - wait
-
   - command: .buildkite/steps/cleanup.sh
     name: "Cleanup"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-EOF
-
-buildkite-agent meta-data set stack_name "$stack_name"
-buildkite-agent meta-data set queue_name "$queue_name"

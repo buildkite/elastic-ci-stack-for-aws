@@ -6,7 +6,7 @@ echo "~~~ :llama: Loading aws-stack environment"
 
 set -a
 # shellcheck source=/dev/null
-source ~/cfn-env
+source ${AWS_STACK_CFN_ENV_FILE:-$HOME/cfn-env}
 set +a
 
 export AWS_REGION

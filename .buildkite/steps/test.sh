@@ -38,9 +38,6 @@ stack_follow() {
 ## -------------------------------------------------
 ## read metadata
 
-stack_name=$(buildkite-agent meta-data get stack_name)
-queue_name=$(buildkite-agent meta-data get queue_name)
-
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
@@ -65,7 +62,7 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "BuildkiteQueue",
-    "ParameterValue": "${queue_name}"
+    "ParameterValue": "${AWS_STACK_QUEUE_NAME}"
   },
   {
     "ParameterKey": "KeyName",
@@ -112,14 +109,14 @@ EOF
 
 make build validate
 
-echo "--- Creating stack $stack_name ($version)"
+echo "--- Creating stack ${AWS_STACK_NAME} ($version)"
 aws cloudformation create-stack \
   --output text \
-  --stack-name "$stack_name" \
+  --stack-name "${AWS_STACK_NAME}" \
   --disable-rollback \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 
 echo "--- Waiting for stack to complete"
-stack_follow "$stack_name"
+stack_follow "${AWS_STACK_NAME}"
