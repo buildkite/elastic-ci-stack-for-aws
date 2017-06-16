@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-echo "Sourcing CloudFormation environment..."
+echo "~~~ :llama: Loading aws-stack environment"
 
 set -a
 # shellcheck source=/dev/null
