@@ -16,17 +16,6 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" && "${SECRETS_PLUGIN_ENABLED:-true}"  =
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/pre-command
 fi
 
-
-# DOCKER_HUB_* legacy config var support
-if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]]; then
-  echo "~~~ :warning: Deprecated DOCKER_HUB_* env variables"
-  echo "The following env hook environments variables need updating:"
-  echo "* DOCKER_HUB_USER is now DOCKER_LOGIN_USER"
-  echo "* DOCKER_HUB_PASSWORD is now DOCKER_LOGIN_PASSWORD"
-  DOCKER_LOGIN_USER="${DOCKER_HUB_USER}"
-  DOCKER_LOGIN_PASSWORD="${DOCKER_HUB_PASSWORD}"
-fi
-
 if [[ -n "${DOCKER_LOGIN_USER:-}" && "${DOCKER_LOGIN_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_USERNAME="$DOCKER_LOGIN_USER"
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_PASSWORD="$DOCKER_LOGIN_PASSWORD"
