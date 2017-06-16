@@ -5,6 +5,7 @@ grep -rl '^#!/.*sh' . | while read -r file ; do
   [[ $file =~ \.git ]] && continue
   [[ $file =~ init\.d ]] && continue
   [[ $file =~ vendor ]] && continue
+  [[ $file =~ plugins ]] && continue
   [[ $file =~ node_modules ]] && continue
 
   echo "Processing $file"

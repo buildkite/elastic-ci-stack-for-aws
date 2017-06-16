@@ -18,6 +18,11 @@
       "destination": "/tmp"
     },
     {
+      "type": "file",
+      "source": "../plugins",
+      "destination": "/tmp/plugins"
+    },
+    {
       "type": "shell",
       "script": "scripts/install-utils.sh"
     },

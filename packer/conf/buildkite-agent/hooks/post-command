@@ -1,11 +1,10 @@
 #!/bin/bash
 
-if [[ -n "${SSH_AGENT_PID:-}" ]] && ps -p "$SSH_AGENT_PID" &>/dev/null; then
-  echo "~~~ Stopping ssh-agent ${SSH_AGENT_PID}"
-  ssh-agent -k
-fi
+set -eu -o pipefail
 
-if [[ -n "${GIT_CREDENTIALS_FILE:-}" ]] ; then
-  echo "~~~ Cleaning up git credentials"
-  rm "$GIT_CREDENTIALS_FILE"
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
+  export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/post-command
 fi

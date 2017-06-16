@@ -49,6 +49,14 @@ Metadata:
         Parameters:
         - ECRAccessPolicy
 
+      - Label:
+          default: Plugin Configuration
+        Parameters:
+        - EnableSecretsPlugin
+        - EnableECRPlugin
+        - EnableDockerLoginPlugin
+
+
 Parameters:
   KeyName:
     Description: SSH keypair used to access the buildkite instances
@@ -200,6 +208,30 @@ Parameters:
   AssociatePublicIpAddress:
     Type: String
     Description: Associate instances with public IP addresses
+    AllowedValues:
+      - true
+      - false
+    Default: "true"
+
+  EnableSecretsPlugin:
+    Type: String
+    Description: Enables s3-secrets plugin for all pipelines
+    AllowedValues:
+      - true
+      - false
+    Default: "true"
+
+  EnableECRPlugin:
+    Type: String
+    Description: Enables ecr plugin for all pipelines
+    AllowedValues:
+      - true
+      - false
+    Default: "true"
+
+  EnableDockerLoginPlugin:
+    Type: String
+    Description: Enables docker-login plugin for all pipelines
     AllowedValues:
       - true
       - false
@@ -429,6 +461,9 @@ Resources:
               BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
               BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
               AWS_DEFAULT_REGION=${AWS::Region} \
+              SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
+              ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
+              DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
               AWS_REGION=${AWS::Region} \
                 /usr/local/bin/bk-install-elastic-stack.sh
             - LocalSecretsBucket:
@@ -436,6 +471,7 @@ Resources:
                   - CreateSecretsBucket
                   - { Ref: ManagedSecretsBucket }
                   - { Ref: SecretsBucket }
+
 
   # XXX: We don't even want a topic or role, but CloudFormation requires them
   # to create a lifecycle hook.

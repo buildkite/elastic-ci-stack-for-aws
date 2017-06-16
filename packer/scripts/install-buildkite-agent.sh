@@ -64,3 +64,8 @@ sudo cp /tmp/conf/buildkite-agent/init.d/buildkite-agent /etc/buildkite-agent/in
 
 echo "Adding termationd hook..."
 sudo cp /tmp/conf/buildkite-agent/terminationd/hook /etc/terminationd/hook
+
+echo "Copying built-in plugins..."
+sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
+sudo cp -a /tmp/plugins/* /usr/local/buildkite-aws-stack/plugins/
+sudo chown -R buildkite-agent: /usr/local/buildkite-aws-stack
