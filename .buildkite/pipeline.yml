@@ -36,8 +36,8 @@ steps:
     name: "Run tests on :buildkite: agent"
     timeout_in_minutes: 5
     agents:
-      stack: "${AWS_STACK_NAME}"
-      queue: "${AWS_STACK_QUEUE_NAME}"
+      stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
   - wait
   - command: .buildkite/steps/publish.sh
