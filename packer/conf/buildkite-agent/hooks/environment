@@ -2,16 +2,11 @@
 
 set -eu -o pipefail
 
-echo "~~~ :llama: Loading aws-stack environment"
-
-set -a
 # shellcheck source=/dev/null
 source ~/cfn-env
-set +a
 
-export AWS_REGION
-export AWS_DEFAULT_REGION
-export AWS_ECR_LOGIN
+echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
+cat ~/cfn-env
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
