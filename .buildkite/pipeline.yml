@@ -3,12 +3,12 @@ env:
   AWS_STACK_QUEUE_NAME: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
 steps:
-  - name: "Run linting on shell scripts"
+  - name: ":bash: Lint"
     command: .buildkite/steps/lint.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
-  - label: ":bash: :hammer:"
+  - label: ":hammer: Unit test"
     command: "bats tests/unit"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -17,14 +17,14 @@ steps:
         run: tests
 
   - wait
-  - command: .buildkite/steps/packer.sh
-    name: "Build packer image"
+  - name: ":packer: Build"
+    command: .buildkite/steps/packer.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
   - wait
-  - command: .buildkite/steps/test.sh
-    name: "Launch :cloudformation: stack"
+  - name: ":cloudformation: Test"
+    command: .buildkite/steps/test.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths:
@@ -32,16 +32,17 @@ steps:
       - "build/*.yml"
 
   - wait
-  - command: "/usr/local/bin/bats --pretty tests/instance"
-    name: "Run tests on :buildkite: agent"
+  - name: ":buildkite: Instance test"
+    command: "/usr/local/bin/bats --pretty tests/instance"
+
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
   - wait
-  - command: .buildkite/steps/publish.sh
-    name: "Publishing :cloudformation: stack"
+  - name: ":cloudformation: :rocket:"
+    command: .buildkite/steps/publish.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "templates/mappings.yml;build/aws-stack.json"
@@ -49,7 +50,7 @@ steps:
     concurrency: 1
 
   - wait
-  - command: .buildkite/steps/cleanup.sh
-    name: "Cleanup"
+  - name: "Cleanup"
+    command: .buildkite/steps/cleanup.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
