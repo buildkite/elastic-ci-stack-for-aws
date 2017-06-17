@@ -1,10 +1,11 @@
 #!/bin/bash
-
 set -eu -o pipefail
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../" && pwd )"
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
-  # shellcheck source=/dev/null
-  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/post-command
+  # shellcheck source=../../../../plugins/secrets/hooks/post-command
+  source "$BASEDIR/plugins/secrets/hooks/post-command"
 fi

@@ -1,9 +1,9 @@
 #!/bin/bash
-
 set -eu -o pipefail
 
-echo "~~~ :llama: Loading aws-stack environment"
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../" && pwd )"
 
+echo "~~~ :llama: Loading aws-stack environment"
 set -a
 # shellcheck source=/dev/null
 source ${AWS_STACK_CFN_ENV_FILE:-$HOME/cfn-env}
@@ -12,9 +12,9 @@ set +a
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
-  # shellcheck source=/dev/null
-  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/environment
-fi
+  # shellcheck source=../../../../plugins/secrets/hooks/environment
+  source $BASEDIR/plugins/secrets/hooks/environment
 
-unset BUILDKITE_SECRETS_BUCKET
-unset BUILDKITE_SECRETS_KEY
+  unset BUILDKITE_SECRETS_BUCKET
+  unset BUILDKITE_SECRETS_KEY
+fi

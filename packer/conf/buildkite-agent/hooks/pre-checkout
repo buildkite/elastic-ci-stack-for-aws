@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -eu -o pipefail
 
 echo "Fixing permissions for '${BUILDKITE_AGENT_NAME}'..."
