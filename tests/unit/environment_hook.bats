@@ -11,6 +11,7 @@ setup() {
   export TEST_TEMP_DIR="${BATS_TMPDIR}/envhooks.$$"
   export AWS_STACK_CFN_ENV_FILE="$TEST_TEMP_DIR/cfn-env"
 
+  export BUILDKITE_AGENT_NAME="llamas-1"
   export BUILDKITE_BUILD_CHECKOUT_PATH="/var/lib/buildkite-agent/builds/my-agent-1/my-pipeline-blah"
   export BUILDKITE_BUILD_PATH="/var/lib/buildkite-agent/builds"
 
@@ -19,7 +20,7 @@ setup() {
 
   stub ssh-agent "-s : echo export SSH_AGENT_PID=224;"
   stub timeout "30 docker ps : echo waiting for docker to start"
-  stub sudo "/usr/bin/fix-buildkite-agent-builds-permissions my-agent-1 : echo fixing agent build permissions"
+  stub sudo "/usr/bin/fix-buildkite-agent-builds-permissions : echo fixing agent build permissions"
 }
 
 teardown() {
@@ -35,5 +36,7 @@ teardown() {
 
 @test "Environment hook runs without BUILDKITE_SECRETS_BUCKET set" {
   run bash -c "$PWD/packer/conf/buildkite-agent/hooks/environment"
+
   assert_success
+  assert_output --partial "llamas"
 }
