@@ -240,10 +240,13 @@ Parameters:
 Outputs:
   AvailabilityZones:
     Value:
-      "Fn::Join":
-        - ":"
-        - - { "Fn::GetAtt" : [ "Subnet0",  "AvailabilityZone" ] }
-          - { "Fn::GetAtt" : [ "Subnet1",  "AvailabilityZone" ] }
+      "Fn::If":
+        - UseSpecifiedAvailabilityZones
+        - { Ref: AvailabilityZones }
+        - "Fn::Join":
+          - ":"
+          - - { "Fn::GetAtt" : [ "Subnet0",  "AvailabilityZone" ] }
+            - { "Fn::GetAtt" : [ "Subnet1",  "AvailabilityZone" ] }
 
   ManagedSecretsBucket:
     Value:
