@@ -1,81 +1,59 @@
 #!/bin/bash
-
-# Files that are created by Docker containers end up with strange user and
-# group ids, usually 0 (root). Docker namespacing will one day save us, but it
-# can only map a single docker user id to a given user id (not any docker user
-# id to a single system user id).
-#
-# Until we can map any old user id back to
-# buildkite-agent automatically with Docker, then we just need to fix the
-# permissions manually before each build runs so git clean can work as
-# expected.
-
 set -eu -o pipefail
 
-# We need to scope this to only the currently running agent's builds, but we
-# also need to control security and make sure arbitrary folders can't be
-# chmoded.
-#
-# We prepare the agent build directory basename in the environment hook and
-# pass it as the first argument. In here we just need to check that it contains
-# no slashes and isn't a traversal component.
-AGENT_BUILDS_NAME="$1"
-# => "my-agent-1"
+### Overview
 
-# Make sure it doesn't contain any slashes by substituting slashes with nothing
-# and making sure it doesn't change
-if [[ "${AGENT_BUILDS_NAME//\//}" != "${AGENT_BUILDS_NAME}" ]]; then
-	exit 1
+# When docker is used in builds, the files created in containers that make it back to the
+# build directories by way of volume mounts have the UID and GID of the docker daemon. This
+# is typically root(0), which results in permissions problems with the `git clean` step
+# of builds (as the buildkite agent runs as buildkite-agent).
+
+# The long term solution to this problem is to use username space remapping in docker, but
+# this is not always available and there are some quirks around how containers with multiple
+# users inside them are mapped to host users.
+
+# This script can be run in a Buildkite environment hook to reset permissions for an agents
+# builds directory to avoid errors.
+
+# NOTE: This script requires root permissions, so it needs to be added to /etc/sudoers for the user
+# that the buildkite-agent is running as and invoked with sudo.
+
+# This script requires the following env to be set (which are set by the agent):
+#
+# - BUILDKITE_BUILD_CHECKOUT_PATH
+# - BUILDKITE_BUILD_PATH
+
+### Implementation notes
+
+# The agent builds path isn't exposed nicely by itself. The agent name also
+# doesn't quite map to its builds path. We do have a complete checkout path,
+# but we need to chop it up, safely. The path looks like:
+#
+#   BUILDKITE_BUILD_CHECKOUT_PATH="/var/lib/buildkite-agent/builds/my-agent-1/my-pipeline-blah"
+#
+# We know the beginning of this path, it's in BUILDKITE_BUILD_PATH:
+#
+#   BUILDKITE_BUILD_PATH="/var/lib/buildkite-agent/builds"
+#
+# We need to calculate the directory which the current agent is checking out it's builds to, which is
+# unfortunately not provided as an environment variable. As the name of the agent doesn't
+# always map exactly to the slug used for this path, we need to construct it by slicing up the above.
+
+# Returns => "my-agent-1"
+buildkite_build_agent_name_stub() {
+  /usr/bin/awk -F "/" '{print $1}' <<< "${BUILDKITE_BUILD_CHECKOUT_PATH#${BUILDKITE_BUILD_PATH}/}"
+}
+
+# Returns => `/var/lib/buildkite-agent/builds/my-agent-1`
+buildkite_build_agent_checkout_path() {
+  echo "${BUILDKITE_BUILD_PATH}/$(buildkite_build_agent_name_stub)"
+}
+
+# Allow a custom chown passed in for testing
+chown_bin=${1:-/bin/chown}
+checkout_dir="$(buildkite_build_agent_checkout_path)"
+
+# Now we just need to chown the checkout path!
+if [[ -e "${checkout_dir}" ]]; then
+  "$chown_bin" -R "buildkite-agent:buildkite-agent" "${checkout_dir}"
 fi
-
-# Now we know this name has only non-slash characters.
-#
-# We just need to check that it's not "." or ".." to prevent traversal:
-if [[ "${AGENT_BUILDS_NAME}" == "." || "${AGENT_BUILDS_NAME}" == ".." ]]; then
-	exit 2
-fi
-
-# We also need to make sure it's not empty so we don't collide with other agents:
-if [[ -z "${AGENT_BUILDS_NAME}" ]]; then
-	exit 3
-fi
-
-# We know the builds path:
-BUILDS_PATH="/var/lib/buildkite-agent/builds"
-
-# And now we can reconstruct the full agent builds path:
-AGENT_BUILDS_PATH="${BUILDS_PATH}/${AGENT_BUILDS_NAME}"
-# => "/var/lib/buildkite-agent/builds/my-agent-1"
-
-if [[ -e "${AGENT_BUILDS_PATH}" ]]; then
-	/bin/chown -R buildkite-agent:buildkite-agent "${AGENT_BUILDS_PATH}"
-fi
-
-# Manual tests (anybody know a good way to test this?):
-#
-# ./fix-buildkite-agent-builds-permissions "/"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "one/"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "/two"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "one/two"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "one/two/three"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "/two/"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "."
-# => exit 2
-#
-# ./fix-buildkite-agent-builds-permissions ".."
-# => exit 2
-#
-# ./fix-buildkite-agent-builds-permissions ""
-# => exit 3
