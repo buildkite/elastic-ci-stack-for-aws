@@ -7,6 +7,7 @@ echo "--- Deleting stack $stack_name"
 aws cloudformation delete-stack --stack-name "$stack_name"
 
 echo "--- Deleting old managed secrets buckets"
+# shellcheck disable=SC2016
 aws s3api list-buckets \
   --output text \
   --query "$(printf 'Buckets[?starts_with(Name, `%s`) == `true`][?CreationDate<`%s`].Name' \
