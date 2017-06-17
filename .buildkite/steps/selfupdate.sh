@@ -8,7 +8,7 @@ echo "--- :cloudformation: Waiting for any previous updates to complete"
 aws cloudformation wait stack-update-complete \
   --stack-name "$stack_name"
 
-echo "--- :lambda: Invoking updateElasticStack function"
+echo "--- :lambda: Invoking updateElasticStack function with ${stack_path}"
 output=$(aws lambda invoke \
   --invocation-type RequestResponse \
   --function-name updateElasticStack \
@@ -27,6 +27,6 @@ if [[ "$(jq --raw-output '.errorMessage' < output.json)" == "No updates are to b
   exit 0
 fi
 
-echo "--- :cloudformation: Waiting for stack update to complete"
+echo "--- :cloudformation: Waiting for stack ${stack_name} to complete update"
 aws cloudformation wait stack-update-complete \
   --stack-name "$stack_name"
