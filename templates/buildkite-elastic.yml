@@ -238,9 +238,20 @@ Parameters:
     Default: "true"
 
 Outputs:
-  SecretsBucket:
+  AvailabilityZones:
     Value:
-      "Fn::If": [CreateSecretsBucket, { Ref: ManagedSecretsBucket }, { Ref: SecretsBucket} ]
+      "Fn::Join":
+        - ":"
+        - - { "Fn::GetAtt" : [ "Subnet0",  "AvailabilityZone" ] }
+          - { "Fn::GetAtt" : [ "Subnet1",  "AvailabilityZone" ] }
+
+  ManagedSecretsBucket:
+    Value:
+      "Fn::If": [CreateSecretsBucket, { Ref: ManagedSecretsBucket }, "" ]
+
+  ManagedSecretsLoggingBucket:
+    Value:
+      "Fn::If": [CreateSecretsBucket, { Ref: ManagedSecretsLoggingBucket }, "" ]
 
 Conditions:
     UseSpotInstances:
