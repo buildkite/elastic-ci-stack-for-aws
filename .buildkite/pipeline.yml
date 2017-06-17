@@ -35,11 +35,9 @@ steps:
   - command: "/usr/local/bin/bats --pretty tests/instance"
     name: "Run tests on :buildkite: agent"
     timeout_in_minutes: 5
-    env:
-      BUILDKITE_SECRETS_KEY: $BUILDKITE_SECRETS_KEY
     agents:
-      stack: ${AWS_STACK_NAME}
-      queue: ${AWS_STACK_QUEUE_NAME}
+      stack: "${AWS_STACK_NAME}"
+      queue: "${AWS_STACK_QUEUE_NAME}"
 
   - wait
   - command: .buildkite/steps/publish.sh
