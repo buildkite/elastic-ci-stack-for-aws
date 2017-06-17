@@ -41,7 +41,7 @@ steps:
   - wait
 
   - command: .buildkite/steps/publish.sh
-    name: "Publishing branch and commit versions of :cloudformation: stack"
+    name: "Publishing :cloudformation: stack"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "templates/mappings.yml;build/aws-stack.json;build/aws-stack.yml"
@@ -50,8 +50,15 @@ steps:
 
   - wait
 
-  - command: .buildkite/steps/publish_tagged.sh
-    name: "Publishing :cloudformation: stack"
+  - command: .buildkite/steps/selfupdate.sh
+    name: "Self-updating :cloudformation:"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
+  - wait
+
+  - command: .buildkite/steps/release.sh
+    name: "Releasing :cloudformation: stack"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     concurrency_group: "aws-stack-publish"
