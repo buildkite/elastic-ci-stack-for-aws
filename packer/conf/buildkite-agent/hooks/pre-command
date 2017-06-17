@@ -6,14 +6,14 @@ BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../" && pwd )"
 if [[ -n "${AWS_ECR_LOGIN:-}" && "${ECR_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_ECR_LOGIN=1
 
-  # shellcheck source=../../../../plugins/ecr/hooks/pre-command
+  # shellcheck source=/dev/null
   source "$BASEDIR/plugins/ecr/hooks/pre-command"
 fi
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" && "${SECRETS_PLUGIN_ENABLED:-true}"  =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
-  # shellcheck source=../../../../plugins/secrets/hooks/pre-command
+  # shellcheck source=/dev/null
   source $BASEDIR/plugins/secrets/hooks/pre-command
 fi
 

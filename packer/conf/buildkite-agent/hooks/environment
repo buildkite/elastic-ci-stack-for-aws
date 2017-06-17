@@ -12,7 +12,7 @@ set +a
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
-  # shellcheck source=../../../../plugins/secrets/hooks/environment
+  # shellcheck source=/dev/null
   source $BASEDIR/plugins/secrets/hooks/environment
 
   unset BUILDKITE_SECRETS_BUCKET
