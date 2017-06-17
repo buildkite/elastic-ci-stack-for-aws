@@ -25,10 +25,6 @@ is_tag_build() {
    [[ "$BUILDKITE_TAG" = "$BUILDKITE_BRANCH" ]]
 }
 
-is_latest_tag() {
-   [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
-}
-
 copy_ami_to_region() {
   local source_ami_id="$1"
   local source_region="$2"
@@ -149,11 +145,6 @@ generate_mappings
 
 echo "--- Building stack"
 make build
-
-buildkite-agent artifact upload "templates/mappings.yml"
-buildkite-agent artifact upload "build/aws-stack.json"
-buildkite-agent artifact upload "build/aws-stack.yml"
-buildkite-agent meta-data set is_latest_tag "$(is_latest_tag && echo "true")"
 
 echo "--- Publishing stack to https://s3.amazonaws.com/buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.yml"
 aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/mappings.yml"

@@ -44,7 +44,7 @@ steps:
     name: "Publishing branch and commit versions of :cloudformation: stack"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "templates/mappings.yml;build/aws-stack.json"
+    artifact_paths: "templates/mappings.yml;build/aws-stack.json;build/aws-stack.yml"
     concurrency_group: "aws-stack-publish"
     concurrency: 1
 
@@ -54,7 +54,6 @@ steps:
     name: "Publishing :cloudformation: stack"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "templates/mappings.yml;build/aws-stack.json"
     concurrency_group: "aws-stack-publish"
     concurrency: 1
 
