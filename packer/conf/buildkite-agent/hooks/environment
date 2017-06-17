@@ -18,6 +18,3 @@ fi
 
 unset BUILDKITE_SECRETS_BUCKET
 unset BUILDKITE_SECRETS_KEY
-
-echo "Fixing permissions for '${BUILDKITE_AGENT_NAME}'..."
-sudo /usr/bin/fix-buildkite-agent-builds-permissions
