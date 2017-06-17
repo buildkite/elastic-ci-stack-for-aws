@@ -4,6 +4,7 @@ set -eu -o pipefail
 BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../" && pwd )"
 
 echo "~~~ :llama: Loading aws-stack environment"
+
 set -a
 # shellcheck source=/dev/null
 source ${AWS_STACK_CFN_ENV_FILE:-$HOME/cfn-env}
@@ -18,3 +19,6 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =
   unset BUILDKITE_SECRETS_BUCKET
   unset BUILDKITE_SECRETS_KEY
 fi
+
+
+env
