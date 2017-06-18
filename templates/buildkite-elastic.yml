@@ -242,7 +242,9 @@ Outputs:
     Value:
       "Fn::If":
         - UseSpecifiedAvailabilityZones
-        - { Ref: AvailabilityZones }
+        - "Fn::Join":
+          - ":"
+          - { Ref: AvailabilityZones }
         - "Fn::Join":
           - ":"
           - - { "Fn::GetAtt" : [ "Subnet0",  "AvailabilityZone" ] }
