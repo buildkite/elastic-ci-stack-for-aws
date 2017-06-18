@@ -8,6 +8,9 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
+echo "Fixing permissions for '${BUILDKITE_AGENT_NAME}'..."
+sudo --preserve-env /usr/bin/fix-buildkite-agent-builds-permissions
+
 echo "Configuring built-in plugins"
 
 [[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}
@@ -41,7 +44,3 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/environment
 fi
-
-
-echo "Fixing permissions for '${BUILDKITE_AGENT_NAME}'..."
-sudo --preserve-env /usr/bin/fix-buildkite-agent-builds-permissions
