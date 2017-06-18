@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
   # shellcheck source=/dev/null
