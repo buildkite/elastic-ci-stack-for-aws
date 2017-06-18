@@ -5,7 +5,7 @@ export queue_name="testqueue-$$"
 
 cat << EOF
 steps:
-  - name: "Run linting on shell scripts"
+  - name: "Lint"
     command: .buildkite/steps/lint.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
