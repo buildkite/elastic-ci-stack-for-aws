@@ -45,7 +45,7 @@ export DOCKER_LOGIN_PLUGIN_ENABLED=$DOCKER_LOGIN_PLUGIN_ENABLED
 EOF
 
 if [[ "${BUILDKITE_ECR_POLICY:-none}" != "none" ]] ; then
-	printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
+	printf "export AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
 fi
 
 # Choose the right agent binary
