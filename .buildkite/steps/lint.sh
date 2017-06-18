@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "--- Linting shellscripts with shellcheck"
 grep -rl '^#!/.*sh' . | while read -r file ; do
   [[ $file =~ \.git ]] && continue
   [[ $file =~ init\.d ]] && continue
@@ -13,6 +12,3 @@ grep -rl '^#!/.*sh' . | while read -r file ; do
   docker run --rm -v "$PWD:/mnt" koalaman/shellcheck "$file"
   echo -e "Ok.\n"
 done
-
-echo "--- Validating cloudformation templates"
-make validate
