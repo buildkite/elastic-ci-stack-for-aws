@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=2199
 
 set -eu -o pipefail
 
@@ -8,12 +9,25 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
-# List plugin versions
-printf "plugins/docker-login: %s\n" "$(cd plugins/docker-login; git describe --tags --candidates=1)"
-printf "plugins/secrets: %s\n" "$(cd plugins/secrets; git describe --tags --candidates=1)"
-printf "plugins/ecr: %s\n" "$(cd plugins/ecr; git describe --tags --candidates=1)"
+# Process plugins, they can be disabled in the stack config and also with environment vars
+PLUGINS_ENABLED=( $PLUGINS_ENABLED )
 
-if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
+if [[ " ${PLUGINS_ENABLED[@]} " =~ " secrets " && ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] ; then
+  export SECRETS_PLUGIN_ENABLED=1
+  printf "plugins: secrets %s\n" "$(cd plugins/secrets; git describe --tags --candidates=1)"
+fi
+
+if [[ " ${PLUGINS_ENABLED[@]} " =~ " docker-login " && ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] ; then
+  export DOCKER_LOGIN_PLUGIN_ENABLED=1
+  printf "plugins: docker-login %s\n" "$(cd plugins/docker-login; git describe --tags --candidates=1)"
+fi
+
+if [[ " ${PLUGINS_ENABLED[@]} " =~ " ecr " && ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] ; then
+  export ECR_PLUGIN_ENABLED=1
+  printf "plugins: ecr %s\n" "$(cd plugins/ecr; git describe --tags --candidates=1)"
+fi
+
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
   # shellcheck source=/dev/null

@@ -2,14 +2,14 @@
 
 set -eu -o pipefail
 
-if [[ -n "${AWS_ECR_LOGIN:-}" && "${ECR_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
+if [[ -n "${AWS_ECR_LOGIN:-}" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_ECR_LOGIN=1
 
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command
 fi
 
-if [[ -n "${DOCKER_LOGIN_USER:-}" && "${DOCKER_LOGIN_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
+if [[ -n "${DOCKER_LOGIN_USER:-}" && "${DOCKER_LOGIN_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_USERNAME="$DOCKER_LOGIN_USER"
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_PASSWORD="$DOCKER_LOGIN_PASSWORD"
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_SERVER="${DOCKER_LOGIN_SERVER:-}"
