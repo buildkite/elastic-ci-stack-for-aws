@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-if [[ -n "${AWS_ECR_LOGIN:-}" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_ECR_LOGIN=1
 
   # shellcheck source=/dev/null

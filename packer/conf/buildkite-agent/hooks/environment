@@ -10,9 +10,9 @@ cat ~/cfn-env
 
 echo "Configuring built-in plugins"
 
-[[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/\bsecrets\b/}
-[[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/\bdocker-login\b/}
-[[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/\becr\b/}
+[[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}
+[[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/docker-login/}
+[[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ecr/}
 
 SECRETS_PLUGIN_ENABLED=0
 DOCKER_LOGIN_PLUGIN_ENABLED=0

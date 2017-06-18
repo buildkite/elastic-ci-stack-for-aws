@@ -33,7 +33,7 @@ EOF
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
-[[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker_login")
+[[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker-login")
 
 # cfn-env is sourced by the environment hook in builds
 cat << EOF > /var/lib/buildkite-agent/cfn-env
@@ -44,12 +44,9 @@ export BUILDKITE_AGENTS_PER_INSTANCE=$BUILDKITE_AGENTS_PER_INSTANCE
 export BUILDKITE_SECRETS_BUCKET=$BUILDKITE_SECRETS_BUCKET
 export AWS_DEFAULT_REGION=$AWS_REGION
 export AWS_REGION=$AWS_REGION
-export PLUGINS_ENABLED=${PLUGINS_ENABLED[@]}
+export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]}"
+export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
-
-if [[ "${BUILDKITE_ECR_POLICY:-none}" != "none" ]] ; then
-	printf "export AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
-fi
 
 # Choose the right agent binary
 ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
