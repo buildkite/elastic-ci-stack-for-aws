@@ -8,6 +8,11 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
+# List plugin versions
+printf "plugins/docker-login: %s\n" "$(cd plugins/docker-login; git describe --tags --candidates=1)"
+printf "plugins/secrets: %s\n" "$(cd plugins/secrets; git describe --tags --candidates=1)"
+printf "plugins/ecr: %s\n" "$(cd plugins/ecr; git describe --tags --candidates=1)"
+
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-true}" =~ (on|1|true) ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
