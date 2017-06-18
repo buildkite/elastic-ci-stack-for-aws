@@ -58,7 +58,6 @@ wait_for_ami_to_be_available() {
 make_ami_public() {
   local image_id="$1"
   local region="$2"
-  local image_state
 
   aws ec2 modify-image-attribute \
     --region "$region" \
