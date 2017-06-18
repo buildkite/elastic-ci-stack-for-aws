@@ -25,10 +25,6 @@ is_tag_build() {
    [[ "$BUILDKITE_TAG" = "$BUILDKITE_BRANCH" ]]
 }
 
-is_latest_tag() {
-   [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
-}
-
 copy_ami_to_region() {
   local source_ami_id="$1"
   local source_region="$2"
@@ -147,24 +143,15 @@ make clean
 echo "--- Generating mappings"
 generate_mappings
 
-echo "--- Building and publishing stack"
+echo "--- Building stack"
 make build
 
-# Publish the top-level mappings only on when we see the most recent tag on master
-if is_latest_tag ; then
-  aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
-  aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
-  aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/aws-stack.yml"
-else
-  echo "Skipping publishing latest, '$BUILDKITE_TAG' doesn't match '$(git describe origin/master --tags --match='v*')'"
-fi
-
-# Publish the most recent commit from each branch
+echo "--- Publishing stack to https://s3.amazonaws.com/buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.yml"
 aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/mappings.yml"
 aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.json"
 aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.yml"
 
-# Publish each build to a unique URL, to let people roll back to old versions
+echo "--- Publishing stack to https://s3.amazonaws.com/buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.aws-stack.yml"
 aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.mappings.yml"
 aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.aws-stack.json"
 aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.aws-stack.yml"

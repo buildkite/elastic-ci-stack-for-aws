@@ -20,7 +20,7 @@ steps:
   - wait
 
   - command: .buildkite/steps/test.sh
-    name: "Launch :cloudformation: stack"
+    name: "Test :cloudformation: stack"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths:
@@ -41,10 +41,26 @@ steps:
   - wait
 
   - command: .buildkite/steps/publish.sh
-    name: "Publishing :cloudformation: stack"
+    name: "Publishing :cloudformation: templates"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "templates/mappings.yml;build/aws-stack.json"
+    artifact_paths: "templates/mappings.yml;build/aws-stack.json;build/aws-stack.yml"
+    concurrency_group: "aws-stack-publish"
+    concurrency: 1
+
+  - wait
+
+  - command: .buildkite/steps/selfupdate.sh
+    name: "Self-updating :cloudformation: stack"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
+  - wait
+
+  - command: .buildkite/steps/release.sh
+    name: "Releasing :cloudformation: templates"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     concurrency_group: "aws-stack-publish"
     concurrency: 1
 
@@ -54,6 +70,7 @@ steps:
     name: "Cleanup"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
 EOF
 
 buildkite-agent meta-data set stack_name "$stack_name"
