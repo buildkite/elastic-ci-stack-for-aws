@@ -49,20 +49,10 @@ copy_ami_to_region() {
 wait_for_ami_to_be_available() {
   local image_id="$1"
   local region="$2"
-  local image_state
 
-  while true; do
-    image_state=$(aws ec2 describe-images --region "$region" --image-ids "$image_id" --output text --query 'Images[*].State');
-    echo "$image_id ($region) is $image_state"
-
-    if [[ "$image_state" == "available" ]]; then
-      break
-    elif [[ "$image_state" == "pending" ]]; then
-      sleep 5
-    else
-      exit 1
-    fi
-  done
+  aws ec2 wait image-available \
+    --region "$region" \
+    --image-ids "$image_id"
 }
 
 make_ami_public() {
@@ -70,7 +60,10 @@ make_ami_public() {
   local region="$2"
   local image_state
 
-  aws ec2 modify-image-attribute --region "$region" --image-id "$image_id" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
+  aws ec2 modify-image-attribute \
+    --region "$region" \
+    --image-id "$image_id" \
+    --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
 }
 
 fetch_ami_name() {
@@ -105,14 +98,12 @@ EOF
   if [[ $BUILDKITE_BRANCH == "master" ]] || is_tag_build ; then
     for region in ${DESTINATION_REGIONS[*]}; do
       echo "--- Copying $image_id to $region"
-
       region_ami=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
 
       DESTINATION_AMIS+=("$region_ami")
     done
 
     echo "--- Waiting for AMIs to become available"
-
     for ((i=0; i<${#DESTINATION_AMIS[*]}; i++)); do
       region="${DESTINATION_REGIONS[i]}"
       region_ami="${DESTINATION_AMIS[i]}"
@@ -136,9 +127,16 @@ generate_mappings() {
     echo "Skipping creating additional AZ mappings, base AMI has not changed"
   else
     copy_ami_and_create_mappings_yml "$image_id" templates/mappings.yml
-
     aws s3 cp templates/mappings.yml "${s3_mappings_cache}"
   fi
+}
+
+s3_upload_templates() {
+  local bucket_prefix="${1:-}"
+
+  aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${bucket_prefix}mappings.yml"
+  aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${bucket_prefix}aws-stack.json"
+  aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${bucket_prefix}aws-stack.yml"
 }
 
 git fetch --tags
@@ -152,19 +150,13 @@ make build
 
 # Publish the top-level mappings only on when we see the most recent tag on master
 if is_latest_tag ; then
-  aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
-  aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
-  aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/aws-stack.yml"
+  s3_upload_templates
 else
   echo "Skipping publishing latest, '$BUILDKITE_TAG' doesn't match '$(git describe origin/master --tags --match='v*')'"
 fi
 
 # Publish the most recent commit from each branch
-aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/mappings.yml"
-aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.json"
-aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/aws-stack.yml"
+s3_upload_templates "${BUILDKITE_BRANCH}/"
 
 # Publish each build to a unique URL, to let people roll back to old versions
-aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.mappings.yml"
-aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.aws-stack.json"
-aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}.aws-stack.yml"
+s3_upload_templates "${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}."
