@@ -9,23 +9,32 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
-# Process plugins, they can be disabled in the stack config and also with environment vars
-PLUGINS_ENABLED=( $PLUGINS_ENABLED )
+echo "Configuring built-in plugins"
 
-if [[ " ${PLUGINS_ENABLED[@]} " =~ " secrets " && ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] ; then
-  export SECRETS_PLUGIN_ENABLED=1
-  printf "plugins: secrets %s\n" "$(cd plugins/secrets; git describe --tags --candidates=1)"
-fi
+[[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/\bsecrets\b/}
+[[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/\bdocker-login\b/}
+[[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/\becr\b/}
 
-if [[ " ${PLUGINS_ENABLED[@]} " =~ " docker-login " && ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] ; then
-  export DOCKER_LOGIN_PLUGIN_ENABLED=1
-  printf "plugins: docker-login %s\n" "$(cd plugins/docker-login; git describe --tags --candidates=1)"
-fi
+SECRETS_PLUGIN_ENABLED=0
+DOCKER_LOGIN_PLUGIN_ENABLED=0
+ECR_PLUGIN_ENABLED=0
 
-if [[ " ${PLUGINS_ENABLED[@]} " =~ " ecr " && ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] ; then
-  export ECR_PLUGIN_ENABLED=1
-  printf "plugins: ecr %s\n" "$(cd plugins/ecr; git describe --tags --candidates=1)"
-fi
+for plugin in $PLUGINS_ENABLED ; do
+  case "$plugin" in
+    secrets)
+      export SECRETS_PLUGIN_ENABLED=1
+      echo "Secrets plugin enabled"
+      ;;
+    docker-login)
+      export DOCKER_LOGIN_PLUGIN_ENABLED=1
+      echo "Docker-login plugin enabled"
+      ;;
+    ecr)
+      export ECR_PLUGIN_ENABLED=1
+      echo "ECR plugin enabled"
+      ;;
+  esac
+done
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
