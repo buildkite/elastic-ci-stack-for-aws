@@ -33,7 +33,11 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "InstanceType",
-    "ParameterValue": "t2.nano"
+    "ParameterValue": "t1.micro"
+  },
+  {
+    "ParameterKey": "SpotPrice",
+    "ParameterValue": "0.02"
   },
   {
     "ParameterKey": "VpcId",
@@ -58,6 +62,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "ECRAccessPolicy",
     "ParameterValue": "readonly"
+  },
+  {
+    "ParameterKey": "RootVolumeSize",
+    "ParameterValue": "10"
   }
 ]
 EOF
