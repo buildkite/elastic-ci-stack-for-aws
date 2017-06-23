@@ -43,11 +43,11 @@ export AWS_REGION
 export AWS_DEFAULT_REGION
 export AWS_ECR_LOGIN
 
-echo "Starting an SSH Agent..."
-eval "$(ssh-agent -s)"
-echo
+if [[ "${SECRETS_PLUGIN_ENABLED:-1}" != "1" ]] && [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
+  echo "Starting an SSH Agent..."
+  eval "$(ssh-agent -s)"
+  echo
 
-if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   if [[ -n "${BUILDKITE_SECRETS_KEY:-}" ]] ; then
     echo "~~~ :warning: Deprecated BUILDKITE_SECRETS_KEY env variable"
     echo "AWS KMS is now the supported method for decrypting files from your secrets bucket."
