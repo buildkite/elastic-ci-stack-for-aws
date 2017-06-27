@@ -43,7 +43,7 @@ export AWS_REGION
 export AWS_DEFAULT_REGION
 export AWS_ECR_LOGIN
 
-if [[ "${SECRETS_PLUGIN_ENABLED:-1}" != "1" ]] && [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
+if [[ "${SECRETS_PLUGIN_ENABLED:-1}" == "1" ]] && [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" ]] ; then
   echo "Starting an SSH Agent..."
   eval "$(ssh-agent -s)"
   echo
