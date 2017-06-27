@@ -48,6 +48,14 @@ export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
 
+if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
+	echo "Downloading buildkite-agent edge..."
+	curl -Lsf -o /usr/bin/buildkite-agent-edge \
+		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
+	chmod +x /usr/bin/buildkite-agent-edge
+	buildkite-agent-edge --version
+fi
+
 # Choose the right agent binary
 ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
 
