@@ -43,6 +43,14 @@ if [[ "${BUILDKITE_ECR_POLICY:-none}" != "none" ]] ; then
 	printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
 fi
 
+if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
+	echo "Downloading buildkite-agent edge..."
+	curl -Lsf -o /usr/bin/buildkite-agent-edge \
+		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
+	chmod +x /usr/bin/buildkite-agent-edge
+	buildkite-agent-edge --version
+fi
+
 # Choose the right agent binary
 ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
 

@@ -12,10 +12,7 @@ echo "Agent stable sha256 is $stable_agent_sha"
 unstable_agent_sha=$(curl -Lfs https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64.sha256)
 echo "Agent unstable sha256 is $unstable_agent_sha"
 
-experimental_agent_sha=$(curl -Lfs https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64.sha256)
-echo "Agent experimental sha256 is $experimental_agent_sha"
-
-packer_hash=$(echo "$packer_files_sha" "$stable_agent_sha" "$unstable_agent_sha" "$experimental_agent_sha" | sha1sum | awk '{print $1}')
+packer_hash=$(echo "$packer_files_sha" "$stable_agent_sha" "$unstable_agent_sha" | sha1sum | awk '{print $1}')
 echo "Packer image hash is $packer_hash"
 
 packer_file="${packer_hash}.packer"

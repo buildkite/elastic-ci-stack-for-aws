@@ -22,12 +22,6 @@ sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
 sudo chmod +x /usr/bin/buildkite-agent-beta
 buildkite-agent-beta --version
 
-echo "Downloading buildkite-agent edge..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-edge \
-  "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
-sudo chmod +x /usr/bin/buildkite-agent-edge
-buildkite-agent-edge --version
-
 echo "Downloading legacy bootstrap.sh for v2 stable agent..."
 sudo mkdir -p /etc/buildkite-agent
 sudo curl -Lsf -o /etc/buildkite-agent/bootstrap.sh \
