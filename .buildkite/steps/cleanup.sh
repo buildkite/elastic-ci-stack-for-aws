@@ -11,10 +11,10 @@ echo "--- Deleting test managed secrets buckets created"
 aws s3api list-buckets \
   --output text \
   --query "$(printf '[?CreationDate<`%s`].Name' "$cutoff_date" )" |
-  grep -E 'buildkite-aws-stack-test(-\d+)?-managed'
+  grep -E 'buildkite-aws-stack-test(-\d+)?-managed' || true
 
 echo "--- Deleting old cloudformation stacks"
 aws cloudformation describe-stacks \
   --output text \
   --query "$(printf 'Stacks[?CreationTime<`%s`].StackName' "$cutoff_date" )" |
-  grep -E 'buildkite-aws-stack-test-(\d+)'
+  grep -E 'buildkite-aws-stack-test-(\d+)' || true
