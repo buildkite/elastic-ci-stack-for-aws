@@ -49,10 +49,20 @@ copy_ami_to_region() {
 wait_for_ami_to_be_available() {
   local image_id="$1"
   local region="$2"
+  local image_state
 
-  aws ec2 wait image-available \
-    --region "$region" \
-    --image-ids "$image_id"
+  while true; do
+    image_state=$(aws ec2 describe-images --region "$region" --image-ids "$image_id" --output text --query 'Images[*].State');
+    echo "$image_id ($region) is $image_state"
+
+    if [[ "$image_state" == "available" ]]; then
+      break
+    elif [[ "$image_state" == "pending" ]]; then
+      sleep 5
+    else
+      exit 1
+    fi
+  done
 }
 
 make_ami_public() {
