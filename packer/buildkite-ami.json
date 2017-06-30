@@ -32,7 +32,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-terminationd.sh"
+      "script": "scripts/install-shudder.sh"
     },
     {
       "type": "shell",

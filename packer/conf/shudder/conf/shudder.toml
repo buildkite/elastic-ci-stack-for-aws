@@ -1,0 +1,5 @@
+sqs_prefix = "myapp"
+region = "us-east-1"
+sns_topic = "arn:aws:sns:us-east-1:723456455537:myapp-shutdowns"
+endpoint = "http://127.0.0.1:5000/youaregoingtodiesoon"
+commands = [["//etc/init.d/nginx", "stop"], ["/etc/init.d/filebeats", "stop"]]
