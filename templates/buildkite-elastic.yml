@@ -476,6 +476,7 @@ Resources:
               BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
               BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
               BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
+              BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
               AWS_DEFAULT_REGION=${AWS::Region} \
               SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
               ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
@@ -488,9 +489,6 @@ Resources:
                   - { Ref: ManagedSecretsBucket }
                   - { Ref: SecretsBucket }
 
-
-  # XXX: We don't even want a topic or role, but CloudFormation requires them
-  # to create a lifecycle hook.
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
 
