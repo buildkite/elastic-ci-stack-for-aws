@@ -114,7 +114,7 @@ cat << EOF > /etc/shudder/shudder.toml
 sqs_prefix = "${BUILDKITE_STACK_NAME}"
 region = "${AWS_REGION}"
 sns_topic = "${BUILDKITE_LIFECYCLE_TOPIC}"
-commands = [["/etc/init.d/buildkite-agent", "stop"]]
+commands = [["/usr/local/bin/stop-agent-gracefully"]]
 EOF
 
 # my kingdom for a decent init system
