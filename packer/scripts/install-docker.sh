@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_VERSION=17.06.0-ce
+DOCKER_VERSION=17.05.0-ce
 DOCKER_COMPOSE_VERSION=1.14.0
 ECR_LOGIN_VERSION=v1.0.0
 

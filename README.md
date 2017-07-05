@@ -107,7 +107,7 @@ If you really want to store your secrets unencrypted, you can disable it entirel
 
 * [Amazon Linux 2017.03.1](https://aws.amazon.com/amazon-linux-ami/)
 * [Buildkite Agent](https://buildkite.com/docs/agent)
-* [Docker 17.06.0-ce](https://www.docker.com)
+* [Docker 17.05.0-ce](https://www.docker.com)
 * [Docker Compose 1.14.0](https://docs.docker.com/compose/)
 * [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
 * [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli or the Buildkite API
