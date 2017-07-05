@@ -3,7 +3,6 @@ set -eu -o pipefail
 
 DOCKER_VERSION=17.05.0-ce
 DOCKER_COMPOSE_VERSION=1.14.0
-ECR_LOGIN_VERSION=v1.0.0
 
 # This performs a manual install of Docker. The init.d script is from the
 # 1.11 yum package
@@ -40,12 +39,3 @@ echo "Downloading jq..."
 sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
 sudo chmod +x /usr/bin/jq
 jq --version
-
-echo "Downloading docker-credential-ecr-login..."
-sudo curl -Lsf -o /usr/bin/docker-credential-ecr-login https://github.com/lox/amazon-ecr-credential-helper/releases/download/${ECR_LOGIN_VERSION}/docker-credential-ecr-login_linux_amd64
-mkdir -p ~/.docker
-cat << EOF > ~/.docker/config.json
-{
-  "credsStore": "ecr-login"
-}
-EOF

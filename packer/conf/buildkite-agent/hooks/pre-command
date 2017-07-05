@@ -3,6 +3,8 @@
 set -eu -o pipefail
 
 if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command
 fi
