@@ -28,3 +28,10 @@ aws cloudformation describe-stacks \
   | xargs -n1 \
   | grep -E 'buildkite-aws-stack-test-\d+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
+
+echo "--- Deleting old packer builders"
+aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=Packer Builder" \
+  --query "$(printf 'Reservations[].Instances[?LaunchTime<`%s`].InstanceId' "$cutoff_date")" \
+  --output text \
+  | xargs -n1 -t -I% aws ec2 terminate-instances --instance-ids "%"
