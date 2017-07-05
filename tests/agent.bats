@@ -5,7 +5,7 @@
 	[ $status = 0 ]
 }
 
-@test "Check terminationd is running" {
-	run status "terminationd"
+@test "Check shudder is running" {
+	run status "shudder"
 	[ $status = 0 ]
 }
