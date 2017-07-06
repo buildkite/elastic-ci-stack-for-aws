@@ -43,9 +43,8 @@ jq --version
 
 echo "Downloading docker-credential-ecr-login..."
 sudo curl -Lsf -o /usr/bin/docker-credential-ecr-login https://github.com/lox/amazon-ecr-credential-helper/releases/download/${ECR_LOGIN_VERSION}/docker-credential-ecr-login_linux_amd64
-mkdir -p ~/.docker
 cat << EOF > ~/.docker/config.json
 {
-  "credsStore": "ecr-login"
+	"credsStore": "ecr-login"
 }
 EOF
