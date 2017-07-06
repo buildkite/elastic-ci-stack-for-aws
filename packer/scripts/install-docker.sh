@@ -39,3 +39,4 @@ echo "Downloading jq..."
 sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
 sudo chmod +x /usr/bin/jq
 jq --version
+
