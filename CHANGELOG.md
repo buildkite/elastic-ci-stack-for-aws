@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased
 ### Changed
 - Move ecr, secrets and docker-login to plugins
 - Add a signature llama to the environment hook
@@ -15,22 +15,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
 - Remove deprecated DOCKER_HUB_USER variables
 
-## [2.1.4] - 2017-06-28
+## 2.1.4 - 2017-06-28
 ### Changed
 - Buildkite Agents v3.0.0-beta28
 - Edge agent version is downloaded when instances boot rather than baked in AMI
 - Added SECRETS_PLUGIN_ENABLED to allow secrets downloading to be disabled
 
-## [2.1.3] - 2017-06-20
+## 2.1.3 - 2017-06-20
 ### Changed
 - Updated to latest Amazon Linux 2017.03.1 (see security advisory AWS-2017-007)
 - Updated docker-compose to 1.14.0
 
-## [2.1.2] - 2017-06-16
+## 2.1.2 - 2017-06-16
 ### Fixed
 - Using an env secrets bucket hook caused builds to fail with an undefined variable error
 
-## [2.1.1] - 2017-06-12
+## 2.1.1 - 2017-06-12
 ### Changed
 - 🐳 Docker-Compose 1.14.0-r2 (with support for cache_from directive)
 - Buildkite Agents v2.6.3 and v3.0.0-beta27
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Using git-credentials was broken (#290)
 - Managed secrets bucket failed to create (#282)
 
-## [2.1.0] - 2017-05-12
+## 2.1.0 - 2017-05-12
 ### Added
 - A secrets bucket is created automatically if left blank
 - Git over HTTPS is supported via a git-credentials file
@@ -55,18 +55,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Fixed a bug where the stack would scale up faster than instances were launching
 
-## [2.0.2] - 2017-04-11
+## 2.0.2 - 2017-04-11
 ### Fixed
 - 🕷 Avoid restarting docker whilst it's initializing to try and avoid corrupting it (#236)
 
-## [2.0.1] - 2017-04-04
+## 2.0.1 - 2017-04-04
 ### Added
 - 🆙 Includes new Buildkite Agent v2.5.1 (stable) and v3.0-beta.19 (beta)
 
 ### Fixed
 - ⏰ Increase the polling duration for scale down events to prevent hitting api limits (#263)
 
-## [2.0.0] - 2017-03-28
+## 2.0.0 - 2017-03-28
 ### Added
 - Docker 17.03.0-ce and Docker-Compose 1.11.2
 - Metrics are collected by a Lambda function, so no more metrics sub-stack 🎉
@@ -95,12 +95,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
 - ManagedPolicyARNs has been removed, a singular version exists now: ManagedPolicyARN
 
-## [1.1.1] - 2016-09-19
+## 1.1.1 - 2016-09-19
 ### Fixed
 - 👭 If you run multiple agents per instance, chmod during build environment setup no longer clashes (#143)
 - 🔐 The AWS_ECR_LOGIN_REGISTRY_IDS option has been fixed, so it now calls aws ecr get-login --registry-ids correctly (#141)
 
-## [1.1.0] - 2016-09-09
+## 1.1.0 - 2016-09-09
 - ### Added
 - 📡 Buildkite Agent has been updated to the latest builds
 - 🐳 Docker has been upgraded to 1.12.1
@@ -120,6 +120,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 
-## [1.0.0] - 2016-07-28
+## 1.0.0 - 2016-07-28
 ### Added
 - Initial release! 🎂🎉
