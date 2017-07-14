@@ -1,12 +1,14 @@
 #!/bin/bash
 # shellcheck disable=SC2016
-set -uo pipefail
+set -uxo pipefail
 
 if [[ $OSTYPE =~ ^darwin ]] ; then
-  cutoff_date=$(gdate --date='-2 days' +%Y-%m-%d)
+  cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
 else
-  cutoff_date=$(date --date='-2 days' +%Y-%m-%d)
+  cutoff_date=$(date --date='-1 days' +%Y-%m-%d)
 fi
+
+echo "--- Cleaning up resources older than ${cutoff_date}"
 
 if [[ -n "${AWS_STACK_NAME:-}" ]] ; then
   echo "--- Deleting stack $AWS_STACK_NAME"
@@ -18,8 +20,8 @@ aws s3api list-buckets \
   --output text \
   --query "$(printf 'Buckets[?CreationDate<`%s`].Name' "$cutoff_date" )" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-managedsecrets' \
-  | xargs -n1 -t -I% aws s3 rb s3://% --force  
+  | grep -E 'buildkite-aws-stack-test-(\d+-)?managedsecrets' \
+  | xargs -n1 -t -I% aws s3 rb s3://% --force
 
 echo "--- Deleting old cloudformation stacks"
 aws cloudformation describe-stacks \
