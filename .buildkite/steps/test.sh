@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1117
 set -eu
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
@@ -58,6 +59,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "ECRAccessPolicy",
     "ParameterValue": "readonly"
+  },
+  {
+    "ParameterKey": "RootVolumeSize",
+    "ParameterValue": "10"
   }
 ]
 EOF
