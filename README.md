@@ -88,7 +88,7 @@ Here's an example that shows how to generate a private SSH key, and upload it wi
 ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
 pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
 
-aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key" 
+aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key"
 ```
 
 If you want to set secrets that your build can access, create a file that sets environment variables and upload it:
@@ -96,10 +96,10 @@ If you want to set secrets that your build can access, create a file that sets e
 ```bash
 echo "export MY_ENV_VAR=something secret" > myenv
 aws s3 cp --acl private --sse aws:kms myenv "s3://${SecretsBucket}/env"
-rm myenv 
+rm myenv
 ```
 
-**Note: Currently only using the default KMS key for s3 can be used, follow [#235](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/235) for progress on using specific KMS keys** 
+**Note: Currently only using the default KMS key for s3 can be used, follow [#235](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/235) for progress on using specific KMS keys**
 
 If you really want to store your secrets unencrypted, you can disable it entirely with `BUILDKITE_USE_KMS=false`.
 
@@ -107,7 +107,7 @@ If you really want to store your secrets unencrypted, you can disable it entirel
 
 * [Amazon Linux 2017.03.1](https://aws.amazon.com/amazon-linux-ami/)
 * [Buildkite Agent](https://buildkite.com/docs/agent)
-* [Docker 17.05.0-ce](https://www.docker.com)
+* [Docker 17.06.0-ce](https://www.docker.com)
 * [Docker Compose 1.14.0](https://docs.docker.com/compose/)
 * [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
 * [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli or the Buildkite API
@@ -124,7 +124,7 @@ By following these simple conventions you get a scaleable, repeatable and source
 
 ## Multiple Instances of the Stack
 
-If you need to different instances sizes and scaling characteristics between pipelines, you can create multiple stack. Each can run on a different [Agent Queue](https://buildkite.com/docs/agent/queues), with it's own configuration, or even in a different AWS account. 
+If you need to different instances sizes and scaling characteristics between pipelines, you can create multiple stack. Each can run on a different [Agent Queue](https://buildkite.com/docs/agent/queues), with it's own configuration, or even in a different AWS account.
 
 Examples:
 
@@ -134,9 +134,9 @@ Examples:
 
 ## Autoscaling
 
-If you have provided `BuildkiteApiAccessToken` and your `MinSize` < `MaxSize`, the stack will automatically scale up and down based on the number of scheduled jobs. 
+If you have provided `BuildkiteApiAccessToken` and your `MinSize` < `MaxSize`, the stack will automatically scale up and down based on the number of scheduled jobs.
 
-This means you can scale down to zero when idle, which means you can use larger instances for the same cost. 
+This means you can scale down to zero when idle, which means you can use larger instances for the same cost.
 
 Metrics are collected with a Lambda function, polling every minute.
 
@@ -160,19 +160,19 @@ If you want to login to an ECR server on another AWS account, you can set `AWS_E
 
 We recommend running the latest release, which is available at `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`, or on the [releases page](https://github.com/buildkite/elastic-ci-stack-for-aws/releases).
 
-The latest build of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/master/aws-stack.json`, along with a version for each commit in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.json`. 
+The latest build of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/master/aws-stack.json`, along with a version for each commit in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.json`.
 
-Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.json`. 
+Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.json`.
 
 ## Updating Your Stack
 
 To update your stack to the latest version use CloudFormation’s stack update tools with one of the urls in the [Versions](#versions) section.
 
-Prior to updating, it's a good idea to set the desired instance size on the AutoscalingGroup to 0 manually. 
+Prior to updating, it's a good idea to set the desired instance size on the AutoscalingGroup to 0 manually.
 
 ## CloudWatch Metrics
 
-Metrics are calculated every minute from the Buildkite API using a lambda function. 
+Metrics are calculated every minute from the Buildkite API using a lambda function.
 
 <img width="544" alt="cloudwatch" src="https://cloud.githubusercontent.com/assets/153/16836158/85abdbc6-49ff-11e6-814c-eaf2400e8333.png">
 
