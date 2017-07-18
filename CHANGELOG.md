@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Show stack version in the environment hook
 - Move pipeline to yaml, json version is deprecated
 - Use Shudder tool to handle autoscaling events and spot notifications
+- Docker 17.06.0-ce
 
 ### Removed
 - Remove deprecated DOCKER_HUB_USER variables
