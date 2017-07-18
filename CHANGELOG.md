@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## 2.2.0-rc1 - 2017-07-18
 ### Changed
 - Move ecr, secrets and docker-login to plugins
 - Add a signature llama to the environment hook
