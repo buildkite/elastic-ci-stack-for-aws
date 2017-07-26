@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euxo pipefail
+
+mark_instance_unhealthy() {
+  aws autoscaling set-instance-health \
+    --instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+    --health-status Unhealthy
+}
+
+trap mark_instance_unhealthy ERR
+
+DISK_SPACE_FREE=$(df -k --output=avail "$PWD" | tail -n1)
+DISK_SPACE_REQUIRED=1048576 # 1GB
+
+echo "Disk space free: $DISK_SPACE_FREE"
+
+if [[ $DISK_SPACE_FREE -lt $DISK_SPACE_REQUIRED ]]; then
+  echo "Not enough disk space free"
+  exit 1
+fi
