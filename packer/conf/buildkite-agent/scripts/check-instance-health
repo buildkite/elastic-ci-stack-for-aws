@@ -1,30 +1,41 @@
 #!/bin/bash
 set -euo pipefail
 
+DISK_MIN_AVAILABLE=${DISK_MIN_AVAILABLE:-1048576} # 1GB
+DISK_MIN_INODES=${DISK_MIN_INODES:-10000}
+
 mark_instance_unhealthy() {
   aws autoscaling set-instance-health \
     --instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
     --health-status Unhealthy
 }
 
+check_disk_healthy() {
+  disk_avail=$(df -k --output=avail "$PWD" | tail -n1)
+  echo "Disk space free: $disk_avail"
+
+  if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
+    echo "Not enough disk space free"
+    return 1
+  fi
+
+  inodes_avail=$(df -k --output=iavail "$PWD" | tail -n1)
+  echo "Inodes free: $inodes_avail"
+
+  if [[ $inodes_avail -lt $DISK_MIN_INODES ]]; then
+    echo "Not enough inodes free"
+    return 1
+  fi
+}
+
 trap mark_instance_unhealthy ERR
 
-DISK_SPACE_FREE=$(df -k --output=avail "$PWD" | tail -n1)
-DISK_SPACE_REQUIRED=1048576 # 1GB
+if ! check_disk_healthy ; then
+  echo "~~~ Cleaning up docker resources"
+  docker system prune -a -f
 
-echo "Disk space free: $DISK_SPACE_FREE"
-
-if [[ $DISK_SPACE_FREE -lt $DISK_SPACE_REQUIRED ]]; then
-  echo "Not enough disk space free"
-  exit 1
-fi
-
-INODES_FREE=$(df -k --output=iavail "$PWD" | tail -n1)
-INODES_REQUIRED=10000
-
-echo "Inodes free: $INODES_FREE"
-
-if [[ $INODES_FREE -lt $INODES_REQUIRED ]]; then
-  echo "Not enough inodes free"
-  exit 1
+  if ! check_disk_healthy ; then
+    echo "Disk health checks failed"
+    exit 1
+  fi
 fi
