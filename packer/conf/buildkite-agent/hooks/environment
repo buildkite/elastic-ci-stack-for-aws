@@ -10,7 +10,7 @@ cat ~/cfn-env
 
 echo "Checking instance health"
 if ! /usr/bin/check-instance-health ; then
-  echo "+++ Instance is unhealthy ☠"
+  echo "+++ Instance is unhealthy, terminating it 🤢"
   exit 100
 fi
 
