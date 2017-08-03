@@ -9,7 +9,7 @@ echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION
 cat ~/cfn-env
 
 echo "Checking instance health"
-if ! /usr/local/bin/check-instance-health ; then
+if ! /usr/bin/check-instance-health ; then
   echo "+++ Instance is unhealthy ☠"
   exit 100
 fi
