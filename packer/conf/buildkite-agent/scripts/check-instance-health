@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 mark_instance_unhealthy() {
   aws autoscaling set-instance-health \
@@ -16,5 +16,15 @@ echo "Disk space free: $DISK_SPACE_FREE"
 
 if [[ $DISK_SPACE_FREE -lt $DISK_SPACE_REQUIRED ]]; then
   echo "Not enough disk space free"
+  exit 1
+fi
+
+INODES_FREE=$(df -k --output=iavail "$PWD" | tail -n1)
+INODES_REQUIRED=10000
+
+echo "Inodes free: $INODES_FREE"
+
+if [[ $INODES_FREE -lt $INODES_REQUIRED ]]; then
+  echo "Not enough inodes free"
   exit 1
 fi
