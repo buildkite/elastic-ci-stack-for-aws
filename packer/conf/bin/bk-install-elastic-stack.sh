@@ -123,7 +123,7 @@ service awslogs restart || true
 # wait for docker to start
 next_wait_time=0
 until docker ps || [ $next_wait_time -eq 5 ]; do
-   sleep $(( next_wait_time++ ))
+	sleep $(( next_wait_time++ ))
 done
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
