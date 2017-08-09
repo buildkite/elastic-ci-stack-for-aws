@@ -34,7 +34,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-shudder.sh"
+      "script": "scripts/install-lifecycled.sh"
     },
     {
       "type": "shell",

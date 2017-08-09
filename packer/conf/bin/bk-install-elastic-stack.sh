@@ -110,16 +110,14 @@ if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 	rm /tmp/elastic_bootstrap
 fi
 
-cat << EOF > /etc/shudder/shudder.toml
-sqs_prefix = "${BUILDKITE_STACK_NAME}"
-region = "${AWS_REGION}"
-sns_topic = "${BUILDKITE_LIFECYCLE_TOPIC}"
-commands = [["/usr/local/bin/stop-agent-gracefully"]]
+cat << EOF > /etc/lifecycled
+AWS_REGION=${AWS_REGION}
+LIFECYCLED_SNS_TOPIC = "${BUILDKITE_LIFECYCLE_TOPIC}"
+LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
 
 # my kingdom for a decent init system
-start terminationd || true
-start shudder || true
+start lifecycled || true
 service awslogs restart || true
 
 # wait for docker to start
