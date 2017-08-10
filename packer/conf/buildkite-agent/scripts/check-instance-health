@@ -40,7 +40,7 @@ trap mark_instance_unhealthy ERR
 
 if ! check_disk_healthy ; then
   echo "~~~ Cleaning up docker resources"
-  docker system prune -a -f
+  docker system prune --all --force --filter "until=15m"
 
   if ! check_disk_healthy ; then
     echo "Disk health checks failed" >&2
