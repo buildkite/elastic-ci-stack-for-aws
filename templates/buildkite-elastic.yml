@@ -343,7 +343,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: [ ec2.amazonaws.com ]
+              Service: [ autoscaling.amazonaws.com, ec2.amazonaws.com ]
             Action: sts:AssumeRole
       Path: /
 
@@ -371,7 +371,12 @@ Resources:
               - logs:PutLogEvents
               - logs:DescribeLogStreams
             Resource: "*"
-
+          - Effect: Allow
+            Action:
+              - sqs:*
+              - sns:Unsubscribe
+              - sns:Subscribe
+            Resource: "*"
       Roles:
         - { Ref: IAMRole }
 
