@@ -60,3 +60,6 @@ echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
 sudo cp -a /tmp/plugins/* /usr/local/buildkite-aws-stack/plugins/
 sudo chown -R buildkite-agent: /usr/local/buildkite-aws-stack
+
+echo "Adding check-instance-health cron task..."
+sudo ln -s /usr/bin/check-instance-health /etc/cron.hourly/check-instance-health

@@ -1,5 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-
-# prune stopped containers and images
-docker system prune -f
