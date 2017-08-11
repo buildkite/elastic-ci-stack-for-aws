@@ -45,12 +45,12 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, { Ref: 'AWS::Region' }, 'Bucket'] }
-        S3Key: "buildkite-metrics-v1.4.1-lambda.zip"
+        S3Key: "buildkite-metrics-v1.5.0-lambda.zip"
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
         - Arn
-      Timeout: 60
+      Timeout: 120
       Handler: handler.handle
       Runtime: python2.7
       MemorySize: 128
