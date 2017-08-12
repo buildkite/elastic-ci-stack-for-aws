@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## 2.2.0-rc3 - 2017-08-12
+### Changed
+- Bump buildkite-metrics to v1.5.0 (retry on error)
+- Replace shudder with new lifecycled that supports spot notifications
+
+## 2.2.0-rc2 - 2017-06-26
+### Changed
+- Re-added deprecated DOCKER_HUB_USER variables
+
 ## 2.2.0-rc1 - 2017-07-18
 ### Changed
 - Move ecr, secrets and docker-login to plugins
