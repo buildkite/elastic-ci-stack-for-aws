@@ -5,6 +5,13 @@ set -eu -o pipefail
 # shellcheck source=/dev/null
 source ~/cfn-env
 
+echo "~~~ Checking instance health"
+if ! /usr/bin/check-instance-health ; then
+  echo "^^^ +++"
+  echo "+++ Instance is unhealthy, terminating it 🤢"
+  exit 100
+fi
+
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 

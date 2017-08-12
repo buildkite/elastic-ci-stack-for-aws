@@ -1,0 +1,60 @@
+#!/bin/bash
+set -euo pipefail
+
+DISK_MIN_AVAILABLE=${DISK_MIN_AVAILABLE:-1048576} # 1GB
+DISK_MIN_INODES=${DISK_MIN_INODES:-10000}
+DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-12h}
+
+mark_instance_unhealthy() {
+  aws autoscaling set-instance-health \
+    --instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+    --health-status Unhealthy
+}
+
+check_disk_healthy() {
+  disk_avail=$(df -k --output=avail "$PWD" | tail -n1)
+  echo "Disk space free: $disk_avail"
+
+  if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
+    echo "Not enough disk space free" >&2
+    return 1
+  fi
+
+  inodes_avail=$(df -k --output=iavail "$PWD" | tail -n1)
+  echo "Inodes free: $inodes_avail"
+
+  if [[ $inodes_avail -lt $DISK_MIN_INODES ]]; then
+    echo "Not enough inodes free" >&2
+    return 1
+  fi
+}
+
+check_buildkite_agent_healthy() {
+  pgrep -f buildkite-agent
+}
+
+check_docker_healthy() {
+  timeout 30 docker ps -q
+}
+
+trap mark_instance_unhealthy ERR
+
+if ! check_disk_healthy ; then
+  echo "~~~ Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL}"
+  docker system prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
+
+  if ! check_disk_healthy ; then
+    echo "Disk health checks failed" >&2
+    exit 1
+  fi
+fi
+
+if ! check_docker_healthy ; then
+  echo "Docker health checks failed" >&2
+  exit 2
+fi
+
+if ! check_buildkite_agent_healthy ; then
+  echo "Buildkite-agent health checks failed" >&2
+  exit 2
+fi
