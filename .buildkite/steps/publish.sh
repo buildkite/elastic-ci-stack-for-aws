@@ -22,11 +22,15 @@ DESTINATION_AMIS=(
 )
 
 is_tag_build() {
-   [[ "$BUILDKITE_TAG" = "$BUILDKITE_BRANCH" ]]
+  [[ "$BUILDKITE_TAG" = "$BUILDKITE_BRANCH" ]]
 }
 
 is_latest_tag() {
-   [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
+  [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*' | grep -v '-rc') ]]
+}
+
+is_release_candidate_tag() {
+  [[ "$BUILDKITE_TAG" =~ -rc ]]
 }
 
 copy_ami_to_region() {
@@ -147,11 +151,18 @@ make clean
 echo "--- Generating mappings"
 generate_mappings
 
-echo "--- Building and publishing stack"
+echo "--- Building stack"
 make build
 
 # Publish the top-level mappings only on when we see the most recent tag on master
 if is_latest_tag ; then
+  if ! is_release_candidate_tag ; then
+    echo "--- Releasing buildkite-aws-stack/latest/aws-stack.yml"
+    aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/latest/mappings.yml"
+    aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/latest/aws-stack.json"
+    aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/latest/aws-stack.yml"
+  fi
+  echo "--- Releasing buildkite-aws-stack/aws-stack.yml"
   aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/mappings.yml"
   aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/aws-stack.json"
   aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/aws-stack.yml"
