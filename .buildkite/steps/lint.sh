@@ -9,5 +9,5 @@ grep -rl '^#!/.*sh' . | while read -r file ; do
 
   echo "Processing $file"
   docker run --rm -v "$PWD:/mnt" koalaman/shellcheck "$file"
-  echo -e "Ok.\n"
+  echo -e 'Ok.\n'
 done

@@ -40,7 +40,7 @@ AWS_REGION=$AWS_REGION
 EOF
 
 if [[ "${BUILDKITE_ECR_POLICY:-none}" != "none" ]] ; then
-	printf "AWS_ECR_LOGIN=1\n" >> /var/lib/buildkite-agent/cfn-env
+	printf 'AWS_ECR_LOGIN=1\n' >> /var/lib/buildkite-agent/cfn-env
 fi
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
