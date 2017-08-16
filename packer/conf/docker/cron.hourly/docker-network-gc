@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+
+DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-1h}
+
+## ------------------------------------------
+## Prune stuff that doesn't affect cache hits
+
+docker network prune -af --filter "until=${DOCKER_PRUNE_UNTIL}"
