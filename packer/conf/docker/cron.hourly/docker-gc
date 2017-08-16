@@ -8,4 +8,3 @@ DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-4h}
 
 docker network prune --force --filter "until=${DOCKER_PRUNE_UNTIL}"
 docker container prune --force --filter "until=${DOCKER_PRUNE_UNTIL}"
-docker volume prune --force --filter "until=${DOCKER_PRUNE_UNTIL}"
