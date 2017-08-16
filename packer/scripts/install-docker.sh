@@ -32,9 +32,9 @@ sudo chmod +x /usr/bin/docker-compose
 docker-compose --version
 
 echo "Adding docker cron tasks..."
-sudo cp /tmp/conf/docker/cron.hourly/docker-disk-gc /etc/cron.daily/docker-disk-gc
-sudo cp /tmp/conf/docker/cron.hourly/docker-network-gc /etc/cron.daily/docker-network-gc
-sudo chmod +x /etc/cron.daily/docker-{disk,network}-gc
+sudo cp /tmp/conf/docker/cron.hourly/docker-gc /etc/cron.daily/docker-gc
+sudo cp /tmp/conf/docker/cron.hourly/docker-low-disk-gc /etc/cron.daily/docker-low-disk-gc
+sudo chmod +x /etc/cron.daily/docker-*
 
 echo "Downloading jq..."
 sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
