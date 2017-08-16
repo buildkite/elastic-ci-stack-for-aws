@@ -38,8 +38,6 @@ trap mark_instance_unhealthy ERR
 if ! check_disk_healthy ; then
   echo "~~~ Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL}"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
-  docker container prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
-  docker volume prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
 
   if ! check_disk_healthy ; then
     echo "Disk health checks failed" >&2
