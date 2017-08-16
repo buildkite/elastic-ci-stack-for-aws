@@ -1,0 +1,49 @@
+#!/bin/bash
+set -euo pipefail
+
+DISK_MIN_AVAILABLE=${DISK_MIN_AVAILABLE:-1048576} # 1GB
+DISK_MIN_INODES=${DISK_MIN_INODES:-10000}
+DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-1h}
+
+mark_instance_unhealthy() {
+  # cancel any running buildkite builds
+  killall -QUIT buildkite-agent || true
+
+  # mark the instance for termination
+  aws autoscaling set-instance-health \
+    --instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+    --health-status Unhealthy
+}
+
+check_disk_healthy() {
+  disk_avail=$(df -k --output=avail "$PWD" | tail -n1)
+  echo "Disk space free: $disk_avail"
+
+  if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
+    echo "Not enough disk space free" >&2
+    return 1
+  fi
+
+  inodes_avail=$(df -k --output=iavail "$PWD" | tail -n1)
+  echo "Inodes free: $inodes_avail"
+
+  if [[ $inodes_avail -lt $DISK_MIN_INODES ]]; then
+    echo "Not enough inodes free" >&2
+    return 1
+  fi
+}
+
+trap mark_instance_unhealthy ERR
+
+## -----------------------------------------------------------------
+## Check disk, we only want to prune images/containers if we have to
+
+if ! check_disk_healthy ; then
+  echo "~~~ Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL}"
+  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
+
+  if ! check_disk_healthy ; then
+    echo "Disk health checks failed" >&2
+    exit 1
+  fi
+fi
