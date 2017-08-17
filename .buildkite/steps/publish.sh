@@ -22,11 +22,15 @@ DESTINATION_AMIS=(
 )
 
 is_tag_build() {
-   [[ "$BUILDKITE_TAG" = "$BUILDKITE_BRANCH" ]]
+  [[ "$BUILDKITE_TAG" = "$BUILDKITE_BRANCH" ]]
 }
 
 is_latest_tag() {
-   [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
+  [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
+}
+
+is_release_candidate_tag() {
+  [[ "$BUILDKITE_TAG" =~ -rc ]]
 }
 
 copy_ami_to_region() {
@@ -158,11 +162,14 @@ make clean
 echo "--- Generating mappings"
 generate_mappings
 
-echo "--- Building and publishing stack"
+echo "--- Building stack"
 make build
 
 # Publish the top-level mappings only on when we see the most recent tag on master
 if is_latest_tag ; then
+  if ! is_release_candidate_tag ; then
+    s3_upload_templates "latest/"
+  fi
   s3_upload_templates
 else
   echo "Skipping publishing latest, '$BUILDKITE_TAG' doesn't match '$(git describe origin/master --tags --match='v*')'"
