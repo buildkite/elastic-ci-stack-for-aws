@@ -26,7 +26,7 @@ is_tag_build() {
 }
 
 is_latest_tag() {
-  [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*' | grep -v -- '-rc') ]]
+  [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
 }
 
 is_release_candidate_tag() {
