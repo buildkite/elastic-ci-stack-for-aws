@@ -49,7 +49,7 @@ Features:
 
 See the [Elastic CI Stack for AWS guide](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, or jump straight in:
 
-[![Launch AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json)
+[![Launch AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.json)
 
 Current release is ![](https://img.shields.io/github/release/buildkite/elastic-ci-stack-for-aws.svg). See [Releases](https://github.com/buildkite/elastic-ci-stack-for-aws/releases) for older releases, or [Versions](#versions) for development version
 
@@ -61,7 +61,7 @@ If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`conf
 aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
-  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json" \
+  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.json" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters $(cat config.json)
 ```
