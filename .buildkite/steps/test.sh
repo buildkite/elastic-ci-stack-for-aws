@@ -28,10 +28,10 @@ stack_follow() {
   done
   if [[ $status =~ FAILED ]] ; then
     stack_events "$1"
-    echo -e "\033[33;31mStack creation failed!\n$(stack_failures "$1")\033[0m"
+    echo -e "\\033[33;31mStack creation failed!\\n$(stack_failures "$1")\\033[0m"
     return 1
   else
-    echo -e "\033[33;32mStack completed successfully\033[0m"
+    echo -e '\033[33;32mStack completed successfully\033[0m'
   fi
 }
 
