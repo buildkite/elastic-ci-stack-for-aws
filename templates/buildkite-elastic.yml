@@ -164,7 +164,7 @@ Parameters:
     MinValue: 0
 
   ScaleDownAdjustment:
-    Description: Number of instances to remove on scale down events (UnfinishedJobs == 0 for 30 mins)
+    Description: Number of instances to remove on scale down events (UnfinishedJobs == 0 for ScaleDownPeriod)
     Type: Number
     Default: -1
     MaxValue: 0
