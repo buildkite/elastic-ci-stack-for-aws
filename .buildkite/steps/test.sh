@@ -3,8 +3,8 @@
 set -eu
 
 agent_release="$1"
-stack_name="${AWS_STACK_QUEUE_NAME_PREFIX}-${agent_release}"
-queue_name="${AWS_STACK_NAME_PREFIX}-${agent_release}"
+stack_name="${AWS_STACK_NAME_PREFIX}-${agent_release}"
+queue_name="${AWS_STACK_QUEUE_NAME_PREFIX}-${agent_release}"
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
