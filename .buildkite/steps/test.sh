@@ -2,6 +2,10 @@
 # shellcheck disable=SC1117
 set -eu
 
+agent_release="$1"
+stack_name="${AWS_STACK_QUEUE_NAME_PREFIX}-${agent_release}"
+queue_name="${AWS_STACK_NAME_PREFIX}-${agent_release}"
+
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
@@ -26,11 +30,15 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "BuildkiteQueue",
-    "ParameterValue": "${AWS_STACK_QUEUE_NAME}"
+    "ParameterValue": "${queue_name}"
   },
   {
     "ParameterKey": "KeyName",
     "ParameterValue": "${AWS_KEYPAIR:-default}"
+  },
+  {
+    "ParameterKey": "BuildkiteAgentRelease",
+    "ParameterValue": "${agent_release}"
   },
   {
     "ParameterKey": "InstanceType",
@@ -77,14 +85,14 @@ EOF
 
 make build validate
 
-echo "--- Creating stack ${AWS_STACK_NAME} ($version)"
+echo "--- Creating stack ${stack_name} ($version)"
 aws cloudformation create-stack \
   --output text \
-  --stack-name "${AWS_STACK_NAME}" \
+  --stack-name "${stack_name}" \
   --disable-rollback \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 
 echo "--- Waiting for stack to complete"
-aws cloudformation wait stack-create-complete --stack-name "${AWS_STACK_NAME}"
+aws cloudformation wait stack-create-complete --stack-name "${stack_name}"
