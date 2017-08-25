@@ -37,14 +37,14 @@ steps:
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}-stable"
-      queue: "${AWS_STACK_QUEUE_NAME_PREFIX}-stable"
+      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}-stable"
 
   - name: ":buildkite: Instance test (with beta agent)"
     command: "/usr/local/bin/bats --pretty tests/"
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}-beta"
-      queue: "${AWS_STACK_QUEUE_NAME_PREFIX}-beta"
+      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}-beta"
 
   - wait
   - name: ":cloudformation: :rocket:"
