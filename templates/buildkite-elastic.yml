@@ -32,6 +32,7 @@ Metadata:
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
+        - EncryptRootVolume
         - AssociatePublicIpAddress
         - ManagedPolicyARN
 
@@ -179,6 +180,14 @@ Parameters:
     Type: Number
     Default: 250
     MinValue: 10
+
+  EncryptRootVolume:
+    Description: Encrypt instance root EBS volumes (will require a supported instance type)
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
 
   SecurityGroupId:
     Type: String
@@ -453,7 +462,7 @@ Resources:
         { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
+          Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2, Encrypted: { Ref: EncryptRootVolume } }
       UserData:
         "Fn::Base64":
           "Fn::Sub":
