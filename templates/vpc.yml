@@ -58,6 +58,7 @@ Resources:
 
   Routes:
     Type: AWS::EC2::RouteTable
+    DependsOn: Gateway
     Condition: CreateVpcResources
     Properties:
       VpcId: { Ref: Vpc }
@@ -68,6 +69,7 @@ Resources:
   RouteDefault:
     Type: AWS::EC2::Route
     Condition: CreateVpcResources
+    DependsOn: Gateway
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: { Ref: Gateway }
