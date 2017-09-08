@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# To run the unit tests for this file, run the following command in the root of
+# the project:
+# $ docker-compose -f docker-compose.unit-tests.yml run unit-tests
+
 # Files that are created by Docker containers end up with strange user and
 # group ids, usually 0 (root). Docker namespacing will one day save us, but it
 # can only map a single docker user id to a given user id (not any docker user
@@ -12,70 +16,70 @@
 
 set -eu -o pipefail
 
-# We need to scope this to only the currently running agent's builds, but we
-# also need to control security and make sure arbitrary folders can't be
-# chmoded.
+# We need to scope the next bit to only the currently running agent dir and
+# pipeline, but we also need to control security and make sure arbitrary folders
+# can't be chmoded.
 #
-# We prepare the agent build directory basename in the environment hook and
-# pass it as the first argument. In here we just need to check that it contains
-# no slashes and isn't a traversal component.
-AGENT_BUILDS_NAME="$1"
+# We prepare the agent build directory basename in the environment hook and pass
+# it as the first argument, org name as second argument, and the pipeline dir as
+# the third.
+#
+# In here we need to check that they both don't contain slashes or contain a
+# traversal component.
+
+AGENT_DIR="$1"
 # => "my-agent-1"
+
+ORG_DIR="$2"
+# => "my-org"
+
+PIPELINE_DIR="$3"
+# => "my-pipeline"
 
 # Make sure it doesn't contain any slashes by substituting slashes with nothing
 # and making sure it doesn't change
-if [[ "${AGENT_BUILDS_NAME//\//}" != "${AGENT_BUILDS_NAME}" ]]; then
-	exit 1
-fi
+function exit_if_contains_slashes() {
+	if [[ "${1//\//}" != "${1}" ]]; then
+		exit 1
+	fi
+}
 
-# Now we know this name has only non-slash characters.
-#
-# We just need to check that it's not "." or ".." to prevent traversal:
-if [[ "${AGENT_BUILDS_NAME}" == "." || "${AGENT_BUILDS_NAME}" == ".." ]]; then
-	exit 2
-fi
+function exit_if_contains_traversal() {
+	if [[ "${1}" == "." || "${1}" == ".." ]]; then
+		exit 2
+	fi
+}
 
-# We also need to make sure it's not empty so we don't collide with other agents:
-if [[ -z "${AGENT_BUILDS_NAME}" ]]; then
-	exit 3
-fi
+function exit_if_blank() {
+	if [[ -z "${1}" ]]; then
+		exit 3
+	fi
+}
+
+# Check them for slashes
+exit_if_contains_slashes "${AGENT_DIR}"
+exit_if_contains_slashes "${ORG_DIR}"
+exit_if_contains_slashes "${PIPELINE_DIR}"
+
+# Check them for traversals
+exit_if_contains_traversal "${AGENT_DIR}"
+exit_if_contains_traversal "${ORG_DIR}"
+exit_if_contains_traversal "${PIPELINE_DIR}"
+
+# Check them for blank vaues
+exit_if_blank "${AGENT_DIR}"
+exit_if_blank "${ORG_DIR}"
+exit_if_blank "${PIPELINE_DIR}"
+
+# If we make it here, we're safe to go!
 
 # We know the builds path:
 BUILDS_PATH="/var/lib/buildkite-agent/builds"
 
 # And now we can reconstruct the full agent builds path:
-AGENT_BUILDS_PATH="${BUILDS_PATH}/${AGENT_BUILDS_NAME}"
-# => "/var/lib/buildkite-agent/builds/my-agent-1"
+PIPELINE_PATH="${BUILDS_PATH}/${AGENT_DIR}/${ORG_DIR}/${PIPELINE_DIR}"
+# => "/var/lib/buildkite-agent/builds/my-agent-1/my-org/my-pipeline"
 
-if [[ -e "${AGENT_BUILDS_PATH}" ]]; then
-	/bin/chown -R buildkite-agent:buildkite-agent "${AGENT_BUILDS_PATH}"
+if [[ -e "${PIPELINE_PATH}" ]]; then
+	/bin/chown -R buildkite-agent:buildkite-agent "${PIPELINE_PATH}"
 fi
-
-# Manual tests (anybody know a good way to test this?):
-#
-# ./fix-buildkite-agent-builds-permissions "/"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "one/"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "/two"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "one/two"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "one/two/three"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "/two/"
-# => exit 1
-#
-# ./fix-buildkite-agent-builds-permissions "."
-# => exit 2
-#
-# ./fix-buildkite-agent-builds-permissions ".."
-# => exit 2
-#
-# ./fix-buildkite-agent-builds-permissions ""
-# => exit 3
