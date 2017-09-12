@@ -84,9 +84,9 @@ for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 
 	# Setup logging first so we capture everything
 	cat <<- EOF > "/etc/awslogs/config/buildkite-agent-${i}.conf"
-	[/var/log/buildkite-agent-${i}.log]
+	[/buildkite/buildkite-agent-${i}.log]
 	file = /var/log/buildkite-agent-${i}.log
-	log_group_name = /var/log/buildkite-agent.log
+	log_group_name = /buildkite/buildkite-agent
 	log_stream_name = {instance_id}-${i}
 	datetime_format = %Y-%m-%d %H:%M:%S
 	EOF
