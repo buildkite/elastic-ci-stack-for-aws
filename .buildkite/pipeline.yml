@@ -1,6 +1,6 @@
 env:
-  AWS_STACK_NAME: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
-  AWS_STACK_QUEUE_NAME: "testqueue-${BUILDKITE_BUILD_NUMBER}"
+  AWS_STACK_NAME_PREFIX: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
+  AWS_STACK_QUEUE_NAME_PREFIX: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
 steps:
   - name: ":bash: Lint"
@@ -23,8 +23,16 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
   - wait
-  - name: ":cloudformation: Launch"
-    command: .buildkite/steps/test.sh
+  - name: ":cloudformation: Launch (with stable agent)"
+    command: ".buildkite/steps/test.sh stable"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    artifact_paths:
+      - "build/*.json"
+      - "build/*.yml"
+
+  - name: ":cloudformation: Launch (with beta agent)"
+    command: ".buildkite/steps/test.sh beta"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths:
@@ -32,13 +40,19 @@ steps:
       - "build/*.yml"
 
   - wait
-  - name: ":buildkite: Instance test"
+  - name: ":buildkite: Instance test (with stable agent)"
     command: "/usr/local/bin/bats --pretty tests/"
-
     timeout_in_minutes: 5
     agents:
-      stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
+      stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}-stable"
+      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}-stable"
+
+  - name: ":buildkite: Instance test (with beta agent)"
+    command: "/usr/local/bin/bats --pretty tests/"
+    timeout_in_minutes: 5
+    agents:
+      stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}-beta"
+      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}-beta"
 
   - wait
   - name: ":cloudformation: :rocket:"

@@ -10,9 +10,12 @@ fi
 
 echo "--- Cleaning up resources older than ${cutoff_date}"
 
-if [[ -n "${AWS_STACK_NAME:-}" ]] ; then
-  echo "--- Deleting stack $AWS_STACK_NAME"
-  aws cloudformation delete-stack --stack-name "$AWS_STACK_NAME"
+if [[ -n "${AWS_STACK_NAME_PREFIX:-}" ]] ; then
+  echo "--- Deleting stack $AWS_STACK_NAME_PREFIX-beta"
+  aws cloudformation delete-stack --stack-name "$AWS_STACK_NAME_PREFIX-beta"
+
+  echo "--- Deleting stack $AWS_STACK_NAME_PREFIX-stable"
+  aws cloudformation delete-stack --stack-name "$AWS_STACK_NAME_PREFIX-stable"
 fi
 
 echo "--- Deleting test managed secrets buckets created"
