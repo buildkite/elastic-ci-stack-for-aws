@@ -510,7 +510,7 @@ Resources:
       AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
       LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
       DefaultResult: CONTINUE
-      HeartbeatTimeout: 600
+      HeartbeatTimeout: 120
       NotificationTargetARN: { Ref: AgentLifecycleTopic }
       RoleARN: { "Fn::GetAtt" : [ "AgentLifecycleHookRole", "Arn" ] }
 
