@@ -24,6 +24,8 @@ rm docker.tgz
 
 sudo cp /tmp/conf/docker/init.d/docker /etc/init.d/docker
 sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
+sudo cp /tmp/conf/docker/subuid /etc/subuid
+sudo cp /tmp/conf/docker/subgid /etc/subgid
 sudo chkconfig docker on
 
 echo "Downloading docker-compose..."
