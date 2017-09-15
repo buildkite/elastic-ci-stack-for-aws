@@ -9,7 +9,7 @@ echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION
 cat ~/cfn-env
 
 echo "Checking docker processes"
-ps aux | grep -E 'docker'
+pgrep -lf docker
 
 echo "Configuring built-in plugins"
 
