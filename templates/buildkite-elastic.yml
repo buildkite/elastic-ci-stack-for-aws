@@ -239,7 +239,7 @@ Parameters:
 
   EnableDockerUserNamespaceRemap:
     Type: String
-    Description: Enables experimental feature to run docker as buildkite-agent
+    Description: Enables experimental Docker userns-remap support
     AllowedValues:
       - true
       - false
