@@ -30,6 +30,12 @@ cwlogs = cwlogs
 region = $AWS_REGION
 EOF
 
+if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]] ; then
+  echo "Enabling docker userns-remap"
+  cp /etc/sysconfig/docker.userns-remap /etc/sysconfig/docker
+  service docker restart
+fi
+
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
