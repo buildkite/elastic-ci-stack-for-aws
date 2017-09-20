@@ -30,6 +30,12 @@ cwlogs = cwlogs
 region = $AWS_REGION
 EOF
 
+if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]] ; then
+  echo "Enabling docker userns-remap"
+  cp /etc/sysconfig/docker.userns-remap /etc/sysconfig/docker
+  service docker restart
+fi
+
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
@@ -46,6 +52,7 @@ export AWS_DEFAULT_REGION=$AWS_REGION
 export AWS_REGION=$AWS_REGION
 export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
+export BUILDKITE_USERNS_REMAP={DOCKER_USERNS_REMAP}
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
