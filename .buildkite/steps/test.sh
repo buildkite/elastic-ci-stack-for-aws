@@ -6,6 +6,7 @@ vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "V
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+version=$(git describe --tags --candidates=1)
 
 cat << EOF > config.json
 [
