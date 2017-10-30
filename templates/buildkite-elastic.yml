@@ -357,7 +357,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: [ autoscaling.amazonaws.com, ec2.amazonaws.com ]
+              Service: [ autoscaling.amazonaws.com, ec2.amazonaws.com, ecs.amazonaws.com ]
             Action: sts:AssumeRole
       Path: /
 
@@ -377,6 +377,7 @@ Resources:
               - autoscaling:RecordLifecycleActionHeartbeat
               - autoscaling:CompleteLifecycleAction
               - autoscaling:SetInstanceHealth
+              - ecs:*
             Resource: "*"
           - Effect: Allow
             Action:
@@ -509,7 +510,7 @@ Resources:
               yum install -y awslogs jq
 
               # Configure ECS cluster
-              cat >/etc/ecs/ecs.config <<- EOF
+              cat > /etc/ecs/ecs.config <<- EOF
               ECS_CLUSTER=${ECSCluster}
               EOF
 
