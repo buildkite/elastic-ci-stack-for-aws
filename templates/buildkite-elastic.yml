@@ -468,6 +468,17 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
 
+  ECSAgentTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        - Name: buildkite-agent
+            Ref: "AppName"
+          Image: "${DockerImage}"
+          Cpu: "10"
+          Memory: "500"
+          Essential: "true"
+
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -608,11 +619,11 @@ Resources:
                   exec 2>>/var/log/ecs/ecs-start-task.log
                   set -x
 
-                  docker pull ${DockerImage}
+                instance_arn=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $NF}' )
+                cluster=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .Cluster' | awk -F/ '{print $NF}' )
+                region=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F: '{print $4}')
 
-                  for i in \$(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-                    docker run --name "buildkite-agent-\${i}" --restart "${DockerImage}"
-                  done
+                aws ecs start-task --cluster $cluster --task-definition "${ECSAgentTaskDefinition}" --container-instances $instance_arn --region $region
               end script
               --==BOUNDARY==--
             #   #!/bin/bash -xv
