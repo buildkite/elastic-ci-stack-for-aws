@@ -1,13 +1,8 @@
 #!/bin/bash
 set -eu -o pipefail
 
-echo "Updating awscli..."
-sudo yum install -y python27-pip
-sudo pip install --upgrade --user awscli
-
-echo "Installing zip utils..."
-sudo yum update -y -q
-sudo yum install -y zip unzip
+echo "Installing dependencies..."
+sudo yum install -y python27-pip zip unzip git
 
 echo "Installing bats..."
 sudo yum install -y git
@@ -18,5 +13,10 @@ echo "Installing bk elastic stack bin files..."
 sudo chmod +x /tmp/conf/bin/bk-*
 sudo mv /tmp/conf/bin/bk-* /usr/local/bin
 
+env | grep PATH
+sudo env | grep PATH
+sudo -i env | grep PATH
+
 echo "Configuring awscli to use v4 signatures..."
-sudo aws configure set s3.signature_version s3v4
+pip install --upgrade --user awscli
+aws configure set s3.signature_version s3v4
