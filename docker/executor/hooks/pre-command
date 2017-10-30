@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command
+fi
+
+if [[ -n "${DOCKER_LOGIN_USER:-}" && "${DOCKER_LOGIN_PLUGIN_ENABLED:-}" == "1" ]] ; then
+
+  if [[ -n "${DOCKER_HUB_USER:-}" && -n "${DOCKER_HUB_PASSWORD:-}" ]]; then
+    echo "~~~ :warning: Deprecated DOCKER_HUB_* env variables"
+    echo "The following environment variables have been deprecated, and will be removed"
+    echo "in Elastic CI Stack for AWS v3 and above:"
+    echo "  * DOCKER_HUB_USER - has been renamed to DOCKER_LOGIN_USER"
+    echo "  * DOCKER_HUB_PASSWORD - has been renamed to DOCKER_LOGIN_PASSWORD"
+    echo "Please update your secrets bucket env hook."
+    DOCKER_LOGIN_USER="${DOCKER_HUB_USER}"
+    DOCKER_LOGIN_PASSWORD="${DOCKER_HUB_PASSWORD}"
+  fi
+
+  export BUILDKITE_PLUGIN_DOCKER_LOGIN_USERNAME="$DOCKER_LOGIN_USER"
+  export BUILDKITE_PLUGIN_DOCKER_LOGIN_PASSWORD="$DOCKER_LOGIN_PASSWORD"
+  export BUILDKITE_PLUGIN_DOCKER_LOGIN_SERVER="${DOCKER_LOGIN_SERVER:-}"
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/docker-login/hooks/pre-command
+fi

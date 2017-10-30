@@ -1,0 +1,7 @@
+{
+  "name": "ECR",
+  "description": "Login to ECR in your build steps.",
+  "author": "@lox",
+  "public": true,
+  "requirements": ["curl", "bash", "aws"]
+}
