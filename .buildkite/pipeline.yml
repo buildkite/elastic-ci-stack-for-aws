@@ -3,24 +3,23 @@ env:
   AWS_STACK_QUEUE_NAME: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
 steps:
-  - name: ":bash: Lint"
-    command: .buildkite/steps/lint.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-
-  - name: ":bash: Unit tests"
+  - name: ":docker: Build Agent"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     plugins:
       docker-compose#v1.5.2:
-        run: unit-tests
-        config: docker-compose.unit-tests.yml
+        build: agent
+        image-repository: 172840064832.dkr.ecr.us-east-1.amazonaws.com/elastic-stack-agent
 
   - wait
-  - name: ":packer: Build"
-    command: .buildkite/steps/packer.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
+  # - name: ":bash: Unit tests"
+  #   agents:
+  #     queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+  #   plugins:
+  #     docker-compose#v1.5.2:
+  #       run: unit-tests
+  #       config: docker-compose.unit-tests.yml
 
   - wait
   - name: ":cloudformation: Launch"
@@ -34,23 +33,22 @@ steps:
   - wait
   - name: ":buildkite: Instance test"
     command: "/usr/local/bin/bats --pretty tests/"
-
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
-  - wait
-  - name: ":cloudformation: :rocket:"
-    command: .buildkite/steps/publish.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "templates/mappings.yml;build/aws-stack.json;build/aws-stack.yml"
-    concurrency_group: "aws-stack-publish"
-    concurrency: 1
+  # - wait
+  # - name: ":cloudformation: :rocket:"
+  #   command: .buildkite/steps/publish.sh
+  #   agents:
+  #     queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+  #   artifact_paths: "templates/mappings.yml;build/aws-stack.json;build/aws-stack.yml"
+  #   concurrency_group: "aws-stack-publish"
+  #   concurrency: 1
 
-  - wait
-  - name: "Cleanup"
-    command: .buildkite/steps/cleanup.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+  # - wait
+  # - name: "Cleanup"
+  #   command: .buildkite/steps/cleanup.sh
+  #   agents:
+  #     queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"

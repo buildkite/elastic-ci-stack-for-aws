@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+function plugin_var_prefixes() {
+  while IFS='=' read -r name value ; do
+    if [[ $name =~ ^(BUILDKITE_PLUGIN_DOCKER_LOGIN_[0-9]+) || $name =~ ^(BUILDKITE_PLUGIN_DOCKER_LOGIN)_[^0-9] ]] ; then
+      echo "${BASH_REMATCH[1]}"
+    fi
+  done < <(env) | sort | uniq
+}
+
+prefixes=( $(plugin_var_prefixes) )
+
+# enumerate the list of servers to login
+for prefix in "${prefixes[@]}" ; do
+  username_var="${prefix}_USERNAME"
+  password_var="${prefix}_PASSWORD"
+  server_var="${prefix}_SERVER"
+
+  login_args=(
+    "--username" "${!username_var:-}"
+    "--password" "${!password_var:-}"
+  )
+
+  if [[ -n "${!server_var:-}" ]] ; then
+    login_args+=("${!server_var:-}")
+  fi
+
+  echo "~~~ :docker: Logging into docker registry ${!server_var:-hub.docker.com}"
+  docker login "${login_args[@]}"
+done

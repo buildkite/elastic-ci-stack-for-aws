@@ -1,11 +1,11 @@
-[submodule "plugins/secrets"]
-	path = plugins/secrets
+[submodule "docker/executor/plugins/secrets"]
+	path = docker/executorplugins/secrets
 	url = https://github.com/buildkite-plugins/s3-secrets-buildkite-plugin.git
 
-[submodule "plugins/ecr"]
-	path = plugins/ecr
+[submodule "docker/executor/plugins/ecr"]
+	path = docker/executor/plugins/ecr
 	url = https://github.com/buildkite-plugins/ecr-buildkite-plugin.git
 
-[submodule "plugins/docker-login"]
-	path = plugins/docker-login
+[submodule "docker/executor/plugins/docker-login"]
+	path = docker/executor/plugins/docker-login
 	url = https://github.com/buildkite-plugins/docker-login-buildkite-plugin.git

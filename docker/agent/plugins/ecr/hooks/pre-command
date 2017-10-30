@@ -1,0 +1,76 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+# Reads either a value or a list from plugin config
+function plugin_read_list() {
+  local prefix="BUILDKITE_PLUGIN_ECR_$1"
+  local parameter="${prefix}_0"
+
+  if [[ -n "${!parameter:-}" ]]; then
+    local i=0
+    local parameter="${prefix}_${i}"
+    while [[ -n "${!parameter:-}" ]]; do
+      echo "${!parameter}"
+      i=$((i+1))
+      parameter="${prefix}_${i}"
+    done
+  elif [[ -n "${!prefix:-}" ]]; then
+    echo "${!prefix}"
+  fi
+}
+
+# Check a provided aws-cli version is greater or equal than the current
+function aws_version_ge() {
+  local version; version="$(aws --version 2>&1 | awk -F'[/ ]' '{print $2}')"
+  local wanted=( ${1//./ } )
+  local current=( ${version//./ } )
+
+  if [[ ! ${#current[@]} -eq 3 ]] ; then
+    echo "Expected $version to be in the form x.y.z"
+    exit 1
+  fi
+
+  [[ ${current[0]} -gt ${wanted[0]} ]] && return 0
+  [[ ${current[1]} -gt ${wanted[1]} ]] && return 0
+  [[ ${current[2]} -ge ${wanted[2]} ]] && return 0
+
+  echo "$version isn't ge $1"
+
+  return 1
+}
+
+if [[ -z "${AWS_DEFAULT_REGION:-}" ]] ; then
+  export AWS_DEFAULT_REGION=us-east-1
+fi
+
+# If not specified, auto-detect if we can support no-include-email
+if [[ -z "${BUILDKITE_PLUGIN_ECR_NO_INCLUDE_EMAIL:-}" ]] ; then
+  if aws_version_ge "1.11.91" ; then
+    BUILDKITE_PLUGIN_ECR_NO_INCLUDE_EMAIL="true"
+  else
+    BUILDKITE_PLUGIN_ECR_NO_INCLUDE_EMAIL="false"
+  fi
+fi
+
+# For logging into the current AWS account’s registry
+if [[ "${BUILDKITE_PLUGIN_ECR_LOGIN:-}" =~ ^(true|1)$ ]] ; then
+  registry_ids=( $(plugin_read_list ACCOUNT_IDS | tr "," "\n") )
+  login_args=()
+
+  if [[ $BUILDKITE_PLUGIN_ECR_NO_INCLUDE_EMAIL =~ (true|on|1) ]] ; then
+    login_args+=("--no-include-email")
+  fi
+
+  if [[ ${#registry_ids[@]} -gt 0 ]] ; then
+    login_args+=("--registry-ids" "${registry_ids[@]}")
+  fi
+
+  echo "~~~ Authenticating with AWS ECR"
+
+  # shellcheck disable=SC2068
+  ecr_login=$(aws ecr get-login ${login_args[@]+"${login_args[@]}"}) || exit $?
+
+  # despite all the horror above, if we have docker > 17.06 it still breaks...
+  eval "$(sed 's/-e none//' <<< "$ecr_login")"
+fi
