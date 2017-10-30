@@ -2,6 +2,7 @@
 set -eu -o pipefail
 
 echo "Updating awscli..."
+sudo yum install -y python27-pip
 sudo pip install --upgrade --user awscli
 
 echo "Installing zip utils..."
