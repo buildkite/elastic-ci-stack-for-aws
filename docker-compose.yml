@@ -1,5 +1,8 @@
 version: '2.1'
 
 services:
-  elastic-stack:
-    build: ./docker
+  executor:
+    build: ./docker/executor
+
+  agent:
+    build: ./docker/agent

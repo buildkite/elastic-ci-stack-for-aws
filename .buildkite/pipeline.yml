@@ -3,14 +3,23 @@ env:
   AWS_STACK_QUEUE_NAME: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
 steps:
-  - name: ":docker: Build"
-    command: .buildkite/steps/docker.sh
+  - name: ":docker: Build Agent"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     plugins:
       docker-compose#v1.5.2:
-        build: elastic-stack
-        image-repository: 172840064832.dkr.ecr.us-east-1.amazonaws.com/elastic-stack
+        build: agent
+        image-repository: 172840064832.dkr.ecr.us-east-1.amazonaws.com/elastic-stack-executor
+
+  - name: ":docker: Build Executor"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    plugins:
+      docker-compose#v1.5.2:
+        build: executor
+        image-repository: 172840064832.dkr.ecr.us-east-1.amazonaws.com/elastic-stack-agent
+
+  - wait
 
   # - name: ":bash: Unit tests"
   #   agents:
