@@ -7,9 +7,6 @@ subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --quer
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 
-image_id=$(buildkite-agent meta-data get image_id)
-echo "Using AMI $image_id"
-
 cat << EOF > config.json
 [
   {
@@ -59,27 +56,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "ECRAccessPolicy",
     "ParameterValue": "readonly"
-  },
-  {
-    "ParameterKey": "RootVolumeSize",
-    "ParameterValue": "10"
-  },
-  {
-    "ParameterKey": "EnableDockerUserNamespaceRemap",
-    "ParameterValue": "true"
   }
 ]
 EOF
 
-version=$(git describe --tags --candidates=1)
-
-cat << EOF > templates/mappings.yml
-Mappings:
-  AWSRegion2AMI:
-    us-east-1     : { AMI: $image_id }
-EOF
-
-make build validate
 
 echo "--- Creating stack ${AWS_STACK_NAME} ($version)"
 aws cloudformation create-stack \
