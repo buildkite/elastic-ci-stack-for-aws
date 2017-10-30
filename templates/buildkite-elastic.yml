@@ -503,13 +503,15 @@ Resources:
               --==BOUNDARY==
               Content-Type: text/x-shellscript; charset="us-ascii"
               #!/bin/bash
-              echo "ECS_CLUSTER=${ECSCluster}" >> /etc/ecs/ecs.config
+              set -euo pipefail
 
-              --==BOUNDARY==
-              Content-Type: text/x-shellscript; charset="us-ascii"
-              #!/bin/bash
               # Install awslogs and the jq JSON parser
               yum install -y awslogs jq
+
+              # Configure ECS cluster
+              cat >/etc/ecs/ecs.config <<- EOF
+              ECS_CLUSTER=${ECSCluster}
+              EOF
 
               # Inject the CloudWatch Logs configuration file contents
               cat > /etc/awslogs/awslogs.conf <<- EOF
@@ -571,9 +573,6 @@ Resources:
               datetime_format = %Y-%m-%dT%H:%M:%SZ
               EOF
 
-              --==BOUNDARY==
-              Content-Type: text/x-shellscript; charset="us-ascii"
-              #!/bin/bash
               # Set the region to send CloudWatch Logs data to (the region where the container instance is located)
               sed -i -e "s/region = us-east-1/region = ${AWS::Region}/g" /etc/awslogs/awscli.conf
 
@@ -592,12 +591,11 @@ Resources:
                 # Wait for metadata to be available
                 until curl -s http://localhost:51678/v1/metadata ; do sleep 1 ; done
 
-                # Grab the cluster and container instance ARN from instance metadata
-                cluster=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .Cluster')
+                # Grab the container instance ARN from instance metadata
                 container_instance_id=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $2}' )
 
                 # Replace the cluster name and container instance ID placeholders with the actual values
-                sed -i -e "s/{cluster}/$cluster/g" /etc/awslogs/awslogs.conf
+                sed -i -e "s/{cluster}/${ECSCluster}"/g" /etc/awslogs/awslogs.conf
                 sed -i -e "s/{container_instance_id}/$container_instance_id/g" /etc/awslogs/awslogs.conf
 
                 service awslogs start
@@ -618,11 +616,13 @@ Resources:
                   exec 2>>/var/log/ecs/ecs-start-task.log
                   set -x
 
-                instance_arn=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $NF}' )
-                cluster=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .Cluster' | awk -F/ '{print $NF}' )
-                region=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F: '{print $4}')
+                  # Wait for metadata to be available
+                  until curl -s http://localhost:51678/v1/metadata ; do sleep 1 ; done
 
-                aws ecs start-task --cluster $cluster --task-definition "${ECSAgentTaskDefinition}" --container-instances $instance_arn --region $region
+                  # Grab the container instance ARN from instance metadata
+                  instance_arn=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $NF}' )
+
+                  aws ecs start-task --cluster "${ECSCluster}" --task-definition "${ECSAgentTaskDefinition}" --container-instances $instance_arn --region ${AWS::Region}
               end script
               --==BOUNDARY==--
             #   #!/bin/bash -xv
