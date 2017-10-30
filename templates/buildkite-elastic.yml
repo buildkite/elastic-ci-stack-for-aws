@@ -593,6 +593,27 @@ Resources:
                 service awslogs start
                 chkconfig awslogs on
               end script
+
+              --==BOUNDARY==
+              MIME-Version: 1.0
+              Content-Type: text/upstart-job; charset="us-ascii"
+              Content-Disposition: attachment; filename="buildkite-agent.conf"
+
+              #upstart-job
+              description "Buildkite Agents"
+              author "Buildkite"
+              start on started docker
+
+              script
+                  exec 2>>/var/log/ecs/ecs-start-task.log
+                  set -x
+
+                  docker pull ${DockerImage}
+
+                  for i in \$(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
+                    docker run --name "buildkite-agent-\${i}" --restart "${DockerImage}"
+                  done
+              end script
               --==BOUNDARY==--
             #   #!/bin/bash -xv
             #   BUILDKITE_STACK_NAME="${AWS::StackName}" \
