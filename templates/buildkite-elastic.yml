@@ -594,7 +594,6 @@ Resources:
                 chkconfig awslogs on
               end script
               --==BOUNDARY==--
-
             #   #!/bin/bash -xv
             #   BUILDKITE_STACK_NAME="${AWS::StackName}" \
             #   BUILDKITE_STACK_VERSION=dev \
@@ -615,11 +614,11 @@ Resources:
             #   ECS_CLUSTER=${ECSCluster} \
             #   AWS_REGION=${AWS::Region} \
             #     /usr/local/bin/bk-install-elastic-stack.sh
-            # - LocalSecretsBucket:
-            #     "Fn::If":
-            #       - CreateSecretsBucket
-            #       - { Ref: ManagedSecretsBucket }
-            #       - { Ref: SecretsBucket }
+            - LocalSecretsBucket:
+                "Fn::If":
+                  - CreateSecretsBucket
+                  - { Ref: ManagedSecretsBucket }
+                  - { Ref: SecretsBucket }
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
