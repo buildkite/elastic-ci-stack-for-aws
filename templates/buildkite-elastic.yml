@@ -245,6 +245,10 @@ Parameters:
       - false
     Default: "false"
 
+  DockerImage:
+    Type: String
+    Description: The docker image to execute when booted
+
 Outputs:
   ManagedSecretsBucket:
     Value:
