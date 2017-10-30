@@ -22,6 +22,11 @@ trap 'on_error $LINENO' ERR
 INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
+# Configure ECS agent
+cat << EOF > /etc/ecs/ecs.config
+ECS_CLUSTER=${ECS_CLUSTER}"
+EOF
+
 # Cloudwatch logs needs a region specifically configured
 cat << EOF > /etc/awslogs/awscli.conf
 [plugins]
