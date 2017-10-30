@@ -473,8 +473,7 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Name: buildkite-agent
-            Ref: "AppName"
-          Image: "${DockerImage}"
+          Image: !Ref "${DockerImage}"
           Cpu: "10"
           Memory: "500"
           Essential: "true"
