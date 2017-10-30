@@ -21,23 +21,22 @@ steps:
   #       run: unit-tests
   #       config: docker-compose.unit-tests.yml
 
-  # - wait
-  # - name: ":cloudformation: Launch"
-  #   command: .buildkite/steps/test.sh
-  #   agents:
-  #     queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-  #   artifact_paths:
-  #     - "build/*.json"
-  #     - "build/*.yml"
+  - wait
+  - name: ":cloudformation: Launch"
+    command: .buildkite/steps/test.sh
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    artifact_paths:
+      - "build/*.json"
+      - "build/*.yml"
 
-  # - wait
-  # - name: ":buildkite: Instance test"
-  #   command: "/usr/local/bin/bats --pretty tests/"
-
-  #   timeout_in_minutes: 5
-  #   agents:
-  #     stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
-  #     queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
+  - wait
+  - name: ":buildkite: Instance test"
+    command: "/usr/local/bin/bats --pretty tests/"
+    timeout_in_minutes: 5
+    agents:
+      stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
   # - wait
   # - name: ":cloudformation: :rocket:"
