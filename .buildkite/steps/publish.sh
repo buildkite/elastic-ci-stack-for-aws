@@ -16,11 +16,9 @@ is_release_candidate_tag() {
 s3_upload_templates() {
   local bucket_prefix="${1:-}"
 
-  aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${bucket_prefix}mappings.yml"
   aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${bucket_prefix}aws-stack.json"
   aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${bucket_prefix}aws-stack.yml"
 
-  echo "Published https://s3.amazonaws.com/buildkite-aws-stack/${bucket_prefix}mappings.yml"
   echo "Published https://s3.amazonaws.com/buildkite-aws-stack/${bucket_prefix}aws-stack.json"
   echo "Published https://s3.amazonaws.com/buildkite-aws-stack/${bucket_prefix}aws-stack.yml"
 }

@@ -313,6 +313,20 @@ Mappings:
     ap-south-1 : { Bucket: "buildkite-metrics-ap-south-1" }
     sa-east-1 : { Bucket: "buildkite-metrics-sa-east-1" }
 
+  # amzn-ami-2017.03.g-amazon-ecs-optimized
+  AWSRegion2AMI:
+    us-east-1 : { AMI: ami-ec33cc96 }
+    us-east-2 : { AMI: ami-34032e51 }
+    us-west-1 : { AMI: ami-d5d0e0b5 }
+    us-west-2 : { AMI: ami-29f80351 }
+    eu-west-1 : { AMI: ami-13f7226a }
+    eu-west-2 : { AMI: ami-eb62708f }
+    eu-central-1 : { AMI: ami-40d5672f }
+    ap-northeast-1 : { AMI: ami-21815747 }
+    ap-northeast-2 : { AMI: ami-7ee13b10 }
+    ap-southeast-1 : { AMI: ami-99f588fa }
+    ap-southeast-2 : { AMI: ami-4f08e82d }
+    ca-central-1 : { AMI: ami-9b54edf }
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
@@ -462,38 +476,150 @@ Resources:
         { "Fn::If": [ "UseSpotInstances", { Ref: SpotPrice }, { Ref: 'AWS::NoValue' } ] }
       ImageId :
         { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
+      # BlockDeviceMappings:
+      #   - DeviceName: /dev/xvda
+      #     Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
       UserData:
         "Fn::Base64":
           "Fn::Sub":
             - |
-              #!/bin/bash -xv
-              BUILDKITE_STACK_NAME="${AWS::StackName}" \
-              BUILDKITE_STACK_VERSION=dev \
-              BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
-              BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
-              BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
-              BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
-              BUILDKITE_QUEUE="${BuildkiteQueue}" \
-              BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
-              BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
-              BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
-              BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
-              AWS_DEFAULT_REGION=${AWS::Region} \
-              SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
-              ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
-              DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
-              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
-              ECS_CLUSTER=${ECSCluster} \
-              AWS_REGION=${AWS::Region} \
-                /usr/local/bin/bk-install-elastic-stack.sh
-            - LocalSecretsBucket:
-                "Fn::If":
-                  - CreateSecretsBucket
-                  - { Ref: ManagedSecretsBucket }
-                  - { Ref: SecretsBucket }
+              Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+              MIME-Version: 1.0
+
+              --==BOUNDARY==
+              Content-Type: text/x-shellscript; charset="us-ascii"
+              #!/bin/bash
+              echo "ECS_CLUSTER=${ECS_CLUSTER}" >> /etc/ecs/ecs.config
+
+              --==BOUNDARY==
+              Content-Type: text/x-shellscript; charset="us-ascii"
+              #!/bin/bash
+              # Install awslogs and the jq JSON parser
+              yum install -y awslogs jq
+
+              # Inject the CloudWatch Logs configuration file contents
+              cat > /etc/awslogs/awslogs.conf <<- EOF
+              [general]
+              state_file = /var/awslogs/state/agent-state
+
+              [/buildkite/system]
+              file = /var/log/messages
+              log_group_name = /buildkite/system
+              log_stream_name = {instance_id}
+              datetime_format = %b %d %H:%M:%S
+
+              [/buildkite/docker-daemon]
+              file = /var/log/docker
+              log_group_name = /buildkite/docker-daemon
+              log_stream_name = {instance_id}
+              datetime_format = %Y-%m-%dT%H:%M:%S.%f
+
+              [/buildkite/cfn-init]
+              file = /var/log/cfn-init.log
+              log_group_name = /buildkite/cfn-init
+              log_stream_name = {instance_id}
+              datetime_format = %Y-%m-%d %H:%M:%S,%f
+
+              [/buildkite/cloud-init]
+              file = /var/log/cloud-init.log
+              log_group_name = /buildkite/cloud-init
+              log_stream_name = {instance_id}
+              datetime_format = %Y-%m-%d %H:%M:%S,%f
+
+              [/buildkite/cloud-init/output]
+              file = /var/log/cloud-init-output.log
+              log_group_name = /buildkite/cloud-init/output
+              log_stream_name = {instance_id}
+              datetime_format = %Y-%m-%d %H:%M:%S,%f
+
+              [/buildkite/elastic-stack-init]
+              file = /var/log/elastic-stack.log
+              log_group_name = /buildkite/elastic-stack-init
+              log_stream_name = {instance_id}
+              datetime_format = %Y-%m-%d %H:%M:%S,%f
+
+              [/buildkite/ecs/ecs-init.log]
+              file = /var/log/ecs/ecs-init.log.*
+              log_group_name = /buildkite/ecs/{cluster}/ecs-init.log
+              log_stream_name = {container_instance_id}
+              datetime_format = %Y-%m-%dT%H:%M:%SZ
+
+              [/buildkite/ecs/ecs-agent.log]
+              file = /var/log/ecs/ecs-agent.log.*
+              log_group_name = /buildkite/ecs/{cluster}/ecs-agent.log
+              log_stream_name = {container_instance_id}
+              datetime_format = %Y-%m-%dT%H:%M:%SZ
+
+              [/buildkite/ecs/audit.log]
+              file = /var/log/ecs/audit.log.*
+              log_group_name = /buildkite/ecs/{cluster}/ecs-audit.log
+              log_stream_name = {container_instance_id}
+              datetime_format = %Y-%m-%dT%H:%M:%SZ
+              EOF
+
+              --==BOUNDARY==
+              Content-Type: text/cloud-config; charset="us-ascii"
+              hostname: ${hostname}
+
+              --==BOUNDARY==
+              Content-Type: text/x-shellscript; charset="us-ascii"
+              #!/bin/bash
+              # Set the region to send CloudWatch Logs data to (the region where the container instance is located)
+              sed -i -e "s/region = us-east-1/region = ${AWS::Region}/g" /etc/awslogs/awscli.conf
+
+              --==BOUNDARY==
+              Content-Type: text/upstart-job; charset="us-ascii"
+
+              #upstart-job
+              description "Configure and start CloudWatch Logs agent on Amazon ECS container instance"
+              author "Amazon Web Services"
+              start on started ecs
+
+              script
+                exec 2>>/var/log/ecs/cloudwatch-logs-start.log
+                set -x
+
+                # Wait for metadata to be available
+                until curl -s http://localhost:51678/v1/metadata ; do sleep 1 ; done
+
+                # Grab the cluster and container instance ARN from instance metadata
+                cluster=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .Cluster')
+                container_instance_id=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $2}' )
+
+                # Replace the cluster name and container instance ID placeholders with the actual values
+                sed -i -e "s/{cluster}/$cluster/g" /etc/awslogs/awslogs.conf
+                sed -i -e "s/{container_instance_id}/$container_instance_id/g" /etc/awslogs/awslogs.conf
+
+                service awslogs start
+                chkconfig awslogs on
+              end script
+              --==BOUNDARY==--
+
+            #   #!/bin/bash -xv
+            #   BUILDKITE_STACK_NAME="${AWS::StackName}" \
+            #   BUILDKITE_STACK_VERSION=dev \
+            #   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
+            #   BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
+            #   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+            #   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
+            #   BUILDKITE_QUEUE="${BuildkiteQueue}" \
+            #   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+            #   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
+            #   BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
+            #   BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
+            #   AWS_DEFAULT_REGION=${AWS::Region} \
+            #   SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
+            #   ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
+            #   DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
+            #   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+            #   ECS_CLUSTER=${ECSCluster} \
+            #   AWS_REGION=${AWS::Region} \
+            #     /usr/local/bin/bk-install-elastic-stack.sh
+            # - LocalSecretsBucket:
+            #     "Fn::If":
+            #       - CreateSecretsBucket
+            #       - { Ref: ManagedSecretsBucket }
+            #       - { Ref: SecretsBucket }
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic

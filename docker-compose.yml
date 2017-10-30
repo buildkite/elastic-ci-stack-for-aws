@@ -1,8 +1,5 @@
 version: '2.1'
 
 services:
-  executor:
-    build: ./docker/executor
-
   agent:
     build: ./docker/agent

@@ -60,7 +60,6 @@ cat << EOF > config.json
 ]
 EOF
 
-
 echo "--- Creating stack ${AWS_STACK_NAME} ($version)"
 aws cloudformation create-stack \
   --output text \

@@ -9,14 +9,6 @@ steps:
     plugins:
       docker-compose#v1.5.2:
         build: agent
-        image-repository: 172840064832.dkr.ecr.us-east-1.amazonaws.com/elastic-stack-executor
-
-  - name: ":docker: Build Executor"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    plugins:
-      docker-compose#v1.5.2:
-        build: executor
         image-repository: 172840064832.dkr.ecr.us-east-1.amazonaws.com/elastic-stack-agent
 
   - wait
