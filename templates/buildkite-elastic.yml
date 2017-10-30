@@ -549,12 +549,6 @@ Resources:
               log_stream_name = {instance_id}
               datetime_format = %Y-%m-%d %H:%M:%S,%f
 
-              [/buildkite/elastic-stack-init]
-              file = /var/log/elastic-stack.log
-              log_group_name = /buildkite/elastic-stack-init
-              log_stream_name = {instance_id}
-              datetime_format = %Y-%m-%d %H:%M:%S,%f
-
               [/buildkite/ecs/ecs-init.log]
               file = /var/log/ecs/ecs-init.log.*
               log_group_name = /buildkite/ecs/{cluster}/ecs-init.log
@@ -572,13 +566,21 @@ Resources:
               log_group_name = /buildkite/ecs/{cluster}/ecs-audit.log
               log_stream_name = {container_instance_id}
               datetime_format = %Y-%m-%dT%H:%M:%SZ
+
+              [/buildkite/ecs/start-tasks.log]
+              file = /var/log/ecs/start-tasks.log
+              log_group_name = /buildkite/ecs/{cluster}/start-tasks.log
+              log_stream_name = {container_instance_id}
+              datetime_format = %Y-%m-%dT%H:%M:%SZ
               EOF
 
               # Set the region to send CloudWatch Logs data to (the region where the container instance is located)
               sed -i -e "s/region = us-east-1/region = ${AWS::Region}/g" /etc/awslogs/awscli.conf
 
               --==BOUNDARY==
+              MIME-Version: 1.0
               Content-Type: text/upstart-job; charset="us-ascii"
+              Content-Disposition: attachment; filename="cloudwatch-logs.conf"
 
               #upstart-job
               description "Configure and start CloudWatch Logs agent on Amazon ECS container instance"
@@ -611,19 +613,19 @@ Resources:
               #upstart-job
               description "Buildkite Agents"
               author "Buildkite"
-              start on started docker
+              start on started ecs
 
               script
-                  exec 2>>/var/log/ecs/ecs-start-task.log
-                  set -x
+                exec 2>>/var/log/ecs/start-tasks.log
+                set -x
 
-                  # Wait for metadata to be available
-                  until curl -s http://localhost:51678/v1/metadata ; do sleep 1 ; done
+                # Wait for metadata to be available
+                until curl -s http://localhost:51678/v1/metadata ; do sleep 1 ; done
 
-                  # Grab the container instance ARN from instance metadata
-                  instance_arn=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $NF}' )
+                # Grab the container instance ARN from instance metadata
+                instance_arn=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $NF}' )
 
-                  aws ecs start-task --cluster "${ECSCluster}" --task-definition "${ECSAgentTaskDefinition}" --container-instances $instance_arn --region ${AWS::Region}
+                aws ecs start-task --cluster "${ECSCluster}" --task-definition "${ECSAgentTaskDefinition}" --container-instances $instance_arn --region ${AWS::Region}
               end script
               --==BOUNDARY==--
             #   #!/bin/bash -xv
