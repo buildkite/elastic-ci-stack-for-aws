@@ -297,7 +297,7 @@ Conditions:
       "Fn::Not": [ "Fn::Equals": [ { Ref: MaxSize }, { Ref: MinSize } ] ]
 
     PreemptiveScaling:
-      "Fn::And": [ Condition: UseAutoscaling, [ "Fn::Equals": [ { Ref: EnablePreemptiveScaling }, "true" ] ] ]
+      "Fn::And": [ Condition: UseAutoscaling, { "Fn::Equals": [ { Ref: EnablePreemptiveScaling }, "true" ] } ]
 
     StandardScaling:
       "Fn::And": [ Condition: UseAutoscaling, { "Fn::Not": [ "Fn::Equals": [ { Ref: EnablePreemptiveScaling }, "true" ] ] } ]
