@@ -247,7 +247,7 @@ Parameters:
 
   EnablePreemptiveScaling:
     Type: String
-    Description: Whether or not to always keep a spare Buildkite Agent running
+    Description: Whether or not to always keep a spare Buildkite Agent running. Note your ASG will never scale down to 0.
     AllowedValues:
       - true
       - false

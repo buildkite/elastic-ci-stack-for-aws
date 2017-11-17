@@ -35,6 +35,23 @@ Resources:
           Value: { Ref: BuildkiteQueue }
       ComparisonOperator: LessThanThreshold
 
+  AgentSpareAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Condition: PreemptiveScaling
+    Properties:
+      AlarmDescription: Scale-up if IdleAgentCount > 1 for N minute
+      MetricName: IdleAgentCount
+      Namespace: Buildkite
+      Statistic: Maximum
+      Period: { Ref: ScaleDownPeriod }
+      EvaluationPeriods: 1
+      Threshold: 1
+      AlarmActions: [ { Ref: AgentScaleDownPolicy } ]
+      Dimensions:
+        - Name: Queue
+          Value: { Ref: BuildkiteQueue }
+      ComparisonOperator: GreaterThanThreshold
+
   AgentUtilizationAlarmHigh:
    Type: AWS::CloudWatch::Alarm
    Condition: StandardScaling
@@ -54,7 +71,7 @@ Resources:
 
   AgentUtilizationAlarmLow:
    Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
+   Condition: StandardScaling
    Properties:
       AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
       MetricName: UnfinishedJobsCount
