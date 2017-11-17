@@ -18,9 +18,26 @@ Resources:
       Cooldown: 300
       ScalingAdjustment: { Ref: ScaleDownAdjustment }
 
+  AgentSpareAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Condition: PreemptiveScaling
+    Properties:
+      AlarmDescription: Scale-up if IdleAgentCount < 1 for 1 minute
+      MetricName: IdleAgentCount
+      Namespace: Buildkite
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      AlarmActions: [ { Ref: AgentScaleUpPolicy } ]
+      Dimensions:
+        - Name: Queue
+          Value: { Ref: BuildkiteQueue }
+      ComparisonOperator: LessThanThreshold
+
   AgentUtilizationAlarmHigh:
    Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
+   Condition: StandardScaling
    Properties:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount

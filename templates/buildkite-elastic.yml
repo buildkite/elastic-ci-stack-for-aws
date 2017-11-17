@@ -245,6 +245,14 @@ Parameters:
       - false
     Default: "false"
 
+  EnablePreemptiveScaling:
+    Type: String
+    Description: Whether or not to always keep a spare Buildkite Agent running
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
+
 Outputs:
   ManagedSecretsBucket:
     Value:
@@ -287,6 +295,12 @@ Conditions:
 
     UseAutoscaling:
       "Fn::Not": [ "Fn::Equals": [ { Ref: MaxSize }, { Ref: MinSize } ] ]
+
+    PreemptiveScaling:
+      "Fn::And": [ Condition: UseAutoscaling, [ "Fn::Equals": [ { Ref: EnablePreemptiveScaling }, "true" ] ] ]
+
+    StandardScaling:
+      "Fn::And": [ Condition: UseAutoscaling, { "Fn::Not": [ "Fn::Equals": [ { Ref: EnablePreemptiveScaling }, "true" ] ] } ]
 
     CreateMetricsStack:
       "Fn::And": [ Condition: UseAutoscaling, { "Fn::Not": [ "Fn::Equals": [ { Ref: BuildkiteApiAccessToken }, "" ] ] } ]
