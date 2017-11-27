@@ -45,7 +45,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, { Ref: 'AWS::Region' }, 'Bucket'] }
-        S3Key: "buildkite-metrics-v2.0.0-lambda.zip"
+        S3Key: "buildkite-metrics-2.0.0-lambda.zip"
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
