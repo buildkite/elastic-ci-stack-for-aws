@@ -4,25 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-
-## [v2.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v2.3.0) (2017-10-20)
-
+## v2.3.0 - 2017-10-20
 ### Fixed
-
 - Autoscaling is suspended when lifecycled crashes [\#344](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/344)
 - Optimize the permissions check script to only fix the current pipeline’s build dir [\#340](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/340) (@toolmantim)
 
 ### Changed
-
 - CloudWatch Logs namespaced [\#342](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/342)
 - Docker 17.09.0-ce [\#350](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/350) (@lox)
 - Buildkite Agent v2.6.6 and v3.0.0-beta34
 
 ### Added
-
 - Optionally run docker as buildkite agent with userns-remap  [\#341](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/341) (@lox)
-
 
 ## 2.2.0-rc3 - 2017-08-12
 ### Changed
