@@ -71,12 +71,22 @@ if [[ "${BUILDKITE_AGENT_RELEASE}" == "stable" ]]; then
 	BOOTSTRAP_SCRIPT="/etc/buildkite-agent/bootstrap.sh"
 else
 	BOOTSTRAP_SCRIPT="buildkite-agent bootstrap"
-fi;
+fi
+
+agent_metadata=(
+  "queue=${BUILDKITE_QUEUE}"
+  "docker=${DOCKER_VERSION}"
+  "stack=${BUILDKITE_STACK_NAME}"
+  "buildkite-aws-stack=${BUILDKITE_STACK_VERSION}"
+)
+
+IFS=',' read -a extra_agent_metadata <<< "${BUILDKITE_AGENT_TAGS:-}"
+agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
 token="${BUILDKITE_AGENT_TOKEN}"
-meta-data=$(printf 'queue=%s,docker=%s,stack=%s,buildkite-aws-stack=%s' "${BUILDKITE_QUEUE}" "${DOCKER_VERSION}" "${BUILDKITE_STACK_NAME}" "${BUILDKITE_STACK_VERSION}")
+meta-data=$(IFS=, ; echo "${agent_metadata[*]}")
 meta-data-ec2=true
 bootstrap-script="${BOOTSTRAP_SCRIPT}"
 hooks-path=/etc/buildkite-agent/hooks
