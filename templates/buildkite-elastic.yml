@@ -7,6 +7,7 @@ Metadata:
         Parameters:
         - BuildkiteAgentRelease
         - BuildkiteAgentToken
+        - BuildkiteAgentTags
         - BuildkiteQueue
         - BuildkiteOrgSlug
         - BuildkiteApiAccessToken
@@ -81,6 +82,11 @@ Parameters:
     Description: Buildkite organization slug
     Type: String
     MinLength: 1
+
+  BuildkiteAgentTags:
+    Description: Additional tags to provide to the agent. E.g os=linux
+    Type: String
+    Default: ""
 
   BuildkiteApiAccessToken:
     Description: Buildkite API access token with read_pipelines, read_builds and read_agents (required for metrics)
@@ -472,6 +478,7 @@ Resources:
               BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
               BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
               BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+              BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
               BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
               BUILDKITE_QUEUE="${BuildkiteQueue}" \
               BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
