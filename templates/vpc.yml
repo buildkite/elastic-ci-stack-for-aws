@@ -1,88 +1,339 @@
+Mappings:
+  AWSRegion:
+    us-east-2:
+      Zones: 3
+    us-east-1:
+      Zones: 6
+    us-west-2:
+      Zones: 3
+    us-west-1:
+      Zones: 2
+    eu-west-2:
+      Zones: 2
+    eu-west-1:
+      Zones: 3
+    eu-central-1:
+      Zones: 3
+    ap-northeast-2:
+      Zones: 2
+    ap-northeast-1:
+      Zones: 2
+    ap-southeast-2:
+      Zones: 3
+    ap-southeast-1:
+      Zones: 2
+    ca-central-1:
+      Zones: 2
+
+Conditions:
+  HasExactly6Zones: !Equals [ !FindInMap [AWSRegion, !Ref "AWS::Region", Zones], "6" ]
+  HasExactly5Zones: !Equals [ !FindInMap [AWSRegion, !Ref "AWS::Region", Zones], "5" ]
+  HasExactly4Zones: !Equals [ !FindInMap [AWSRegion, !Ref "AWS::Region", Zones], "4" ]
+  HasExactly3Zones: !Equals [ !FindInMap [AWSRegion, !Ref "AWS::Region", Zones], "3" ]
+  HasExactly2Zones: !Equals [ !FindInMap [AWSRegion, !Ref "AWS::Region", Zones], "2" ]
+
+  Has6Zones: { Condition: HasExactly6Zones }
+  Has5Zones: !Or [ Condition: HasExactly5Zones, Condition: Has6Zones ]
+  Has4Zones: !Or [ Condition: HasExactly4Zones, Condition: Has5Zones ]
+  Has3Zones: !Or [ Condition: HasExactly3Zones, Condition: Has4Zones ]
+  Has2Zones: !Or [ Condition: HasExactly2Zones, Condition: Has3Zones ]
 
 Resources:
   Vpc:
     Type: AWS::EC2::VPC
-    Condition: CreateVpcResources
     Properties:
       CidrBlock: 10.0.0.0/16
-      InstanceTenancy: default
       Tags:
         - Key: Name
-          Value: { Ref: 'AWS::StackName' }
+          Value: !Ref AWS::StackName
 
-  Gateway:
+  InternetGateway:
     Type: AWS::EC2::InternetGateway
-    Condition: CreateVpcResources
     Properties:
       Tags:
         - Key: Name
-          Value: { Ref: 'AWS::StackName' }
+          Value: !Ref AWS::StackName
 
-  GatewayAttachment:
+  InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
-    Condition: CreateVpcResources
     Properties:
-      InternetGatewayId: { Ref: Gateway }
-      VpcId: { Ref: Vpc }
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
 
-  Subnet0:
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
     Properties:
-      AvailabilityZone:
-        "Fn::If":
-          - "UseSpecifiedAvailabilityZones"
-          - { "Fn::Select": [ 0, { Ref: AvailabilityZones } ] }
-          - { "Fn::Select": [ 0, { "Fn::GetAZs": '' } ] }
-      CidrBlock: 10.0.1.0/24
-      VpcId: { Ref: Vpc }
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 0, !Ref AvailabilityZones ],
+        !Select [ 0, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.0.0/19
+      MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: { Ref: 'AWS::StackName' }
+          Value: !Sub ${AWS::StackName} Public Subnet (AZ1)
 
-  Subnet1:
-    Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
     Properties:
-      AvailabilityZone:
-        "Fn::If":
-          - "UseSpecifiedAvailabilityZones"
-          - { "Fn::Select": [ 1, { Ref: AvailabilityZones } ] }
-          - { "Fn::Select": [ 1, { "Fn::GetAZs": '' } ] }
-      CidrBlock: 10.0.2.0/24
-      VpcId: { Ref: Vpc }
-      Tags:
-        - Key: Name
-          Value: { Ref: 'AWS::StackName' }
+      Domain: vpc
 
-  Routes:
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PublicRouteTable:
     Type: AWS::EC2::RouteTable
-    Condition: CreateVpcResources
     Properties:
-      VpcId: { Ref: Vpc }
+      VpcId: !Ref Vpc
       Tags:
         - Key: Name
-          Value: { Ref: 'AWS::StackName' }
+          Value: !Sub ${AWS::StackName} Public Routes
 
-  RouteDefault:
+  DefaultPublicRoute:
     Type: AWS::EC2::Route
-    Condition: CreateVpcResources
-    DependsOn: GatewayAttachment
+    DependsOn: InternetGatewayAttachment
     Properties:
+      RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: { Ref: Gateway }
-      RouteTableId: { Ref: Routes }
+      GatewayId: !Ref InternetGateway
 
-  Subnet0Routes:
+  PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
     Properties:
-      SubnetId: { Ref: Subnet0 }
-      RouteTableId: { Ref: Routes }
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
 
-  Subnet1Routes:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
     Properties:
-      SubnetId: { Ref: Subnet1 }
-      RouteTableId: { Ref: Routes }
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 0, !Ref AvailabilityZones ],
+        !Select [ 0, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.64.0/19
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 1, !Ref AvailabilityZones ],
+        !Select [ 1, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.96.0/19
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Subnet (AZ2)
+
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Condition: Has3Zones
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 2, !Ref AvailabilityZones ],
+        !Select [ 2, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.128.0/19
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Subnet (AZ3)
+
+  PrivateSubnet4:
+    Type: AWS::EC2::Subnet
+    Condition: Has4Zones
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 3, !Ref AvailabilityZones ],
+        !Select [ 3, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.160.0/19
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Subnet (AZ4)
+
+  PrivateSubnet5:
+    Type: AWS::EC2::Subnet
+    Condition: Has5Zones
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 4, !Ref AvailabilityZones ],
+        !Select [ 4, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.192.0/19
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Subnet (AZ5)
+
+  PrivateSubnet6:
+    Type: AWS::EC2::Subnet
+    Condition: Has6Zones
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 5, !Ref AvailabilityZones ],
+        !Select [ 5, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.224.0/19
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Subnet (AZ6)
+
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Routes (AZ1)
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Routes (AZ2)
+
+  PrivateRouteTable3:
+    Type: AWS::EC2::RouteTable
+    Condition: Has3Zones
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Routes (AZ3)
+
+  PrivateRouteTable4:
+    Type: AWS::EC2::RouteTable
+    Condition: Has4Zones
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Routes (AZ4)
+
+  PrivateRouteTable5:
+    Type: AWS::EC2::RouteTable
+    Condition: Has5Zones
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Routes (AZ5)
+
+  PrivateRouteTable6:
+    Type: AWS::EC2::RouteTable
+    Condition: Has6Zones
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Private Routes (AZ6)
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  DefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  DefaultPrivateRoute3:
+    Type: AWS::EC2::Route
+    Condition: Has3Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable3
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  DefaultPrivateRoute4:
+    Type: AWS::EC2::Route
+    Condition: Has4Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable4
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  DefaultPrivateRoute5:
+    Type: AWS::EC2::Route
+    Condition: Has5Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable5
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  DefaultPrivateRoute6:
+    Type: AWS::EC2::Route
+    Condition: Has6Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable6
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2
+
+  PrivateSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: Has3Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable3
+      SubnetId: !Ref PrivateSubnet3
+
+  PrivateSubnet4RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: Has4Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable4
+      SubnetId: !Ref PrivateSubnet4
+
+  PrivateSubnet5RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: Has5Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable5
+      SubnetId: !Ref PrivateSubnet5
+
+  PrivateSubnet6RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: Has6Zones
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable6
+      SubnetId: !Ref PrivateSubnet6

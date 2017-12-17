@@ -127,7 +127,7 @@ Parameters:
 
   Subnets:
     Type: CommaDelimitedList
-    Description: Optional - Comma separated list of two existing VPC subnet ids where EC2 instances will run. Required if setting VpcId.
+    Description: Optional - Comma separated list of existing VPC subnet ids where EC2 instances will run. Required if setting VpcId.
     Default: ""
 
   AvailabilityZones:
@@ -204,14 +204,6 @@ Parameters:
       - poweruser
       - full
     Default: "none"
-
-  AssociatePublicIpAddress:
-    Type: String
-    Description: Associate instances with public IP addresses
-    AllowedValues:
-      - true
-      - false
-    Default: "true"
 
   EnableSecretsPlugin:
     Type: String
@@ -450,7 +442,6 @@ Resources:
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
       SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
       KeyName : { Ref: KeyName }
       IamInstanceProfile: { Ref: IAMInstanceProfile }
@@ -526,8 +517,27 @@ Resources:
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-        { "Fn::If": [ "CreateVpcResources", [ { Ref: Subnet0 }, { Ref: Subnet1 } ], { Ref: Subnets } ] }
+      VPCZoneIdentifier: !If [
+        CreateVpcResources,
+        !If [
+          Has6Zones,
+          !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5, !Ref PrivateSubnet6 ]],
+          !If [
+            Has5Zones,
+            !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5 ]],
+            !If [
+              Has4Zones,
+              !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4 ]],
+              !If [
+                Has3Zones,
+                !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ]],
+                !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
+              ]
+            ]
+          ]
+        ],
+        !Ref Subnets
+      ]
       LaunchConfigurationName: { Ref: AgentLaunchConfiguration }
       MinSize: { Ref: MinSize }
       MaxSize: { Ref: MaxSize }
