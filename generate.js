@@ -3,6 +3,7 @@ const glob = require('glob');
 const yaml = require('js-yaml');
 const extendify = require('extendify');
 const replace = require("replace");
+const { schema } = require('yaml-cfn');
 
 const sortOrder = [
   'AWSTemplateFormatVersion',
@@ -18,7 +19,7 @@ const sortOrder = [
 glob("templates/*.yml", function (er, files) {
   const contents = files.map(f => {
     try {
-      return yaml.safeLoad(fs.readFileSync(f, 'utf8'));
+      return yaml.safeLoad(fs.readFileSync(f, 'utf8'), { schema: schema});
     } catch (e) {
       console.error("Failed to parse %s", f, e);
       process.exit(1);

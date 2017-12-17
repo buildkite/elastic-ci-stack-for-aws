@@ -14,11 +14,11 @@ TEMPLATES=templates/description.yml \
 
 all: build
 
-build: build/aws-stack.json
+build: build/aws-stack.yml
 
-build/aws-stack.json: $(TEMPLATES)
+build/aws-stack.yml: $(TEMPLATES)
 	docker run --rm -w /app -v "$(PWD):/app" node:slim bash \
-		-c "yarn install --non-interactive && yarn run generate -- $(VERSION)"
+		-c "yarn install --non-interactive && yarn run generate $(VERSION)"
 
 clean:
 	-rm -f build/*
@@ -37,32 +37,28 @@ build-ami: config.json
 		config.json  > config.json.temp
 	mv config.json.temp config.json
 
-upload: build/aws-stack.json
+upload: build/aws-stack.yml
 	aws s3 sync --acl public-read build s3://$(BUILDKITE_STACK_BUCKET)/
 
-extra_tags.json:
-	echo "{}" > extra_tags.json
-
-create-stack: config.json build/aws-stack.json extra_tags.json
+create-stack: config.json build/aws-stack.yml
 	aws cloudformation create-stack \
 	--output text \
 	--stack-name $(STACK_NAME) \
 	--disable-rollback \
-	--template-body "file://$(PWD)/build/aws-stack.json" \
+	--template-body "file://$(PWD)/build/aws-stack.yml" \
 	--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-	--parameters "$$(cat config.json)" \
-	--tags "$$(cat extra_tags.json)"
+	--parameters "$$(cat config.json)"
 
-validate: build/aws-stack.json
+validate: build/aws-stack.yml
 	aws cloudformation validate-template \
 	--output table \
-	--template-body "file://$(PWD)/build/aws-stack.json"
+	--template-body "file://$(PWD)/build/aws-stack.yml"
 
-update-stack: config.json templates/mappings.yml build/aws-stack.json
+update-stack: config.json templates/mappings.yml build/aws-stack.yml
 	aws cloudformation update-stack \
 	--output text \
 	--stack-name $(STACK_NAME) \
-	--template-body "file://$(PWD)/build/aws-stack.json" \
+	--template-body "file://$(PWD)/build/aws-stack.yml" \
 	--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
 	--parameters "$$(cat config.json)"
 
