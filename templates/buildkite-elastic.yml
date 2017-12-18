@@ -18,6 +18,7 @@ Metadata:
         - Subnets
         - AvailabilityZones
         - SecurityGroupId
+        - NetworkConfiguration
 
       - Label:
           default: Instance Configuration
@@ -134,6 +135,15 @@ Parameters:
     Type: CommaDelimitedList
     Description: Optional - Comma separated list of AZs that subnets are created in (if Subnets parameter is not specified)
     Default: ""
+
+  NetworkConfiguration:
+    Type: String
+    Description: Whether to configure your subnets as public, so your instances get public IP addresses (no extra cost) or private with redundant NAT instances ($58/month)
+    AllowedValues:
+      - public
+      - private-with-nat
+      - private-with-nat-and-ssh-bastion
+    Default: "public"
 
   InstanceType:
     Description: Instance type
@@ -579,11 +589,7 @@ Resources:
     Condition: CreateSecurityGroup
     Properties:
       GroupDescription: Enable access to SSH
-      VpcId:
-        "Fn::If":
-          - "CreateVpcResources"
-          - { Ref: Vpc }
-          - { Ref: VpcId }
+      VpcId: !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22

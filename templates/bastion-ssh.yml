@@ -1,0 +1,35 @@
+Resources:
+  BastionHost:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      KeyName : !Ref KeyName
+      InstanceType: t2.nano
+      ImageId: !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet: [ !Ref BastionHostSecurityGroup ]
+          SubnetId:  !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash
+          exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-signal --region "${AWS::Region}" --stack "${AWS::StackName}" --resource "BastionHost" -e $?
+      Tags:
+        - Key: Name
+          Value: ssh-bastion-host
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+
+  BastionHostSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub ${AWS::StackName} BastionHost Security Group
+      VpcId:  !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
