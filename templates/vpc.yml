@@ -13,17 +13,17 @@ Conditions:
 
   HasPublicSubnet1: { Condition: CreateVpcResources }
   HasPublicSubnet2: { Condition: CreateVpcResources }
-  HasPublicSubnet3: !And [ { Condition: CreateVpcResources }, !Not { Condition: UsePrivateSubnets }, !Or [ { Condition: RegionHas3Zones }, { Condition: RegionHas6Zones } ] ]
-  HasPublicSubnet4: !And [ { Condition: CreateVpcResources }, !Not { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
-  HasPublicSubnet5: !And [ { Condition: CreateVpcResources }, !Not { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
-  HasPublicSubnet6: !And [ { Condition: CreateVpcResources }, !Not { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
+  HasPublicSubnet3: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], !Or [ { Condition: RegionHas3Zones }, { Condition: RegionHas6Zones } ] ]
+  HasPublicSubnet4: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], { Condition: RegionHas6Zones } ]
+  HasPublicSubnet5: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], { Condition: RegionHas6Zones } ]
+  HasPublicSubnet6: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], { Condition: RegionHas6Zones } ]
 
   HasPrivateSubnet1: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets } ]
   HasPrivateSubnet2: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets } ]
   HasPrivateSubnet3: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, !Or [ { Condition: RegionHas3Zones }, { Condition: RegionHas6Zones } ] ]
-  HasPrivateSubnet4: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, !Or [ { Condition: RegionHas6Zones } ] ]
-  HasPrivateSubnet5: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, !Or [ { Condition: RegionHas6Zones } ] ]
-  HasPrivateSubnet6: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, !Or [ { Condition: RegionHas6Zones } ] ]
+  HasPrivateSubnet4: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
+  HasPrivateSubnet5: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
+  HasPrivateSubnet6: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
 
 Resources:
   Vpc:
