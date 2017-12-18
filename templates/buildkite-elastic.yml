@@ -263,6 +263,18 @@ Conditions:
     CreateVpcResources:
       "Fn::Equals": [ { Ref: VpcId }, "" ]
 
+    CreateNatGateways: !Or [
+      !Equals [ !Ref NetworkConfiguration, "private-with-nat" ],
+      !Equals [ !Ref NetworkConfiguration, "private-with-nat-and-ssh-bastion" ]
+    ]
+
+    UsePrivateSubnets: !Or [
+      !Equals [ !Ref NetworkConfiguration, "private-with-nat" ],
+      !Equals [ !Ref NetworkConfiguration, "private-with-nat-and-ssh-bastion" ]
+    ]
+
+    CreateSSHBastion: !Equals [ !Ref NetworkConfiguration, "private-with-nat-and-ssh-bastion" ]
+
     CreateSecurityGroup:
       "Fn::Equals": [ { Ref: SecurityGroupId }, "" ]
 
