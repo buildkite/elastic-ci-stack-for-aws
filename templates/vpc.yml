@@ -75,7 +75,28 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName} Public Subnet (AZ1)
 
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !If [
+        UseSpecifiedAvailabilityZones,
+        !Select [ 1, !Ref AvailabilityZones ],
+        !Select [ 1, !GetAZs "" ]
+      ]
+      CidrBlock: 10.0.32.0/19
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName} Public Subnet (AZ2)
+
   NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway2EIP:
     Type: AWS::EC2::EIP
     DependsOn: InternetGatewayAttachment
     Properties:
@@ -86,6 +107,12 @@ Resources:
     Properties:
       AllocationId: !GetAtt NatGateway1EIP.AllocationId
       SubnetId: !Ref PublicSubnet1
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -108,6 +135,12 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -264,7 +297,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable2
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway1
+      NatGatewayId: !Ref NatGateway2
 
   DefaultPrivateRoute3:
     Type: AWS::EC2::Route
@@ -280,7 +313,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable4
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway1
+      NatGatewayId: !Ref NatGateway2
 
   DefaultPrivateRoute5:
     Type: AWS::EC2::Route
@@ -296,7 +329,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable6
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway1
+      NatGatewayId: !Ref NatGateway2
 
   PrivateSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
