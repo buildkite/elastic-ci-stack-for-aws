@@ -80,7 +80,8 @@ agent_metadata=(
   "buildkite-aws-stack=${BUILDKITE_STACK_VERSION}"
 )
 
-IFS=',' read -a extra_agent_metadata <<< "${BUILDKITE_AGENT_TAGS:-}"
+# Split on commas
+IFS=',' read -r -a extra_agent_metadata <<< "${BUILDKITE_AGENT_TAGS:-}"
 agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
