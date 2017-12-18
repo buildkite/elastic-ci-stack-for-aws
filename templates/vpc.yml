@@ -1,5 +1,5 @@
 Conditions:
-  RegionHas6Zones: !Equals [ !Ref "AWS::Region", "us-east-1" ] ]
+  RegionHas6Zones: !Equals [ !Ref "AWS::Region", "us-east-1" ]
   RegionHas3Zones: !Or [
     !Equals [ !Ref "AWS::Region", "us-east-2"],
     !Equals [ !Ref "AWS::Region", "us-west-2"],
