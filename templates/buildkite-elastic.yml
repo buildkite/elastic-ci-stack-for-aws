@@ -454,8 +454,6 @@ Resources:
       KeyName : { Ref: KeyName }
       IamInstanceProfile: { Ref: IAMInstanceProfile }
       InstanceType: { Ref: InstanceType }
-      SpotPrice:
-        { "Fn::If": [ "UseSpotInstances", { Ref: SpotPrice }, { Ref: 'AWS::NoValue' } ] }
       ImageId :
         { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
       BlockDeviceMappings:
@@ -617,3 +615,35 @@ Resources:
       Tags:
       - Key: Name
         Value: { Ref: 'AWS::StackName' }
+
+  SpotFleetIAMRole:
+    Type: AWS::IAM::Role
+    Condition: CreateMetricsStack
+    Properties:
+      RoleName: !Sub "$(AWS::StackName)-SpotFleetIAMRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ spotfleet.amazonaws.com ]
+            Action: sts:AssumeRole
+      Path: /
+
+  SpotFleet:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt SpotFleetIAMRole.Arn
+        SpotPrice: !Ref 'SpotPrice'
+        TerminateInstancesWithExpiration: false
+        AllocationStrategy: lowestPrice
+        TargetCapacity: !Ref MinSize
+        LaunchSpecifications:
+          - InstanceType: m3.medium
+            ImageId:
+              { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
+            WeightedCapacity: '1'
+            SecurityGroups:
+              - !If [ "CreateSecurityGroup", $(SecurityGroup), $(SecurityGroupId) ]

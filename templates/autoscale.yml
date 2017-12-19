@@ -51,3 +51,31 @@ Resources:
         - Name: Queue
           Value: { Ref: BuildkiteQueue }
       ComparisonOperator: LessThanOrEqualToThreshold
+
+  SpotFleetScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxSize
+      MinCapacity: !Ref MinSize
+      ResourceId: "spot-fleet-request/$(SpotFleet)"
+      RoleARN: !GetAtt [SpotFleetIAMRole, Arn]
+      ScalableDimension: 'ec2:spot-fleet-request:TargetCapacity'
+      ServiceNamespace: 'ec2'
+
+  FleetUpPolicy:
+    Type : "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: FleetUpPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref SpotFleetScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: '1500'
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 10
+            MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 10
+            ScalingAdjustment: 1
+
