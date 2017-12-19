@@ -31,9 +31,9 @@ region = $AWS_REGION
 EOF
 
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]] ; then
-  echo "Enabling docker userns-remap"
-  cp /etc/sysconfig/docker.userns-remap /etc/sysconfig/docker
-  service docker restart
+	echo "Enabling docker userns-remap"
+	cp /etc/sysconfig/docker.userns-remap /etc/sysconfig/docker
+	service docker restart
 fi
 
 PLUGINS_ENABLED=()
@@ -74,15 +74,17 @@ else
 fi
 
 agent_metadata=(
-  "queue=${BUILDKITE_QUEUE}"
-  "docker=${DOCKER_VERSION}"
-  "stack=${BUILDKITE_STACK_NAME}"
-  "buildkite-aws-stack=${BUILDKITE_STACK_VERSION}"
+	"queue=${BUILDKITE_QUEUE}"
+	"docker=${DOCKER_VERSION}"
+	"stack=${BUILDKITE_STACK_NAME}"
+	"buildkite-aws-stack=${BUILDKITE_STACK_VERSION}"
 )
 
 # Split on commas
-IFS=',' read -r -a extra_agent_metadata <<< "${BUILDKITE_AGENT_TAGS:-}"
-agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
+if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]] ; then
+	IFS=',' read -r -a extra_agent_metadata <<< "${BUILDKITE_AGENT_TAGS:-}"
+	agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
+fi
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
@@ -141,7 +143,7 @@ service awslogs restart || true
 # wait for docker to start
 next_wait_time=0
 until docker ps || [ $next_wait_time -eq 5 ]; do
-   sleep $(( next_wait_time++ ))
+	 sleep $(( next_wait_time++ ))
 done
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
