@@ -132,9 +132,8 @@ Parameters:
     Default: ""
 
   AvailabilityZones:
-    Type: CommaDelimitedList
+    Type: List<AWS::EC2::AvailabilityZone::Name>
     Description: Optional - Comma separated list of AZs that subnets are created in (if Subnets parameter is not specified)
-    Default: ""
 
   NetworkConfiguration:
     Type: String
