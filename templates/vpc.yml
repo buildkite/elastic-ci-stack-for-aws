@@ -1,29 +1,73 @@
+Parameters:
+  AvailabilityZones:
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+    Description: The Availability Zones to use. The more the better, for a better spread of spot instance prices.
+    MinLength: 10
+
+  SubnetConfiguration:
+    Type: String
+    Description: How to configure your subnets, must match the availability zones you provided. Note that NAT Gateways which are charged at $0.045-0.095 an hour each. Make sure to provide VPCId and SubnetId if you select "Use an existing VPC/Subnets"
+    AllowedValues:
+      - Instances launched across 2 public subnets with public IP's
+      - Instances launched across 3 public subnets with public IP's
+      - Instances launched across 4 public subnets with public IP's
+      - Instances launched across 5 public subnets with public IP's
+      - Instances launched across 6 public subnets with public IP's
+      - Instances launched across 2 private subnets, with 2 public subnets with NAT Gateways for internet access
+      - Instances launched across 3 private subnets, with 2 public subnets with NAT Gateways for internet access
+      - Instances launched across 4 private subnets, with 2 public subnets with NAT Gateways for internet access
+      - Instances launched across 5 private subnets, with 2 public subnets with NAT Gateways for internet access
+      - Instances launched across 6 private subnets, with 2 public subnets with NAT Gateways for internet access
+      - Use existing VPC/Subnets
+
 Conditions:
-  RegionHas6Zones: !Equals [ !Ref "AWS::Region", "us-east-1" ]
-  RegionHas3Zones: !Or [
-    !Equals [ !Ref "AWS::Region", "us-east-2"],
-    !Equals [ !Ref "AWS::Region", "us-west-2"],
-    !Equals [ !Ref "AWS::Region", "eu-west-1"],
-    !Equals [ !Ref "AWS::Region", "eu-central-1"],
-    !Equals [ !Ref "AWS::Region", "ap-southeast-2"]
+  CreateVpcResources: !Equals [ !Ref VpcID, "" ]
+
+  HasPrivateSubnets: !Or [
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 2 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 3 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 4 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 5 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 6 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
   ]
 
-  HasNatGateway1: !And [ {Condition: CreateNatGateways }, { Condition: CreateVpcResources } ]
-  HasNatGateway2: !And [ {Condition: CreateNatGateways }, { Condition: CreateVpcResources } ]
+  HasTwoAZs: !Or [
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 2 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 2 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+  ]
+  HasThreeAZs: !Or [
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 3 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 3 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+  ]
+  HasFourAZs: !Or [
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 4 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 4 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+  ]
+  HasFiveAZs: !Or [
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 5 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 5 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+  ]
+  HasSixAZs: !Or [
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 6 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "Instances launched across 7 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+  ]
+
+  HasNatGateway1: !And [ {Condition: HasPrivateSubnets }, { Condition: CreateVpcResources } ]
+  HasNatGateway2: !And [ {Condition: HasPrivateSubnets }, { Condition: CreateVpcResources } ]
 
   HasPublicSubnet1: { Condition: CreateVpcResources }
   HasPublicSubnet2: { Condition: CreateVpcResources }
-  HasPublicSubnet3: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], !Or [ { Condition: RegionHas3Zones }, { Condition: RegionHas6Zones } ] ]
-  HasPublicSubnet4: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], { Condition: RegionHas6Zones } ]
-  HasPublicSubnet5: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], { Condition: RegionHas6Zones } ]
-  HasPublicSubnet6: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: UsePrivateSubnets } ], { Condition: RegionHas6Zones } ]
+  HasPublicSubnet3: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: HasPrivateSubnets } ], !Or [ { Condition: HasThreeAZs }, { Condition: HasFourAZs }, { Condition: HasFiveAZs }, { Condition: HasSixAZs } ] ]
+  HasPublicSubnet4: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: HasPrivateSubnets } ], !Or [ { Condition: HasFourAZs }, { Condition: HasFiveAZs }, { Condition: HasSixAZs } ] ]
+  HasPublicSubnet5: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: HasPrivateSubnets } ], !Or [ { Condition: HasFiveAZs }, { Condition: HasSixAZs } ] ]
+  HasPublicSubnet6: !And [ { Condition: CreateVpcResources }, !Not [ { Condition: HasPrivateSubnets } ], { Condition: HasSixAZs } ]
 
-  HasPrivateSubnet1: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets } ]
-  HasPrivateSubnet2: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets } ]
-  HasPrivateSubnet3: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, !Or [ { Condition: RegionHas3Zones }, { Condition: RegionHas6Zones } ] ]
-  HasPrivateSubnet4: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
-  HasPrivateSubnet5: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
-  HasPrivateSubnet6: !And [ { Condition: CreateVpcResources }, { Condition: UsePrivateSubnets }, { Condition: RegionHas6Zones } ]
+  HasPrivateSubnet1: !And [ { Condition: CreateVpcResources }, { Condition: HasPrivateSubnets } ]
+  HasPrivateSubnet2: !And [ { Condition: CreateVpcResources }, { Condition: HasPrivateSubnets } ]
+  HasPrivateSubnet3: !And [ { Condition: CreateVpcResources }, { Condition: HasPrivateSubnets }, !Or [ { Condition: HasThreeAZs }, { Condition: HasFourAZs }, { Condition: HasFiveAZs }, { Condition: HasSixAZs } ] ]
+  HasPrivateSubnet4: !And [ { Condition: CreateVpcResources }, { Condition: HasPrivateSubnets }, !Or [ { Condition: HasFourAZs }, { Condition: HasFiveAZs }, { Condition: HasSixAZs } ] ]
+  HasPrivateSubnet5: !And [ { Condition: CreateVpcResources }, { Condition: HasPrivateSubnets }, !Or [ { Condition: HasFiveAZs }, { Condition: HasSixAZs } ] ]
+  HasPrivateSubnet6: !And [ { Condition: CreateVpcResources }, { Condition: HasPrivateSubnets }, { Condition: HasSixAZs } ]
 
 Resources:
   Vpc:

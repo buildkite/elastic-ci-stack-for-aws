@@ -14,11 +14,16 @@ Metadata:
       - Label:
           default: Network Configuration
         Parameters:
+        - AvailabilityZones
+        - SubnetConfiguration
+        - SSHBastionHost
+
+      - Label:
+          default: Custom VPC Configuration (Optional)
+        Parameters:
         - VpcId
         - Subnets
-        - AvailabilityZones
         - SecurityGroupId
-        - NetworkConfiguration
 
       - Label:
           default: Instance Configuration
@@ -33,7 +38,6 @@ Metadata:
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
-        - AssociatePublicIpAddress
         - ManagedPolicyARN
 
       - Label:
@@ -44,6 +48,11 @@ Metadata:
         - ScaleUpAdjustment
         - ScaleDownAdjustment
         - ScaleDownPeriod
+
+      - Label:
+          default: Docker Daemon Configuration
+        Parameters:
+        - EnableDockerUserNamespaceRemap
 
       - Label:
           default: Docker Registry Configuration
@@ -131,18 +140,13 @@ Parameters:
     Description: Optional - Comma separated list of existing VPC subnet ids where EC2 instances will run. Required if setting VpcId.
     Default: ""
 
-  AvailabilityZones:
-    Type: List<AWS::EC2::AvailabilityZone::Name>
-    Description: Optional - Comma separated list of AZs that subnets are created in (if Subnets parameter is not specified)
-
-  NetworkConfiguration:
+  SSHBastionHost:
     Type: String
-    Description: Whether to configure your subnets as public, so your instances get public IP addresses (no extra cost) or private with redundant NAT instances ($58/month)
+    Description: Whether to create a dedicated SSH Bastion host for accessing your private subnets. Generally not required if your instances are in public subnets.
     AllowedValues:
-      - public
-      - private-with-nat
-      - private-with-nat-and-ssh-bastion
-    Default: "public"
+      - true
+      - false
+    Default: "false"
 
   InstanceType:
     Description: Instance type
@@ -259,21 +263,6 @@ Conditions:
     UseSpotInstances:
       "Fn::Not": [ "Fn::Equals": [ { Ref: SpotPrice }, 0 ] ]
 
-    CreateVpcResources:
-      "Fn::Equals": [ { Ref: VpcId }, "" ]
-
-    CreateNatGateways: !Or [
-      !Equals [ !Ref NetworkConfiguration, "private-with-nat" ],
-      !Equals [ !Ref NetworkConfiguration, "private-with-nat-and-ssh-bastion" ]
-    ]
-
-    UsePrivateSubnets: !Or [
-      !Equals [ !Ref NetworkConfiguration, "private-with-nat" ],
-      !Equals [ !Ref NetworkConfiguration, "private-with-nat-and-ssh-bastion" ]
-    ]
-
-    CreateSSHBastion: !Equals [ !Ref NetworkConfiguration, "private-with-nat-and-ssh-bastion" ]
-
     CreateSecurityGroup:
       "Fn::Equals": [ { Ref: SecurityGroupId }, "" ]
 
@@ -303,6 +292,8 @@ Conditions:
 
     CreateMetricsStack:
       "Fn::And": [ Condition: UseAutoscaling, { "Fn::Not": [ "Fn::Equals": [ { Ref: BuildkiteApiAccessToken }, "" ] ] } ]
+
+    CreateSSHBastionInstance: !Equals [ !Ref SSHBastionHost, "true" ]
 
 Mappings:
   ECRManagedPolicy:
