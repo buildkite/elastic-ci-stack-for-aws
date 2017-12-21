@@ -6,19 +6,19 @@ Parameters:
 
   SubnetConfiguration:
     Type: String
-    Description: How to configure your subnets, must match the availability zones you provided. Note that NAT Gateways which are charged at $0.045-0.095 an hour each. Make sure to provide VPCId and SubnetId if you select "Use an existing VPC/Subnets"
-    Default: "Instances launched across 2 public subnets with public IP's"
+    Description: "How to configure your subnets, must match the availability zones you provided. Note: NAT Gateways are charged at $0.045-0.095 an hour."
+    Default: "2 public subnets with public IP's"
     AllowedValues:
-      - Instances launched across 2 public subnets with public IP's
-      - Instances launched across 3 public subnets with public IP's
-      - Instances launched across 4 public subnets with public IP's
-      - Instances launched across 5 public subnets with public IP's
-      - Instances launched across 6 public subnets with public IP's
-      - Instances launched across 2 private subnets, with 2 public subnets with NAT Gateways for internet access
-      - Instances launched across 3 private subnets, with 2 public subnets with NAT Gateways for internet access
-      - Instances launched across 4 private subnets, with 2 public subnets with NAT Gateways for internet access
-      - Instances launched across 5 private subnets, with 2 public subnets with NAT Gateways for internet access
-      - Instances launched across 6 private subnets, with 2 public subnets with NAT Gateways for internet access
+      - 2 public subnets with public IP's
+      - 3 public subnets with public IP's
+      - 4 public subnets with public IP's
+      - 5 public subnets with public IP's
+      - 6 public subnets with public IP's
+      - 2 private subnets + 2 public subnets with NAT Gateways for internet access
+      - 3 private subnets + 2 public subnets with NAT Gateways for internet access
+      - 4 private subnets + 2 public subnets with NAT Gateways for internet access
+      - 5 private subnets + 2 public subnets with NAT Gateways for internet access
+      - 6 private subnets + 2 public subnets with NAT Gateways for internet access
       - Use existing VPC/Subnets
 
 
@@ -26,32 +26,32 @@ Conditions:
   CreateVpcResources: !Equals [ !Ref VpcId, "" ]
 
   HasPrivateSubnets: !Or [
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 2 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 3 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 4 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 5 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 6 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+    !Equals [ !Ref SubnetConfiguration, "2 private subnets + 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "3 private subnets + 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "4 private subnets + 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "5 private subnets + 2 public subnets with NAT Gateways for internet access" ],
+    !Equals [ !Ref SubnetConfiguration, "6 private subnets + 2 public subnets with NAT Gateways for internet access" ]
   ]
 
   HasTwoAZs: !Or [
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 2 public subnets with public IP's" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 2 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+    !Equals [ !Ref SubnetConfiguration, "2 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "2 private subnets + 2 public subnets with NAT Gateways for internet access" ]
   ]
   HasThreeAZs: !Or [
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 3 public subnets with public IP's" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 3 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+    !Equals [ !Ref SubnetConfiguration, "3 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "3 private subnets + 2 public subnets with NAT Gateways for internet access" ]
   ]
   HasFourAZs: !Or [
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 4 public subnets with public IP's" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 4 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+    !Equals [ !Ref SubnetConfiguration, "4 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "4 private subnets + 2 public subnets with NAT Gateways for internet access" ]
   ]
   HasFiveAZs: !Or [
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 5 public subnets with public IP's" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 5 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+    !Equals [ !Ref SubnetConfiguration, "5 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "5 private subnets + 2 public subnets with NAT Gateways for internet access" ]
   ]
   HasSixAZs: !Or [
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 6 public subnets with public IP's" ],
-    !Equals [ !Ref SubnetConfiguration, "Instances launched across 7 private subnets, with 2 public subnets with NAT Gateways for internet access" ]
+    !Equals [ !Ref SubnetConfiguration, "6 public subnets with public IP's" ],
+    !Equals [ !Ref SubnetConfiguration, "7 private subnets + 2 public subnets with NAT Gateways for internet access" ]
   ]
 
   HasNatGateway1: !And [ {Condition: HasPrivateSubnets }, { Condition: CreateVpcResources } ]
