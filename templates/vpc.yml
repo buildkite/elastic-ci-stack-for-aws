@@ -7,6 +7,7 @@ Parameters:
   SubnetConfiguration:
     Type: String
     Description: How to configure your subnets, must match the availability zones you provided. Note that NAT Gateways which are charged at $0.045-0.095 an hour each. Make sure to provide VPCId and SubnetId if you select "Use an existing VPC/Subnets"
+    Default: "Instances launched across 2 public subnets with public IP's"
     AllowedValues:
       - Instances launched across 2 public subnets with public IP's
       - Instances launched across 3 public subnets with public IP's
@@ -19,6 +20,7 @@ Parameters:
       - Instances launched across 5 private subnets, with 2 public subnets with NAT Gateways for internet access
       - Instances launched across 6 private subnets, with 2 public subnets with NAT Gateways for internet access
       - Use existing VPC/Subnets
+
 
 Conditions:
   CreateVpcResources: !Equals [ !Ref VpcId, "" ]
