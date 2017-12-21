@@ -1,3 +1,15 @@
+Parameters:
+  SSHBastionHost:
+    Type: String
+    Description: Whether to create a dedicated SSH Bastion host for accessing your private subnets. Generally not required if your instances are in public subnets.
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
+
+Conditions:
+  CreateSSHBastionInstance: !Equals [ !Ref SSHBastionHost, "true" ]
+
 Resources:
   BastionHost:
     Type: "AWS::EC2::Instance"
@@ -26,7 +38,7 @@ Resources:
 
   BastionHostSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    Condition: CreateSSHBastion
+    Condition: CreateSSHBastionInstance
     Properties:
       GroupDescription: !Sub ${AWS::StackName} BastionHost Security Group
       VpcId:  !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]

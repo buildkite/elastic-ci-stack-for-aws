@@ -140,14 +140,6 @@ Parameters:
     Description: Optional - Comma separated list of existing VPC subnet ids where EC2 instances will run. Required if setting VpcId.
     Default: ""
 
-  SSHBastionHost:
-    Type: String
-    Description: Whether to create a dedicated SSH Bastion host for accessing your private subnets. Generally not required if your instances are in public subnets.
-    AllowedValues:
-      - true
-      - false
-    Default: "false"
-
   InstanceType:
     Description: Instance type
     Type: String
@@ -292,8 +284,6 @@ Conditions:
 
     CreateMetricsStack:
       "Fn::And": [ Condition: UseAutoscaling, { "Fn::Not": [ "Fn::Equals": [ { Ref: BuildkiteApiAccessToken }, "" ] ] } ]
-
-    CreateSSHBastionInstance: !Equals [ !Ref SSHBastionHost, "true" ]
 
 Mappings:
   ECRManagedPolicy:

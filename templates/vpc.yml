@@ -21,7 +21,7 @@ Parameters:
       - Use existing VPC/Subnets
 
 Conditions:
-  CreateVpcResources: !Equals [ !Ref VpcID, "" ]
+  CreateVpcResources: !Equals [ !Ref VpcId, "" ]
 
   HasPrivateSubnets: !Or [
     !Equals [ !Ref SubnetConfiguration, "Instances launched across 2 private subnets, with 2 public subnets with NAT Gateways for internet access" ],
