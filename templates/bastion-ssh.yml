@@ -8,12 +8,12 @@ Parameters:
     Default: "false"
 
 Conditions:
-  CreateSSHBastionInstance: !Equals [ !Ref SSHBastionHost, "true" ]
+  CreateSSHBastionHost: !Equals [ !Ref SSHBastionHost, "true" ]
 
 Resources:
   BastionHost:
     Type: "AWS::EC2::Instance"
-    Condition: CreateSSHBastion
+    Condition: CreateSSHBastionHost
     Properties:
       KeyName : !Ref KeyName
       InstanceType: t2.nano
@@ -38,7 +38,7 @@ Resources:
 
   BastionHostSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    Condition: CreateSSHBastionInstance
+    Condition: CreateSSHBastionHost
     Properties:
       GroupDescription: !Sub ${AWS::StackName} BastionHost Security Group
       VpcId:  !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]
