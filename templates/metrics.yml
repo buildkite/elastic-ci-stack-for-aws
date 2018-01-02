@@ -50,7 +50,7 @@ Resources:
         Fn::GetAtt:
         - LambdaExecutionRole
         - Arn
-      Timeout: 120
+      Timeout: 300
       Handler: handler.handle
       Runtime: python2.7
       MemorySize: 128
