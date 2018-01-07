@@ -25,6 +25,7 @@ Metadata:
         - VpcId
         - Subnets
         - SecurityGroupId
+        - AssociatePublicIpAddress
 
       - Label:
           default: Instance Configuration
@@ -66,7 +67,6 @@ Metadata:
         - EnableSecretsPlugin
         - EnableECRPlugin
         - EnableDockerLoginPlugin
-
 
 Parameters:
   KeyName:

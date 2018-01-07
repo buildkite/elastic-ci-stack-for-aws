@@ -21,11 +21,19 @@ Parameters:
       - 6 private subnets + 2 public subnets with NAT Gateways for internet access
       - Use existing VPC/Subnets
 
+  AssociatePublicIpAddress:
+    Type: String
+    Description: Deprecated - Use SubnetConfiguration instead.
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
 
 Conditions:
   CreateVpcResources: !Equals [ !Ref VpcId, "" ]
 
   HasPrivateSubnets: !Or [
+    !Equals [ !Ref AssociatePublicIpAddress, "false"],
     !Equals [ !Ref SubnetConfiguration, "2 private subnets + 2 public subnets with NAT Gateways for internet access" ],
     !Equals [ !Ref SubnetConfiguration, "3 private subnets + 2 public subnets with NAT Gateways for internet access" ],
     !Equals [ !Ref SubnetConfiguration, "4 private subnets + 2 public subnets with NAT Gateways for internet access" ],
