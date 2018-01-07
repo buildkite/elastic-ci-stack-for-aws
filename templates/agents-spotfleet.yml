@@ -1,0 +1,61 @@
+
+Resources:
+  SpotFleetIAMRole:
+    Type: AWS::IAM::Role
+    Condition: CreateMetricsStack
+    Properties:
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ spotfleet.amazonaws.com ]
+            Action: sts:AssumeRole
+      Path: /
+
+  SpotFleet:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        AllocationStrategy: lowestPrice
+        IamFleetRole: !GetAtt SpotFleetIAMRole.Arn
+        TargetCapacity: !Ref MinSize
+        SpotPrice: !Ref SpotPrice
+        LaunchSpecifications:
+          - WeightedCapacity: 4
+            IamInstanceProfile: { Arn: !GetAtt IAMInstanceProfile.Arn }
+            InstanceType: m5.large
+            ImageId: !If [ UseDefaultAMI, !FindInMap [AWSRegion2AMI, !Ref "AWS::Region", AMI], !Ref ImageId ]
+            KeyName: !If [HasKeyName, !Ref KeyName, !Ref "AWS::NoValue"]
+            SecurityGroups:
+              - GroupId: !If [ "CreateSecurityGroup", !GetAtt SecurityGroup.GroupId, !Ref SecurityGroupId ]
+            UserData: # generated dynamically
+
+  SpotFleetScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxSize
+      MinCapacity: !Ref MinSize
+      ResourceId: "spot-fleet-request/$(SpotFleet)"
+      RoleARN: !GetAtt [SpotFleetIAMRole, Arn]
+      ScalableDimension: 'ec2:spot-fleet-request:TargetCapacity'
+      ServiceNamespace: 'ec2'
+
+  FleetUpPolicy:
+    Type : "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: FleetUpPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref SpotFleetScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: '1500'
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 10
+            MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 10
+            ScalingAdjustment: 1
+

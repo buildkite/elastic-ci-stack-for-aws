@@ -6,12 +6,12 @@ VERSION ?= $(shell git describe --tags --candidates=1)
 STACK_NAME ?= buildkite
 SHELL=/bin/bash -o pipefail
 TEMPLATES=templates/description.yml \
-  templates/buildkite-elastic.yml \
-  templates/autoscale.yml \
-  templates/vpc.yml \
-  templates/metrics.yml \
-  templates/bastion-ssh.yml \
-  templates/outputs.yml
+	templates/agents-asg.yml \
+	templates/agents-spotfleet.yml \
+	templates/buildkite-elastic.yml \
+	templates/vpc.yml \
+	templates/metrics.yml \
+	templates/bastion-ssh.yml
 
 all: build
 
