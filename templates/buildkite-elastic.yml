@@ -25,6 +25,7 @@ Metadata:
         - VpcId
         - Subnets
         - SecurityGroupId
+        - AssociatePublicIpAddress
 
       - Label:
           default: Instance Configuration
@@ -66,7 +67,6 @@ Metadata:
         - EnableSecretsPlugin
         - EnableECRPlugin
         - EnableDockerLoginPlugin
-
 
 Parameters:
   KeyName:
@@ -532,34 +532,34 @@ Resources:
           HasPrivateSubnets,
           !If [
             HasPrivateSubnet6,
-            !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5, !Ref PrivateSubnet6 ]],
+            [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5, !Ref PrivateSubnet6 ],
             !If [
               HasPrivateSubnet5,
-              !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5 ]],
+              [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5 ],
               !If [
                 HasPrivateSubnet4,
-                !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4 ]],
+                [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4 ],
                 !If [
                   HasPrivateSubnet3,
-                  !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ]],
-                  !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
+                  [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ],
+                  [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]
                 ]
               ]
             ]
           ],
           !If [
             HasPublicSubnet6,
-            !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3, !Ref PublicSubnet4, !Ref PublicSubnet5, !Ref PublicSubnet6 ]],
+            [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3, !Ref PublicSubnet4, !Ref PublicSubnet5, !Ref PublicSubnet6 ],
             !If [
               HasPublicSubnet5,
-              !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3, !Ref PublicSubnet4, !Ref PublicSubnet5 ]],
+              [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3, !Ref PublicSubnet4, !Ref PublicSubnet5 ],
               !If [
                 HasPublicSubnet4,
-                !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3, !Ref PublicSubnet4 ]],
+                [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3, !Ref PublicSubnet4 ],
                 !If [
                   HasPublicSubnet3,
-                  !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3 ]],
-                  !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]]
+                  [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3 ],
+                  [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]
                 ]
               ]
             ]
