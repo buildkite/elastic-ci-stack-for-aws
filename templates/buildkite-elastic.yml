@@ -620,7 +620,6 @@ Resources:
     Type: AWS::IAM::Role
     Condition: CreateMetricsStack
     Properties:
-      RoleName: !Sub "$(AWS::StackName)-SpotFleetIAMRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
       AssumeRolePolicyDocument:
