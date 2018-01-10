@@ -325,7 +325,6 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: { "Fn::Sub": "${AWS::StackName}-Role" }
       ManagedPolicyArns:
         - "Fn::If":
           - UseManagedPolicyARN
