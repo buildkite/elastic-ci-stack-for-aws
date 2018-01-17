@@ -39,7 +39,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: PreemptiveScaling
     Properties:
-      AlarmDescription: Scale-up if IdleAgentCount > X for Y minute
+      AlarmDescription: Scale-down if IdleAgentCount > X for Y minute
       MetricName: IdleAgentCount
       Namespace: Buildkite
       Statistic: Maximum
