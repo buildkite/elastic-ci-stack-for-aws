@@ -1,0 +1,3 @@
+#!/bin/bash
+
+iptables -A OUTPUT -m owner ! --uid-owner root -d 169.254.169.254 -j DROP

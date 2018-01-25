@@ -8,6 +8,28 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
+if [[ -n "${AWS_ASSUME_IAM_ROLE:-}" ]] ; then
+  aws_cred_tmp=$(mktemp -t aws-json-XXXXXX)
+
+  echo "Assuming IAM Role $AWS_ASSUME_IAM_ROLE"
+  aws sts assume-role --role-arn "${AWS_ASSUME_IAM_ROLE}" --role-session-name "bk-${BUILDKITE_JOB_ID}" > "${aws_cred_tmp}"
+
+  export AWS_ACCESS_KEY_ID; AWS_ACCESS_KEY_ID=$(jq -r ".Credentials.AccessKeyId" "${aws_cred_tmp}")
+  export AWS_SECRET_ACCESS_KEY; AWS_SECRET_ACCESS_KEY=$(jq -r ".Credentials.SecretAccessKey" "${aws_cred_tmp}")
+  export AWS_SESSION_TOKEN; AWS_SESSION_TOKEN=$(jq -r ".Credentials.SessionToken" "${aws_cred_tmp}")
+  export AWS_SESSION_EXPIRATION; AWS_SESSION_EXPIRATION=$(jq -r ".Credentials.Expiration" "${aws_cred_tmp}")
+
+  rm "${aws_cred_tmp}"
+
+  # If we have a role, block the metadata service
+  export AWS_BLOCK_METADATA_SERVICE=true
+fi
+
+if [[ ${AWS_BLOCK_METADATA_SERVICE:-false} =~ (on|1|true) ]] ; then
+  echo "Blocking AWS Metadata Service"
+  sudo /usr/bin/block-ec2-metadata-service
+fi
+
 echo "Checking docker processes"
 pgrep -lf docker
 
