@@ -3,7 +3,9 @@ set -euo pipefail
 
 ## Installs the Buildkite Agent, run from the CloudFormation template
 
-exec > /var/log/elastic-stack.log 2>&1 # Logs to elastic-stack.log
+# Write to system console and to our log file
+# See https://alestic.com/2010/12/ec2-user-data-output/
+exec > >(tee  /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 on_error() {
 	local exitCode="$?"
