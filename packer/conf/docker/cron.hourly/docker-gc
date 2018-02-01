@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+exec > /var/log/elastic-stack.log 2>&1 # Logs to elastic-stack.log
+
 DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-4h}
 
 ## ------------------------------------------

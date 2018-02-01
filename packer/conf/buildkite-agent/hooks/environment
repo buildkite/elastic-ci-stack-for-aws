@@ -11,6 +11,9 @@ cat ~/cfn-env
 echo "Checking docker processes"
 pgrep -lf docker
 
+echo "Checking disk space"
+/usr/local/bin/bk-check-disk-space.sh
+
 echo "Configuring built-in plugins"
 
 [[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}
