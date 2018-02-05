@@ -8,11 +8,23 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
-echo "Checking docker processes"
+echo ":docker: Checking docker processes"
 pgrep -lf docker
 
 echo "Checking disk space"
-/usr/local/bin/bk-check-disk-space.sh
+if ! /usr/local/bin/bk-check-disk-space.sh ; then
+  echo ":warning: Disk space is low, generally this is either your builds or docker"
+  du -d 4 -h -t 100M /var/lib | sort -h
+
+  echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL:-4h}"
+  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
+
+  echo "Checking disk space again"
+  if ! /usr/local/bin/bk-check-disk-space.sh ; then
+    echo "Disk health checks failed" >&2
+    exit 1
+  fi
+fi
 
 echo "Configuring built-in plugins"
 

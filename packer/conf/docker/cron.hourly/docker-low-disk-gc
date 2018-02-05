@@ -26,7 +26,7 @@ if ! /usr/local/bin/bk-check-disk-space.sh ; then
   echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL}"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
 
-  if ! check_disk_healthy ; then
+  if ! /usr/local/bin/bk-check-disk-space.sh ; then
     echo "Disk health checks failed" >&2
     exit 1
   fi
