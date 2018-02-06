@@ -18,9 +18,43 @@ Resources:
       Cooldown: 300
       ScalingAdjustment: { Ref: ScaleDownAdjustment }
 
+  AgentSpareAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Condition: PreemptiveScaling
+    Properties:
+      AlarmDescription: Scale-up if IdleAgentCount < 1 for 1 minute
+      MetricName: IdleAgentCount
+      Namespace: Buildkite
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      AlarmActions: [ { Ref: AgentScaleUpPolicy } ]
+      Dimensions:
+        - Name: Queue
+          Value: { Ref: BuildkiteQueue }
+      ComparisonOperator: LessThanThreshold
+
+  AgentSpareAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Condition: PreemptiveScaling
+    Properties:
+      AlarmDescription: Scale-down if IdleAgentCount > X for Y minute
+      MetricName: IdleAgentCount
+      Namespace: Buildkite
+      Statistic: Maximum
+      Period: { Ref: ScaleDownPeriod }
+      EvaluationPeriods: 1
+      Threshold: { Ref: AgentsPerInstance }
+      AlarmActions: [ { Ref: AgentScaleDownPolicy } ]
+      Dimensions:
+        - Name: Queue
+          Value: { Ref: BuildkiteQueue }
+      ComparisonOperator: GreaterThanThreshold
+
   AgentUtilizationAlarmHigh:
    Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
+   Condition: StandardScaling
    Properties:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
@@ -37,7 +71,7 @@ Resources:
 
   AgentUtilizationAlarmLow:
    Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
+   Condition: StandardScaling
    Properties:
       AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
       MetricName: UnfinishedJobsCount
