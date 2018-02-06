@@ -19,7 +19,10 @@ const sortOrder = [
 glob("templates/*.yml", function (er, files) {
   const contents = files.map(f => {
     try {
-      return yaml.safeLoad(fs.readFileSync(f, 'utf8'), { schema: schema});
+      return yaml.safeLoad(fs.readFileSync(f, 'utf8'), {
+        schema: schema,
+        noRefs: false,
+      });
     } catch (e) {
       console.error("Failed to parse %s", f, e);
       process.exit(1);
@@ -49,6 +52,15 @@ glob("templates/*.yml", function (er, files) {
   // set a description
   sorted.Description = "Buildkite stack " + String(version).trim();
   console.log(sorted.Description);
+
+  // clone the object, otherwise js-yaml uses anchors which aren't supported by cfn
+  var userData = JSON.parse(JSON.stringify(sorted.Resources.AgentLaunchConfiguration.Properties.UserData));
+
+  console.log(userData);
+
+  for(var idx in sorted.Resources.SpotFleet.Properties.SpotFleetRequestConfigData.LaunchSpecifications) {
+    sorted.Resources.SpotFleet.Properties.SpotFleetRequestConfigData.LaunchSpecifications[idx].UserData = userData;
+  }
 
   fs.existsSync("build") || fs.mkdirSync("build");
   console.log("Generating build/aws-stack.yml");
