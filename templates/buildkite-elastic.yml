@@ -465,6 +465,15 @@ Resources:
         "Fn::Base64":
           "Fn::Sub":
             - |
+              Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+              MIME-Version: 1.0
+              --==BOUNDARY==
+              Content-Type: text/cloud-boothook; charset="us-ascii"
+              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+                /usr/local/bin/bk-configure-docker.sh
+
+              --==BOUNDARY==
+              Content-Type: text/x-shellscript; charset="us-ascii"
               #!/bin/bash -xv
               BUILDKITE_STACK_NAME="${AWS::StackName}" \
               BUILDKITE_STACK_VERSION=dev \
@@ -485,6 +494,7 @@ Resources:
               DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
               AWS_REGION=${AWS::Region} \
                 /usr/local/bin/bk-install-elastic-stack.sh
+              --==BOUNDARY==--
             - LocalSecretsBucket:
                 "Fn::If":
                   - CreateSecretsBucket
