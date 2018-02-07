@@ -1,7 +1,9 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_VERSION=17.12.0-ce
+set -x
+
+DOCKER_VERSION=18.01.0-ce
 DOCKER_COMPOSE_VERSION=1.18.0
 
 # This performs a manual install of Docker. The init.d script is from the
