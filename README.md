@@ -261,7 +261,22 @@ make clean build-ami
 
 ## Questions and Support
 
-Feel free to drop an email to support@buildkite.com with questions, or checkout the `#aws-stack` and `#aws` channels in [Buildkite Slack](https://chat.buildkite.com/).
+Feel free to drop an email to support@buildkite.com with questions. It helps us if you can provide the following details:
+
+```
+# List your stack parameters
+aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
+  --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
+```
+
+Provide us with logs from Cloudwatch Logs:
+
+```
+/buildkite/elastic-stack-init/{instance-id}
+/buildkite/docker-daemon/{instance-id}
+```
+
+Alternately, drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
 
 ## Licence
 
