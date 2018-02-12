@@ -1,9 +1,0 @@
-version: '3'
-
-services:
-  unit-tests:
-    image: lucor/bats
-    volumes:
-      - .:/src:ro
-    working_dir: /src
-    command: bats /src/unit-tests/

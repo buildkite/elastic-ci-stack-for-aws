@@ -51,10 +51,8 @@ Metadata:
         - ScaleDownAdjustment
         - ScaleDownPeriod
 
-      - Label:
-          default: Docker Daemon Configuration
-        Parameters:
-        - EnableDockerUserNamespaceRemap
+      # - Label:
+      #     default: Docker Daemon Configuration
 
       - Label:
           default: Docker Registry Configuration
@@ -239,14 +237,6 @@ Parameters:
       - true
       - false
     Default: "true"
-
-  EnableDockerUserNamespaceRemap:
-    Type: String
-    Description: Enables experimental Docker userns-remap support
-    AllowedValues:
-      - true
-      - false
-    Default: "false"
 
 Outputs:
   ManagedSecretsBucket:
@@ -469,7 +459,6 @@ Resources:
               MIME-Version: 1.0
               --==BOUNDARY==
               Content-Type: text/cloud-boothook; charset="us-ascii"
-              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                 /usr/local/bin/bk-configure-docker.sh
 
               --==BOUNDARY==
@@ -491,7 +480,6 @@ Resources:
               SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
               ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
               DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
-              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
               AWS_REGION=${AWS::Region} \
                 /usr/local/bin/bk-install-elastic-stack.sh
               --==BOUNDARY==--
