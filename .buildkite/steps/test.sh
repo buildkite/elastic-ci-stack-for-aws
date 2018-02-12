@@ -63,10 +63,6 @@ cat << EOF > config.json
   {
     "ParameterKey": "RootVolumeSize",
     "ParameterValue": "10"
-  },
-  {
-    "ParameterKey": "EnableDockerUserNamespaceRemap",
-    "ParameterValue": "true"
   }
 ]
 EOF
