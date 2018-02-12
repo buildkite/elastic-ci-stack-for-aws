@@ -51,10 +51,8 @@ Metadata:
         - ScaleDownAdjustment
         - ScaleDownPeriod
 
-      - Label:
-          default: Docker Daemon Configuration
-        Parameters:
-        - EnableDockerUserNamespaceRemap
+      # - Label:
+      #     default: Docker Daemon Configuration
 
       - Label:
           default: Docker Registry Configuration
