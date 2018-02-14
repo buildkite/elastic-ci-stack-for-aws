@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## unreleased
+
+- AMI built from ami-97785bed (Amazon Linux AMI 2017.09.1 released on 2018-01-17)
+
 ## v2.3.4 - 2018-02-13
 ### Fixed
 - Configure docker before it starts to avoid corruption [\#377](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/377)
