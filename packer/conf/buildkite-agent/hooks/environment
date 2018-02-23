@@ -12,8 +12,7 @@ if ! docker ps ; then
   echo "^^^ +++"
   echo ":alert: Docker isn't running!"
   set -x
-  pgrep -lf docker
-  tail -n 50 /var/log/docker
+  pgrep -lf docker || tail -n 50 /var/log/docker
   exit 1
 fi
 
