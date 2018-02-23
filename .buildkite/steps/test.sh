@@ -82,7 +82,7 @@ aws cloudformation create-stack \
   --output text \
   --stack-name "${AWS_STACK_NAME}" \
   --disable-rollback \
-  --template-body "file://${PWD}/build/aws-stack.yml" \
+  --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 

@@ -10,7 +10,6 @@ TEMPLATES=templates/description.yml \
   templates/autoscale.yml \
   templates/vpc.yml \
   templates/metrics.yml \
-  templates/bastion-ssh.yml \
   templates/outputs.yml
 
 all: build
