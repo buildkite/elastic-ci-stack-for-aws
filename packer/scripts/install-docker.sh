@@ -1,7 +1,8 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_VERSION=17.12.0-ce
+DOCKER_VERSION=17.12.1-ce-rc2
+DOCKER_RELEASE="test"
 DOCKER_COMPOSE_VERSION=1.18.0
 
 # This performs a manual install of Docker. The init.d script is from the
@@ -17,7 +18,7 @@ sudo groupadd docker
 sudo usermod -a -G docker ec2-user
 
 # Manual install ala https://docs.docker.com/engine/installation/binaries/
-curl -Lsf https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz > docker.tgz
+curl -Lsf https://download.docker.com/linux/static/${DOCKER_RELEASE}/x86_64/docker-${DOCKER_VERSION}.tgz > docker.tgz
 tar -xvzf docker.tgz
 sudo mv docker/* /usr/bin
 rm docker.tgz
