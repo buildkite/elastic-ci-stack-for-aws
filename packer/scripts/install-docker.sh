@@ -2,7 +2,7 @@
 set -eu -o pipefail
 
 DOCKER_VERSION=17.12.1-ce-rc2
-DOCKER_RELEASE=test
+DOCKER_RELEASE="test"
 DOCKER_COMPOSE_VERSION=1.18.0
 
 # This performs a manual install of Docker. The init.d script is from the
