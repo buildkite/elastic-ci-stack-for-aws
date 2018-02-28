@@ -1,0 +1,3 @@
+{
+  "userns-remap": "buildkite-agent",
+}
