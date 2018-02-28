@@ -154,6 +154,7 @@ for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	chkconfig --add "buildkite-agent-${i}"
 done
 
+# let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \
 	--region "$AWS_REGION" \
 	--stack "$BUILDKITE_STACK_NAME" \
