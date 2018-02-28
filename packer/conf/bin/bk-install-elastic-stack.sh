@@ -11,11 +11,11 @@ on_error() {
 	local exitCode="$?"
 	local errorLine="$1"
 
-  if [[ $exitCode != 0 ]] ; then
-    aws autoscaling set-instance-health \
-      --instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
-      --health-status Unhealthy
-  fi
+	if [[ $exitCode != 0 ]] ; then
+		aws autoscaling set-instance-health \
+			--instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+			--health-status Unhealthy
+	fi
 
 	/opt/aws/bin/cfn-signal \
 		--region "$AWS_REGION" \
