@@ -14,7 +14,7 @@ on_error() {
 	if [[ $exitCode != 0 ]] ; then
 		aws autoscaling set-instance-health \
 			--instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
-			--health-status Unhealthy
+			--health-status Unhealthy || true
 	fi
 
 	/opt/aws/bin/cfn-signal \
@@ -145,7 +145,7 @@ service awslogs restart || true
 # wait for docker to start
 next_wait_time=0
 until docker ps || [ $next_wait_time -eq 5 ]; do
-	 sleep $(( next_wait_time++ ))
+	sleep $(( next_wait_time++ ))
 done
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
@@ -158,4 +158,8 @@ done
 	--region "$AWS_REGION" \
 	--stack "$BUILDKITE_STACK_NAME" \
 	--resource "AgentAutoScaleGroup" \
-	--exit-code 0
+	--exit-code 0 || (
+		# This will fail if the stack has already completed, for instance if there is a min size
+		# of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
+		echo "Signal failed"
+	)
