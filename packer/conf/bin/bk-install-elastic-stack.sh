@@ -5,11 +5,17 @@ set -euo pipefail
 
 # Write to system console and to our log file
 # See https://alestic.com/2010/12/ec2-user-data-output/
-exec > >(tee  /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console) 2>&1
+exec > >(tee -a /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 on_error() {
 	local exitCode="$?"
 	local errorLine="$1"
+
+  if [[ $exitCode != 0 ]] ; then
+    aws autoscaling set-instance-health \
+      --instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+      --health-status Unhealthy
+  fi
 
 	/opt/aws/bin/cfn-signal \
 		--region "$AWS_REGION" \
