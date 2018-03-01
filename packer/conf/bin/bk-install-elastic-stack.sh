@@ -14,7 +14,7 @@ on_error() {
 	if [[ $exitCode != 0 ]] ; then
 		aws autoscaling set-instance-health \
 			--instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
-			--health-status Unhealthy
+			--health-status Unhealthy || true
 	fi
 
 	/opt/aws/bin/cfn-signal \
@@ -54,7 +54,6 @@ export AWS_DEFAULT_REGION=$AWS_REGION
 export AWS_REGION=$AWS_REGION
 export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
-export BUILDKITE_USERNS_REMAP={DOCKER_USERNS_REMAP}
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
@@ -145,7 +144,7 @@ service awslogs restart || true
 # wait for docker to start
 next_wait_time=0
 until docker ps || [ $next_wait_time -eq 5 ]; do
-	 sleep $(( next_wait_time++ ))
+	sleep $(( next_wait_time++ ))
 done
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
@@ -154,8 +153,13 @@ for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	chkconfig --add "buildkite-agent-${i}"
 done
 
+# let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \
 	--region "$AWS_REGION" \
 	--stack "$BUILDKITE_STACK_NAME" \
 	--resource "AgentAutoScaleGroup" \
-	--exit-code 0
+	--exit-code 0 || (
+		# This will fail if the stack has already completed, for instance if there is a min size
+		# of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
+		echo "Signal failed"
+	)
