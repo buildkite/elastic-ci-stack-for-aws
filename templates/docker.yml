@@ -1,0 +1,24 @@
+Parameters:
+  DockerVersion:
+    Type: String
+    AllowedValues:
+      - latest-stable
+      - latest-testing
+      - 18.02.0-ce testing
+      - 17.12.1-ce
+      - 17.12.0-ce
+      - 17.09.0-ce
+      - 17.06.0-ce
+      - none
+    Default: "latest"
+
+  DockerComposeVersion:
+    Type: String
+    AllowedValues:
+      - latest
+      - latest-testing
+      - 1.20.0-rc1
+      - 1.19.0
+      - 1.18.0
+      - none
+    Default: "latest"

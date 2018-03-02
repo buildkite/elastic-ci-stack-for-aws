@@ -471,6 +471,8 @@ Resources:
               MIME-Version: 1.0
               --==BOUNDARY==
               Content-Type: text/cloud-boothook; charset="us-ascii"
+              DOCKER_VERSION=${DockerVersion} \
+              DOCKER_COMPOSE_VERSION=${DockerComposeVersion} \
                 /usr/local/bin/bk-configure-docker.sh
 
               --==BOUNDARY==
