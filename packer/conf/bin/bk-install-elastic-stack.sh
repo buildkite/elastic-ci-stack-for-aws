@@ -147,6 +147,11 @@ until docker ps || [ $next_wait_time -eq 5 ]; do
 	sleep $(( next_wait_time++ ))
 done
 
+if ! docker ps ; then
+  echo "Failed to contact docker"
+  exit 1
+fi
+
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
 	service "buildkite-agent-${i}" start
