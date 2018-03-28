@@ -72,7 +72,7 @@ version=$(git describe --tags --candidates=1)
 cat << EOF > templates/mappings.yml
 Mappings:
   AWSRegion2AMI:
-    us-east-1     : { AMI: $image_id }
+    ${AWS_REGION}    : { AMI: $image_id }
 EOF
 
 make build validate
@@ -82,10 +82,9 @@ aws cloudformation create-stack \
   --output text \
   --stack-name "${AWS_STACK_NAME}" \
   --disable-rollback \
-  --region "${AWS_DEFAULT_REGION:-us-east-1}" \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 
 echo "--- Waiting for stack to complete"
-aws cloudformation wait stack-create-complete --stack-name "${AWS_STACK_NAME}" --region "${AWS_DEFAULT_REGION:-us-east-1}"
+aws cloudformation wait stack-create-complete --stack-name "${AWS_STACK_NAME}"
