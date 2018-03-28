@@ -82,10 +82,10 @@ aws cloudformation create-stack \
   --output text \
   --stack-name "${AWS_STACK_NAME}" \
   --disable-rollback \
-  --region ${AWS_DEFAULT_REGION:-us-east-1} \
+  --region "${AWS_DEFAULT_REGION:-us-east-1}" \
   --template-body "file://${PWD}/build/aws-stack.json" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 
 echo "--- Waiting for stack to complete"
-aws cloudformation wait stack-create-complete --stack-name "${AWS_STACK_NAME}" --region ${AWS_DEFAULT_REGION:-us-east-1}
+aws cloudformation wait stack-create-complete --stack-name "${AWS_STACK_NAME}" --region "${AWS_DEFAULT_REGION:-us-east-1}"
