@@ -12,10 +12,13 @@ TEMPLATES=templates/description.yml \
   templates/metrics.yml \
   templates/outputs.yml
 
+INPUT_PACKER_JSON ?= packer/buildkite-ami.json.example
+OUTPUT_PACKER_JSON ?= packer/buildkite-ami.json
+
 all: build
 
 build: build/aws-stack.yml
-
+	
 build/aws-stack.yml: $(TEMPLATES)
 	docker run --rm -w /app -v "$(PWD):/app" node:slim bash \
 		-c "yarn install --non-interactive && yarn run generate $(VERSION)"
@@ -26,7 +29,10 @@ clean:
 config.json:
 	cp config.json.example config.json
 
-build-ami: config.json
+buildkite-ami.json: update-buildkite-ami.json.sh $(INPUT_PACKER_JSON)
+	./update-buildkite-ami.json.sh $(INPUT_PACKER_JSON) $(OUTPUT_PACKER_JSON)
+
+build-ami: config.json buildkite-ami.json
 	docker run  -e AWS_DEFAULT_REGION  -e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \

@@ -259,6 +259,10 @@ If you need to build your own AMI (because you've changed something in the `pack
 make clean build-ami
 ```
 
+### Build in a specific region
+set AWS_SOURCE_AMI_ID
+set AWS_DEFAULT_REGION or AWS_REGION
+
 ## Questions and Support
 
 Feel free to drop an email to support@buildkite.com with questions. It helps us if you can provide the following details:
