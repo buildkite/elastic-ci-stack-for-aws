@@ -27,7 +27,7 @@ else
   echo "Skipping packer build, no changes"
 fi
 
-image_id=$(grep -Eo "us-east-1: (ami-.+)$" "$packer_file" | awk '{print $2}')
-echo "AMI for us-east-1 is $image_id"
+image_id=$(grep -Eo "${AWS_DEFAULT_REGION}: (ami-.+)$" "$packer_file" | awk '{print $2}')
+echo "AMI for ${AWS_DEFAULT_REGION} is $image_id"
 
 buildkite-agent meta-data set image_id "$image_id"
