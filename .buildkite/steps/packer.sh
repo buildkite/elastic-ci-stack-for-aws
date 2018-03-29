@@ -17,9 +17,9 @@ echo "Packer image hash is $packer_hash"
 
 packer_file="${packer_hash}.packer"
 
-if ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
+if ! aws s3 cp "s3://${BUILDKITE_STACK_BUCKET}/${packer_file}" . ; then
   make build-ami | tee "$packer_file"
-  aws s3 cp "${packer_file}" "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}"
+  aws s3 cp "${packer_file}" "s3://${BUILDKITE_STACK_BUCKET}/${packer_file}"
 else
   echo "Skipping packer build, no changes"
 fi
