@@ -18,5 +18,9 @@
   {
     "ParameterKey": "ImageId",
     "ParameterValue": ""
-  }
+  },
+  {
+    "ParameterKey": "BuildkiteAgentRelease",
+    "ParameterValue": "stable"
+  },
 ]
