@@ -22,5 +22,5 @@
   {
     "ParameterKey": "BuildkiteAgentRelease",
     "ParameterValue": "stable"
-  },
+  }
 ]
