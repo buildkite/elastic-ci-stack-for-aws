@@ -3,6 +3,9 @@ set -euo pipefail
 
 mkdir -p build
 
+# Update buildkite-ami first so it can be captured in packer_files_sha
+make buildkite-ami.json
+
 packer_files_sha=$(find packer/ plugins/ -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
 echo "Packer files hash is $packer_files_sha"
 
