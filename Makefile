@@ -18,7 +18,7 @@ OUTPUT_PACKER_JSON ?= packer/buildkite-ami.json
 all: build
 
 build: build/aws-stack.yml
-	
+
 build/aws-stack.yml: $(TEMPLATES)
 	docker run --rm -w /app -v "$(PWD):/app" node:slim bash \
 		-c "yarn install --non-interactive && yarn run generate $(VERSION)"
@@ -38,7 +38,7 @@ build-ami: config.json buildkite-ami.json
 		-v ${HOME}/.aws:/root/.aws \
 		--rm -v "$(PWD):/src" -w /src/packer hashicorp/packer:1.0.4 \
 			build buildkite-ami.json | tee packer.output
-	jq --arg ImageId $$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2) \
+	jq --arg ImageId $$(grep -Eo '$(AWS_DEFAULT_REGION): (ami-.+)' packer.output | cut -d' ' -f2) \
 		'[ .[] | select(.ParameterKey != "ImageId") ] + [{ParameterKey: "ImageId", ParameterValue: $$ImageId}]' \
 		config.json  > config.json.temp
 	mv config.json.temp config.json
