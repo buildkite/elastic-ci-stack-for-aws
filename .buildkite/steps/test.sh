@@ -71,6 +71,14 @@ cat << EOF > config.json
   {
     "ParameterKey": "AssociatePublicIpAddress",
     "ParameterValue": "${BUILDKITE_AWS_STACK_PUBLIC_IP:-true}"
+  },
+  {
+    "ParameterKey": "ManagedPolicyARN",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_MANAGED_POLICY_ARN:-}"
+  },
+  {
+    "ParameterKey": "BuildkiteAgentRelease",
+    "ParameterValue": "${BUILDKITE_AGENT_RELEASE:-beta}"
   }
 ]
 EOF
