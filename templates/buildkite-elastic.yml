@@ -478,7 +478,7 @@ Resources:
               #!/bin/bash -xv
               BUILDKITE_STACK_NAME="${AWS::StackName}" \
               BUILDKITE_STACK_VERSION=dev \
-              BUILDKITE_AWS_STACK_PUBLIC_IP=${AssociatePublicIpAddress:-true} \
+              BUILDKITE_AWS_STACK_PUBLIC_IP=${AssociatePublicIpAddress} \
               BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
               BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
               BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
