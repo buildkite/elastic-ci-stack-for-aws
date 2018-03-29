@@ -67,6 +67,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "BootstrapScriptUrl",
     "ParameterValue": "${BUILDKITE_AWS_STACK_BOOTSTRAP_URL:-}"
+  },
+  {
+    "ParameterKey": "AssociatePublicIpAddress",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_PUBLIC_IP:-true}"
   }
 ]
 EOF
