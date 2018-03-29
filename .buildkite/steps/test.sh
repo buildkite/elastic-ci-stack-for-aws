@@ -63,6 +63,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "RootVolumeSize",
     "ParameterValue": "10"
+  },
+  {
+    "ParameterKey": "BootstrapScriptUrl",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_BOOTSTRAP_URL:-}"
   }
 ]
 EOF
