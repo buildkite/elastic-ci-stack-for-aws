@@ -13,9 +13,6 @@ steps:
     command: .buildkite/steps/packer.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths:
-      - "packer/buildkite-ami.json"
-      - "config.json"
 
   - wait
   - name: ":cloudformation: Launch"
