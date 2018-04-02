@@ -100,7 +100,7 @@ copy_ami_and_create_mappings_yml() {
   local region_ami
   local i
 
-  image_name=$(fetch_ami_name "$base_image_id" ${AWS_REGION})
+  image_name=$(fetch_ami_name "$base_image_id" "${AWS_REGION}")
 
   cat << EOF > "$destination_yml"
 Mappings:
@@ -111,7 +111,7 @@ EOF
   if [[ $BUILDKITE_BRANCH == "master" ]] || is_tag_build ; then
     for region in ${DESTINATION_REGIONS[*]}; do
       echo "--- Copying $image_id to $region"
-      region_ami=$(copy_ami_to_region "$base_image_id" ${AWS_REGION} "$region" "$image_name-$region")
+      region_ami=$(copy_ami_to_region "$base_image_id" "${AWS_REGION}" "$region" "$image_name-$region")
 
       DESTINATION_AMIS+=("$region_ami")
     done
