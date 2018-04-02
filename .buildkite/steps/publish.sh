@@ -2,7 +2,7 @@
 
 set -eu
 
-# us-east-1 is the base image
+# ${AWS_REGION} is the base image
 DESTINATION_REGIONS=(
   us-east-2
   us-west-1
@@ -100,18 +100,18 @@ copy_ami_and_create_mappings_yml() {
   local region_ami
   local i
 
-  image_name=$(fetch_ami_name "$base_image_id" us-east-1)
+  image_name=$(fetch_ami_name "$base_image_id" ${AWS_REGION})
 
   cat << EOF > "$destination_yml"
 Mappings:
   AWSRegion2AMI:
-    us-east-1 : { AMI: $base_image_id }
+    ${AWS_REGION} : { AMI: $base_image_id }
 EOF
 
   if [[ $BUILDKITE_BRANCH == "master" ]] || is_tag_build ; then
     for region in ${DESTINATION_REGIONS[*]}; do
       echo "--- Copying $image_id to $region"
-      region_ami=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
+      region_ami=$(copy_ami_to_region "$base_image_id" ${AWS_REGION} "$region" "$image_name-$region")
 
       DESTINATION_AMIS+=("$region_ami")
     done
