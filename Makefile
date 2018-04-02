@@ -25,6 +25,10 @@ build/aws-stack.yml: $(TEMPLATES)
 
 clean:
 	-rm -f build/*
+	-rm config.json
+	-rm $(OUTPUT_PACKER_JSON)
+	-rm packer.output
+	-rm -rf node_modules/*
 
 config.json:
 	cp config.json.example config.json
