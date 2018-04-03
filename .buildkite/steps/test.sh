@@ -79,6 +79,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "BuildkiteAgentRelease",
     "ParameterValue": "${BUILDKITE_AGENT_RELEASE:-beta}"
+  },
+  {
+    "ParameterKey": "SecretsBucket",
+    "ParameterValue": "${BUILDKITE_SECRETS_BUCKET:-}"
   }
 ]
 EOF
