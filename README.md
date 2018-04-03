@@ -259,9 +259,20 @@ If you need to build your own AMI (because you've changed something in the `pack
 make clean build-ami
 ```
 
-### Build in a specific region
-set AWS_SOURCE_AMI_ID
-set AWS_DEFAULT_REGION or AWS_REGION
+## Use your own BK pipeline
+To use your own BK pipeline and AWS resources to test and develop this stack, you need to create a pipeline with the an appropriate set of pipeline variables.
+Below are a set of pipeline variables for building and testing the BK Elastic CI stack in your BuildKite organisation, with your secrets and bootstrapping.
+
+```
+AWS_SOURCE_AMI_ID=ami-id-to-base-off
+BUILDKITE_STACK_BUCKET=my-buildkite-aws-stack-resources
+BUILDKITE_AWS_STACK_ORG_SLUG=my-buildkite-org-slug
+AWS_KEYPAIR=my-aws-keypair-name
+BUILDKITE_AWS_STACK_BOOTSTRAP_URL=<s3-url-for-bootstrap-url>
+BUILDKITE_SECRETS_BUCKET=my-s3-bucket-name
+BUILDKITE_AWS_STACK_PUBLIC_IP=true
+BUILDKITE_AWS_STACK_MANAGED_POLICY_ARN="arn-for-my-stack-permissions-policies"
+```
 
 ## Questions and Support
 
