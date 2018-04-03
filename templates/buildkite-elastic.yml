@@ -246,6 +246,16 @@ Parameters:
       - false
     Default: "true"
 
+  BuildkiteBillingTagName:
+    Type: String
+    Description: The name of the Cost Allocation Tag used for billing purposes
+    Default: "aws:createdBy"
+
+  BuildkiteBillingTagValue:
+    Type: String
+    Description: The value of the Cost Allocation Tag used for billing purposes
+    Default: "buildkite-elastic-ci-stack-for-aws"
+
 Outputs:
   ManagedSecretsBucket:
     Value:
@@ -564,6 +574,9 @@ Resources:
           PropagateAtLaunch: true
         - Key: BuildkiteQueue
           Value: { Ref: BuildkiteQueue }
+          PropagateAtLaunch: true
+        - Key: { Ref: BuildkiteBillingTagName }
+          Value: { Ref: BuildkiteBillingTagValue }
           PropagateAtLaunch: true
 
     CreationPolicy:
