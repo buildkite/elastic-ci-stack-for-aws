@@ -10,25 +10,6 @@ echo "Creating buildkite-agent user..."
 sudo useradd --base-dir /var/lib buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
-echo "Downloading buildkite-agent stable..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/latest/buildkite-agent-linux-amd64"
-sudo chmod +x /usr/bin/buildkite-agent-stable
-buildkite-agent-stable --version
-
-echo "Downloading buildkite-agent beta..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
-  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64"
-sudo chmod +x /usr/bin/buildkite-agent-beta
-buildkite-agent-beta --version
-
-echo "Downloading legacy bootstrap.sh for v2 stable agent..."
-sudo mkdir -p /etc/buildkite-agent
-sudo curl -Lsf -o /etc/buildkite-agent/bootstrap.sh \
-  https://raw.githubusercontent.com/buildkite/agent/2-1-stable/templates/bootstrap.sh
-sudo chmod +x /etc/buildkite-agent/bootstrap.sh
-sudo chown -R buildkite-agent: /etc/buildkite-agent
-
 echo "Adding scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/* /usr/bin
 
