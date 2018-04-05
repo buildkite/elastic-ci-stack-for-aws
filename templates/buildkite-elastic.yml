@@ -6,6 +6,7 @@ Metadata:
           default: Buildkite Configuration
         Parameters:
         - BuildkiteAgentRelease
+        - BuildkiteAgentVersion
         - BuildkiteAgentToken
         - BuildkiteAgentTags
         - BuildkiteQueue
@@ -74,6 +75,11 @@ Parameters:
       - beta
       - edge
     Default: "beta"
+
+  BuildkiteAgentVersion:
+    Description: A specific version of the agent to pin to, must exist in the release specified in BuildkiteAgentRelease
+    Type: String
+    Default: "latest"
 
   BuildkiteAgentToken:
     Description: Buildkite agent token
@@ -483,6 +489,7 @@ Resources:
               BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
               BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
               BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
+              BUILDKITE_AGENT_VERSION="${BuildkiteAgentVersion}" \
               BUILDKITE_QUEUE="${BuildkiteQueue}" \
               BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
               BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \

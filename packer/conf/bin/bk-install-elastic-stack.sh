@@ -60,10 +60,11 @@ EOF
 download_agent() {
   local release="$1"
   local channel="$2"
+  local version="${BUILDKITE_AGENT_VERSION:-latest}"
 
-  echo "Downloading buildkite-agent ${release}..."
+  echo "Downloading buildkite-agent ${release}/${version}..."
   sudo curl -Lsf -o "/usr/bin/buildkite-agent" \
-    "https://download.buildkite.com/agent/${channel}/latest/buildkite-agent-linux-amd64"
+    "https://download.buildkite.com/agent/${channel}/${version}/buildkite-agent-linux-amd64"
   sudo chmod +x "/usr/bin/buildkite-agent"
   "buildkite-agent" --version
 }
