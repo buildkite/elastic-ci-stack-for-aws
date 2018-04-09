@@ -82,7 +82,7 @@ Parameters:
       The version must be in the form of 3.X.X, or 3.X-beta.X, or latest.
       Note that for beta releases BuildkiteAgentRelease must be set to either beta or edge.
     Type: String
-    AllowedPattern: "^(latest|3\.[0-9]+\.[0-9]+|3\.[0-9]+.beta\.[0-9]+)$"
+    AllowedPattern: "^(latest|3\\.[0-9]+\\.[0-9]+|3\\.[0-9]+.beta\\.[0-9]+)$"
     Default: "latest"
 
   BuildkiteAgentToken:
