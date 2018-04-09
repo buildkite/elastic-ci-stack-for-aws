@@ -56,23 +56,31 @@ export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]-}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
 
-if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
-	echo "Downloading buildkite-agent edge..."
-	curl -Lsf -o /usr/bin/buildkite-agent-edge \
-		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
-	chmod +x /usr/bin/buildkite-agent-edge
-	buildkite-agent-edge --version
-fi
 
-# Choose the right agent binary
-ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
+download_agent() {
+  local release="$1"
+  local channel="$2"
+  local version="${BUILDKITE_AGENT_VERSION:-latest}"
 
-# Once 3.0 is stable we can just remove this and let the agent do the right thing
-if [[ "${BUILDKITE_AGENT_RELEASE}" == "stable" ]]; then
-	BOOTSTRAP_SCRIPT="/etc/buildkite-agent/bootstrap.sh"
-else
-	BOOTSTRAP_SCRIPT="buildkite-agent bootstrap"
-fi
+  echo "Downloading buildkite-agent ${release}/${version}..."
+  sudo curl -Lsf -o "/usr/bin/buildkite-agent" \
+    "https://download.buildkite.com/agent/${channel}/${version}/buildkite-agent-linux-amd64"
+  sudo chmod +x "/usr/bin/buildkite-agent"
+  "buildkite-agent" --version
+}
+
+# Install the right agent binary
+case ${BUILDKITE_AGENT_RELEASE} in
+stable)
+  download_agent "stable" "stable" ;;
+edge)
+  download_agent "edge" "experimental" ;;
+beta)
+  download_agent "beta" "unstable" ;;
+*)
+  echo "Unknown agent release ${BUILDKITE_AGENT_RELEASE}"
+  exit 1 ;;
+esac
 
 agent_metadata=(
 	"queue=${BUILDKITE_QUEUE}"
@@ -90,9 +98,8 @@ fi
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
 token="${BUILDKITE_AGENT_TOKEN}"
-meta-data=$(IFS=, ; echo "${agent_metadata[*]}")
-meta-data-ec2=true
-bootstrap-script="${BOOTSTRAP_SCRIPT}"
+tags=$(IFS=, ; echo "${agent_metadata[*]}")
+tags-from-ec2=true
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
