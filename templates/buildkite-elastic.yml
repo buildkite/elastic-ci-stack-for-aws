@@ -36,9 +36,6 @@ Metadata:
         - RootVolumeSize
         - AssociatePublicIpAddress
         - ManagedPolicyARN
-        - EnableCostAllocationTags
-        - CostAllocationTagName
-        - CostAllocationTagValue
 
       - Label:
           default: Auto-scaling Configuration
@@ -48,6 +45,13 @@ Metadata:
         - ScaleUpAdjustment
         - ScaleDownAdjustment
         - ScaleDownPeriod
+
+      - Label:
+          default: Cost Allocation Configuration
+        Parameters:
+        - EnableCostAllocationTags
+        - CostAllocationTagName
+        - CostAllocationTagValue
 
       - Label:
           default: Docker Registry Configuration
