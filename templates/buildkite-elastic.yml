@@ -46,8 +46,12 @@ Metadata:
         - ScaleDownAdjustment
         - ScaleDownPeriod
 
-      # - Label:
-      #     default: Docker Daemon Configuration
+      - Label:
+          default: Cost Allocation Configuration
+        Parameters:
+        - EnableCostAllocationTags
+        - CostAllocationTagName
+        - CostAllocationTagValue
 
       - Label:
           default: Docker Registry Configuration
@@ -246,12 +250,20 @@ Parameters:
       - false
     Default: "true"
 
-  BuildkiteBillingTagName:
+  EnableCostAllocationTags:
+    Type: String
+    Description: Enables AWS Cost Allocation tags for all resources in the stack. See https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
+
+  CostAllocationTagName:
     Type: String
     Description: The name of the Cost Allocation Tag used for billing purposes
     Default: "aws:createdBy"
 
-  BuildkiteBillingTagValue:
+  CostAllocationTagValue:
     Type: String
     Description: The value of the Cost Allocation Tag used for billing purposes
     Default: "buildkite-elastic-ci-stack-for-aws"
@@ -301,6 +313,9 @@ Conditions:
 
     CreateMetricsStack:
       "Fn::And": [ Condition: UseAutoscaling, { "Fn::Not": [ "Fn::Equals": [ { Ref: BuildkiteApiAccessToken }, "" ] ] } ]
+
+    UseCostAllocationTags:
+      "Fn::Equals": [ { Ref: EnableCostAllocationTags }, "true" ]
 
 Mappings:
   ECRManagedPolicy:
@@ -575,9 +590,12 @@ Resources:
         - Key: BuildkiteQueue
           Value: { Ref: BuildkiteQueue }
           PropagateAtLaunch: true
-        - Key: { Ref: BuildkiteBillingTagName }
-          Value: { Ref: BuildkiteBillingTagValue }
-          PropagateAtLaunch: true
+        - "Fn::If":
+          - UseCostAllocationTags
+          - Key: { Ref: CostAllocationTagName }
+            Value: { Ref: CostAllocationTagValue }
+            PropagateAtLaunch: true
+          - { Ref: "AWS::NoValue" }
 
     CreationPolicy:
       ResourceSignal:
