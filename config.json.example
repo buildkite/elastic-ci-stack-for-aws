@@ -1,15 +1,7 @@
 [
   {
-    "ParameterKey": "BuildkiteOrgSlug",
-    "ParameterValue": "MyOrg"
-  },
-  {
     "ParameterKey": "BuildkiteAgentToken",
     "ParameterValue": "TokenGoesHere"
-  },
-  {
-    "ParameterKey": "BuildkiteApiAccessToken",
-    "ParameterValue": "ApiTokenGoesHere"
   },
   {
     "ParameterKey": "KeyName",

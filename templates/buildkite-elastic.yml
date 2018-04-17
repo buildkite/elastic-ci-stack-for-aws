@@ -299,7 +299,7 @@ Conditions:
       "Fn::Not": [ "Fn::Equals": [ { Ref: MaxSize }, { Ref: MinSize } ] ]
 
     CreateMetricsStack:
-      "Fn::And": [ Condition: UseAutoscaling, { "Fn::Not": [ "Fn::Equals": [ { Ref: BuildkiteApiAccessToken }, "" ] ] } ]
+      Condition: UseAutoscaling
 
     UseCostAllocationTags:
       "Fn::Equals": [ { Ref: EnableCostAllocationTags }, "true" ]
