@@ -13,16 +13,8 @@ echo "Using AMI $image_id"
 cat << EOF > config.json
 [
   {
-    "ParameterKey": "BuildkiteOrgSlug",
-    "ParameterValue": "$BUILDKITE_AWS_STACK_ORG_SLUG"
-  },
-  {
     "ParameterKey": "BuildkiteAgentToken",
     "ParameterValue": "$BUILDKITE_AWS_STACK_AGENT_TOKEN"
-  },
-  {
-    "ParameterKey": "BuildkiteApiAccessToken",
-    "ParameterValue": "$BUILDKITE_AWS_STACK_API_TOKEN"
   },
   {
     "ParameterKey": "BuildkiteQueue",
