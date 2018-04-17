@@ -9,8 +9,6 @@ Metadata:
         - BuildkiteAgentToken
         - BuildkiteAgentTags
         - BuildkiteQueue
-        - BuildkiteOrgSlug
-        - BuildkiteApiAccessToken
 
       - Label:
           default: Network Configuration
@@ -80,26 +78,15 @@ Parameters:
     Default: "beta"
 
   BuildkiteAgentToken:
-    Description: Buildkite agent token
+    Description: Buildkite agent registration token
     Type: String
     NoEcho: true
-    MinLength: 1
-
-  BuildkiteOrgSlug:
-    Description: Buildkite organization slug
-    Type: String
     MinLength: 1
 
   BuildkiteAgentTags:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
     Type: String
     Default: ""
-
-  BuildkiteApiAccessToken:
-    Description: Buildkite API access token with read_pipelines, read_builds and read_agents (required for metrics)
-    Type: String
-    NoEcho: true
-    MinLength: 1
 
   BuildkiteQueue:
     Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}"

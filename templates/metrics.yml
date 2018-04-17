@@ -32,7 +32,6 @@ Resources:
           - logs:CreateLogStream
           - logs:PutLogEvents
           - cloudwatch:PutMetricData
-          - autoscaling:SetInstanceHealth
           Resource:
           - "*"
 
@@ -45,7 +44,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, { Ref: 'AWS::Region' }, 'Bucket'] }
-        S3Key: "buildkite-metrics-v2.0.2-lambda.zip"
+        S3Key: "buildkite-metrics-v3.0.0-lambda.zip"
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
@@ -56,8 +55,7 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          BUILDKITE_TOKEN: { Ref: BuildkiteApiAccessToken }
-          BUILDKITE_ORG: { Ref: BuildkiteOrgSlug }
+          BUILDKITE_AGENT_TOKEN: { Ref: BuildkiteAgentToken }
           BUILDKITE_QUEUE: { Ref: BuildkiteQueue }
           AWS_STACK_ID: { Ref: "AWS::StackId" }
           AWS_STACK_NAME: { Ref: "AWS::StackName" }
