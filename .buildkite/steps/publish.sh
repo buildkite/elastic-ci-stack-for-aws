@@ -2,7 +2,7 @@
 
 set -eu
 
-# us-east-1 is the base image
+# ${AWS_REGION} is the base image
 DESTINATION_REGIONS=(
   us-east-2
   us-west-1
@@ -100,18 +100,18 @@ copy_ami_and_create_mappings_yml() {
   local region_ami
   local i
 
-  image_name=$(fetch_ami_name "$base_image_id" us-east-1)
+  image_name=$(fetch_ami_name "$base_image_id" "${AWS_REGION}")
 
   cat << EOF > "$destination_yml"
 Mappings:
   AWSRegion2AMI:
-    us-east-1 : { AMI: $base_image_id }
+    ${AWS_REGION} : { AMI: $base_image_id }
 EOF
 
   if [[ $BUILDKITE_BRANCH == "master" ]] || is_tag_build ; then
     for region in ${DESTINATION_REGIONS[*]}; do
       echo "--- Copying $image_id to $region"
-      region_ami=$(copy_ami_to_region "$base_image_id" us-east-1 "$region" "$image_name-$region")
+      region_ami=$(copy_ami_to_region "$base_image_id" "${AWS_REGION}" "$region" "$image_name-$region")
 
       DESTINATION_AMIS+=("$region_ami")
     done
@@ -134,7 +134,7 @@ generate_mappings() {
   local s3_mappings_cache
 
   image_id=$(buildkite-agent meta-data get image_id)
-  s3_mappings_cache="s3://${BUILDKITE_AWS_STACK_BUCKET}/mappings-${image_id}-${BUILDKITE_BRANCH}.yml"
+  s3_mappings_cache="s3://${BUILDKITE_STACK_BUCKET}/mappings-${image_id}-${BUILDKITE_BRANCH}.yml"
 
   if aws s3 cp "${s3_mappings_cache}" templates/mappings.yml ; then
     echo "Skipping creating additional AZ mappings, base AMI has not changed"
@@ -147,13 +147,13 @@ generate_mappings() {
 s3_upload_templates() {
   local bucket_prefix="${1:-}"
 
-  aws s3 cp --acl public-read templates/mappings.yml "s3://buildkite-aws-stack/${bucket_prefix}mappings.yml"
-  aws s3 cp --acl public-read build/aws-stack.json "s3://buildkite-aws-stack/${bucket_prefix}aws-stack.json"
-  aws s3 cp --acl public-read build/aws-stack.yml "s3://buildkite-aws-stack/${bucket_prefix}aws-stack.yml"
+  aws s3 cp --acl public-read templates/mappings.yml "s3://${BUILDKITE_STACK_BUCKET}/${bucket_prefix}mappings.yml"
+  aws s3 cp --acl public-read build/aws-stack.json "s3://${BUILDKITE_STACK_BUCKET}/${bucket_prefix}aws-stack.json"
+  aws s3 cp --acl public-read build/aws-stack.yml "s3://${BUILDKITE_STACK_BUCKET}/${bucket_prefix}aws-stack.yml"
 
-  echo "Published https://s3.amazonaws.com/buildkite-aws-stack/${bucket_prefix}mappings.yml"
-  echo "Published https://s3.amazonaws.com/buildkite-aws-stack/${bucket_prefix}aws-stack.json"
-  echo "Published https://s3.amazonaws.com/buildkite-aws-stack/${bucket_prefix}aws-stack.yml"
+  echo "Published https://s3.amazonaws.com/${BUILDKITE_STACK_BUCKET}/${bucket_prefix}mappings.yml"
+  echo "Published https://s3.amazonaws.com/${BUILDKITE_STACK_BUCKET}/${bucket_prefix}aws-stack.json"
+  echo "Published https://s3.amazonaws.com/${BUILDKITE_STACK_BUCKET}/${bucket_prefix}aws-stack.yml"
 }
 
 git fetch --tags

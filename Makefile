@@ -12,6 +12,9 @@ TEMPLATES=templates/description.yml \
   templates/metrics.yml \
   templates/outputs.yml
 
+INPUT_PACKER_JSON ?= packer/buildkite-ami.json.example
+OUTPUT_PACKER_JSON ?= packer/buildkite-ami.json
+
 all: build
 
 build: build/aws-stack.yml
@@ -22,17 +25,24 @@ build/aws-stack.yml: $(TEMPLATES)
 
 clean:
 	-rm -f build/*
+	-rm config.json
+	-rm $(OUTPUT_PACKER_JSON)
+	-rm packer.output
+	-rm -rf node_modules/*
 
 config.json:
 	cp config.json.example config.json
 
-build-ami: config.json
+buildkite-ami.json: update-buildkite-ami.json.sh $(INPUT_PACKER_JSON)
+	./update-buildkite-ami.json.sh $(INPUT_PACKER_JSON) $(OUTPUT_PACKER_JSON)
+
+build-ami: config.json buildkite-ami.json
 	docker run  -e AWS_DEFAULT_REGION  -e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \
 		--rm -v "$(PWD):/src" -w /src/packer hashicorp/packer:1.0.4 \
 			build buildkite-ami.json | tee packer.output
-	jq --arg ImageId $$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2) \
+	jq --arg ImageId $$(grep -Eo '$(AWS_DEFAULT_REGION): (ami-.+)' packer.output | cut -d' ' -f2) \
 		'[ .[] | select(.ParameterKey != "ImageId") ] + [{ParameterKey: "ImageId", ParameterValue: $$ImageId}]' \
 		config.json  > config.json.temp
 	mv config.json.temp config.json

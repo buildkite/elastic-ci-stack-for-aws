@@ -63,6 +63,26 @@ cat << EOF > config.json
   {
     "ParameterKey": "RootVolumeSize",
     "ParameterValue": "10"
+  },
+  {
+    "ParameterKey": "BootstrapScriptUrl",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_BOOTSTRAP_URL:-}"
+  },
+  {
+    "ParameterKey": "AssociatePublicIpAddress",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_PUBLIC_IP:-true}"
+  },
+  {
+    "ParameterKey": "ManagedPolicyARN",
+    "ParameterValue": "${BUILDKITE_AWS_STACK_MANAGED_POLICY_ARN:-}"
+  },
+  {
+    "ParameterKey": "BuildkiteAgentRelease",
+    "ParameterValue": "${BUILDKITE_AGENT_RELEASE:-beta}"
+  },
+  {
+    "ParameterKey": "SecretsBucket",
+    "ParameterValue": "${BUILDKITE_SECRETS_BUCKET:-}"
   }
 ]
 EOF
@@ -72,7 +92,7 @@ version=$(git describe --tags --candidates=1)
 cat << EOF > templates/mappings.yml
 Mappings:
   AWSRegion2AMI:
-    us-east-1     : { AMI: $image_id }
+    ${AWS_REGION}    : { AMI: $image_id }
 EOF
 
 make build validate
