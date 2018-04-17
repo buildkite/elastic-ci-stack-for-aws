@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-LIFECYCLED_VERSION=v2.0.0-rc2
+LIFECYCLED_VERSION=v2.0.0
 
 echo "Installing lifecycled..."
 
