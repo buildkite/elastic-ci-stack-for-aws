@@ -134,7 +134,7 @@ Examples:
 
 ## Autoscaling
 
-If you have provided `BuildkiteApiAccessToken` and your `MinSize` < `MaxSize`, the stack will automatically scale up and down based on the number of scheduled jobs.
+If you have configured `MinSize` < `MaxSize`, the stack will automatically scale up and down based on the number of scheduled jobs.
 
 This means you can scale down to zero when idle, which means you can use larger instances for the same cost.
 
