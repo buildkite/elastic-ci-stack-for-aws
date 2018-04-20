@@ -18,7 +18,7 @@ on_error() {
 	fi
 
 	/opt/aws/bin/cfn-signal \
-		--region "$AWS_REGION" \
+		--region "$BUILDKITE_STACK_REGION" \
 		--stack "$BUILDKITE_STACK_NAME" \
 		--reason "Error on line $errorLine: $(tail -n 1 /var/log/elastic-stack.log)" \
 		--resource "AgentAutoScaleGroup" \
@@ -35,7 +35,7 @@ cat << EOF > /etc/awslogs/awscli.conf
 [plugins]
 cwlogs = cwlogs
 [default]
-region = $AWS_REGION
+region = $BUILDKITE_STACK_REGION
 EOF
 
 PLUGINS_ENABLED=()
@@ -50,10 +50,9 @@ export BUILDKITE_STACK_NAME=$BUILDKITE_STACK_NAME
 export BUILDKITE_STACK_VERSION=$BUILDKITE_STACK_VERSION
 export BUILDKITE_AGENTS_PER_INSTANCE=$BUILDKITE_AGENTS_PER_INSTANCE
 export BUILDKITE_SECRETS_BUCKET=$BUILDKITE_SECRETS_BUCKET
-export AWS_DEFAULT_REGION=$AWS_REGION
-export AWS_REGION=$AWS_REGION
 export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]-}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
+export BUILDKITE_STACK_REGION=${BUILDKITE_STACK_REGION}
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
@@ -124,7 +123,7 @@ if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 fi
 
 cat << EOF > /etc/lifecycled
-AWS_REGION=${AWS_REGION}
+AWS_REGION=${BUILDKITE_STACK_REGION}
 LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
@@ -152,7 +151,7 @@ done
 
 # let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \
-	--region "$AWS_REGION" \
+	--region "$BUILDKITE_STACK_REGION" \
 	--stack "$BUILDKITE_STACK_NAME" \
 	--resource "AgentAutoScaleGroup" \
 	--exit-code 0 || (

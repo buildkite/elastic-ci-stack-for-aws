@@ -4,6 +4,11 @@ set -eu -o pipefail
 # shellcheck source=/dev/null
 source ~/cfn-env
 
+# We set BUILDKITE_STACK_REGION in the cfn-env file, so if no value is set by the job
+# then we use that to set the two environment variables that aws tools depend on
+export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-$BUILDKITE_STACK_REGION}"
+export AWS_REGION="${AWS_REGION:-$BUILDKITE_STACK_REGION}"
+
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
