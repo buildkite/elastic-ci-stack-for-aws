@@ -34,7 +34,6 @@ steps:
   - wait
   - name: ":buildkite: Instance test"
     command: "/usr/local/bin/bats tests/"
-
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"

@@ -3,11 +3,13 @@ Description=Buildkite Agent (%i)
 Documentation=https://buildkite.com/agent
 After=syslog.target
 After=network.target
+After=docker.service
 
 [Service]
 Type=simple
 User=buildkite-agent
-Environment=HOME=/var/lib/buildkite-agent
+Environment="HOME=/var/lib/buildkite-agent"
+Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 ExecStart=/usr/bin/buildkite-agent start
 RestartSec=5
 Restart=on-failure
