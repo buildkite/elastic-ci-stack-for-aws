@@ -7,7 +7,7 @@ sudo yum update -y -q
 sudo yum install -y -q git-core
 
 echo "Creating buildkite-agent user..."
-sudo useradd --base-dir /var/lib buildkite-agent
+sudo useradd --base-dir /var/lib -u 1000 -g 1000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent stable..."
