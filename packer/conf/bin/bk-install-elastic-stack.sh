@@ -130,7 +130,7 @@ LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
 
 systemctl start lifecycled
-systemctl start awslogs
+systemctl start awslogsd
 
 # wait for docker to start
 next_wait_time=0
