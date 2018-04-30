@@ -33,7 +33,7 @@ steps:
 
   - wait
   - name: ":buildkite: Instance test"
-    command: "/usr/local/bin/bats --pretty tests/"
+    command: "/usr/local/bin/bats tests/"
 
     timeout_in_minutes: 5
     agents:
