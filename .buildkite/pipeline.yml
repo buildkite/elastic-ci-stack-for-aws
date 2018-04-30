@@ -12,7 +12,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     plugins:
-      docker-compose#v1.5.2:
+      docker-compose#v2.1.0:
         run: unit-tests
         config: docker-compose.unit-tests.yml
 
