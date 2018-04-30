@@ -53,6 +53,11 @@ Metadata:
         - CostAllocationTagValue
 
       - Label:
+          default: Docker Daemon Configuration
+        Parameters:
+        - EnableDockerUserNamespaceRemap
+
+      - Label:
           default: Docker Registry Configuration
         Parameters:
         - ECRAccessPolicy
