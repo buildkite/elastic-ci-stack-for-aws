@@ -7,10 +7,10 @@ eval "$(cat /var/lib/buildkite-agent/cfn-env)"
 echo "Stopping buildkite-agent gracefully"
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-  service "buildkite-agent-${i}" stop &
+  systemctl stop "buildkite-agent@${i}" &
 done
 
-# Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycld handler script
+# Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycled handler script
 while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
   echo "Waiting for all buildkite-agent processes to have stopped..."
   sleep 5
