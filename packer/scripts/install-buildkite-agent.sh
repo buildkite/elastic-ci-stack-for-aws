@@ -6,8 +6,9 @@ echo "Installing dependencies..."
 sudo yum update -y -q
 sudo yum install -y -q git-core
 
-echo "Creating buildkite-agent user..."
-sudo useradd --base-dir /var/lib -u 2000 -g 2000 buildkite-agent
+echo "Creating buildkite-agent user and group..."
+sudo groupadd -g 2000 buildkite-agent
+sudo useradd --base-dir /var/lib --uid 2000 --gid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent stable..."
