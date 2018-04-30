@@ -144,7 +144,6 @@ if ! docker ps ; then
 fi
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
   systemctl enable "buildkite-agent@${i}"
   systemctl start "buildkite-agent@${i}"
 done
