@@ -25,6 +25,10 @@ buildkite-agent-beta --version
 echo "Adding scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/* /usr/bin
 
+echo "Adding sudoers config..."
+sudo cp /tmp/conf/buildkite-agent/sudoers.conf /etc/sudoers.d/buildkite-agent
+sudo chmod 440 /etc/sudoers.d/buildkite-agent
+
 echo "Creating hooks dir..."
 sudo mkdir -p /etc/buildkite-agent/hooks
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
