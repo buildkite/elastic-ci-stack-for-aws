@@ -18,6 +18,10 @@ fi
 echo "--- Deleting test managed secrets buckets created"
 aws s3api list-buckets \
   --output text \
+  --query "$(printf 'Buckets[?CreationDate<`%s`].Name' "$cutoff_date" )"
+
+aws s3api list-buckets \
+  --output text \
   --query "$(printf 'Buckets[?CreationDate<`%s`].Name' "$cutoff_date" )" \
   | xargs -n1 \
   | grep -E 'buildkite-aws-stack-test-(\d+-)?managedsecrets' \
