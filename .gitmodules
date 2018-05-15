@@ -1,6 +1,6 @@
 [submodule "plugins/secrets"]
 	path = plugins/secrets
-	url = https://github.com/buildkite-plugins/s3-secrets-buildkite-plugin.git
+	url = https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks.git
 
 [submodule "plugins/ecr"]
 	path = plugins/ecr
