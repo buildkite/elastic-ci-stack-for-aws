@@ -9,5 +9,7 @@ exec > >(tee -a /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console
 
 # Swap in the userns remap config
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]] ; then
-	cp /etc/sysconfig/docker.userns-remap /etc/sysconfig/docker
+	mv /etc/docker/daemon.userns-remap.json /etc/docker/daemon.json
+else
+  rm /etc/docker/daemon.userns-remap.json
 fi
