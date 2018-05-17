@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v3.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.2.0) (2018-05-17)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.1.1...v3.2.0)
+
+### Changed
+- Updated stable agent to buildkite-agent v3.1.2
+- Default EnableDockerUserNamespaceRemap to true [#417](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/417) (@lox)
+- Bump the minimum inodes to 250K to allow for big docker images [#416](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/416) (@lox)
+- Update to the new secrets hooks repo URL [#414](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/414) (@toolmantim)
+
 ## [v3.1.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.1.1) (2018-05-02)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.1.0...v3.1.1)
 
