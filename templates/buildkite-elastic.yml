@@ -250,11 +250,11 @@ Parameters:
 
   EnableDockerUserNamespaceRemap:
     Type: String
-    Description: Enables experimental Docker userns-remap support
+    Description: Enables Docker user namespace remapping so docker runs as buildkite-agent
     AllowedValues:
       - true
       - false
-    Default: "false"
+    Default: "true"
 
   EnableCostAllocationTags:
     Type: String
