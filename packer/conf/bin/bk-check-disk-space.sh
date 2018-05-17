@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DISK_MIN_AVAILABLE=${DISK_MIN_AVAILABLE:-1048576} # 1GB
-DISK_MIN_INODES=${DISK_MIN_INODES:-10000}
+DISK_MIN_INODES=${DISK_MIN_INODES:-1000000} # docker needs lots
 
 disk_avail=$(df -k --output=avail "$PWD" | tail -n1)
 
