@@ -90,7 +90,7 @@ Resources:
           Value: !Ref AWS::StackName
 
   Gateway:
-    Type: AWS::EC2::Gateway
+    Type: AWS::EC2::InternetGateway
     Condition: CreateVpcResources
     Properties:
       Tags:
