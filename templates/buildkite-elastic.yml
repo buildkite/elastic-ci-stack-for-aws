@@ -14,9 +14,15 @@ Metadata:
       - Label:
           default: Network Configuration
         Parameters:
+        - AvailabilityZones
+        - SubnetConfiguration
+        - SSHBastionHost
+
+      - Label:
+          default: Custom VPC Configuration (Optional)
+        Parameters:
         - VpcId
         - Subnets
-        - AvailabilityZones
         - SecurityGroupId
         - AssociatePublicIpAddress
 
@@ -33,7 +39,6 @@ Metadata:
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
-        - AssociatePublicIpAddress
         - ManagedPolicyARN
         - InstanceRoleName
 
@@ -139,12 +144,7 @@ Parameters:
 
   Subnets:
     Type: CommaDelimitedList
-    Description: Optional - Comma separated list of two existing VPC subnet ids where EC2 instances will run. Required if setting VpcId.
-    Default: ""
-
-  AvailabilityZones:
-    Type: CommaDelimitedList
-    Description: Optional - Comma separated list of AZs that subnets are created in (if Subnets parameter is not specified)
+    Description: Optional - Comma separated list of existing VPC subnet ids where EC2 instances will run. Required if setting VpcId.
     Default: ""
 
   InstanceType:
@@ -222,14 +222,6 @@ Parameters:
       - full
     Default: "none"
 
-  AssociatePublicIpAddress:
-    Type: String
-    Description: Associate instances with public IP addresses
-    AllowedValues:
-      - true
-      - false
-    Default: "true"
-
   EnableSecretsPlugin:
     Type: String
     Description: Enables s3-secrets plugin for all pipelines
@@ -292,9 +284,6 @@ Outputs:
 Conditions:
     UseSpotInstances:
       "Fn::Not": [ "Fn::Equals": [ { Ref: SpotPrice }, 0 ] ]
-
-    CreateVpcResources:
-      "Fn::Equals": [ { Ref: VpcId }, "" ]
 
     CreateSecurityGroup:
       "Fn::Equals": [ { Ref: SecurityGroupId }, "" ]
@@ -494,7 +483,6 @@ Resources:
       LaunchTemplateData:
         NetworkInterfaces:
           - DeviceIndex: 0
-            AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
             Groups:
             - { "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] }
         KeyName : { Ref: KeyName }
@@ -598,8 +586,47 @@ Resources:
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-        { "Fn::If": [ "CreateVpcResources", [ { Ref: Subnet0 }, { Ref: Subnet1 } ], { Ref: Subnets } ] }
+      VPCZoneIdentifier: !If [
+        CreateVpcResources,
+        !If [
+          HasPrivateSubnets,
+          !If [
+            HasPrivateSubnet6,
+            [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5, !Ref PrivateSubnet6 ],
+            !If [
+              HasPrivateSubnet5,
+              [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4, !Ref PrivateSubnet5 ],
+              !If [
+                HasPrivateSubnet4,
+                [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3, !Ref PrivateSubnet4 ],
+                !If [
+                  HasPrivateSubnet3,
+                  [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ],
+                  [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]
+                ]
+              ]
+            ]
+          ],
+          !If [
+            HasPublicSubnet6,
+            [ !Ref Subnet0, !Ref Subnet1, !Ref PublicSubnet3, !Ref PublicSubnet4, !Ref PublicSubnet5, !Ref PublicSubnet6 ],
+            !If [
+              HasPublicSubnet5,
+              [ !Ref Subnet0, !Ref Subnet1, !Ref PublicSubnet3, !Ref PublicSubnet4, !Ref PublicSubnet5 ],
+              !If [
+                HasPublicSubnet4,
+                [ !Ref Subnet0, !Ref Subnet1, !Ref PublicSubnet3, !Ref PublicSubnet4 ],
+                !If [
+                  HasPublicSubnet3,
+                  [ !Ref Subnet0, !Ref Subnet1, !Ref PublicSubnet3 ],
+                  [ !Ref Subnet0, !Ref Subnet1 ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        !Ref Subnets
+      ]
       LaunchTemplate:
         LaunchTemplateId: { Ref: AgentLaunchTemplate }
         Version: { "Fn::GetAtt" : ["AgentLaunchTemplate", "LatestVersionNumber"] }
@@ -630,11 +657,7 @@ Resources:
     Condition: CreateSecurityGroup
     Properties:
       GroupDescription: Enable access to SSH
-      VpcId:
-        "Fn::If":
-          - "CreateVpcResources"
-          - { Ref: Vpc }
-          - { Ref: VpcId }
+      VpcId: !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
