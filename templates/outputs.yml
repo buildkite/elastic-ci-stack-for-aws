@@ -2,3 +2,5 @@
 Outputs:
   AutoScalingGroupName:
     Value: { Ref: AgentAutoScaleGroup }
+  InstanceRoleName:
+    Value: { Ref: InstanceRoleName }
