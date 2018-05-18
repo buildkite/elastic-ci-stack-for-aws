@@ -224,14 +224,14 @@ Resources:
     Condition: HasNatGateway1
     Properties:
       AllocationId: !GetAtt NatGateway1EIP.AllocationId
-      SubnetId: !Ref PublicSubnet1
+      SubnetId: !Ref Subnet0
 
   NatGateway2:
     Type: AWS::EC2::NatGateway
     Condition: HasNatGateway2
     Properties:
       AllocationId: !GetAtt NatGateway2EIP.AllocationId
-      SubnetId: !Ref PublicSubnet2
+      SubnetId: !Ref Subnet1
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -256,14 +256,14 @@ Resources:
     Condition: HasPublicSubnet1
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet1
+      SubnetId: !Ref Subnet0
 
   PublicSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Condition: HasPublicSubnet2
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet2
+      SubnetId: !Ref Subnet1
 
   PublicSubnet3RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
