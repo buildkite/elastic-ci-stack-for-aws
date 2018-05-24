@@ -488,61 +488,64 @@ Resources:
       Roles:
         - { Ref: IAMRole }
 
-  AgentLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  AgentLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
-      SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
-      KeyName : { Ref: KeyName }
-      IamInstanceProfile: { Ref: IAMInstanceProfile }
-      InstanceType: { Ref: InstanceType }
-      SpotPrice:
-        { "Fn::If": [ "UseSpotInstances", { Ref: SpotPrice }, { Ref: 'AWS::NoValue' } ] }
-      ImageId :
-        { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
-      UserData:
-        "Fn::Base64":
-          "Fn::Sub":
-            - |
-              Content-Type: multipart/mixed; boundary="==BOUNDARY=="
-              MIME-Version: 1.0
-              --==BOUNDARY==
-              Content-Type: text/cloud-boothook; charset="us-ascii"
-              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
-                /usr/local/bin/bk-configure-docker.sh
+      LaunchTemplateName: BuildkiteAgents
+      LaunchTemplateData:
+        NetworkInterfaces:
+          AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
+        SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
+        KeyName : { Ref: KeyName }
+        IamInstanceProfile:
+          Arn: { Ref: IAMInstanceProfile }
+          Name: AgentInstanceProfile
+        InstanceType: { Ref: InstanceType }
+        ImageId :
+          { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
+        UserData:
+          "Fn::Base64":
+            "Fn::Sub":
+              - |
+                Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+                MIME-Version: 1.0
+                --==BOUNDARY==
+                Content-Type: text/cloud-boothook; charset="us-ascii"
+                DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+                  /usr/local/bin/bk-configure-docker.sh
 
-              --==BOUNDARY==
-              Content-Type: text/x-shellscript; charset="us-ascii"
-              #!/bin/bash -xv
-              BUILDKITE_STACK_NAME="${AWS::StackName}" \
-              BUILDKITE_STACK_VERSION=dev \
-              BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
-              BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
-              BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
-              BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
-              BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
-              BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
-              BUILDKITE_QUEUE="${BuildkiteQueue}" \
-              BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
-              BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
-              BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
-              BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
-              AWS_DEFAULT_REGION=${AWS::Region} \
-              SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
-              ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
-              DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
-              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
-              AWS_REGION=${AWS::Region} \
-                /usr/local/bin/bk-install-elastic-stack.sh
-              --==BOUNDARY==--
-            - LocalSecretsBucket:
-                "Fn::If":
-                  - CreateSecretsBucket
-                  - { Ref: ManagedSecretsBucket }
-                  - { Ref: SecretsBucket }
+                --==BOUNDARY==
+                Content-Type: text/x-shellscript; charset="us-ascii"
+                #!/bin/bash -xv
+                BUILDKITE_STACK_NAME="${AWS::StackName}" \
+                BUILDKITE_STACK_VERSION=dev \
+                BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
+                BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
+                BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+                BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
+                BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
+                BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
+                BUILDKITE_QUEUE="${BuildkiteQueue}" \
+                BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+                BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
+                BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
+                BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
+                AWS_DEFAULT_REGION=${AWS::Region} \
+                SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
+                ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
+                DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
+                DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+                AWS_REGION=${AWS::Region} \
+                  /usr/local/bin/bk-install-elastic-stack.sh
+                --==BOUNDARY==--
+              - LocalSecretsBucket:
+                  "Fn::If":
+                    - CreateSecretsBucket
+                    - { Ref: ManagedSecretsBucket }
+                    - { Ref: SecretsBucket }
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
@@ -581,7 +584,7 @@ Resources:
     Properties:
       VPCZoneIdentifier:
         { "Fn::If": [ "CreateVpcResources", [ { Ref: Subnet0 }, { Ref: Subnet1 } ], { Ref: Subnets } ] }
-      LaunchConfigurationName: { Ref: AgentLaunchConfiguration }
+      LaunchTemplate: { Ref: AgentLaunchTemplate }
       MinSize: { Ref: MinSize }
       MaxSize: { Ref: MaxSize }
       MetricsCollection:
