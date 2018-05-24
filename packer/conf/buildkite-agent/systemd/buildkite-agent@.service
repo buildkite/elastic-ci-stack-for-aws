@@ -10,6 +10,7 @@ Type=simple
 User=buildkite-agent
 Environment="HOME=/var/lib/buildkite-agent"
 Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="USER=buildkite-agent"
 ExecStart=/usr/bin/buildkite-agent start
 RestartSec=5
 Restart=on-failure
