@@ -88,6 +88,7 @@ tags-from-ec2=true
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
+experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 EOF
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
