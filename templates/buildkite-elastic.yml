@@ -491,7 +491,6 @@ Resources:
   AgentLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
-      LaunchTemplateName: BuildkiteAgents
       LaunchTemplateData:
         NetworkInterfaces:
           AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
