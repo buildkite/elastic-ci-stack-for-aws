@@ -497,7 +497,7 @@ Resources:
         SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
         KeyName : { Ref: KeyName }
         IamInstanceProfile:
-          Arn: { Ref: IAMInstanceProfile }
+          Arn: { "Fn::GetAtt" : ["IAMInstanceProfile", "Arn"] }
         InstanceType: { Ref: InstanceType }
         ImageId :
           { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
