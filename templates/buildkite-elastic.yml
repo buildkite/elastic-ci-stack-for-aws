@@ -499,7 +499,6 @@ Resources:
         KeyName : { Ref: KeyName }
         IamInstanceProfile:
           Arn: { Ref: IAMInstanceProfile }
-          Name: AgentInstanceProfile
         InstanceType: { Ref: InstanceType }
         ImageId :
           { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
