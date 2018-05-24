@@ -493,7 +493,7 @@ Resources:
     Properties:
       LaunchTemplateData:
         NetworkInterfaces:
-          AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
+          - AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
         SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
         KeyName : { Ref: KeyName }
         IamInstanceProfile:
