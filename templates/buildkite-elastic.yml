@@ -9,6 +9,7 @@ Metadata:
         - BuildkiteAgentToken
         - BuildkiteAgentTags
         - BuildkiteQueue
+        - BuildkiteAgentExperiments
 
       - Label:
           default: Network Configuration
@@ -91,6 +92,11 @@ Parameters:
 
   BuildkiteAgentTags:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
+    Type: String
+    Default: ""
+
+  BuildkiteAgentExperiments:
+    Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/master/EXPERIMENTS.md.
     Type: String
     Default: ""
 
@@ -517,6 +523,7 @@ Resources:
               BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
               BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
               BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
+              BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
               BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
               BUILDKITE_QUEUE="${BuildkiteQueue}" \
               BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
