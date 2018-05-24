@@ -1,11 +1,11 @@
 #!/usr/bin/env bats
 
 @test "Check buildkite-agent-1 is running" {
-	run service "buildkite-agent-1" status
+	run systemctl is-active --quiet "buildkite-agent@1"
 	[ $status = 0 ]
 }
 
 @test "Check lifecycled is running" {
-	run status "lifecycled"
+	run systemctl is-active --quiet "lifecycled"
 	[ $status = 0 ]
 }
