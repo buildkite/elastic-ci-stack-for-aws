@@ -280,6 +280,14 @@ Parameters:
     Description: The value of the Cost Allocation Tag used for billing purposes
     Default: "buildkite-elastic-ci-stack-for-aws"
 
+  EnableLambdaBasedScaler:
+    Type: String
+    Description: Enables experimental lambda-based auto-scaler
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
+
 Outputs:
   ManagedSecretsBucket:
     Value:
@@ -326,8 +334,11 @@ Conditions:
     UseAutoscaling:
       "Fn::Not": [ "Fn::Equals": [ { Ref: MaxSize }, { Ref: MinSize } ] ]
 
+    UseLambdaScaler:
+      "Fn::And": [ Condition: UseAutoscaling, {"Fn::Equals": [ { Ref: EnableLambdaBasedScaler }, "true" ]}]
+
     CreateMetricsStack:
-      Condition: UseAutoscaling
+      "Fn::And": [ Condition: UseAutoscaling, {"Fn::Not": [ {Condition: UseLambdaScaler} ]} ]
 
     UseCostAllocationTags:
       "Fn::Equals": [ { Ref: EnableCostAllocationTags }, "true" ]
@@ -354,6 +365,20 @@ Mappings:
     ap-south-1 : { Bucket: "buildkite-metrics-ap-south-1" }
     sa-east-1 : { Bucket: "buildkite-metrics-sa-east-1" }
 
+  LambdaBucket:
+    us-east-1 : { Bucket: "buildkite-lambdas" }
+    us-east-2 : { Bucket: "buildkite-lambdas-us-east-2" }
+    us-west-1 : { Bucket: "buildkite-lambdas-us-west-1" }
+    us-west-2 : { Bucket: "buildkite-lambdas-us-west-2" }
+    eu-west-1 : { Bucket: "buildkite-lambdas-eu-west-1" }
+    eu-west-2 : { Bucket: "buildkite-lambdas-eu-west-2" }
+    eu-central-1 : { Bucket: "buildkite-lambdas-eu-central-1" }
+    ap-northeast-1 : { Bucket: "buildkite-lambdas-ap-northeast-1" }
+    ap-northeast-2 : { Bucket: "buildkite-lambdas-ap-northeast-2" }
+    ap-southeast-1 : { Bucket: "buildkite-lambdas-ap-southeast-1" }
+    ap-southeast-2 : { Bucket: "buildkite-lambdas-ap-southeast-2" }
+    ap-south-1 : { Bucket: "buildkite-lambdas-ap-south-1" }
+    sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
 Resources:
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
