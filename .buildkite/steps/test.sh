@@ -2,6 +2,11 @@
 # shellcheck disable=SC1117
 set -eu
 
+# download parfait binary
+wget -N https://github.com/lox/parfait/releases/download/v1.1.3/parfait_linux_amd64
+mv parfait_linux_amd64 parfait
+chmod +x ./parfait
+
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
@@ -73,7 +78,7 @@ EOF
 
 make build validate
 
-echo "--- Creating stack ${AWS_STACK_NAME} ($version)"
+echo "--- :cloudformation: Creating stack ${AWS_STACK_NAME} ($version)"
 aws cloudformation create-stack \
   --output text \
   --stack-name "${AWS_STACK_NAME}" \
@@ -82,5 +87,5 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 
-echo "--- Waiting for stack to complete"
-aws cloudformation wait stack-create-complete --stack-name "${AWS_STACK_NAME}"
+echo "--- :cloudformation: ⌛️ Waiting for update to complete"
+./parfait watch-stack "${AWS_STACK_NAME}"
