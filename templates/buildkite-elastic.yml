@@ -495,7 +495,8 @@ Resources:
         NetworkInterfaces:
           - DeviceIndex: 0
             AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
-        SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
+            Groups:
+            - { "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] }
         KeyName : { Ref: KeyName }
         IamInstanceProfile:
           Arn: { "Fn::GetAtt" : ["IAMInstanceProfile", "Arn"] }
