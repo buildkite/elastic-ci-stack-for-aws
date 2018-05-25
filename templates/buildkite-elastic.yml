@@ -582,7 +582,9 @@ Resources:
     Properties:
       VPCZoneIdentifier:
         { "Fn::If": [ "CreateVpcResources", [ { Ref: Subnet0 }, { Ref: Subnet1 } ], { Ref: Subnets } ] }
-      LaunchTemplate: { Ref: AgentLaunchTemplate }
+      LaunchTemplate:
+        LaunchTemplateId: { Ref: AgentLaunchTemplate }
+        Version: { "Fn::GetAtt" : ["AgentLaunchTemplate", "LatestVersionNumber"] }
       MinSize: { Ref: MinSize }
       MaxSize: { Ref: MaxSize }
       MetricsCollection:
