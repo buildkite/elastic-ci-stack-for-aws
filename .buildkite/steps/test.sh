@@ -87,5 +87,5 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 
-echo "--- :cloudformation: ⌛️ Waiting for update to complete"
+echo "+++ :cloudformation: ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${AWS_STACK_NAME}"
