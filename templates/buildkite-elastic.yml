@@ -506,6 +506,27 @@ Resources:
         BlockDeviceMappings:
           - DeviceName: /dev/xvda
             Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Role
+                Value: buildkite-agent
+                PropagateAtLaunch: true
+              - Key: Name
+                Value: buildkite-agent
+                PropagateAtLaunch: true
+              - Key: BuildkiteAgentRelease
+                Value: { Ref: BuildkiteAgentRelease }
+                PropagateAtLaunch: true
+              - Key: BuildkiteQueue
+                Value: { Ref: BuildkiteQueue }
+                PropagateAtLaunch: true
+              - "Fn::If":
+                - UseCostAllocationTags
+                - Key: { Ref: CostAllocationTagName }
+                  Value: { Ref: CostAllocationTagValue }
+                  PropagateAtLaunch: true
+                - { Ref: "AWS::NoValue" }
         UserData:
           "Fn::Base64":
             "Fn::Sub":
@@ -600,25 +621,6 @@ Resources:
       TerminationPolicies:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
-      Tags:
-        - Key: Role
-          Value: buildkite-agent
-          PropagateAtLaunch: true
-        - Key: Name
-          Value: buildkite-agent
-          PropagateAtLaunch: true
-        - Key: BuildkiteAgentRelease
-          Value: { Ref: BuildkiteAgentRelease }
-          PropagateAtLaunch: true
-        - Key: BuildkiteQueue
-          Value: { Ref: BuildkiteQueue }
-          PropagateAtLaunch: true
-        - "Fn::If":
-          - UseCostAllocationTags
-          - Key: { Ref: CostAllocationTagName }
-            Value: { Ref: CostAllocationTagValue }
-            PropagateAtLaunch: true
-          - { Ref: "AWS::NoValue" }
 
     CreationPolicy:
       ResourceSignal:
