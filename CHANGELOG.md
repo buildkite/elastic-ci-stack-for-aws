@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v3.2.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.2.1) (2018-05-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.2.0...v3.2.1)
+
+### Changed
+- Support enabling agent experiments [#423](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/423) (@lox)
+- Use the docker directory to check for disk space [#418](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/418) (@arturopie)
+- Set InstanceRoleName as stack template output [#421](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/421) (@dblandin)
+
 ## [v3.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.2.0) (2018-05-17)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.1.1...v3.2.0)
 
