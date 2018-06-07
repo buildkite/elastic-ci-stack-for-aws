@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 ## Installs the Buildkite Agent, run from the CloudFormation template
 
@@ -130,9 +130,8 @@ LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
 
-# my kingdom for a decent init system
-start lifecycled || true
-service awslogs restart || true
+systemctl start lifecycled
+systemctl start awslogsd
 
 # wait for docker to start
 next_wait_time=0
@@ -146,9 +145,8 @@ if ! docker ps ; then
 fi
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
-	service "buildkite-agent-${i}" start
-	chkconfig --add "buildkite-agent-${i}"
+  systemctl enable "buildkite-agent@${i}"
+  systemctl start "buildkite-agent@${i}"
 done
 
 # let the stack know that this host has been initialized successfully
