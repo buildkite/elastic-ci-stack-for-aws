@@ -2,5 +2,5 @@
 Outputs:
   AutoScalingGroupName:
     Value: { Ref: AgentAutoScaleGroup }
-  InstanceRoleName:
-    Value: !GetAtt IAMRole.RoleName
+  InstanceRoleArn:
+    Value: !GetAtt IAMRole.Arn
