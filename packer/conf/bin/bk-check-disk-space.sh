@@ -12,7 +12,7 @@ echo "Disk space free: $(df -k -h --output=avail "$DOCKER_DIR" | tail -n1 | sed 
 
 if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
   echo "Not enough disk space free, cutoff is ${DISK_MIN_AVAILABLE} 🚨" >&2
-  return 1
+  exit 1
 fi
 
 inodes_avail=$(df -k --output=iavail "$DOCKER_DIR" | tail -n1)
@@ -21,5 +21,5 @@ echo "Inodes free: $(df -k -h --output=iavail "$DOCKER_DIR" | tail -n1 | sed -e 
 
 if [[ $inodes_avail -lt $DISK_MIN_INODES ]]; then
   echo "Not enough inodes free, cutoff is ${DISK_MIN_INODES} 🚨" >&2
-  return 1
+  exit 1
 fi
