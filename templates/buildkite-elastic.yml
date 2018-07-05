@@ -17,6 +17,7 @@ Metadata:
         - AvailabilityZones
         - SubnetConfiguration
         - SSHBastionHost
+        - AssociatePublicIpAddress
 
       - Label:
           default: Custom VPC Configuration (Optional)
@@ -24,7 +25,6 @@ Metadata:
         - VpcId
         - Subnets
         - SecurityGroupId
-        - AssociatePublicIpAddress
 
       - Label:
           default: Instance Configuration
