@@ -1,0 +1,58 @@
+
+Resources:
+  SpotFleetIAMRole:
+    Type: AWS::IAM::Role
+    Condition: UseSpotFleet
+    Properties:
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ spotfleet.amazonaws.com ]
+            Action: sts:AssumeRole
+      Path: /
+
+  SpotFleet:
+    Type: AWS::EC2::SpotFleet
+    Condition: UseSpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        AllocationStrategy: lowestPrice
+        IamFleetRole: !GetAtt SpotFleetIAMRole.Arn
+        TargetCapacity: !Ref MinSize
+        SpotPrice: !Ref SpotPrice
+        LaunchTemplateConfigs:
+          - LaunchTemplateSpecification:
+            LaunchTemplateId: { Ref: AgentLaunchTemplate }
+            Version: { "Fn::GetAtt" : ["AgentLaunchTemplate", "LatestVersionNumber"] }
+
+  SpotFleetScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: UseSpotFleet
+    Properties:
+      MaxCapacity: !Ref MaxSize
+      MinCapacity: !Ref MinSize
+      ResourceId: "spot-fleet-request/$(SpotFleet)"
+      RoleARN: !GetAtt [SpotFleetIAMRole, Arn]
+      ScalableDimension: 'ec2:spot-fleet-request:TargetCapacity'
+      ServiceNamespace: 'ec2'
+
+  FleetUpPolicy:
+    Type : "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Condition: UseSpotFleet
+    Properties:
+      PolicyName: FleetUpPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref SpotFleetScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: '1500'
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 10
+            MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 10
+            ScalingAdjustment: 1

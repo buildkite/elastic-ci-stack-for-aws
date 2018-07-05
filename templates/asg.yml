@@ -2,7 +2,7 @@
 Resources:
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
-    Condition: UseAutoscaling
+    Condition: UseAutoScalingGroup
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
@@ -11,7 +11,7 @@ Resources:
 
   AgentScaleDownPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
-    Condition: UseAutoscaling
+    Condition: UseAutoScalingGroup
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
@@ -20,7 +20,7 @@ Resources:
 
   AgentUtilizationAlarmHigh:
    Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
+   Condition: UseAutoScalingGroup
    Properties:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
@@ -37,7 +37,7 @@ Resources:
 
   AgentUtilizationAlarmLow:
    Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
+   Condition: UseAutoScalingGroup
    Properties:
       AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
       MetricName: UnfinishedJobsCount
