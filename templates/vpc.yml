@@ -101,7 +101,7 @@ Resources:
     Type: AWS::EC2::VPCGatewayAttachment
     Condition: CreateVpcResources
     Properties:
-      GatewayId: !Ref Gateway
+      InternetGatewayId: !Ref Gateway
       VpcId: !Ref Vpc
 
   # Retaining old names for Subnet0 and Subnet1 to avoid subnet clashes
