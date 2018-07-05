@@ -9,7 +9,7 @@ sudo yum update -y -q
 sudo yum install -y zip unzip
 
 echo "Installing bats..."
-sudo yum install -y git
+sudo yum install -y git # bump 2018-06-04
 sudo git clone https://github.com/sstephenson/bats.git /tmp/bats
 sudo /tmp/bats/install.sh /usr/local
 
