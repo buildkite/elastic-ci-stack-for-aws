@@ -335,6 +335,9 @@ Conditions:
     HasKeyName:
       "Fn::Not": [ "Fn::Equals": [ { Ref: KeyName }, "" ] ]
 
+    EnableSshIngress:
+      "Fn::And": [ { Condition: HasKeyName }, { Condition : CreateSecurityGroup } ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
@@ -630,17 +633,22 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Condition: CreateSecurityGroup
     Properties:
-      GroupDescription: Enable access to SSH
+      GroupDescription: Enable access to agents
       VpcId:
         "Fn::If":
           - "CreateVpcResources"
           - { Ref: Vpc }
           - { Ref: VpcId }
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
       Tags:
       - Key: Name
         Value: { Ref: 'AWS::StackName' }
+
+  SecurityGroupSshIngress:
+    Condition: EnableSshIngress
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupName: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
