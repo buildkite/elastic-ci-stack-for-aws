@@ -72,9 +72,9 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: SSH keypair used to access the buildkite instances
-    Type: AWS::EC2::KeyPair::KeyName
-    MinLength: 1
+    Description: SSH keypair used to access the buildkite instances, if this is left blank SSHing into agents is disabled
+    Type: String
+    Default: ""
 
   BuildkiteAgentRelease:
     Type: String
@@ -332,6 +332,9 @@ Conditions:
     UseCostAllocationTags:
       "Fn::Equals": [ { Ref: EnableCostAllocationTags }, "true" ]
 
+    HasKeyName:
+      "Fn::Not": [ "Fn::Equals": [ { Ref: KeyName }, "" ] ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
@@ -493,7 +496,7 @@ Resources:
     Properties:
       AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
       SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
-      KeyName : { Ref: KeyName }
+      KeyName: { "Fn::If": [ "HasKeyName", { Ref: KeyName }, { Ref: 'AWS::NoValue' } ] }
       IamInstanceProfile: { Ref: IAMInstanceProfile }
       InstanceType: { Ref: InstanceType }
       SpotPrice:
