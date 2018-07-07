@@ -204,7 +204,7 @@ Parameters:
 
   ManagedPolicyARN:
     Type: String
-    Description: Optional - ARN of a managed IAM policy to attach to the instance role
+    Description: Optional - ARN(s) of a managed IAM policy to attach to the instance role, separate multiple policies with ','
     Default: ""
 
   InstanceRoleName:
@@ -378,15 +378,21 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: { "Fn::If": [ SetInstanceRoleName, { Ref: InstanceRoleName }, { "Fn::Sub": "${AWS::StackName}-Role" } ] }
-      ManagedPolicyArns:
-        - "Fn::If":
-          - UseManagedPolicyARN
-          - { Ref: ManagedPolicyARN }
-          - { Ref: 'AWS::NoValue' }
-        - "Fn::If":
-          - UseECR
-          - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
-          - { Ref: 'AWS::NoValue' }
+      # Support multiple policies to attach by merging the values together and splitting on ','
+      ManagedPolicyArns: !Split
+        - ','
+        # Join will skip over AWS::NoValue values
+        - !Join
+          - ','
+          - - "Fn::If":
+              - UseECR
+              - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
+              - { Ref: 'AWS::NoValue' }
+            # This may support mutliple values of its own (separated by commas)
+            - "Fn::If":
+              - UseManagedPolicyARN
+              - { Ref: ManagedPolicyARN }
+              - { Ref: 'AWS::NoValue' }
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
