@@ -72,7 +72,7 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: SSH keypair used to access the buildkite instances, if this is left blank SSHing into agents is disabled
+    Description: Optional - SSH keypair used to access the buildkite instances, setting this will enable SSH ingress
     Type: String
     Default: ""
 
@@ -128,7 +128,7 @@ Parameters:
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from
+    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress
     Type: String
     Default: ""
 
@@ -336,7 +336,11 @@ Conditions:
       "Fn::Not": [ "Fn::Equals": [ { Ref: KeyName }, "" ] ]
 
     EnableSshIngress:
-      "Fn::And": [ { Condition: HasKeyName }, { Condition : CreateSecurityGroup } ]
+      "Fn::And":
+        - { Condition: HasKeyName }
+        - { Condition : CreateSecurityGroup }
+        # Enable ingress if authorized users (keys) can be specified another way
+        - "Fn::Not": [ "Fn::Equals": [ { Ref: AuthorizedUsersUrl }, "" ] ]
 
 Mappings:
   ECRManagedPolicy:
