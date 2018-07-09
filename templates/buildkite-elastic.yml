@@ -72,9 +72,9 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: SSH keypair used to access the buildkite instances
-    Type: AWS::EC2::KeyPair::KeyName
-    MinLength: 1
+    Description: Optional - SSH keypair used to access the buildkite instances, setting this will enable SSH ingress
+    Type: String
+    Default: ""
 
   BuildkiteAgentRelease:
     Type: String
@@ -128,7 +128,7 @@ Parameters:
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from
+    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress
     Type: String
     Default: ""
 
@@ -332,6 +332,17 @@ Conditions:
     UseCostAllocationTags:
       "Fn::Equals": [ { Ref: EnableCostAllocationTags }, "true" ]
 
+    HasKeyName:
+      "Fn::Not": [ "Fn::Equals": [ { Ref: KeyName }, "" ] ]
+
+    EnableSshIngress:
+      "Fn::And":
+        - { Condition : CreateSecurityGroup }
+        # Enable ingress if a key can be specified another way
+        - "Fn::Or":
+          - { Condition: HasKeyName }
+          - "Fn::Not": [ "Fn::Equals": [ { Ref: AuthorizedUsersUrl }, "" ] ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
@@ -493,7 +504,7 @@ Resources:
     Properties:
       AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
       SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
-      KeyName : { Ref: KeyName }
+      KeyName: { "Fn::If": [ "HasKeyName", { Ref: KeyName }, { Ref: 'AWS::NoValue' } ] }
       IamInstanceProfile: { Ref: IAMInstanceProfile }
       InstanceType: { Ref: InstanceType }
       SpotPrice:
@@ -627,17 +638,22 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Condition: CreateSecurityGroup
     Properties:
-      GroupDescription: Enable access to SSH
+      GroupDescription: Enable access to agents
       VpcId:
         "Fn::If":
           - "CreateVpcResources"
           - { Ref: Vpc }
           - { Ref: VpcId }
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
       Tags:
       - Key: Name
         Value: { Ref: 'AWS::StackName' }
+
+  SecurityGroupSshIngress:
+    Condition: EnableSshIngress
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupName: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
