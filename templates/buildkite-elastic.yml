@@ -337,10 +337,11 @@ Conditions:
 
     EnableSshIngress:
       "Fn::And":
-        - { Condition: HasKeyName }
         - { Condition : CreateSecurityGroup }
-        # Enable ingress if authorized users (keys) can be specified another way
-        - "Fn::Not": [ "Fn::Equals": [ { Ref: AuthorizedUsersUrl }, "" ] ]
+        # Enable ingress if a key can be specified another way
+        - "Fn::Or":
+          - { Condition: HasKeyName }
+          - "Fn::Not": [ "Fn::Equals": [ { Ref: AuthorizedUsersUrl }, "" ] ]
 
 Mappings:
   ECRManagedPolicy:
