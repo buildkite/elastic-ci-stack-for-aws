@@ -652,7 +652,7 @@ Resources:
     Condition: EnableSshIngress
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
-      GroupName: !Ref SecurityGroup
+      GroupId: !GetAtt SecurityGroup.GroupId
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
