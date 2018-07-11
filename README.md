@@ -201,7 +201,7 @@ An example of how to set this up:
 
 1. Create a Docker Hub repository for pushing images to
 1. Update the pipeline’s `env` hook in your secrets bucket to perform a `docker login`
-1. Create a builder stack with its own queue (i.e. `elastic-builders`), making sure to use `beta` agents so you can use the [Docker Compose Buildkite Plugin](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin) and [pre-building](https://github.com/buildkite-plugins/docker-compose-buildkite-plugin#pre-building-the-image)
+1. Create a builder stack with its own queue (i.e. `elastic-builders`)
 
 Here is an example build pipeline based on a production Rails application:
 
