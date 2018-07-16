@@ -343,6 +343,10 @@ Conditions:
           - { Condition: HasKeyName }
           - "Fn::Not": [ "Fn::Equals": [ { Ref: AuthorizedUsersUrl }, "" ] ]
 
+    # Whether or not there's any managed polices to attach
+    HasManagedPolicies:
+      "Fn::Or": [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
@@ -378,21 +382,24 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: { "Fn::If": [ SetInstanceRoleName, { Ref: InstanceRoleName }, { "Fn::Sub": "${AWS::StackName}-Role" } ] }
-      # Support multiple policies to attach by merging the values together and splitting on ','
-      ManagedPolicyArns: !Split
-        - ','
-        # Join will skip over AWS::NoValue values
-        - !Join
-          - ','
-          - - "Fn::If":
-              - UseECR
-              - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
-              - { Ref: 'AWS::NoValue' }
-            # This may support multiple values of its own (separated by commas)
-            - "Fn::If":
-              - UseManagedPolicyARN
-              - !Join [ ',', { Ref: ManagedPolicyARN } ]
-              - { Ref: 'AWS::NoValue' }
+      ManagedPolicyArns: !If
+          - HasManagedPolicies
+          # Support multiple policies to attach by merging the values together and splitting on ','
+          - !Split
+            - ','
+            # Join will skip over AWS::NoValue values
+            - !Join
+             - ','
+             - - "Fn::If":
+                 - UseECR
+                 - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
+                 - { Ref: 'AWS::NoValue' }
+               # This may support multiple values of its own (separated by commas)
+               - "Fn::If":
+                 - UseManagedPolicyARN
+                 - !Join [ ',', { Ref: ManagedPolicyARN } ]
+                 - { Ref: 'AWS::NoValue' }
+          - { Ref: 'AWS::NoValue' }
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
