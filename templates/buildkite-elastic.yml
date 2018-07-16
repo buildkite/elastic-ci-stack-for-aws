@@ -367,15 +367,21 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: { "Fn::If": [ SetInstanceRoleName, { Ref: InstanceRoleName }, { "Fn::Sub": "${AWS::StackName}-Role" } ] }
-      ManagedPolicyArns:
-        - "Fn::If":
-          - UseManagedPolicyARN
-          - { Ref: ManagedPolicyARN }
-          - { Ref: 'AWS::NoValue' }
-        - "Fn::If":
-          - UseECR
-          - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
-          - { Ref: 'AWS::NoValue' }
+      # Support multiple policies to attach by merging the values together and splitting on ','
+      ManagedPolicyArns: !Split
+        - ','
+        # Join will skip over AWS::NoValue values
+        - !Join
+          - ','
+          - - "Fn::If":
+              - UseECR
+              - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
+              - { Ref: 'AWS::NoValue' }
+            # This may support multiple values of its own (separated by commas)
+            - "Fn::If":
+              - UseManagedPolicyARN
+              - { Ref: ManagedPolicyARN }
+              - { Ref: 'AWS::NoValue' }
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
