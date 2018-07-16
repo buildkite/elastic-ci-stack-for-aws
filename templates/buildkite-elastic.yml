@@ -388,7 +388,7 @@ Resources:
               - UseECR
               - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
               - { Ref: 'AWS::NoValue' }
-            # This may support mutliple values of its own (separated by commas)
+            # This may support multiple values of its own (separated by commas)
             - "Fn::If":
               - UseManagedPolicyARN
               - { Ref: ManagedPolicyARN }
