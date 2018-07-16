@@ -203,8 +203,8 @@ Parameters:
     Default: ""
 
   ManagedPolicyARN:
-    Type: String
-    Description: Optional - ARN(s) of a managed IAM policy to attach to the instance role, separate multiple policies with ','
+    Type: CommaDelimitedList
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
 
   InstanceRoleName:
@@ -318,7 +318,7 @@ Conditions:
       "Fn::Equals": [ { Ref: ImageId }, "" ]
 
     UseManagedPolicyARN:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: ManagedPolicyARN }, "" ] ]
+      "Fn::Not": [ "Fn::Equals": [ "Fn::Join": [ "", { Ref: ManagedPolicyARN } ], "" ] ]
 
     UseECR:
       "Fn::Not": [ "Fn::Equals": [ { Ref: ECRAccessPolicy }, "none" ] ]
@@ -391,7 +391,7 @@ Resources:
             # This may support multiple values of its own (separated by commas)
             - "Fn::If":
               - UseManagedPolicyARN
-              - { Ref: ManagedPolicyARN }
+              - !Join [ ',', { Ref: ManagedPolicyARN } ]
               - { Ref: 'AWS::NoValue' }
       AssumeRolePolicyDocument:
         Statement:
