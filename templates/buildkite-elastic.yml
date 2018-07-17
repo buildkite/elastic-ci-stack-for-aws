@@ -203,8 +203,8 @@ Parameters:
     Default: ""
 
   ManagedPolicyARN:
-    Type: String
-    Description: Optional - ARN of a managed IAM policy to attach to the instance role
+    Type: CommaDelimitedList
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
 
   InstanceRoleName:
@@ -318,7 +318,7 @@ Conditions:
       "Fn::Equals": [ { Ref: ImageId }, "" ]
 
     UseManagedPolicyARN:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: ManagedPolicyARN }, "" ] ]
+      "Fn::Not": [ "Fn::Equals": [ "Fn::Join": [ "", { Ref: ManagedPolicyARN } ], "" ] ]
 
     UseECR:
       "Fn::Not": [ "Fn::Equals": [ { Ref: ECRAccessPolicy }, "none" ] ]
@@ -342,6 +342,10 @@ Conditions:
         - "Fn::Or":
           - { Condition: HasKeyName }
           - "Fn::Not": [ "Fn::Equals": [ { Ref: AuthorizedUsersUrl }, "" ] ]
+
+    # Whether or not there's any managed polices to attach
+    HasManagedPolicies:
+      "Fn::Or": [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
 
 Mappings:
   ECRManagedPolicy:
@@ -378,14 +382,23 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: { "Fn::If": [ SetInstanceRoleName, { Ref: InstanceRoleName }, { "Fn::Sub": "${AWS::StackName}-Role" } ] }
-      ManagedPolicyArns:
-        - "Fn::If":
-          - UseManagedPolicyARN
-          - { Ref: ManagedPolicyARN }
-          - { Ref: 'AWS::NoValue' }
-        - "Fn::If":
-          - UseECR
-          - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
+      ManagedPolicyArns: !If
+          - HasManagedPolicies
+          # Support multiple policies to attach by merging the values together and splitting on ','
+          - !Split
+            - ','
+            # Join will skip over AWS::NoValue values
+            - !Join
+             - ','
+             - - "Fn::If":
+                 - UseECR
+                 - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
+                 - { Ref: 'AWS::NoValue' }
+               # This may support multiple values of its own (separated by commas)
+               - "Fn::If":
+                 - UseManagedPolicyARN
+                 - !Join [ ',', { Ref: ManagedPolicyARN } ]
+                 - { Ref: 'AWS::NoValue' }
           - { Ref: 'AWS::NoValue' }
       AssumeRolePolicyDocument:
         Statement:
