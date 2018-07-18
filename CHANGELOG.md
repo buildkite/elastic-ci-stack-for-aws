@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.0.0-rc1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.0-rc1) (2018-07-18)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.2.1...v4.0.0-rc1)
+
+### Changed
+- Use Amazon Linux 2 as base AMI [#363](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/363) (@lox)
+- Bump docker-login and ecr plugin to latest [#454](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/454) (@lox)
+- Bump docker to 18.03.1-ce and docker-compose to 1.22.0 [#455](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/455) (@lox)
+- Support attaching multiple policies via the parameter [#446](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/446) (@zsims)
+- Make KeyName optional [#444](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/444) (@zsims)
+- Provide InstanceRoleName as Output [#438](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/438) (@lox)
+
+### Fixed
+- Set correct variable to pass to upstream ecr plugin [#453](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/453) (@bshelton229)
+- Use exit instead of return in bk-check-disk-space.sh script [#440](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/440) (@arturopie)
+- Move cleanup cron jobs to run hourly [#429](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/429) (@arturopie)
+
 ## [v3.2.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.2.1) (2018-05-24)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.2.0...v3.2.1)
 
