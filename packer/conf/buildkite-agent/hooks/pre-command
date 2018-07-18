@@ -7,7 +7,7 @@ if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" 
 
   # map AWS_ECR_LOGIN_REGISTRY_IDS into the plugin list format
   if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
-    export BUILDKITE_PLUGIN_ECR_REGISTRY_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
+    export BUILDKITE_PLUGIN_ECR_ACCOUNT_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
   fi
 
   # shellcheck source=/dev/null
