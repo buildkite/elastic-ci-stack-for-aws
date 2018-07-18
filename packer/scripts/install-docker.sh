@@ -1,9 +1,9 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_VERSION=18.03.0-ce
+DOCKER_VERSION=18.03.1-ce
 DOCKER_RELEASE="stable"
-DOCKER_COMPOSE_VERSION=1.21.1
+DOCKER_COMPOSE_VERSION=1.22.0
 
 # This performs a manual install of Docker. The init.d script is from the
 # 1.11 yum package
