@@ -272,7 +272,7 @@ aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
 Provide us with logs from Cloudwatch Logs:
 
 ```
-/buildkite/elastic-stack-init/{instance-id}
+/buildkite/elastic-stack/{instance-id}
 /buildkite/docker-daemon/{instance-id}
 ```
 
