@@ -7,7 +7,7 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
-echo ":docker: Checking docker"
+echo "Checking docker"
 if ! docker ps ; then
   echo "^^^ +++"
   echo ":alert: Docker isn't running!"
