@@ -25,7 +25,7 @@ sudo aws configure set s3.signature_version s3v4
 echo "Installing git lfs..."
 curl -Lsf -o git-lfs.tgz https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_RELEASE}/git-lfs-linux-amd64-v${GIT_LFS_RELEASE}.tar.gz
 mkdir git-lfs
-tar -xvzf ../git-lfs.tgz -C git-lfs
+tar -xvzf git-lfs.tgz -C git-lfs
 sudo ./git-lfs/install.sh
 sudo git lfs install
 rm -rf git-lfs.tgz git-lfs/
