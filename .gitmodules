@@ -9,3 +9,6 @@
 [submodule "plugins/docker-login"]
 	path = plugins/docker-login
 	url = https://github.com/buildkite-plugins/docker-login-buildkite-plugin.git
+[submodule "plugins/secrets-manager"]
+	path = plugins/secrets-manager
+	url = https://github.com/buildkite/elastic-ci-stack-secrets-manager-hooks.git
