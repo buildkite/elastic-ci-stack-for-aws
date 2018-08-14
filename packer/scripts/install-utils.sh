@@ -26,6 +26,6 @@ echo "Installing git lfs..."
 curl -Lsf -o git-lfs.tgz https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_RELEASE}/git-lfs-linux-amd64-v${GIT_LFS_RELEASE}.tar.gz
 mkdir git-lfs
 tar -xvzf git-lfs.tgz -C git-lfs
+sudo chmod 755 /usr/local/bin/git-lfs
 sudo ./git-lfs/install.sh
-sudo git lfs install
 rm -rf git-lfs.tgz git-lfs/
