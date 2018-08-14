@@ -34,16 +34,22 @@ echo "Configuring built-in plugins"
 [[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}
 [[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/docker-login/}
 [[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ecr/}
+[[ ! ${SM_SECRETS_HOOKS_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/sm-secrets/}
 
 SECRETS_PLUGIN_ENABLED=0
 DOCKER_LOGIN_PLUGIN_ENABLED=0
 ECR_PLUGIN_ENABLED=0
+SM_SECRETS_HOOKS_ENABLED=0
 
 for plugin in $PLUGINS_ENABLED ; do
   case "$plugin" in
     secrets)
       export SECRETS_PLUGIN_ENABLED=1
-      echo "Secrets plugin enabled"
+      echo "S3 Secrets hooks enabled"
+      ;;
+    sm-secrets)
+      export SM_SECRETS_HOOKS_ENABLED=1
+      echo "Secrets Manager hooks enabled"
       ;;
     docker-login)
       export DOCKER_LOGIN_PLUGIN_ENABLED=1
@@ -55,6 +61,13 @@ for plugin in $PLUGINS_ENABLED ; do
       ;;
   esac
 done
+
+if [[ "${SM_SECRETS_HOOKS_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_SECRETS_MANAGER_PREFIX="${BUILDKITE_SECRETS_MANAGER_PREFIX:-elastic-ci-stack}"
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets-manager/hooks/environment
+fi
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"

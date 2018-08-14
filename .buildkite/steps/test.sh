@@ -64,6 +64,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "EnableDockerUserNamespaceRemap",
     "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableSecretsManagerPlugin",
+    "ParameterValue": "true"
   }
 ]
 EOF

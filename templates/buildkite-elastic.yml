@@ -67,6 +67,7 @@ Metadata:
           default: Plugin Configuration
         Parameters:
         - EnableSecretsPlugin
+        - EnableSecretsManagerPlugin
         - EnableECRPlugin
         - EnableDockerLoginPlugin
 
@@ -237,6 +238,14 @@ Parameters:
       - true
       - false
     Default: "true"
+
+  EnableSecretsManagerPlugin:
+    Type: String
+    Description: Enables secrets-manager plugin for all pipelines
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
 
   EnableECRPlugin:
     Type: String
@@ -664,7 +673,7 @@ Resources:
   SecurityGroupSshIngress:
     Condition: EnableSshIngress
     Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
+    Properties:
       GroupId: !GetAtt SecurityGroup.GroupId
       IpProtocol: tcp
       FromPort: 22

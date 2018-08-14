@@ -2,6 +2,13 @@
 
 set -eu -o pipefail
 
+if [[ "${SM_SECRETS_HOOKS_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_SECRETS_MANAGER_PREFIX="${BUILDKITE_SECRETS_MANAGER_PREFIX:-elastic-ci-stack}"
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets-manager/hooks/pre-exit
+fi
+
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 
