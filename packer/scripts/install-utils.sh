@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-GIT_LFS_RELEASE="2.4.0"
+GIT_LFS_RELEASE="2.5.1"
 
 echo "Updating awscli..."
 sudo yum update -y awscli
@@ -23,10 +23,9 @@ echo "Configuring awscli to use v4 signatures..."
 sudo aws configure set s3.signature_version s3v4
 
 echo "Installing git lfs..."
-curl -Lsf -o git-lfs.tgz https://github.com/git-lfs/git-lfs/archive/v${GIT_LFS_RELEASE}.tar.gz
-tar -xvzf git-lfs.tgz
-cd git-lfs-${GIT_LFS_RELEASE}/
-sudo ./script/bootstrap
-sudo mv bin/git-lfs /usr/bin
+curl -Lsf -o git-lfs.tgz https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_RELEASE}/git-lfs-linux-amd64-v${GIT_LFS_RELEASE}.tar.gz
+mkdir git-lfs
+tar -xvzf ../git-lfs.tgz -C git-lfs
+sudo ./git-lfs/install.sh
 sudo git lfs install
-rm git-lfs.tgz
+rm -rf git-lfs.tgz git-lfs/
