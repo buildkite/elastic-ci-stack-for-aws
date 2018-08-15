@@ -449,9 +449,17 @@ Resources:
             Resource: "*"
           - Effect: Allow
             Action:
-              - secretsmanager:ListSecrets
+              - secretsmanager:List*
+              - secretsmanager:Describe*
+            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:buildkite/*"
+          - Effect: Allow
+            Action:
               - secretsmanager:GetSecretValue
-            Resource: "*"
+            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:buildkite/*"
+            Condition:
+              ForAnyValue:StringEquals:
+                "secretsmanager:VersionStage": "AWSCURRENT"
+
       Roles:
         - { Ref: IAMRole }
 
