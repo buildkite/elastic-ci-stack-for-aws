@@ -567,6 +567,7 @@ Resources:
               SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
               ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
               DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
+              SM_SECRETS_HOOKS_ENABLED=${EnableSecretsManagerPlugin} \
               DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
               AWS_REGION=${AWS::Region} \
                 /usr/local/bin/bk-install-elastic-stack.sh
