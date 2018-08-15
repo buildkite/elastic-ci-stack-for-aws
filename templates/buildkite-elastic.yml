@@ -447,6 +447,10 @@ Resources:
               - sns:Unsubscribe
               - sns:Subscribe
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - secretsmanager:ListSecrets
+              - secretsmanager:GetSecretValue
       Roles:
         - { Ref: IAMRole }
 
