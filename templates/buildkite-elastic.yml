@@ -45,6 +45,7 @@ Metadata:
         - ScaleUpAdjustment
         - ScaleDownAdjustment
         - ScaleDownPeriod
+        - Timeout
 
       - Label:
           default: Cost Allocation Configuration
@@ -185,6 +186,11 @@ Parameters:
     Description: Number of seconds UnfinishedJobs must equal 0 before scale down
     Type: Number
     Default: 1800
+
+  Timeout:
+    Description: Timeout period for Autoscaling Group Creation Policy
+    Type: String
+    Default: "PT5M"
 
   RootVolumeSize:
     Description: Size of each instance's root EBS volume (in GB)
@@ -641,7 +647,7 @@ Resources:
 
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT5M
+        Timeout: { !Ref Timeout }
         Count: { Ref: MinSize }
     UpdatePolicy:
       AutoScalingReplacingUpdate:
