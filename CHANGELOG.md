@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make KeyName optional [#444](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/444) (@zsims)
 - Provide InstanceRoleName as Output [#438](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/438) (@lox)
 
+## [v3.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.3.0) (2018-09-04)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.2.1...v3.3.0)
+
+### Changed
+- Bump Amazon Linux to 2018.03 [#471](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/471) (@lox)
+- Bump docker to 18.03.1-ce and docker-compose to 1.22.0 [#455](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/455) (@lox)
+- Support attaching multiple policies via the parameter [#446](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/446) (@zsims)
+
 ### Fixed
 - Set correct variable to pass to upstream ecr plugin [#453](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/453) (@bshelton229)
 - Use exit instead of return in bk-check-disk-space.sh script [#440](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/440) (@arturopie)
