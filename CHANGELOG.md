@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.0.0-rc2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.0-rc2) (2018-09-04)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.0-rc1...v4.0.0-rc2)
+
+### Added
+- Install Git LFS [#468](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/468) (@lox)
+
+### Changed
+- Update to the very latest aws-cli [#478](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/478) (@lox)
+- Bump lifecycled to 2.0.2 [#475](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/475) (@lox)
+- Default BuildkiteAgentRelease to stable [#474](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/474) (@lox)
+- Added InstanceCreationTimeout as parameter [#476](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/476) (@RexChenjq)
+- Update README.md to reflect Amazon Linux 2[#470](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/470) (@alexjurkiewicz)
+- Clean up docker login hooks [#466](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/466) (@lox)
+- Rename the log group name we are using for elastic-stack.log file so we are consistent [#463](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/463) (@arturopie)
+- Update to latest Amazon Linux 2 LTS [#462](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/462) (@lox)
+
 ## [v4.0.0-rc1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.0-rc1) (2018-07-18)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.2.1...v4.0.0-rc1)
 
