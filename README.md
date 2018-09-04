@@ -273,7 +273,7 @@ Provide us with logs from Cloudwatch Logs:
 
 ```
 /buildkite/elastic-stack/{instance-id}
-/buildkite/docker-daemon/{instance-id}
+/buildkite/systemd/{instance-id}
 ```
 
 Alternately, drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
