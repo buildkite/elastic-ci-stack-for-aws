@@ -42,6 +42,7 @@ PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
 [[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker-login")
+[[ $SM_SECRETS_HOOKS_ENABLED == "true" ]] && PLUGINS_ENABLED+=("sm-secrets")
 
 # cfn-env is sourced by the environment hook in builds
 cat << EOF > /var/lib/buildkite-agent/cfn-env

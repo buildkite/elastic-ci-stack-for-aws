@@ -14,7 +14,7 @@ Features:
 - Configurable spot instance bid price
 - Configurable auto-scaling based on build activity
 - Docker and Docker Compose support
-- Per-pipeline S3 secret storage (with SSE encryption support)
+- AWS Secrets Manager integration
 - Docker Registry push/pull support
 - CloudWatch logs for system and buildkite agent events
 - CloudWatch metrics from the Buildkite API
@@ -68,40 +68,7 @@ aws cloudformation create-stack \
 
 ## Build Secrets
 
-The stack will have created an S3 bucket for you (or used the one you provided as the `SecretsBucket` parameter). This will be where the agent will fetch your SSH private keys for source control, and environment hooks to provide other secrets to your builds.
-
-The following s3 objects are downloaded and processed:
-
-* `/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks)
-* `/private_ssh_key` - A private key that is added to ssh-agent for your builds
-* `/git-credentials` - A [git-credentials](https://git-scm.com/docs/git-credential-store#_storage_format) file for git over https
-* `/{pipeline-slug}/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks), specific to a pipeline
-* `/{pipeline-slug}/private_ssh_key` - A private key that is added to ssh-agent for your builds, specific to the pipeline
-* `/{pipeline-slug}/git-credentials` - A [git-credentials](https://git-scm.com/docs/git-credential-store#_storage_format) file for git over https, specific to a pipeline
-
-These files are encrypted using [Amazon's KMS Service](https://aws.amazon.com/kms/). See the [Security](#security) section for more details.
-
-Here's an example that shows how to generate a private SSH key, and upload it with KMS encryption to an S3 bucket:
-
-```bash
-# generate a deploy key for your project
-ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
-pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
-
-aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key"
-```
-
-If you want to set secrets that your build can access, create a file that sets environment variables and upload it:
-
-```bash
-echo "export MY_ENV_VAR=something secret" > myenv
-aws s3 cp --acl private --sse aws:kms myenv "s3://${SecretsBucket}/env"
-rm myenv
-```
-
-**Note: Currently only using the default KMS key for s3 can be used, follow [#235](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/235) for progress on using specific KMS keys**
-
-If you really want to store your secrets unencrypted, you can disable it entirely with `BUILDKITE_USE_KMS=false`.
+Secrets are stored in Amazon Secrets Manager. See [Secrets Manager Documentation](plugins/secrets-manager/README.md) for more details and examples.
 
 ## What’s On Each Machine?
 

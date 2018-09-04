@@ -67,6 +67,7 @@ Metadata:
           default: Plugin Configuration
         Parameters:
         - EnableSecretsPlugin
+        - EnableSecretsManagerPlugin
         - EnableECRPlugin
         - EnableDockerLoginPlugin
 
@@ -237,6 +238,14 @@ Parameters:
       - true
       - false
     Default: "true"
+
+  EnableSecretsManagerPlugin:
+    Type: String
+    Description: Enables secrets-manager plugin for all pipelines
+    AllowedValues:
+      - true
+      - false
+    Default: "false"
 
   EnableECRPlugin:
     Type: String
@@ -438,6 +447,19 @@ Resources:
               - sns:Unsubscribe
               - sns:Subscribe
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - secretsmanager:List*
+              - secretsmanager:Describe*
+            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:buildkite/*"
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:buildkite/*"
+            Condition:
+              ForAnyValue:StringEquals:
+                "secretsmanager:VersionStage": "AWSCURRENT"
+
       Roles:
         - { Ref: IAMRole }
 
@@ -558,6 +580,7 @@ Resources:
               SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
               ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
               DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
+              SM_SECRETS_HOOKS_ENABLED=${EnableSecretsManagerPlugin} \
               DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
               AWS_REGION=${AWS::Region} \
                 /usr/local/bin/bk-install-elastic-stack.sh
@@ -664,7 +687,7 @@ Resources:
   SecurityGroupSshIngress:
     Condition: EnableSshIngress
     Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
+    Properties:
       GroupId: !GetAtt SecurityGroup.GroupId
       IpProtocol: tcp
       FromPort: 22
