@@ -45,7 +45,7 @@ Metadata:
         - ScaleUpAdjustment
         - ScaleDownAdjustment
         - ScaleDownPeriod
-        - Timeout
+        - InstanceCreationTimeout
 
       - Label:
           default: Cost Allocation Configuration
@@ -187,7 +187,7 @@ Parameters:
     Type: Number
     Default: 1800
 
-  Timeout:
+  InstanceCreationTimeout:
     Description: Timeout period for Autoscaling Group Creation Policy
     Type: String
     Default: "PT5M"
@@ -647,7 +647,7 @@ Resources:
 
     CreationPolicy:
       ResourceSignal:
-        Timeout: { !Ref Timeout }
+        Timeout: { Ref: InstanceCreationTimeout }
         Count: { Ref: MinSize }
     UpdatePolicy:
       AutoScalingReplacingUpdate:
@@ -670,7 +670,7 @@ Resources:
   SecurityGroupSshIngress:
     Condition: EnableSshIngress
     Type: AWS::EC2::SecurityGroupIngress
-    Properties: 
+    Properties:
       GroupId: !GetAtt SecurityGroup.GroupId
       IpProtocol: tcp
       FromPort: 22
