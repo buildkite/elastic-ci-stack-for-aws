@@ -26,6 +26,10 @@
     },
     {
       "type": "shell",
+      "script": "scripts/install-journald-cloudwatch-logs.sh"
+    },
+    {
+      "type": "shell",
       "script": "scripts/install-utils.sh"
     },
     {

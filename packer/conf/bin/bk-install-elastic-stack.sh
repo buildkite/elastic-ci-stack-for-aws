@@ -93,19 +93,6 @@ EOF
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-	touch "/var/log/buildkite-agent-${i}.log"
-
-	# Setup logging first so we capture everything
-	cat <<- EOF > "/etc/awslogs/config/buildkite-agent-${i}.conf"
-	[/buildkite/buildkite-agent-${i}.log]
-	file = /var/log/buildkite-agent-${i}.log
-	log_group_name = /buildkite/buildkite-agent
-	log_stream_name = {instance_id}-${i}
-	datetime_format = %Y-%m-%d %H:%M:%S
-	EOF
-done
-
 if [[ -n "${BUILDKITE_AUTHORIZED_USERS_URL}" ]] ; then
 	cat <<- EOF > /etc/cron.hourly/authorized_keys
 	/usr/local/bin/bk-fetch.sh "${BUILDKITE_AUTHORIZED_USERS_URL}" /tmp/authorized_keys
@@ -132,6 +119,7 @@ EOF
 
 systemctl start lifecycled
 systemctl start awslogsd
+systemctl start journald-cloudwatch-logs
 
 # wait for docker to start
 next_wait_time=0
