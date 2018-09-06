@@ -1,7 +1,16 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite Elastic CI Stack - VPC stack %v"
+
+Parameters:
+  AvailabilityZones:
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+    Description: The Availability Zones to use (must be exactly two).
+    MinLength: 5
+
 Resources:
   Vpc:
     Type: AWS::EC2::VPC
-    Condition: CreateVpcResources
     Properties:
       CidrBlock: 10.0.0.0/16
       InstanceTenancy: default
@@ -11,7 +20,6 @@ Resources:
 
   Gateway:
     Type: AWS::EC2::InternetGateway
-    Condition: CreateVpcResources
     Properties:
       Tags:
         - Key: Name
@@ -19,20 +27,14 @@ Resources:
 
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
-    Condition: CreateVpcResources
     Properties:
       InternetGatewayId: { Ref: Gateway }
       VpcId: { Ref: Vpc }
 
   Subnet0:
     Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
     Properties:
-      AvailabilityZone:
-        "Fn::If":
-          - "UseSpecifiedAvailabilityZones"
-          - { "Fn::Select": [ 0, { Ref: AvailabilityZones } ] }
-          - { "Fn::Select": [ 0, { "Fn::GetAZs": '' } ] }
+      AvailabilityZone: { "Fn::Select": [ 0, { Ref: AvailabilityZones } ] }
       CidrBlock: 10.0.1.0/24
       VpcId: { Ref: Vpc }
       Tags:
@@ -41,13 +43,8 @@ Resources:
 
   Subnet1:
     Type: AWS::EC2::Subnet
-    Condition: CreateVpcResources
     Properties:
-      AvailabilityZone:
-        "Fn::If":
-          - "UseSpecifiedAvailabilityZones"
-          - { "Fn::Select": [ 1, { Ref: AvailabilityZones } ] }
-          - { "Fn::Select": [ 1, { "Fn::GetAZs": '' } ] }
+      AvailabilityZone: { "Fn::Select": [ 1, { Ref: AvailabilityZones } ] }
       CidrBlock: 10.0.2.0/24
       VpcId: { Ref: Vpc }
       Tags:
@@ -56,7 +53,6 @@ Resources:
 
   Routes:
     Type: AWS::EC2::RouteTable
-    Condition: CreateVpcResources
     Properties:
       VpcId: { Ref: Vpc }
       Tags:
@@ -65,7 +61,6 @@ Resources:
 
   RouteDefault:
     Type: AWS::EC2::Route
-    Condition: CreateVpcResources
     DependsOn: GatewayAttachment
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
@@ -74,14 +69,24 @@ Resources:
 
   Subnet0Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
     Properties:
       SubnetId: { Ref: Subnet0 }
       RouteTableId: { Ref: Routes }
 
   Subnet1Routes:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateVpcResources
     Properties:
       SubnetId: { Ref: Subnet1 }
       RouteTableId: { Ref: Routes }
+
+Outputs:
+  VpcId:
+    Description: The created VPC
+    Value: !Ref Vpc
+
+  PublicSubnets:
+    Description: A list of the public subnets
+    Value: !Join
+      - ','
+      - - !Ref Subnet0
+        - !Ref Subnet1

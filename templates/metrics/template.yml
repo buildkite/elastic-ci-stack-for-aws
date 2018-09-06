@@ -1,8 +1,39 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite Elastic CI Stack - Metrics stack %v"
+
+Parameters:
+  BuildkiteAgentToken:
+    Description: Buildkite agent registration token
+    Type: String
+    NoEcho: true
+    MinLength: 1
+
+  BuildkiteQueue:
+    Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}"
+    Type: String
+    Default: default
+    MinLength: 1
+
+Mappings:
+  MetricsLambdaBucket:
+    us-east-1 : { Bucket: "buildkite-metrics" }
+    us-east-2 : { Bucket: "buildkite-metrics-us-east-2" }
+    us-west-1 : { Bucket: "buildkite-metrics-us-west-1" }
+    us-west-2 : { Bucket: "buildkite-metrics-us-west-2" }
+    eu-west-1 : { Bucket: "buildkite-metrics-eu-west-1" }
+    eu-west-2 : { Bucket: "buildkite-metrics-eu-west-2" }
+    eu-central-1 : { Bucket: "buildkite-metrics-eu-central-1" }
+    ap-northeast-1 : { Bucket: "buildkite-metrics-ap-northeast-1" }
+    ap-northeast-2 : { Bucket: "buildkite-metrics-ap-northeast-2" }
+    ap-southeast-1 : { Bucket: "buildkite-metrics-ap-southeast-1" }
+    ap-southeast-2 : { Bucket: "buildkite-metrics-ap-southeast-2" }
+    ap-south-1 : { Bucket: "buildkite-metrics-ap-south-1" }
+    sa-east-1 : { Bucket: "buildkite-metrics-sa-east-1" }
 
 Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
-    Condition: CreateMetricsStack
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -18,7 +49,6 @@ Resources:
   LambdaExecutionPolicy:
     DependsOn: LambdaExecutionRole
     Type: AWS::IAM::Policy
-    Condition: CreateMetricsStack
     Properties:
       PolicyName: AccessToCloudwatchForBuildkiteMetrics
       Roles:
@@ -40,7 +70,6 @@ Resources:
     DependsOn:
     - LambdaExecutionRole
     - LambdaExecutionPolicy
-    Condition: CreateMetricsStack
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, { Ref: 'AWS::Region' }, 'Bucket'] }
@@ -63,7 +92,6 @@ Resources:
 
   ScheduledRule:
     Type: "AWS::Events::Rule"
-    Condition: CreateMetricsStack
     Properties:
       Description: "ScheduledRule"
       ScheduleExpression: "rate(1 minute)"
@@ -77,7 +105,6 @@ Resources:
 
   PermissionForEventsToInvokeLambda:
     Type: "AWS::Lambda::Permission"
-    Condition: CreateMetricsStack
     Properties:
       FunctionName: { Ref: BuildkiteMetricsFunction }
       Action: "lambda:InvokeFunction"
