@@ -40,6 +40,13 @@ steps:
       queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
   - wait
+  - name: ":cloudformation: 🚚 🌎"
+    command: .buildkite/steps/copy.sh
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    artifact_paths: "templates/mappings.yml"
+
+  - wait
   - name: ":cloudformation: :rocket:"
     command: .buildkite/steps/publish.sh
     agents:
