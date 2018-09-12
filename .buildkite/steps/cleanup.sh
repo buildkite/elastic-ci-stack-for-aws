@@ -2,6 +2,25 @@
 # shellcheck disable=SC2016
 set -uxo pipefail
 
+if [[ -n "${AWS_STACK_NAME:-}" ]] ; then
+  secrets_bucket=$(aws cloudformation describe-stacks \
+    --stack-name "${AWS_STACK_NAME}" \
+    --query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsBucket`].OutputValue' \
+    --output text)
+
+  secrets_logging_bucket=$(aws cloudformation describe-stacks \
+    --stack-name "${AWS_STACK_NAME}" \
+    --query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsLoggingBucket`].OutputValue' \
+    --output text)
+
+  echo "--- Deleting stack $AWS_STACK_NAME"
+  aws cloudformation delete-stack --stack-name "$AWS_STACK_NAME"
+
+  echo "--- Deleting buckets for $AWS_STACK_NAME"
+  aws s3 rb "s3://${secrets_bucket}" --force
+  aws s3 rb "s3://${secrets_logging_bucket}" --force
+fi
+
 if [[ $OSTYPE =~ ^darwin ]] ; then
   cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
   cutoff_date_milli=$(gdate --date='-1 days' +%s%3N)
@@ -11,11 +30,6 @@ else
 fi
 
 echo "--- Cleaning up resources older than ${cutoff_date}"
-
-if [[ -n "${AWS_STACK_NAME:-}" ]] ; then
-  echo "--- Deleting stack $AWS_STACK_NAME"
-  aws cloudformation delete-stack --stack-name "$AWS_STACK_NAME"
-fi
 
 echo "--- Deleting test managed secrets buckets created"
 aws s3api list-buckets \
