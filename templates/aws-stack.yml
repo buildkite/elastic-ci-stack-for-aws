@@ -235,48 +235,48 @@ Parameters:
     Type: String
     Description: Associate instances with public IP addresses
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableSecretsPlugin:
     Type: String
     Description: Enables s3-secrets plugin for all pipelines
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableECRPlugin:
     Type: String
     Description: Enables ecr plugin for all pipelines
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableDockerLoginPlugin:
     Type: String
     Description: Enables docker-login plugin for all pipelines
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableDockerUserNamespaceRemap:
     Type: String
     Description: Enables Docker user namespace remapping so docker runs as buildkite-agent
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableCostAllocationTags:
     Type: String
     Description: Enables AWS Cost Allocation tags for all resources in the stack. See https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "false"
 
   CostAllocationTagName:
@@ -419,8 +419,8 @@ Resources:
       AvailabilityZone:
         !If
           - "UseSpecifiedAvailabilityZones"
-          - { !Select [ 0, !Ref AvailabilityZones ] }
-          - { !Select [ 0, { !GetAZs '' } ] }
+          - !Select [ 0, !Ref AvailabilityZones ]
+          - !Select [ 0, !GetAZs '' ]
       CidrBlock: 10.0.1.0/24
       VpcId: !Ref Vpc
       Tags:
@@ -434,8 +434,8 @@ Resources:
       AvailabilityZone:
         !If
           - "UseSpecifiedAvailabilityZones"
-          - { !Select [ 1, !Ref AvailabilityZones ] }
-          - { !Select [ 1, { !GetAZs '' } ] }
+          - !Select [ 1, !Ref AvailabilityZones ]
+          - !Select [ 1, !GetAZs '' ]
       CidrBlock: 10.0.2.0/24
       VpcId: !Ref Vpc
       Tags:
@@ -484,7 +484,7 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: { !If [ SetInstanceRoleName, !Ref InstanceRoleName, { !Sub "${AWS::StackName}-Role" } ] }
+      RoleName: !If [ SetInstanceRoleName, !Ref InstanceRoleName, !Sub "${AWS::StackName}-Role" ]
       ManagedPolicyArns: !If
           - HasManagedPolicies
           # Support multiple policies to attach by merging the values together and splitting on ','
@@ -495,7 +495,7 @@ Resources:
              - ','
              - - !If
                  - UseECR
-                 - { !FindInMap [ ECRManagedPolicy, !Ref ECRAccessPolicy, 'Policy' ] }
+                 - !FindInMap [ ECRManagedPolicy, !Ref ECRAccessPolicy, 'Policy' ]
                  - !Ref 'AWS::NoValue'
                # This may support multiple values of its own (separated by commas)
                - !If
@@ -620,11 +620,11 @@ Resources:
     Properties:
       AssociatePublicIpAddress: !Ref AssociatePublicIpAddress
       SecurityGroups: [ !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
-      KeyName: { !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ] }
+      KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
       IamInstanceProfile: !Ref IAMInstanceProfile
       InstanceType: !Ref InstanceType
       SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
-      ImageId: !If [ "UseDefaultAMI", { !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'] }, !Ref ImageId ]
+      ImageId: !If [ "UseDefaultAMI", !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'], !Ref ImageId ]
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: gp2 }
@@ -703,8 +703,7 @@ Resources:
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-        { !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ] }
+      VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       LaunchConfigurationName: !Ref AgentLaunchConfiguration
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
@@ -773,7 +772,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      Cooldown: 300
+      Cooldown: "300"
       ScalingAdjustment : !Ref ScaleUpAdjustment
 
   AgentScaleDownPolicy:
@@ -782,7 +781,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      Cooldown: 300
+      Cooldown: "300"
       ScalingAdjustment: !Ref ScaleDownAdjustment
 
   AgentUtilizationAlarmHigh:
@@ -835,7 +834,6 @@ Resources:
       Path: "/"
 
   LambdaExecutionPolicy:
-    DependsOn: LambdaExecutionRole
     Type: AWS::IAM::Policy
     Condition: CreateMetricsStack
     Properties:
@@ -857,7 +855,6 @@ Resources:
   BuildkiteMetricsFunction:
     Type: AWS::Lambda::Function
     DependsOn:
-    - LambdaExecutionRole
     - LambdaExecutionPolicy
     Condition: CreateMetricsStack
     Properties:
