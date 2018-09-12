@@ -17,7 +17,7 @@ clean:
 build: build/aws-stack.yml
 
 build/aws-stack.yml: templates/aws-stack.yml build/mappings.yml
-	awk '{if($$0=="  \# build/mappings.yml"){system("grep -v Mappings: build/mappings.yml")}else{print}}' templates/aws-stack.yml > build/aws-stack.yml
+	awk '{if($$0=="  # build/mappings.yml"){system("grep -v Mappings: build/mappings.yml")}else{print}}' templates/aws-stack.yml > build/aws-stack.yml
 	sed -i '' "3 s/%v/$(VERSION)/" build/aws-stack.yml
 
 # -----------------------------------------
