@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ -n "${BUILDKITE_AWS_STACK_BUCKET}" ]] ; then
+if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]] ; then
   echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_BUCKET for temporary files"
   exit 1
 fi

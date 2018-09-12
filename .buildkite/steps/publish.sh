@@ -17,7 +17,7 @@ s3_upload_templates() {
   aws s3 cp --acl public-read build/aws-stack.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}aws-stack.yml"
 }
 
-if [[ -n "${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}" ]] ; then
+if [[ -z "${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}" ]] ; then
   echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_TEMPLATE_BUCKET for publishing templates to"
   exit 1
 fi
