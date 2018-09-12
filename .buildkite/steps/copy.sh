@@ -75,7 +75,7 @@ IMAGES=(
 # Configuration
 source_image_id="${1:-}"
 source_region="${AWS_REGION}"
-mapping_file="$templates/mappings.yml"
+mapping_file="templates/mappings.yml"
 s3_mappings_cache="s3://${BUILDKITE_AWS_STACK_BUCKET}/mappings-${image_id}-${BUILDKITE_BRANCH}.yml"
 
 # Read the source_image_id from meta-data if empty
@@ -109,7 +109,7 @@ source_image_name=$(aws ec2 describe-images \
 
 # Copy to all other regions
 for region in ${ALL_REGIONS[*]}; do
-  if [[ $region != $source_region ]] ; then
+  if [[ $region != "$source_region" ]] ; then
     echo "--- Copying $source_image_id to $region" >&2
     IMAGES+=("$(copy_ami_to_region "$source_image_id" "$source_region" "$region" "${source_image_name}-${region}")")
   else
@@ -131,7 +131,7 @@ for ((i=0; i<${#IMAGES[*]}; i++)); do
   wait_for_ami_to_be_available "$image_id" "$region" >&2
 
   # Make the AMI public if it's not the source image
-  if [[ $image_id != $source_image_id ]] ; then
+  if [[ $image_id != "$source_image_id" ]] ; then
     echo "Making ${image_id} public" >&2
     make_ami_public "$image_id" "$region"
   fi
