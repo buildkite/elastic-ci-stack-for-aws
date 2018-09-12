@@ -1,3 +1,6 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite stack - %v"
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -295,6 +298,12 @@ Outputs:
     Value:
       "Fn::If": [CreateSecretsBucket, { Ref: ManagedSecretsLoggingBucket }, "" ]
 
+  AutoScalingGroupName:
+    Value: { Ref: AgentAutoScaleGroup }
+
+  InstanceRoleName:
+    Value: { Ref: IAMRole }
+
 Conditions:
     UseSpotInstances:
       "Fn::Not": [ "Fn::Equals": [ { Ref: SpotPrice }, 0 ] ]
@@ -375,8 +384,97 @@ Mappings:
     ap-south-1 : { Bucket: "buildkite-metrics-ap-south-1" }
     sa-east-1 : { Bucket: "buildkite-metrics-sa-east-1" }
 
+  AWSRegion2AMI: {}
 
 Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Condition: CreateVpcResources
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: { Ref: 'AWS::StackName' }
+
+  Gateway:
+    Type: AWS::EC2::InternetGateway
+    Condition: CreateVpcResources
+    Properties:
+      Tags:
+        - Key: Name
+          Value: { Ref: 'AWS::StackName' }
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Condition: CreateVpcResources
+    Properties:
+      InternetGatewayId: { Ref: Gateway }
+      VpcId: { Ref: Vpc }
+
+  Subnet0:
+    Type: AWS::EC2::Subnet
+    Condition: CreateVpcResources
+    Properties:
+      AvailabilityZone:
+        "Fn::If":
+          - "UseSpecifiedAvailabilityZones"
+          - { "Fn::Select": [ 0, { Ref: AvailabilityZones } ] }
+          - { "Fn::Select": [ 0, { "Fn::GetAZs": '' } ] }
+      CidrBlock: 10.0.1.0/24
+      VpcId: { Ref: Vpc }
+      Tags:
+        - Key: Name
+          Value: { Ref: 'AWS::StackName' }
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Condition: CreateVpcResources
+    Properties:
+      AvailabilityZone:
+        "Fn::If":
+          - "UseSpecifiedAvailabilityZones"
+          - { "Fn::Select": [ 1, { Ref: AvailabilityZones } ] }
+          - { "Fn::Select": [ 1, { "Fn::GetAZs": '' } ] }
+      CidrBlock: 10.0.2.0/24
+      VpcId: { Ref: Vpc }
+      Tags:
+        - Key: Name
+          Value: { Ref: 'AWS::StackName' }
+
+  Routes:
+    Type: AWS::EC2::RouteTable
+    Condition: CreateVpcResources
+    Properties:
+      VpcId: { Ref: Vpc }
+      Tags:
+        - Key: Name
+          Value: { Ref: 'AWS::StackName' }
+
+  RouteDefault:
+    Type: AWS::EC2::Route
+    Condition: CreateVpcResources
+    DependsOn: GatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: { Ref: Gateway }
+      RouteTableId: { Ref: Routes }
+
+  Subnet0Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVpcResources
+    Properties:
+      SubnetId: { Ref: Subnet0 }
+      RouteTableId: { Ref: Routes }
+
+  Subnet1Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVpcResources
+    Properties:
+      SubnetId: { Ref: Subnet1 }
+      RouteTableId: { Ref: Routes }
+
+
   # Allow ec2 instances to assume a role and be granted the IAMPolicies
   IAMInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -676,3 +774,142 @@ Resources:
       FromPort: 22
       ToPort: 22
       CidrIp: 0.0.0.0/0
+
+  AgentScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: UseAutoscaling
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
+      Cooldown: 300
+      ScalingAdjustment : { Ref: ScaleUpAdjustment }
+
+  AgentScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: UseAutoscaling
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
+      Cooldown: 300
+      ScalingAdjustment: { Ref: ScaleDownAdjustment }
+
+  AgentUtilizationAlarmHigh:
+   Type: AWS::CloudWatch::Alarm
+   Condition: UseAutoscaling
+   Properties:
+      AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
+      MetricName: ScheduledJobsCount
+      Namespace: Buildkite
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      AlarmActions: [ { Ref: AgentScaleUpPolicy } ]
+      Dimensions:
+        - Name: Queue
+          Value: { Ref: BuildkiteQueue }
+      ComparisonOperator: GreaterThanThreshold
+
+  AgentUtilizationAlarmLow:
+   Type: AWS::CloudWatch::Alarm
+   Condition: UseAutoscaling
+   Properties:
+      AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
+      MetricName: UnfinishedJobsCount
+      Namespace: Buildkite
+      Statistic: Maximum
+      Period: { Ref: ScaleDownPeriod }
+      EvaluationPeriods: 1
+      Threshold: 0
+      AlarmActions: [ { Ref: AgentScaleDownPolicy } ]
+      Dimensions:
+        - Name: Queue
+          Value: { Ref: BuildkiteQueue }
+      ComparisonOperator: LessThanOrEqualToThreshold
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: CreateMetricsStack
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+
+  LambdaExecutionPolicy:
+    DependsOn: LambdaExecutionRole
+    Type: AWS::IAM::Policy
+    Condition: CreateMetricsStack
+    Properties:
+      PolicyName: AccessToCloudwatchForBuildkiteMetrics
+      Roles:
+      - { Ref: LambdaExecutionRole }
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          - cloudwatch:PutMetricData
+          Resource:
+          - "*"
+
+  BuildkiteMetricsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn:
+    - LambdaExecutionRole
+    - LambdaExecutionPolicy
+    Condition: CreateMetricsStack
+    Properties:
+      Code:
+        S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, { Ref: 'AWS::Region' }, 'Bucket'] }
+        S3Key: "buildkite-metrics-v3.0.0-lambda.zip"
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Timeout: 120
+      Handler: handler.handle
+      Runtime: python2.7
+      MemorySize: 128
+      Environment:
+        Variables:
+          BUILDKITE_AGENT_TOKEN: { Ref: BuildkiteAgentToken }
+          BUILDKITE_QUEUE: { Ref: BuildkiteQueue }
+          AWS_STACK_ID: { Ref: "AWS::StackId" }
+          AWS_STACK_NAME: { Ref: "AWS::StackName" }
+          AWS_ACCOUNT_ID: { Ref: "AWS::AccountId" }
+
+  ScheduledRule:
+    Type: "AWS::Events::Rule"
+    Condition: CreateMetricsStack
+    Properties:
+      Description: "ScheduledRule"
+      ScheduleExpression: "rate(1 minute)"
+      State: "ENABLED"
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - "BuildkiteMetricsFunction"
+              - "Arn"
+          Id: "TargetBuildkiteMetricsFunction"
+
+  PermissionForEventsToInvokeLambda:
+    Type: "AWS::Lambda::Permission"
+    Condition: CreateMetricsStack
+    Properties:
+      FunctionName: { Ref: BuildkiteMetricsFunction }
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "ScheduledRule"
+          - "Arn"
