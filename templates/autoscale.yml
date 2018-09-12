@@ -1,4 +1,3 @@
-
 Resources:
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -51,3 +50,79 @@ Resources:
         - Name: Queue
           Value: { Ref: BuildkiteQueue }
       ComparisonOperator: LessThanOrEqualToThreshold
+
+  ScalerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: UseLambdaScaler
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: AccessToCloudwatchLogsForScalerLambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource:
+                - "*"
+            - Effect: Allow
+              Action:
+                - autoscaling:SetDesiredCapacity
+              Resource:
+                - !Ref AgentAutoScaleGroup
+
+  ScalerFunction:
+    Type: AWS::Lambda::Function
+    Condition: UseLambdaScaler
+    DependsOn:
+    - ScalerLambdaExecutionRole
+    Properties:
+      Code:
+        S3Bucket: { 'Fn::FindInMap': [LambdaBucket, { Ref: 'AWS::Region' }, 'Bucket'] }
+        S3Key: "buildkite-agent-scaler/v0.1.0/handler.zip"
+      Role: !GetAtt ScalerLambdaExecutionRole.Arn
+      Timeout: 120
+      Handler: handler.Handle
+      Runtime: python2.7
+      MemorySize: 128
+      Environment:
+        Variables:
+          BUILDKITE_TOKEN: !Ref BuildkiteAgentToken
+          BUILDKITE_QUEUE: !Ref BuildkiteQueue
+          BUILDKITE_ASG_NAME: !Ref AgentAutoScaleGroup
+          BUILDKITE_AGENTS_PER_INSTANCE: !Ref AgentsPerInstance
+
+  ScalerScheduledRule:
+    Type: "AWS::Events::Rule"
+    Condition: UseLambdaScaler
+    Properties:
+      Description: "ScheduledRule"
+      ScheduleExpression: "rate(1 minute)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt ScalerFunction.Arn
+          Id: "TargetScalerFunction"
+
+  ScalerPermissionForEventsToInvokeLambda:
+    Type: "AWS::Lambda::Permission"
+    Condition: UseLambdaScaler
+    Properties:
+      FunctionName: { Ref: ScalerFunction }
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt ScalerScheduledRule.Arn
+
