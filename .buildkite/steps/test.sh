@@ -70,6 +70,7 @@ EOF
 
 version=$(git describe --tags --candidates=1)
 
+mkdir -p build/
 cat << EOF > build/mappings.yml
 Mappings:
   AWSRegion2AMI:
