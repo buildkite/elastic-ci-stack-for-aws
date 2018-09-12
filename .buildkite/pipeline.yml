@@ -27,9 +27,7 @@ steps:
     command: .buildkite/steps/test.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths:
-      - "build/*.json"
-      - "build/*.yml"
+    artifact_paths: "build/aws-stack.yml"
 
   - wait
   - name: ":buildkite: Instance test"
@@ -51,7 +49,6 @@ steps:
     command: .buildkite/steps/publish.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
     concurrency_group: "aws-stack-publish"
     concurrency: 1
 
