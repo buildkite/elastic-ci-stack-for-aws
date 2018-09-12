@@ -83,7 +83,7 @@ echo "--- :cloudformation: Validating"
 make validate
 
 echo "--- :cloudformation: Creating stack ${AWS_STACK_NAME}"
-make create-stack STACK_NAME=$AWS_STACK_NAME
+make create-stack "STACK_NAME=$AWS_STACK_NAME"
 
 echo "+++ :cloudformation: ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${AWS_STACK_NAME}"
