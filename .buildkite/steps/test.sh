@@ -71,10 +71,11 @@ EOF
 version=$(git describe --tags --candidates=1)
 
 mkdir -p build/
+touch packer.output
 cat << EOF > build/mappings.yml
 Mappings:
   AWSRegion2AMI:
-    us-east-1     : { AMI: $image_id }
+    $AWS_REGION     : { AMI: $image_id }
 EOF
 
 make build validate
