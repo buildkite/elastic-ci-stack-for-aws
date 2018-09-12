@@ -68,8 +68,6 @@ cat << EOF > config.json
 ]
 EOF
 
-version=$(git describe --tags --candidates=1)
-
 mkdir -p build/
 touch packer.output
 cat << EOF > build/mappings.yml
@@ -78,8 +76,14 @@ Mappings:
     $AWS_REGION     : { AMI: $image_id }
 EOF
 
-echo "--- :cloudformation: Creating stack ${AWS_STACK_NAME} ($version)"
-make build validate create-stack "AWS_STACK_NAME=$AWS_STACK_NAME"
+echo "--- :cloudformation: Building"
+make build
+
+echo "--- :cloudformation: Validating"
+make validate
+
+echo "--- :cloudformation: Creating stack ${AWS_STACK_NAME}"
+make create-stack STACK_NAME=$AWS_STACK_NAME
 
 echo "+++ :cloudformation: ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${AWS_STACK_NAME}"

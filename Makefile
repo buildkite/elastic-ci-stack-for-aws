@@ -11,6 +11,13 @@ clean:
 	-rm -f build/*
 	-rm packer.output
 
+# Check for specific environment variables
+env-%:
+	@ if [ "${${*}}" = "" ]; then \
+		echo "Environment variable $* not set"; \
+		exit 1; \
+	fi
+
 # -----------------------------------------
 # Template creation
 
@@ -41,7 +48,7 @@ packer.output: $(PACKER_FILES)
 		hashicorp/packer:1.0.4 build buildkite-ami.json | tee packer.output
 
 # Create a mappings.yml file for the ami produced by packer
-build/mappings.yml: packer.output
+build/mappings.yml: packer.output env-AWS_REGION
 	mkdir -p build/
 	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { AMI: %s }\n" \
 		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" packer.output | cut -d' ' -f2) > build/mappings.yml
@@ -54,7 +61,7 @@ TEMPLATE = aws-stack.yml
 config.json:
 	cp config.json.example config.json
 
-create-stack: build/aws-stack.yml
+create-stack: build/aws-stack.yml env-STACK_NAME
 	aws cloudformation create-stack \
 		--output text \
 		--stack-name $(STACK_NAME) \
@@ -63,7 +70,7 @@ create-stack: build/aws-stack.yml
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
 		--parameters "$$(cat config.json)"
 
-update-stack: build/aws-stack.yml
+update-stack: build/aws-stack.yml env-STACK_NAME
 	aws cloudformation update-stack \
 		--output text \
 		--stack-name $(STACK_NAME) \
@@ -76,7 +83,7 @@ update-stack: build/aws-stack.yml
 
 validate: build/aws-stack.yml
 	aws cloudformation validate-template \
-		--output table \
+		--output text \
 		--template-body "file://$(PWD)/build/aws-stack.yml"
 
 generate-toc:
