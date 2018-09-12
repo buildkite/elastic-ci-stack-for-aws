@@ -76,7 +76,7 @@ IMAGES=(
 source_image_id="${1:-}"
 source_region="${AWS_REGION}"
 mapping_file="templates/mappings.yml"
-s3_mappings_cache="s3://${BUILDKITE_AWS_STACK_BUCKET}/mappings-${image_id}-${BUILDKITE_BRANCH}.yml"
+s3_mappings_cache="s3://${BUILDKITE_AWS_STACK_BUCKET}/mappings-${source_image_id}-${BUILDKITE_BRANCH}.yml"
 
 # Read the source_image_id from meta-data if empty
 if [[ -z "$source_image_id" ]] ; then
