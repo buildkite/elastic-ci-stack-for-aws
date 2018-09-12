@@ -51,6 +51,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     concurrency_group: "aws-stack-publish"
     concurrency: 1
+    artifact_paths: "build/*.yml"
 
   - wait
   - name: "Cleanup"
