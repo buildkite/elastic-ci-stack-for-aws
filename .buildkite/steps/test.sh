@@ -68,22 +68,14 @@ cat << EOF > config.json
 ]
 EOF
 
-mkdir -p build/
-touch packer.output
-cat << EOF > build/mappings.yml
-Mappings:
-  AWSRegion2AMI:
-    $AWS_REGION     : { AMI: $image_id }
-EOF
+echo "--- Building templates"
+make mappings-for-image build "IMAGE_ID=$image_id"
 
-echo "--- :cloudformation: Building"
-make build
-
-echo "--- :cloudformation: Validating"
+echo "--- Validating templates"
 make validate
 
-echo "--- :cloudformation: Creating stack ${AWS_STACK_NAME}"
+echo "--- Creating stack ${AWS_STACK_NAME}"
 make create-stack "STACK_NAME=$AWS_STACK_NAME"
 
-echo "+++ :cloudformation: ⌛️ Waiting for update to complete"
+echo "+++ ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${AWS_STACK_NAME}"

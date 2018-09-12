@@ -21,6 +21,11 @@ env-%:
 # -----------------------------------------
 # Template creation
 
+mappings-for-image: env-AWS_REGION env-IMAGE_ID
+	mkdir -p build/
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { AMI: %s }\n" \
+		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
+
 build: build/aws-stack.yml
 
 build/aws-stack.yml: templates/aws-stack.yml build/mappings.yml
@@ -31,7 +36,10 @@ build/aws-stack.yml: templates/aws-stack.yml build/mappings.yml
 # AMI creation with Packer
 
 # Use packer to create an AMI
-packer: packer.output
+packer: packer.output env-AWS_REGION
+	mkdir -p build/
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { AMI: %s }\n" \
+		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" packer.output | cut -d' ' -f2) > build/mappings.yml
 
 # Use packer to create an AMI and write the output to packer.output
 packer.output: $(PACKER_FILES)
@@ -46,12 +54,6 @@ packer.output: $(PACKER_FILES)
 		--rm \
 		-w /src/packer \
 		hashicorp/packer:1.0.4 build buildkite-ami.json | tee packer.output
-
-# Create a mappings.yml file for the ami produced by packer
-build/mappings.yml: packer.output env-AWS_REGION
-	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" packer.output | cut -d' ' -f2) > build/mappings.yml
 
 # -----------------------------------------
 # Cloudformation helpers
