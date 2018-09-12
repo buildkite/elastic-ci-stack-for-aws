@@ -78,16 +78,8 @@ Mappings:
     $AWS_REGION     : { AMI: $image_id }
 EOF
 
-make build validate
-
 echo "--- :cloudformation: Creating stack ${AWS_STACK_NAME} ($version)"
-aws cloudformation create-stack \
-  --output text \
-  --stack-name "${AWS_STACK_NAME}" \
-  --disable-rollback \
-  --template-body "file://${PWD}/build/aws-stack.json" \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameters "$(cat config.json)"
+make build validate create-stack "AWS_STACK_NAME=$AWS_STACK_NAME"
 
 echo "+++ :cloudformation: ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${AWS_STACK_NAME}"
