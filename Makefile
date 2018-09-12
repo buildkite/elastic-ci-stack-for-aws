@@ -4,7 +4,7 @@ VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 PACKER_FILES = $(exec find packer/)
 
-all: build
+all: packer build
 
 # Remove any built cloudformation templates and packer output
 clean:
@@ -16,8 +16,8 @@ clean:
 
 build: build/aws-stack.yml
 
-build/aws-stack.yml: templates/aws-stack/template.yml build/mapping.yml
-	sed -e '/AMI Mappings go here/r./build/mapping.yml' templates/aws-stack.yml > build/aws-stack.yml
+build/aws-stack.yml: templates/aws-stack.yml build/mappings.yml
+	awk '{if($$0=="  \# build/mappings.yml"){system("grep -v Mappings: build/mappings.yml")}else{print}}' templates/aws-stack.yml > build/aws-stack.yml
 	sed -i '' "3 s/%v/$(VERSION)/" build/aws-stack.yml
 
 # -----------------------------------------
@@ -40,11 +40,11 @@ packer.output: $(PACKER_FILES)
 		-w /src/packer \
 		hashicorp/packer:1.0.4 build buildkite-ami.json | tee packer.output
 
-# Create a mapping.yml file for the ami produced by packer
-build/mapping.yml: packer.output
+# Create a mappings.yml file for the ami produced by packer
+build/mappings.yml: packer.output
 	mkdir -p build/
 	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" packer.output | cut -d' ' -f2) > build/mapping.yml
+		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" packer.output | cut -d' ' -f2) > build/mappings.yml
 
 # -----------------------------------------
 # Cloudformation helpers

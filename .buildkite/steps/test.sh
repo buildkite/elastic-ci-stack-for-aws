@@ -70,7 +70,7 @@ EOF
 
 version=$(git describe --tags --candidates=1)
 
-cat << EOF > templates/mappings.yml
+cat << EOF > build/mappings.yml
 Mappings:
   AWSRegion2AMI:
     us-east-1     : { AMI: $image_id }

@@ -44,14 +44,14 @@ steps:
     command: .buildkite/steps/copy.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "templates/mappings.yml"
+    artifact_paths: "build/mappings.yml"
 
   - wait
   - name: ":cloudformation: :rocket:"
     command: .buildkite/steps/publish.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "templates/mappings.yml;build/aws-stack.json;build/aws-stack.yml"
+    artifact_paths: "build/aws-stack.yml"
     concurrency_group: "aws-stack-publish"
     concurrency: 1
 

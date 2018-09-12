@@ -384,7 +384,7 @@ Mappings:
     ap-south-1 : { Bucket: "buildkite-metrics-ap-south-1" }
     sa-east-1 : { Bucket: "buildkite-metrics-sa-east-1" }
 
-  AWSRegion2AMI: {}
+  # build/mappings.yml
 
 Resources:
   Vpc:

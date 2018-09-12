@@ -19,8 +19,8 @@ packer_file="${packer_hash}.packer"
 
 # Only build packer image if one with the same hash doesn't exist
 if ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
-  make build-ami | tee "$packer_file"
-  aws s3 cp "${packer_file}" "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}"
+  make packer
+  aws s3 cp packer.output "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}"
 else
   echo "Skipping packer build, no changes"
 fi

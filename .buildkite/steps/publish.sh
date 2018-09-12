@@ -12,8 +12,7 @@ is_release_candidate_tag() {
 s3_upload_templates() {
   local bucket_prefix="${1:-}"
 
-  aws s3 cp --acl public-read templates/mappings.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}mappings.yml"
-  aws s3 cp --acl public-read build/aws-stack.json "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}aws-stack.json"
+  aws s3 cp --acl public-read build/mappings.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}mappings.yml"
   aws s3 cp --acl public-read build/aws-stack.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}aws-stack.yml"
 }
 
@@ -23,7 +22,8 @@ if [[ -z "${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}" ]] ; then
 fi
 
 echo "--- Downloading mappings.yml artifact"
-buildkite-agent artifact download templates/mappings.yml templates/
+mkdir -p build/
+buildkite-agent artifact download build/mappings.yml build/
 
 echo "--- Fetching latest git tags"
 git fetch --tags
