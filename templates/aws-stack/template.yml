@@ -1,0 +1,318 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite Elastic CI Stack - %v"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Buildkite Configuration
+        Parameters:
+        - BuildkiteAgentRelease
+        - BuildkiteAgentToken
+        - BuildkiteAgentTags
+        - BuildkiteQueue
+        - BuildkiteAgentExperiments
+
+      - Label:
+          default: Instance Configuration
+        Parameters:
+        - InstanceType
+        - AgentsPerInstance
+        - KeyName
+        - SpotPrice
+        - SecretsBucket
+        - ArtifactsBucket
+        - AuthorizedUsersUrl
+        - BootstrapScriptUrl
+        - RootVolumeSize
+        - AssociatePublicIpAddress
+        - ManagedPolicyARN
+        - InstanceRoleName
+
+      - Label:
+          default: Auto-scaling Configuration
+        Parameters:
+        - MinSize
+        - MaxSize
+        - ScaleUpAdjustment
+        - ScaleDownAdjustment
+        - ScaleDownPeriod
+
+      - Label:
+          default: Cost Allocation Configuration
+        Parameters:
+        - EnableCostAllocationTags
+        - CostAllocationTagName
+        - CostAllocationTagValue
+
+      - Label:
+          default: Docker Daemon Configuration
+        Parameters:
+        - EnableDockerUserNamespaceRemap
+
+      - Label:
+          default: Docker Registry Configuration
+        Parameters:
+        - ECRAccessPolicy
+
+      - Label:
+          default: Plugin Configuration
+        Parameters:
+        - EnableSecretsPlugin
+        - EnableECRPlugin
+        - EnableDockerLoginPlugin
+
+# AMI Mappings go here
+
+Parameters:
+  KeyName:
+    Description: Optional - SSH keypair used to access the buildkite instances, setting this will enable SSH ingress
+    Type: String
+    Default: ""
+
+  BuildkiteAgentRelease:
+    Type: String
+    AllowedValues:
+      - stable
+      - beta
+      - edge
+    Default: "stable"
+
+  BuildkiteAgentToken:
+    Description: Buildkite agent registration token
+    Type: String
+    NoEcho: true
+    MinLength: 1
+
+  BuildkiteAgentTags:
+    Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
+    Type: String
+    Default: ""
+
+  BuildkiteAgentExperiments:
+    Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/master/EXPERIMENTS.md.
+    Type: String
+    Default: ""
+
+  BuildkiteQueue:
+    Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}"
+    Type: String
+    Default: default
+    MinLength: 1
+
+  AgentsPerInstance:
+    Description: Number of Buildkite agents to run on each instance
+    Type: Number
+    Default: 1
+    MinValue: 1
+
+  SecretsBucket:
+    Description: Optional - Name of an existing S3 bucket containing pipeline secrets (Created if left blank)
+    Type: String
+    Default: ""
+
+  ArtifactsBucket:
+    Description: Optional - Name of an existing S3 bucket for build artifact storage
+    Type: String
+    Default: ""
+
+  BootstrapScriptUrl:
+    Description: Optional - HTTPS or S3 URL to run on each instance during boot
+    Type: String
+    Default: ""
+
+  AuthorizedUsersUrl:
+    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress
+    Type: String
+    Default: ""
+
+  AvailabilityZones:
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+    Description: The Availability Zones to use (must be exactly two).
+    MinLength: 5
+
+  InstanceType:
+    Description: Instance type
+    Type: String
+    Default: t2.nano
+    MinLength: 1
+
+  SpotPrice:
+    Description: Spot bid price to use for the instances. 0 means normal (non-spot) instances
+    Type: String
+    Default: 0
+
+  MaxSize:
+    Description: Maximum number of instances
+    Type: Number
+    Default: 10
+    MinValue: 1
+
+  MinSize:
+    Description: Minimum number of instances
+    Type: Number
+    Default: 0
+
+  ScaleUpAdjustment:
+    Description: Number of instances to add on scale up events (ScheduledJobsCount > 0 for 1 min)
+    Type: Number
+    Default: 5
+    MinValue: 0
+
+  ScaleDownAdjustment:
+    Description: Number of instances to remove on scale down events (UnfinishedJobs == 0 for ScaleDownPeriod)
+    Type: Number
+    Default: -1
+    MaxValue: 0
+
+  ScaleDownPeriod:
+    Description: Number of seconds UnfinishedJobs must equal 0 before scale down
+    Type: Number
+    Default: 1800
+
+  RootVolumeSize:
+    Description: Size of each instance's root EBS volume (in GB)
+    Type: Number
+    Default: 250
+    MinValue: 10
+
+  SecurityGroupId:
+    Type: String
+    Description: Optional - Security group id to assign to instances
+    Default: ""
+
+  ManagedPolicyARN:
+    Type: CommaDelimitedList
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
+    Default: ""
+
+  InstanceRoleName:
+    Type: String
+    Description: Optional - A name for the IAM Role attached to the Instance Profile
+    Default: ""
+
+  ECRAccessPolicy:
+    Type: String
+    Description: ECR access policy to give container instances
+    AllowedValues:
+      - none
+      - readonly
+      - poweruser
+      - full
+    Default: "none"
+
+  AssociatePublicIpAddress:
+    Type: String
+    Description: Associate instances with public IP addresses
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
+  EnableSecretsPlugin:
+    Type: String
+    Description: Enables s3-secrets plugin for all pipelines
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
+  EnableECRPlugin:
+    Type: String
+    Description: Enables ecr plugin for all pipelines
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
+  EnableDockerLoginPlugin:
+    Type: String
+    Description: Enables docker-login plugin for all pipelines
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
+  EnableDockerUserNamespaceRemap:
+    Type: String
+    Description: Enables Docker user namespace remapping so docker runs as buildkite-agent
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
+  EnableCostAllocationTags:
+    Type: String
+    Description: Enables AWS Cost Allocation tags for all resources in the stack. See https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  CostAllocationTagName:
+    Type: String
+    Description: The name of the Cost Allocation Tag used for billing purposes
+    Default: "aws:createdBy"
+
+  CostAllocationTagValue:
+    Type: String
+    Description: The value of the Cost Allocation Tag used for billing purposes
+    Default: "buildkite-elastic-ci-stack-for-aws"
+
+Resources:
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: "%S3_URL/vpc.yml"
+      Parameters:
+        AvailabilityZones: !Join [",", !Ref AvailabilityZones]
+
+  AgentStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: MetricsStack
+    Properties:
+      TemplateURL: "%S3_URL/agent.yml"
+      Parameters:
+        BuildkiteAgentRelease: !Ref BuildkiteAgentRelease
+        BuildkiteAgentToken: !Ref BuildkiteAgentToken
+        BuildkiteAgentTags: !Ref BuildkiteAgentTags
+        BuildkiteQueue: !Ref BuildkiteQueue
+        BuildkiteAgentExperiments: !Ref BuildkiteAgentExperiments
+        VpcId: !GetAtt [VpcStack, Outputs.VpcId]
+        Subnets: !GetAtt [VpcStack, Outputs.PublicSubnets]
+        SecurityGroupId: !Ref SecurityGroupId
+        AssociatePublicIpAddress: !Ref AssociatePublicIpAddress
+        InstanceType: !Ref InstanceType
+        AgentsPerInstance: !Ref AgentsPerInstance
+        KeyName: !Ref KeyName
+        SpotPrice: !Ref SpotPrice
+        SecretsBucket: !Ref SecretsBucket
+        ArtifactsBucket: !Ref ArtifactsBucket
+        AuthorizedUsersUrl: !Ref AuthorizedUsersUrl
+        BootstrapScriptUrl: !Ref BootstrapScriptUrl
+        RootVolumeSize: !Ref RootVolumeSize
+        ManagedPolicyARN: !Join [",", !Ref ManagedPolicyARN]
+        InstanceRoleName: !Ref InstanceRoleName
+        ImageId: !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI']
+        MinSize: !Ref MinSize
+        MaxSize: !Ref MaxSize
+        ScaleUpAdjustment: !Ref ScaleUpAdjustment
+        ScaleDownAdjustment: !Ref ScaleDownAdjustment
+        ScaleDownPeriod: !Ref ScaleDownPeriod
+        EnableCostAllocationTags: !Ref EnableCostAllocationTags
+        CostAllocationTagName: !Ref CostAllocationTagName
+        CostAllocationTagValue: !Ref CostAllocationTagValue
+        EnableDockerUserNamespaceRemap: !Ref EnableDockerUserNamespaceRemap
+        ECRAccessPolicy: !Ref ECRAccessPolicy
+        EnableSecretsPlugin: !Ref EnableSecretsPlugin
+        EnableECRPlugin: !Ref EnableECRPlugin
+        EnableDockerLoginPlugin: !Ref EnableDockerLoginPlugin
+
+  MetricsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: "%S3_URL/metrics.yml"
+      Parameters:
+        BuildkiteAgentToken: !Ref BuildkiteAgentToken
+        BuildkiteQueue: !Ref BuildkiteQueue
