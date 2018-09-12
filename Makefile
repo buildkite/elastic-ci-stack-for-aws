@@ -69,7 +69,7 @@ build/mapping.yml: packer.output
 # Upload to S3
 
 upload: $(TEMPLATES)
-	aws s3 sync --acl "$(S3_ACL)" build s3://$(S3_BUCKET)/$(S3_BUCKET_PREFIX)/
+	aws s3 sync --acl "$(S3_ACL)" build/ s3://$(S3_BUCKET)/$(S3_BUCKET_PREFIX)/
 
 # -----------------------------------------
 # Cloudformation helpers

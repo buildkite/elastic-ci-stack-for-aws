@@ -52,7 +52,7 @@ Resources:
     Properties:
       PolicyName: AccessToCloudwatchForBuildkiteMetrics
       Roles:
-      - { Ref: LambdaExecutionRole }
+      - !Ref LambdaExecutionRole
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -72,7 +72,7 @@ Resources:
     - LambdaExecutionPolicy
     Properties:
       Code:
-        S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, { Ref: 'AWS::Region' }, 'Bucket'] }
+        S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
         S3Key: "buildkite-metrics-v3.0.0-lambda.zip"
       Role:
         Fn::GetAtt:
@@ -84,11 +84,11 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          BUILDKITE_AGENT_TOKEN: { Ref: BuildkiteAgentToken }
-          BUILDKITE_QUEUE: { Ref: BuildkiteQueue }
-          AWS_STACK_ID: { Ref: "AWS::StackId" }
-          AWS_STACK_NAME: { Ref: "AWS::StackName" }
-          AWS_ACCOUNT_ID: { Ref: "AWS::AccountId" }
+          BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
+          BUILDKITE_QUEUE: !Ref BuildkiteQueue
+          AWS_STACK_ID: !Ref "AWS::StackId"
+          AWS_STACK_NAME: !Ref "AWS::StackName"
+          AWS_ACCOUNT_ID: !Ref "AWS::AccountId"
 
   ScheduledRule:
     Type: "AWS::Events::Rule"
@@ -106,7 +106,7 @@ Resources:
   PermissionForEventsToInvokeLambda:
     Type: "AWS::Lambda::Permission"
     Properties:
-      FunctionName: { Ref: BuildkiteMetricsFunction }
+      FunctionName: !Ref BuildkiteMetricsFunction
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn:

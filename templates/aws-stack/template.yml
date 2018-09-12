@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Buildkite Elastic CI Stack %v"
+Description: "Buildkite Elastic CI Stack - %v"
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -292,7 +292,7 @@ Resources:
         AuthorizedUsersUrl: !Ref AuthorizedUsersUrl
         BootstrapScriptUrl: !Ref BootstrapScriptUrl
         RootVolumeSize: !Ref RootVolumeSize
-        ManagedPolicyARN: !Ref ManagedPolicyARN
+        ManagedPolicyARN: !Join [",", !Ref ManagedPolicyARN]
         InstanceRoleName: !Ref InstanceRoleName
         ImageId: !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI']
         MinSize: !Ref MinSize

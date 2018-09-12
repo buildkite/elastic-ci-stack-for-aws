@@ -150,7 +150,7 @@ Parameters:
     MinLength: 1
 
   ImageId:
-    Type: String
+    Type: AWS::EC2::Image::Id
     Description: Custom AMI to use for instances (must be based on the stack's AMI)
 
   SpotPrice:
@@ -226,48 +226,48 @@ Parameters:
     Type: String
     Description: Associate instances with public IP addresses
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableSecretsPlugin:
     Type: String
     Description: Enables s3-secrets plugin for all pipelines
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableECRPlugin:
     Type: String
     Description: Enables ecr plugin for all pipelines
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableDockerLoginPlugin:
     Type: String
     Description: Enables docker-login plugin for all pipelines
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableDockerUserNamespaceRemap:
     Type: String
     Description: Enables Docker user namespace remapping so docker runs as buildkite-agent
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "true"
 
   EnableCostAllocationTags:
     Type: String
     Description: Enables AWS Cost Allocation tags for all resources in the stack. See https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
     Default: "false"
 
   CostAllocationTagName:
@@ -282,52 +282,49 @@ Parameters:
 
 Conditions:
     UseSpotInstances:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: SpotPrice }, 0 ] ]
+      !Not [ !Equals [ !Ref SpotPrice, 0 ] ]
 
     CreateSecurityGroup:
-      "Fn::Equals": [ { Ref: SecurityGroupId }, "" ]
+      !Equals [ !Ref SecurityGroupId, "" ]
 
     CreateSecretsBucket:
-      "Fn::Equals": [ { Ref: SecretsBucket }, "" ]
+      !Equals [ !Ref SecretsBucket, "" ]
 
     SetInstanceRoleName:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: InstanceRoleName }, "" ] ]
+      !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
 
     UseSpecifiedSecretsBucket:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: SecretsBucket }, "" ] ]
+      !Not [ !Equals [ !Ref SecretsBucket, "" ] ]
 
     UseArtifactsBucket:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: ArtifactsBucket }, "" ] ]
-
-    UseDefaultAMI:
-      "Fn::Equals": [ { Ref: ImageId }, "" ]
+      !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
 
     UseManagedPolicyARN:
-      "Fn::Not": [ "Fn::Equals": [ "Fn::Join": [ "", { Ref: ManagedPolicyARN } ], "" ] ]
+      !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
 
     UseECR:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: ECRAccessPolicy }, "none" ] ]
+      !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
 
     UseAutoscaling:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: MaxSize }, { Ref: MinSize } ] ]
+      !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
 
     UseCostAllocationTags:
-      "Fn::Equals": [ { Ref: EnableCostAllocationTags }, "true" ]
+      !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
     HasKeyName:
-      "Fn::Not": [ "Fn::Equals": [ { Ref: KeyName }, "" ] ]
+      !Not [ !Equals [ !Ref KeyName, "" ] ]
 
     EnableSshIngress:
-      "Fn::And":
+      !And
         - { Condition : CreateSecurityGroup }
         # Enable ingress if a key can be specified another way
-        - "Fn::Or":
+        - !Or
           - { Condition: HasKeyName }
-          - "Fn::Not": [ "Fn::Equals": [ { Ref: AuthorizedUsersUrl }, "" ] ]
+          - !Not [ !Equals [ !Ref AuthorizedUsersUrl, "" ] ]
 
     # Whether or not there's any managed polices to attach
     HasManagedPolicies:
-      "Fn::Or": [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
+      !Or [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
 
 Mappings:
   ECRManagedPolicy:
@@ -342,12 +339,12 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
-      Roles: [ { Ref: IAMRole } ]
+      Roles: [ !Ref IAMRole ]
 
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: { "Fn::If": [ SetInstanceRoleName, { Ref: InstanceRoleName }, { "Fn::Sub": "${AWS::StackName}-Role" } ] }
+      RoleName: { !If [ SetInstanceRoleName, !Ref InstanceRoleName, { !Sub "${AWS::StackName}-Role" } ] }
       ManagedPolicyArns: !If
           - HasManagedPolicies
           # Support multiple policies to attach by merging the values together and splitting on ','
@@ -356,16 +353,16 @@ Resources:
             # Join will skip over AWS::NoValue values
             - !Join
              - ','
-             - - "Fn::If":
+             - - !If
                  - UseECR
-                 - { "Fn::FindInMap": [ ECRManagedPolicy, { Ref: ECRAccessPolicy }, 'Policy' ] }
-                 - { Ref: 'AWS::NoValue' }
+                 - { !FindInMap [ ECRManagedPolicy, !Ref ECRAccessPolicy, 'Policy' ] }
+                 - !Ref 'AWS::NoValue'
                # This may support multiple values of its own (separated by commas)
-               - "Fn::If":
+               - !If
                  - UseManagedPolicyARN
-                 - !Join [ ',', { Ref: ManagedPolicyARN } ]
-                 - { Ref: 'AWS::NoValue' }
-          - { Ref: 'AWS::NoValue' }
+                 - !Join [ ',', !Ref ManagedPolicyARN ]
+                 - !Ref 'AWS::NoValue'
+          - !Ref 'AWS::NoValue'
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -405,7 +402,7 @@ Resources:
               - sns:Subscribe
             Resource: "*"
       Roles:
-        - { Ref: IAMRole }
+        - !Ref IAMRole
 
   ManagedSecretsLoggingBucket:
     Type: AWS::S3::Bucket
@@ -420,7 +417,7 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       LoggingConfiguration:
-        DestinationBucketName: { Ref: ManagedSecretsLoggingBucket }
+        DestinationBucketName: !Ref ManagedSecretsLoggingBucket
       VersioningConfiguration:
         Status: Enabled
 
@@ -437,10 +434,10 @@ Resources:
               - s3:Get
               - s3:List*
             Resource:
-              - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}/*" }
-              - { "Fn::Sub": "arn:aws:s3:::${ManagedSecretsBucket}" }
+              - { !Sub "arn:aws:s3:::${ManagedSecretsBucket}/*" }
+              - { !Sub "arn:aws:s3:::${ManagedSecretsBucket}" }
       Roles:
-        - { Ref: IAMRole }
+        - !Ref IAMRole
 
   UnmanagedSecretsBucketPolicy:
     Type: AWS::IAM::Policy
@@ -455,10 +452,10 @@ Resources:
               - s3:Get
               - s3:List*
             Resource:
-              - { "Fn::Sub": "arn:aws:s3:::${SecretsBucket}/*" }
-              - { "Fn::Sub": "arn:aws:s3:::${SecretsBucket}" }
+              - { !Sub "arn:aws:s3:::${SecretsBucket}/*" }
+              - { !Sub "arn:aws:s3:::${SecretsBucket}" }
       Roles:
-        - { Ref: IAMRole }
+        - !Ref IAMRole
 
   ArtifactsBucketPolicies:
     Type: AWS::IAM::Policy
@@ -473,66 +470,63 @@ Resources:
               - s3:List*
               - s3:Get*
             Resource:
-              - { "Fn::Sub": "arn:aws:s3:::${ArtifactsBucket}/*" }
-              - {"Fn::Sub": "arn:aws:s3:::${ArtifactsBucket}" }
+              - { !Sub "arn:aws:s3:::${ArtifactsBucket}/*" }
+              - {!Sub "arn:aws:s3:::${ArtifactsBucket}" }
       Roles:
-        - { Ref: IAMRole }
+        - !Ref IAMRole
 
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
-      SecurityGroups: [ "Fn::If": [ "CreateSecurityGroup", { Ref: SecurityGroup }, { Ref: SecurityGroupId } ] ]
-      KeyName: { "Fn::If": [ "HasKeyName", { Ref: KeyName }, { Ref: 'AWS::NoValue' } ] }
-      IamInstanceProfile: { Ref: IAMInstanceProfile }
-      InstanceType: { Ref: InstanceType }
-      SpotPrice:
-        { "Fn::If": [ "UseSpotInstances", { Ref: SpotPrice }, { Ref: 'AWS::NoValue' } ] }
-      ImageId :
-        { "Fn::If": [ "UseDefaultAMI", { "Fn::FindInMap": [ AWSRegion2AMI, { Ref: 'AWS::Region' }, 'AMI'] }, { Ref: ImageId } ] }
+      AssociatePublicIpAddress: !Ref AssociatePublicIpAddress
+      SecurityGroups: [ !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
+      KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue'  ]
+      IamInstanceProfile: !Ref IAMInstanceProfile
+      InstanceType: !Ref InstanceType
+      SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
+      ImageId: !Ref ImageId
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: { Ref: RootVolumeSize }, VolumeType: gp2 }
+          Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: gp2 }
       UserData:
-        "Fn::Base64":
-          "Fn::Sub":
-            - |
-              Content-Type: multipart/mixed; boundary="==BOUNDARY=="
-              MIME-Version: 1.0
-              --==BOUNDARY==
-              Content-Type: text/cloud-boothook; charset="us-ascii"
-              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
-                /usr/local/bin/bk-configure-docker.sh
+        "Fn::Base64": !Sub |
+          - |
+            Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+            MIME-Version: 1.0
+            --==BOUNDARY==
+            Content-Type: text/cloud-boothook; charset="us-ascii"
+            DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+              /usr/local/bin/bk-configure-docker.sh
 
-              --==BOUNDARY==
-              Content-Type: text/x-shellscript; charset="us-ascii"
-              #!/bin/bash -xv
-              BUILDKITE_STACK_NAME="${AWS::StackName}" \
-              BUILDKITE_STACK_VERSION=dev \
-              BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
-              BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
-              BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
-              BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
-              BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
-              BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
-              BUILDKITE_QUEUE="${BuildkiteQueue}" \
-              BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
-              BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
-              BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
-              BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
-              AWS_DEFAULT_REGION=${AWS::Region} \
-              SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
-              ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
-              DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
-              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
-              AWS_REGION=${AWS::Region} \
-                /usr/local/bin/bk-install-elastic-stack.sh
-              --==BOUNDARY==--
-            - LocalSecretsBucket:
-                "Fn::If":
-                  - CreateSecretsBucket
-                  - { Ref: ManagedSecretsBucket }
-                  - { Ref: SecretsBucket }
+            --==BOUNDARY==
+            Content-Type: text/x-shellscript; charset="us-ascii"
+            #!/bin/bash -xv
+            BUILDKITE_STACK_NAME="${AWS::StackName}" \
+            BUILDKITE_STACK_VERSION=dev \
+            BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
+            BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
+            BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+            BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
+            BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
+            BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
+            BUILDKITE_QUEUE="${BuildkiteQueue}" \
+            BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+            BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
+            BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
+            BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
+            AWS_DEFAULT_REGION=${AWS::Region} \
+            SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
+            ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
+            DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
+            DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+            AWS_REGION=${AWS::Region} \
+              /usr/local/bin/bk-install-elastic-stack.sh
+            --==BOUNDARY==--
+          - LocalSecretsBucket:
+              !If
+                - CreateSecretsBucket
+                - !Ref ManagedSecretsBucket
+                - !Ref SecretsBucket
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
@@ -553,26 +547,26 @@ Resources:
               - Effect: Allow
                 Action:
                   - sns:Publish
-                Resource: { Ref: AgentLifecycleTopic }
+                Resource: !Ref AgentLifecycleTopic
       Path: /
 
   AgentLifecycleHook:
     Type: AWS::AutoScaling::LifecycleHook
     Properties:
-      AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
       LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
       DefaultResult: CONTINUE
       HeartbeatTimeout: 120
-      NotificationTargetARN: { Ref: AgentLifecycleTopic }
+      NotificationTargetARN: !Ref AgentLifecycleTopic
       RoleARN: { "Fn::GetAtt" : [ "AgentLifecycleHookRole", "Arn" ] }
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !Ref Subnets
-      LaunchConfigurationName: { Ref: AgentLaunchConfiguration }
-      MinSize: { Ref: MinSize }
-      MaxSize: { Ref: MaxSize }
+      LaunchConfigurationName: !Ref AgentLaunchConfiguration
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
       MetricsCollection:
         - Granularity: 1Minute
           Metrics:
@@ -592,22 +586,22 @@ Resources:
           Value: buildkite-agent
           PropagateAtLaunch: true
         - Key: BuildkiteAgentRelease
-          Value: { Ref: BuildkiteAgentRelease }
+          Value: !Ref BuildkiteAgentRelease
           PropagateAtLaunch: true
         - Key: BuildkiteQueue
-          Value: { Ref: BuildkiteQueue }
+          Value: !Ref BuildkiteQueue
           PropagateAtLaunch: true
-        - "Fn::If":
+        - !If
           - UseCostAllocationTags
-          - Key: { Ref: CostAllocationTagName }
-            Value: { Ref: CostAllocationTagValue }
+          - Key: !Ref CostAllocationTagName
+            Value: !Ref CostAllocationTagValue
             PropagateAtLaunch: true
-          - { Ref: "AWS::NoValue" }
+          - !Ref "AWS::NoValue"
 
     CreationPolicy:
       ResourceSignal:
-        Timeout: { Ref: InstanceCreationTimeout }
-        Count: { Ref: MinSize }
+        Timeout: !Ref InstanceCreationTimeout
+        Count: !Ref MinSize
     UpdatePolicy:
       AutoScalingReplacingUpdate:
         WillReplace: true
@@ -620,7 +614,7 @@ Resources:
       VpcId: !Ref VpcId
       Tags:
       - Key: Name
-        Value: { Ref: 'AWS::StackName' }
+        Value: !Ref 'AWS::StackName'
 
   SecurityGroupSshIngress:
     Condition: EnableSshIngress
@@ -637,18 +631,18 @@ Resources:
     Condition: UseAutoscaling
     Properties:
       AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
-      Cooldown: 300
-      ScalingAdjustment : { Ref: ScaleUpAdjustment }
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      Cooldown: "300"
+      ScalingAdjustment : !Ref ScaleUpAdjustment
 
   AgentScaleDownPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Condition: UseAutoscaling
     Properties:
       AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: { Ref: AgentAutoScaleGroup }
-      Cooldown: 300
-      ScalingAdjustment: { Ref: ScaleDownAdjustment }
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      Cooldown: "300"
+      ScalingAdjustment: !Ref ScaleDownAdjustment
 
   AgentUtilizationAlarmHigh:
    Type: AWS::CloudWatch::Alarm
@@ -661,10 +655,10 @@ Resources:
       Period: 60
       EvaluationPeriods: 1
       Threshold: 0
-      AlarmActions: [ { Ref: AgentScaleUpPolicy } ]
+      AlarmActions: [ !Ref AgentScaleUpPolicy ]
       Dimensions:
         - Name: Queue
-          Value: { Ref: BuildkiteQueue }
+          Value: !Ref BuildkiteQueue
       ComparisonOperator: GreaterThanThreshold
 
   AgentUtilizationAlarmLow:
@@ -675,26 +669,26 @@ Resources:
       MetricName: UnfinishedJobsCount
       Namespace: Buildkite
       Statistic: Maximum
-      Period: { Ref: ScaleDownPeriod }
+      Period: !Ref ScaleDownPeriod
       EvaluationPeriods: 1
       Threshold: 0
-      AlarmActions: [ { Ref: AgentScaleDownPolicy } ]
+      AlarmActions: [ !Ref AgentScaleDownPolicy ]
       Dimensions:
         - Name: Queue
-          Value: { Ref: BuildkiteQueue }
+          Value: !Ref BuildkiteQueue
       ComparisonOperator: LessThanOrEqualToThreshold
 
 Outputs:
   AutoScalingGroupName:
-    Value: { Ref: AgentAutoScaleGroup }
+    Value: !Ref AgentAutoScaleGroup
 
   InstanceRoleName:
-    Value: { Ref: IAMRole }
+    Value: !Ref IAMRole
 
   ManagedSecretsBucket:
     Value:
-      "Fn::If": [CreateSecretsBucket, { Ref: ManagedSecretsBucket }, "" ]
+      !If [CreateSecretsBucket, !Ref ManagedSecretsBucket, "" ]
 
   ManagedSecretsLoggingBucket:
     Value:
-      "Fn::If": [CreateSecretsBucket, { Ref: ManagedSecretsLoggingBucket }, "" ]
+      !If [CreateSecretsBucket, !Ref ManagedSecretsLoggingBucket, "" ]
