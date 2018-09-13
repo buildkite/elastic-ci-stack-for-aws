@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make KeyName optional [#444](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/444) (@zsims)
 - Provide InstanceRoleName as Output [#438](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/438) (@lox)
 
+## [v3.3.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.3.1) (2018-09-13)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.3.0...v3.3.1)
+
+### Fixed
+- Bump lifecycled to v2.1.1 [#488](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/488) (@lox)
+
 ## [v3.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v3.3.0) (2018-09-04)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v3.2.1...v3.3.0)
 
