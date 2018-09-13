@@ -68,24 +68,14 @@ cat << EOF > config.json
 ]
 EOF
 
-version=$(git describe --tags --candidates=1)
+echo "--- Building templates"
+make mappings-for-image build "IMAGE_ID=$image_id"
 
-cat << EOF > templates/mappings.yml
-Mappings:
-  AWSRegion2AMI:
-    us-east-1     : { AMI: $image_id }
-EOF
+echo "--- Validating templates"
+make validate
 
-make build validate
+echo "--- Creating stack ${AWS_STACK_NAME}"
+make create-stack "STACK_NAME=$AWS_STACK_NAME"
 
-echo "--- :cloudformation: Creating stack ${AWS_STACK_NAME} ($version)"
-aws cloudformation create-stack \
-  --output text \
-  --stack-name "${AWS_STACK_NAME}" \
-  --disable-rollback \
-  --template-body "file://${PWD}/build/aws-stack.json" \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameters "$(cat config.json)"
-
-echo "+++ :cloudformation: ⌛️ Waiting for update to complete"
+echo "+++ ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${AWS_STACK_NAME}"

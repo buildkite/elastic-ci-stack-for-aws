@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Copies an AMI to all other regions and outputs a templates/mappings.yml file
+# Copies an AMI to all other regions and outputs a build/mappings.yml file
 # Local Usage: .buildkite/steps/copy.sh <ami_id>
 
 copy_ami_to_region() {
@@ -75,7 +75,7 @@ IMAGES=(
 # Configuration
 source_image_id="${1:-}"
 source_region="${AWS_REGION}"
-mapping_file="templates/mappings.yml"
+mapping_file="build/mappings.yml"
 
 # Read the source_image_id from meta-data if empty
 if [[ -z "$source_image_id" ]] ; then
@@ -85,6 +85,7 @@ fi
 # If we're not on the master branch or a tag build skip the copy
 if [[ $BUILDKITE_BRANCH != "master" ]] && [[ "$BUILDKITE_TAG" != "$BUILDKITE_BRANCH" ]] ; then
   echo "--- Skipping AMI copy on non-master/tag branch " >&2
+  mkdir -p "$(dirname "$mapping_file")"
   cat << EOF > "$mapping_file"
 Mappings:
   AWSRegion2AMI:

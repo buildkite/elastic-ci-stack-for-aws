@@ -49,7 +49,7 @@ Features:
 
 See the [Elastic CI Stack for AWS guide](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, or jump straight in:
 
-[![Launch AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.json)
+[![Launch AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
 
 Current release is ![](https://img.shields.io/github/release/buildkite/elastic-ci-stack-for-aws.svg). See [Releases](https://github.com/buildkite/elastic-ci-stack-for-aws/releases) for older releases, or [Versions](#versions) for development version
 
@@ -61,7 +61,7 @@ If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`conf
 aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
-  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.json" \
+  --template-url "https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml" \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters $(cat config.json)
 ```
@@ -160,11 +160,11 @@ The AWS ECR options are powered by an embedded version of the [ECR plugin](https
 
 ## Versions
 
-We recommend running the latest release, which is available at `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.json`, or on the [releases page](https://github.com/buildkite/elastic-ci-stack-for-aws/releases).
+We recommend running the latest release, which is available at `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.yml`, or on the [releases page](https://github.com/buildkite/elastic-ci-stack-for-aws/releases).
 
-The latest build of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/master/aws-stack.json`, along with a version for each commit in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.json`.
+The latest build of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/master/aws-stack.yml`, along with a version for each commit in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.yml`.
 
-Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.json`.
+Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.yml`.
 
 ## Updating Your Stack
 
