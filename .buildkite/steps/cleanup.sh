@@ -34,7 +34,7 @@ echo "--- Cleaning up resources older than ${cutoff_date}"
 echo "--- Deleting test managed secrets buckets created"
 aws s3api list-buckets \
   --output text \
-  --query "$(printf 'Buckets[?CreationDate<`%s`].Name' "$cutoff_date" )" \
+  --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date" )" \
   | xargs -n1 \
   | grep -E 'buildkite-aws-stack-test-(\d+-)?managedsecrets' \
   | xargs -n1 -t -I% aws s3 rb s3://% --force
@@ -42,7 +42,7 @@ aws s3api list-buckets \
 echo "--- Deleting old cloudformation stacks"
 aws cloudformation describe-stacks \
   --output text \
-  --query "$(printf 'Stacks[?CreationTime<`%s`].StackName' "$cutoff_date" )" \
+  --query "$(printf 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date" )" \
   | xargs -n1 \
   | grep -E 'buildkite-aws-stack-test-\d+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
@@ -50,13 +50,13 @@ aws cloudformation describe-stacks \
 echo "--- Deleting old packer builders"
 aws ec2 describe-instances \
   --filters "Name=tag:Name,Values=Packer Builder" \
-  --query "$(printf 'Reservations[].Instances[?LaunchTime<`%s`].InstanceId' "$cutoff_date")" \
+  --query "$(printf 'Reservations[].Instances[?LaunchTime<`%s`].[InstanceId]' "$cutoff_date")" \
   --output text \
   | xargs -n1 -t -I% aws ec2 terminate-instances --instance-ids "%"
 
 echo "--- Deleting old lambda logs after ${cutoff_date_milli}"
 aws logs describe-log-groups \
   --log-group-name-prefix "/aws/lambda/buildkite-aws-stack-test-" \
-  --query "$(printf 'logGroups[?creationTime<`%s`].logGroupName' "$cutoff_date_milli" )" \
+  --query "$(printf 'logGroups[?creationTime<`%s`].[logGroupName]' "$cutoff_date_milli" )" \
   --output text \
   | xargs -n1 -t -I% aws logs delete-log-group --log-group-name "%"
