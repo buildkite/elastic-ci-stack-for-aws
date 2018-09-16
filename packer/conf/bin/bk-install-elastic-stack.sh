@@ -38,6 +38,10 @@ cwlogs = cwlogs
 region = $AWS_REGION
 EOF
 
+# Start logging daemons as soon as possible to ensure failures in this script get sent
+systemctl start awslogsd
+systemctl start journald-cloudwatch-logs
+
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
@@ -118,8 +122,6 @@ LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
 
 systemctl start lifecycled
-systemctl start awslogsd
-systemctl start journald-cloudwatch-logs
 
 # wait for docker to start
 next_wait_time=0
