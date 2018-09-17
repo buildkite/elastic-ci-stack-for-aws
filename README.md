@@ -37,6 +37,7 @@ Features:
 - [Updating Your Stack](#updating-your-stack)
 - [CloudWatch Metrics](#cloudwatch-metrics)
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
+- [Customizing Instances with a Bootstrap Script](#customizing-instances-with-a-bootstrap-script)
 - [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
 - [Security](#security)
 - [Development](#development)
@@ -192,6 +193,10 @@ Each instance streams both system messages and Buildkite Agent logs to CloudWatc
 Within each stream the logs are grouped by instance id.
 
 To debug an agent first find the instance id from the agent in Buildkite, head to your [CloudWatch Logs Dashboard](https://console.aws.amazon.com/cloudwatch/home?#logs:), choose either the system or Buildkite Agent log group, and then search for the instance id in the list of log streams.
+
+# Customizing Instances with a Bootstrap Script
+
+You can customize your stack’s instances by using the `BootstrapScriptUrl` stack parameter to run a bash script on instance boot. To set up a bootstrap script, create an S3 bucket, upload the script, and set the parameter to point to that script. For example, if the bucket was named `myorg-buildkite-elastic-stack-bootstrap` and the script was named `bootstrap.sh` then the `BootstrapScriptUrl` stack parameter should be set to `s3://myorg-buildkite-elastic-stack-bootstrap/bootstrap.sh`.
 
 ## Optimizing for Slow Docker Builds
 
