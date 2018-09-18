@@ -196,7 +196,26 @@ To debug an agent first find the instance id from the agent in Buildkite, head t
 
 # Customizing Instances with a Bootstrap Script
 
-You can customize your stack’s instances by using the `BootstrapScriptUrl` stack parameter to run a bash script on instance boot. To set up a bootstrap script, create an S3 bucket, upload the script, and set the parameter to point to that script. For example, if the bucket was named `myorg-buildkite-elastic-stack-bootstrap` and the script was named `bootstrap.sh` then the `BootstrapScriptUrl` stack parameter should be set to `s3://myorg-buildkite-elastic-stack-bootstrap/bootstrap.sh`.
+You can customize your stack’s instances by using the `BootstrapScriptUrl` stack parameter to run a bash script on instance boot. To set up a bootstrap script, create an S3 bucket with the script, and set the `BootstrapScriptUrl` parameter, for example `s3://my_bucket_name/my_bootstrap.sh`.
+
+If the file is private, you'll also need to create an IAM policy to allow the instances to read the file, for example:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+      ],
+      "Resource": ["arn:aws:s3:::my_bucket_name/my_bootstrap.sh"]
+    }
+  ]
+}
+```
+
+Once you’ve created the policy, you must specify the policy’s ARN in the `ManagedPolicyARN` stack parameter.
 
 ## Optimizing for Slow Docker Builds
 
