@@ -37,6 +37,7 @@ Features:
 - [Updating Your Stack](#updating-your-stack)
 - [CloudWatch Metrics](#cloudwatch-metrics)
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
+- [Customizing Instances with a Bootstrap Script](#customizing-instances-with-a-bootstrap-script)
 - [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
 - [Security](#security)
 - [Development](#development)
@@ -192,6 +193,29 @@ Each instance streams both system messages and Buildkite Agent logs to CloudWatc
 Within each stream the logs are grouped by instance id.
 
 To debug an agent first find the instance id from the agent in Buildkite, head to your [CloudWatch Logs Dashboard](https://console.aws.amazon.com/cloudwatch/home?#logs:), choose either the system or Buildkite Agent log group, and then search for the instance id in the list of log streams.
+
+# Customizing Instances with a Bootstrap Script
+
+You can customize your stack’s instances by using the `BootstrapScriptUrl` stack parameter to run a bash script on instance boot. To set up a bootstrap script, create an S3 bucket with the script, and set the `BootstrapScriptUrl` parameter, for example `s3://my_bucket_name/my_bootstrap.sh`.
+
+If the file is private, you'll also need to create an IAM policy to allow the instances to read the file, for example:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+      ],
+      "Resource": ["arn:aws:s3:::my_bucket_name/my_bootstrap.sh"]
+    }
+  ]
+}
+```
+
+Once you’ve created the policy, you must specify the policy’s ARN in the `ManagedPolicyARN` stack parameter.
 
 ## Optimizing for Slow Docker Builds
 
