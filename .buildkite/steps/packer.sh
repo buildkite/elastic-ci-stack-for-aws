@@ -21,6 +21,7 @@ packer_file="${packer_hash}.packer"
 if ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
   make packer
   aws s3 cp packer.output "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}"
+  mv packer.output "${packer_file}"
 else
   echo "Skipping packer build, no changes"
 fi

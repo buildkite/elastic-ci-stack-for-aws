@@ -121,6 +121,11 @@ LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
 
+# make sure that the log group for system is created as it's not awslogs managed
+aws logs create-log-group --log-group-name "/buildkite/system" || (
+  echo "Failed to create log group /buildkite/system"
+)
+
 systemctl start lifecycled
 
 # wait for docker to start
