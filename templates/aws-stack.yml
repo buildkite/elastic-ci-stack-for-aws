@@ -11,6 +11,7 @@ Metadata:
         - BuildkiteAgentRelease
         - BuildkiteAgentToken
         - BuildkiteAgentTags
+        - BuildkiteAgentTimestampLines
         - BuildkiteQueue
         - BuildkiteAgentExperiments
 
@@ -98,6 +99,11 @@ Parameters:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
     Type: String
     Default: ""
+
+  BuildkiteAgentTimestampLines:
+    Description: Set to true to prepend timestamps to every line of output
+    Type: String
+    Default: "false"
 
   BuildkiteAgentExperiments:
     Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/master/EXPERIMENTS.md.
@@ -647,6 +653,7 @@ Resources:
             BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
             BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
             BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
+            BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
             BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
             BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
             BUILDKITE_QUEUE="${BuildkiteQueue}" \
