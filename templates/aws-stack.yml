@@ -779,7 +779,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      Cooldown: "300"
+      Cooldown: !Ref ScaleCooldownPeriod
       ScalingAdjustment : !Ref ScaleUpAdjustment
 
   AgentScaleDownPolicy:
