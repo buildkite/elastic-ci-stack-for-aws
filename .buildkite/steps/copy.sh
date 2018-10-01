@@ -120,6 +120,7 @@ for region in ${ALL_REGIONS[*]}; do
 done
 
 # Write yaml preamble
+mkdir -p "$(dirname "$mapping_file")"
 cat << EOF > "$mapping_file"
 Mappings:
   AWSRegion2AMI:
