@@ -26,3 +26,4 @@ sudo aws configure set s3.signature_version s3v4
 
 echo "Installing goss for system validation..."
 curl -fsSL https://goss.rocks/install | GOSS_VER=v0.3.6 sudo sh
+sudo cp /tmp/conf/goss.yaml /home/ec2-user/goss.yaml

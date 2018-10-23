@@ -38,7 +38,7 @@ steps:
       queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
 
   - name: ":buildkite: Server Specs"
-    command: "goss validate"
+    command: "goss validate < /home/ec2-user/goss.yaml"
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
