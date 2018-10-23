@@ -2,19 +2,19 @@ file:
   /etc/buildkite-agent/buildkite-agent.cfg:
     exists: true
 
-  /etc/buildkite-agent/builds:
-    filetype: directory
-    exists: true
-    owner: buildkite-agent
-    group: buildkite-agent
-
   /etc/buildkite-agent/hooks:
     filetype: directory
     exists: true
     owner: buildkite-agent
     group: buildkite-agent
 
-  /etc/buildkite-agent/plugins:
+  /var/lib/buildkite-agent/builds:
+    filetype: directory
+    exists: true
+    owner: buildkite-agent
+    group: buildkite-agent
+
+  /var/lib/buildkite-agent/plugins:
     filetype: directory
     exists: true
     owner: buildkite-agent
