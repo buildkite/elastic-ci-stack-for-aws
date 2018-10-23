@@ -23,3 +23,6 @@ sudo mv /tmp/conf/bin/bk-* /usr/local/bin
 
 echo "Configuring awscli to use v4 signatures..."
 sudo aws configure set s3.signature_version s3v4
+
+echo "Installing goss for system validation..."
+curl -fsSL https://goss.rocks/install | GOSS_VER=v0.3.6 sudo sh
