@@ -39,8 +39,8 @@ region = $AWS_REGION
 EOF
 
 # Start logging daemons as soon as possible to ensure failures in this script get sent
+systemctl restart rsyslog
 systemctl start awslogsd
-systemctl start journald-cloudwatch-logs
 
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
@@ -121,11 +121,6 @@ AWS_REGION=${AWS_REGION}
 LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
-
-# make sure that the log group for system is created as it's not awslogs managed
-aws logs create-log-group --log-group-name "/buildkite/system" || (
-  echo "Failed to create log group /buildkite/system"
-)
 
 systemctl start lifecycled
 
