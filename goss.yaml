@@ -40,10 +40,6 @@ service:
     enabled: true
     running: true
 
-  journald-cloudwatch-logs:
-    enabled: true
-    running: true
-
   lifecycled:
     enabled: true
     running: true
