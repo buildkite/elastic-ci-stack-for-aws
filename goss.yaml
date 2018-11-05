@@ -96,6 +96,12 @@ process:
     running: true
 
 command:
+  "aws --version":
+    exit-status: 0
+
+  "git --version":
+    exit-status: 0
+
   "/etc/cron.hourly/docker-low-disk-gc":
     exit-status: 0
 
