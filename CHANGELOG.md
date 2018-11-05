@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.0.0-rc3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.0-rc3) (2018-11-05)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.0-rc2...v4.0.0-rc3)
+
+### Changed
+- Use rsyslogd+awslogs for logs [#498](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/498) (@lox)
+- Remove the dash in description to be consistent with v3 [#499](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/499) (@lox)
+- Goss specs [#497](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/497) (@lox)
+- Bump lifecycled to v3.0.0 [#496](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/496) (@lox)
+- Support timestamp-lines [#494](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/494) (@raylu)
+- Add docs for using the bootstrap script [#493](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/493) (@toolmantim)
+- Start logging daemons as soon as possile during bootstrap [#492](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/492) (@zsims)
+- Merge template files into a single file [#487](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/487) (@lox)
+- Move AMI copy into a dedicated step [#486](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/486) (@lox)
+- Update AMI to latest packages [#480](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/480) (@lox)
+
 ## [v4.0.0-rc2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.0-rc2) (2018-09-04)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.0-rc1...v4.0.0-rc2)
 
