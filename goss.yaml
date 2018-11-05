@@ -1,0 +1,123 @@
+file:
+  /etc/buildkite-agent/buildkite-agent.cfg:
+    exists: true
+
+  /etc/buildkite-agent/hooks:
+    filetype: directory
+    exists: true
+    owner: buildkite-agent
+    group: buildkite-agent
+
+  /var/lib/buildkite-agent/builds:
+    filetype: directory
+    exists: true
+    owner: buildkite-agent
+    group: buildkite-agent
+
+  /var/lib/buildkite-agent/plugins:
+    filetype: directory
+    exists: true
+    owner: buildkite-agent
+    group: buildkite-agent
+
+port:
+  tcp:22:
+    listening: true
+    ip:
+    - 0.0.0.0
+
+  tcp6:22:
+    listening: true
+    ip:
+    - '::'
+
+service:
+  awslogsd:
+    enabled: true
+    running: true
+
+  docker:
+    enabled: true
+    running: true
+
+  journald-cloudwatch-logs:
+    enabled: true
+    running: true
+
+  lifecycled:
+    enabled: true
+    running: true
+
+  sshd:
+    enabled: true
+    running: true
+
+user:
+  buildkite-agent:
+    exists: true
+    uid: 2000
+    gid: 2000
+    groups:
+    - buildkite-agent
+    - docker
+    home: /var/lib/buildkite-agent
+    shell: /bin/bash
+
+  sshd:
+    exists: true
+    uid: 74
+    gid: 74
+    groups:
+    - sshd
+    home: /var/empty/sshd
+    shell: /sbin/nologin
+
+group:
+  buildkite-agent:
+    exists: true
+    gid: 2000
+
+  docker:
+    exists: true
+    gid: 1001
+
+  sshd:
+    exists: true
+    gid: 74
+
+process:
+  buildkite-agent:
+    running: true
+
+  lifecycled:
+    running: true
+
+  sshd:
+    running: true
+
+command:
+  "aws --version":
+    exit-status: 0
+
+  "git --version":
+    exit-status: 0
+
+  "/etc/cron.hourly/docker-low-disk-gc":
+    exit-status: 0
+
+  "/etc/cron.hourly/docker-gc":
+    exit-status: 0
+
+  # Checks that docker is running
+  "docker info":
+    exit-status: 0
+
+  # Checks that docker containers can run
+  "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version":
+    exit-status: 0
+
+  # Checks that permissions
+  'sh -c "docker run --rm -v \"$PWD:/pwd\" alpine:latest touch /pwd/test && stat -c %U:%G test"':
+    exit-status: 0
+    stdout:
+    - buildkite-agent:docker

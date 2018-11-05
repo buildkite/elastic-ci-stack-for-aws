@@ -30,8 +30,8 @@ steps:
     artifact_paths: "build/aws-stack.yml"
 
   - wait
-  - name: ":buildkite: Instance test"
-    command: "/usr/local/bin/bats tests/"
+  - name: ":buildkite: Server Specs"
+    command: "goss validate --format documentation"
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
