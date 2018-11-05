@@ -39,7 +39,7 @@ region = $AWS_REGION
 EOF
 
 # Start logging daemons as soon as possible to ensure failures in this script get sent
-systemctl restart rsyslogd
+systemctl restart rsyslog
 systemctl start awslogsd
 
 PLUGINS_ENABLED=()
