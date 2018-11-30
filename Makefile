@@ -30,7 +30,7 @@ build: build/aws-stack.yml
 
 build/aws-stack.yml: templates/aws-stack.yml build/mappings.yml
 	awk '{if($$0=="  # build/mappings.yml"){system("grep -v Mappings: build/mappings.yml")}else{print}}' templates/aws-stack.yml \
-		| sed "3 s/%v/$(VERSION)/" > build/aws-stack.yml
+		| sed "s/%v/$(VERSION)/" > build/aws-stack.yml
 
 # -----------------------------------------
 # AMI creation with Packer
