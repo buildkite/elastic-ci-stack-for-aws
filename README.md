@@ -280,7 +280,7 @@ aws-vault exec some-profile -- make create-stack
 If you need to build your own AMI (because you've changed something in the `packer` directory), run:
 
 ```bash
-make clean build-ami
+make packer
 ```
 
 ## Questions and Support
