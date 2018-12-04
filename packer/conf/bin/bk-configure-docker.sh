@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2094
 set -euo pipefail
 
 ## Configures docker before system starts
@@ -7,9 +8,12 @@ set -euo pipefail
 # See https://alestic.com/2010/12/ec2-user-data-output/
 exec > >(tee -a /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-# Swap in the userns remap config
+# Set user namespace remapping in config
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]] ; then
-	mv /etc/docker/daemon.userns-remap.json /etc/docker/daemon.json
-else
-  rm /etc/docker/daemon.userns-remap.json
+  cat <<< "$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+fi
+
+# Set experimental in config
+if [[ "${DOCKER_EXPERIMENTAL:-false}" == "true" ]] ; then
+  cat <<< "$(jq '.experimental="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 fi

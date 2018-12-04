@@ -19,7 +19,6 @@ rm docker.tgz
 
 sudo mkdir -p /etc/docker
 sudo cp /tmp/conf/docker/daemon.json /etc/docker/daemon.json
-sudo cp /tmp/conf/docker/daemon.userns-remap.json /etc/docker/daemon.userns-remap.json
 sudo cp /tmp/conf/docker/subuid /etc/subuid
 sudo cp /tmp/conf/docker/subgid /etc/subgid
 sudo chown -R ec2-user:docker /etc/docker
