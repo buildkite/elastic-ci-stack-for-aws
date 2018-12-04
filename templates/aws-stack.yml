@@ -8,11 +8,15 @@ Metadata:
       - Label:
           default: Buildkite Configuration
         Parameters:
-        - BuildkiteAgentRelease
         - BuildkiteAgentToken
+        - BuildkiteQueue
+
+      - Label:
+          default: Advanced Buildkite Configuration
+        Parameters:
+        - BuildkiteAgentRelease
         - BuildkiteAgentTags
         - BuildkiteAgentTimestampLines
-        - BuildkiteQueue
         - BuildkiteAgentExperiments
 
       - Label:
@@ -102,6 +106,9 @@ Parameters:
   BuildkiteAgentTimestampLines:
     Description: Set to true to prepend timestamps to every line of output
     Type: String
+    AllowedValues:
+      - "true"
+      - "false"
     Default: "false"
 
   BuildkiteAgentExperiments:
