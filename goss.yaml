@@ -20,6 +20,10 @@ file:
     owner: buildkite-agent
     group: buildkite-agent
 
+  /usr/local/bin/stop-agent-gracefully:
+    exists: true
+    mode: "0755"
+
 port:
   tcp:22:
     listening: true

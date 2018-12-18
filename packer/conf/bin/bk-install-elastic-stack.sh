@@ -122,6 +122,7 @@ LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
 
+systemctl enable lifecycled.service
 systemctl start lifecycled
 
 # wait for docker to start
