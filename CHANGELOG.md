@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.0.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.2) (2018-12-20)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.1...v4.0.2)
+
+### Fixed
+- Set a region for awslogsd [#508](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/508) (@dgarbus)
+- Fix bug where lifecycled didn't pick up handler script [#507](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/507) (@lox)
+
+### Changed
+- Add a EnableDockerExperimental param [#506](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/506) (@lox)
+- Bump docker to 18.09.0 [#505](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/505) (@lox)
+
 ## [v4.0.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.1) (2018-11-30)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.0...v4.0.1)
 
