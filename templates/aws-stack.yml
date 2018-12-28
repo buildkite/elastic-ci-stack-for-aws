@@ -679,6 +679,7 @@ Resources:
             BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
             BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
             BUILDKITE_QUEUE="${BuildkiteQueue}" \
+            BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}" \
             BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
             BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
             BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
@@ -756,6 +757,9 @@ Resources:
         - Key: BuildkiteAgentRelease
           Value: !Ref BuildkiteAgentRelease
           PropagateAtLaunch: true
+        - Key: BuildkiteOrgSlug
+          Value: !Ref BuildkiteOrgSlug
+          PropagateAtLaunch: true
         - Key: BuildkiteQueue
           Value: !Ref BuildkiteQueue
           PropagateAtLaunch: true
@@ -765,7 +769,6 @@ Resources:
             Value: !Ref CostAllocationTagValue
             PropagateAtLaunch: true
           - !Ref "AWS::NoValue"
-
     CreationPolicy:
       ResourceSignal:
         Timeout: !Ref InstanceCreationTimeout
@@ -827,6 +830,8 @@ Resources:
       Dimensions:
         - Name: Queue
           Value: !Ref BuildkiteQueue
+        - Name: Org
+          Value: !Ref BuildkiteOrgSlug
       ComparisonOperator: GreaterThanThreshold
 
   AgentUtilizationAlarmLow:
@@ -844,6 +849,8 @@ Resources:
       Dimensions:
         - Name: Queue
           Value: !Ref BuildkiteQueue
+        - Name: Org
+          Value: !Ref BuildkiteOrgSlug
       ComparisonOperator: LessThanOrEqualToThreshold
 
   LambdaExecutionRole:
