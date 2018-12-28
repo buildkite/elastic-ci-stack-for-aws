@@ -10,6 +10,7 @@ Metadata:
         Parameters:
         - BuildkiteAgentToken
         - BuildkiteQueue
+        - BuildkiteOrgSlug
 
       - Label:
           default: Advanced Buildkite Configuration
@@ -92,6 +93,11 @@ Parameters:
       - beta
       - edge
     Default: "stable"
+
+  BuildkiteOrgSlug:
+    Description: Buildkite organization slug
+    Type: String
+    Default: "none"
 
   BuildkiteAgentToken:
     Description: Buildkite agent registration token
@@ -882,11 +888,11 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-metrics-v3.0.0-lambda.zip"
+        S3Key: "buildkite-metrics-v4.0.0-lambda.zip"
       Role: !GetAtt LambdaExecutionRole.Arn
       Timeout: 120
-      Handler: handler.handle
-      Runtime: python2.7
+      Handler: handler
+      Runtime: go1.1x
       MemorySize: 128
       Environment:
         Variables:
@@ -895,6 +901,7 @@ Resources:
           AWS_STACK_ID: !Ref "AWS::StackId"
           AWS_STACK_NAME: !Ref "AWS::StackName"
           AWS_ACCOUNT_ID: !Ref "AWS::AccountId"
+          BUILDKITE_CLOUDWATCH_DIMENSIONS: !Sub "Org=${BuildkiteOrgSlug}"
 
   ScheduledRule:
     Type: "AWS::Events::Rule"
