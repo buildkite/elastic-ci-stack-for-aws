@@ -95,9 +95,9 @@ Parameters:
     Default: "stable"
 
   BuildkiteOrgSlug:
-    Description: Buildkite organization slug
+    Description: Buildkite organization slug (optional, but required if you have multiple accounts)
     Type: String
-    Default: "none"
+    Default: ""
 
   BuildkiteAgentToken:
     Description: Buildkite agent registration token
@@ -375,6 +375,9 @@ Conditions:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
     HasKeyName:
+      !Not [ !Equals [ !Ref KeyName, "" ] ]
+
+    HasOrgSlug:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
 
     EnableSshIngress:
@@ -830,8 +833,11 @@ Resources:
       Dimensions:
         - Name: Queue
           Value: !Ref BuildkiteQueue
-        - Name: Org
-          Value: !Ref BuildkiteOrgSlug
+        - !If
+          - HasOrgSlug
+          - Name: Org
+            Value: !Ref BuildkiteOrgSlug
+          - !Ref "AWS::NoValue"
       ComparisonOperator: GreaterThanThreshold
 
   AgentUtilizationAlarmLow:
@@ -849,8 +855,11 @@ Resources:
       Dimensions:
         - Name: Queue
           Value: !Ref BuildkiteQueue
-        - Name: Org
-          Value: !Ref BuildkiteOrgSlug
+        - !If
+          - HasOrgSlug
+          - Name: Org
+            Value: !Ref BuildkiteOrgSlug
+          - !Ref "AWS::NoValue"
       ComparisonOperator: LessThanOrEqualToThreshold
 
   LambdaExecutionRole:
@@ -895,7 +904,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-metrics-v4.0.0-lambda.zip"
+        S3Key: "buildkite-metrics-v4.1.0-lambda.zip"
       Role: !GetAtt LambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
@@ -908,7 +917,6 @@ Resources:
           AWS_STACK_ID: !Ref "AWS::StackId"
           AWS_STACK_NAME: !Ref "AWS::StackName"
           AWS_ACCOUNT_ID: !Ref "AWS::AccountId"
-          BUILDKITE_CLOUDWATCH_DIMENSIONS: !Sub "Org=${BuildkiteOrgSlug}"
 
   ScheduledRule:
     Type: "AWS::Events::Rule"
