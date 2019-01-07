@@ -819,9 +819,9 @@ Resources:
       ScalingAdjustment: !Ref ScaleDownAdjustment
 
   AgentUtilizationAlarmHigh:
-   Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
-   Properties:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseAutoscaling
+    Properties:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
       Namespace: Buildkite
