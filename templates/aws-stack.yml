@@ -908,7 +908,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
-      Runtime: go1.1x
+      Runtime: go1.x
       MemorySize: 128
       Environment:
         Variables:
