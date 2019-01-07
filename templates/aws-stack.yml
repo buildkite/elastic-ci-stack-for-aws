@@ -95,7 +95,7 @@ Parameters:
     Default: "stable"
 
   BuildkiteOrgSlug:
-    Description: Buildkite organization slug (optional, but required if you have multiple accounts)
+    Description: Optional Buildkite organization slug (e.g. "my-org"). This only needs to be set when running stacks for different Buildkite organisations in a single AWS account.
     Type: String
     Default: ""
 
