@@ -12,7 +12,7 @@ sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent v3.8.1 stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/v3.8.1/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/stable/3.8.1/buildkite-agent-linux-amd64"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
