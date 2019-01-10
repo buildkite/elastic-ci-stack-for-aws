@@ -836,7 +836,7 @@ Resources:
           - - Name: Queue
               Value: !Ref BuildkiteQueue
             - Name: Org
-              Value: !Ref BuildkiteOrgSlug
+              Value:  !If [ HasOrgSlug, !Ref BuildkiteOrgSlug, "" ]
           - - Name: Queue
               Value: !Ref BuildkiteQueue
       ComparisonOperator: GreaterThanThreshold
@@ -859,7 +859,7 @@ Resources:
           - - Name: Queue
               Value: !Ref BuildkiteQueue
             - Name: Org
-              Value: !Ref BuildkiteOrgSlug
+              Value: !If [ HasOrgSlug, !Ref BuildkiteOrgSlug, "" ]
           - - Name: Queue
               Value: !Ref BuildkiteQueue
       ComparisonOperator: LessThanOrEqualToThreshold
