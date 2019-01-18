@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.0.3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.3) (2019-01-18)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.2...v4.0.3)
+
+### Changed
+- Bump docker to 18.09.1 [#516](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/516) (@lox)
+- Bump agent to 3.8.2 [#514](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/514) (@lox)
+- Tunable knob for ASG Cooldown period [#495](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/495) (@prateek)
+
 ## [v4.0.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.2) (2018-12-20)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.1...v4.0.2)
 
