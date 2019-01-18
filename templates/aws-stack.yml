@@ -51,6 +51,7 @@ Metadata:
         - MaxSize
         - ScaleUpAdjustment
         - ScaleDownAdjustment
+        - ScaleCooldownPeriod
         - ScaleDownPeriod
         - InstanceCreationTimeout
 
@@ -197,6 +198,12 @@ Parameters:
     Type: Number
     Default: -1
     MaxValue: 0
+
+  ScaleCooldownPeriod:
+    Description: Minimum number of seconds to wait between any two scaling group changes
+    Type: Number
+    Default: 300
+    MinValue: 10
 
   ScaleDownPeriod:
     Description: Number of seconds UnfinishedJobs must equal 0 before scale down
@@ -794,7 +801,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      Cooldown: "300"
+      Cooldown: !Ref ScaleCooldownPeriod
       ScalingAdjustment : !Ref ScaleUpAdjustment
 
   AgentScaleDownPolicy:
@@ -803,7 +810,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      Cooldown: "300"
+      Cooldown: !Ref ScaleCooldownPeriod
       ScalingAdjustment: !Ref ScaleDownAdjustment
 
   AgentUtilizationAlarmHigh:
