@@ -200,7 +200,7 @@ Parameters:
     MaxValue: 0
 
   ScaleCooldownPeriod:
-    Description: Minimum number of seconds to wait between any two scaling group changes
+    Description: Minimum number of seconds to wait between scaling events. Must be greater than the time needed for an instance to boot.
     Type: Number
     Default: 300
     MinValue: 10
