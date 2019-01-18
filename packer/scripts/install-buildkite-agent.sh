@@ -10,9 +10,9 @@ echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
-echo "Downloading buildkite-agent stable..."
+echo "Downloading buildkite-agent v3.8.2 stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/latest/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/stable/3.8.2/buildkite-agent-linux-amd64"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
