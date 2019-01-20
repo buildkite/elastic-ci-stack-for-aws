@@ -378,7 +378,7 @@ Conditions:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
 
     HasOrgSlug:
-      !Not [ !Equals [ !Ref KeyName, "" ] ]
+      !Not [ !Equals [ !Ref BuildkiteOrgSlug, "" ] ]
 
     EnableSshIngress:
       !And
