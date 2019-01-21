@@ -906,7 +906,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-agent-metrics/v4.1.0/handler.zip"
+        S3Key: "buildkite-agent-metrics/v4.1.1/handler.zip"
       Role: !GetAtt LambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
