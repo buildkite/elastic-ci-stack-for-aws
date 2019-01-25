@@ -98,6 +98,21 @@ plugins-path=/var/lib/buildkite-agent/plugins
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 EOF
 
+if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" == "true" ]] ; then
+  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
+disconnect-after-job=true
+disconnect-after-job-timeout=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT}
+EOF
+
+  mkdir -p /etc/systemd/system/buildkite-agent@.service.d/
+
+  cat << EOF > /etc/systemd/system/buildkite-agent@.service.d/10-power-off-stop.conf
+[Service]
+ExecStopPost=/usr/local/bin/mark-asg-unhealthy
+ExecStopPost=/bin/sudo poweroff
+EOF
+fi
+
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
 if [[ -n "${BUILDKITE_AUTHORIZED_USERS_URL}" ]] ; then
