@@ -332,6 +332,9 @@ Outputs:
   InstanceRoleName:
     Value: !Ref IAMRole
 
+  AgentLifecycleTopic:
+    Value: !Ref AgentLifecycleTopic
+
 Conditions:
     UseSpotInstances:
       !Not [ !Equals [ !Ref SpotPrice, 0 ] ]
