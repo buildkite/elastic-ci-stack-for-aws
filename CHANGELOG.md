@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.0.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.4) (2019-01-29)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.3...v4.0.4)
+
+### Fixed
+- Fix bug where lifecycled logs aren't flushed to cloudwatch logs [#524](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/524) (@lox)
+- Prevent systemd from killing agent process group [#521](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/521) (@lox)
+
+### Changed
+- Expose AgentLifecycleTopic for programatic scaling [#522](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/522) (@tduffield)
+
 ## [v4.0.3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.3) (2019-01-18)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.2...v4.0.3)
 
