@@ -10,6 +10,7 @@ Metadata:
         Parameters:
         - BuildkiteAgentToken
         - BuildkiteQueue
+        - BuildkiteOrgSlug
 
       - Label:
           default: Advanced Buildkite Configuration
@@ -93,6 +94,11 @@ Parameters:
       - beta
       - edge
     Default: "stable"
+
+  BuildkiteOrgSlug:
+    Description: Optional Buildkite organization slug (e.g. "my-org"). This only needs to be set when running stacks for different Buildkite organisations in a single AWS account.
+    Type: String
+    Default: ""
 
   BuildkiteAgentToken:
     Description: Buildkite agent registration token
@@ -381,6 +387,9 @@ Conditions:
     HasKeyName:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
 
+    HasOrgSlug:
+      !Not [ !Equals [ !Ref BuildkiteOrgSlug, "" ] ]
+
     EnableSshIngress:
       !And
         - { Condition : CreateSecurityGroup }
@@ -401,19 +410,19 @@ Mappings:
     full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
 
   MetricsLambdaBucket:
-    us-east-1 : { Bucket: "buildkite-metrics" }
-    us-east-2 : { Bucket: "buildkite-metrics-us-east-2" }
-    us-west-1 : { Bucket: "buildkite-metrics-us-west-1" }
-    us-west-2 : { Bucket: "buildkite-metrics-us-west-2" }
-    eu-west-1 : { Bucket: "buildkite-metrics-eu-west-1" }
-    eu-west-2 : { Bucket: "buildkite-metrics-eu-west-2" }
-    eu-central-1 : { Bucket: "buildkite-metrics-eu-central-1" }
-    ap-northeast-1 : { Bucket: "buildkite-metrics-ap-northeast-1" }
-    ap-northeast-2 : { Bucket: "buildkite-metrics-ap-northeast-2" }
-    ap-southeast-1 : { Bucket: "buildkite-metrics-ap-southeast-1" }
-    ap-southeast-2 : { Bucket: "buildkite-metrics-ap-southeast-2" }
-    ap-south-1 : { Bucket: "buildkite-metrics-ap-south-1" }
-    sa-east-1 : { Bucket: "buildkite-metrics-sa-east-1" }
+    us-east-1 : { Bucket: "buildkite-lambdas" }
+    us-east-2 : { Bucket: "buildkite-lambdas-us-east-2" }
+    us-west-1 : { Bucket: "buildkite-lambdas-us-west-1" }
+    us-west-2 : { Bucket: "buildkite-lambdas-us-west-2" }
+    eu-west-1 : { Bucket: "buildkite-lambdas-eu-west-1" }
+    eu-west-2 : { Bucket: "buildkite-lambdas-eu-west-2" }
+    eu-central-1 : { Bucket: "buildkite-lambdas-eu-central-1" }
+    ap-northeast-1 : { Bucket: "buildkite-lambdas-ap-northeast-1" }
+    ap-northeast-2 : { Bucket: "buildkite-lambdas-ap-northeast-2" }
+    ap-southeast-1 : { Bucket: "buildkite-lambdas-ap-southeast-1" }
+    ap-southeast-2 : { Bucket: "buildkite-lambdas-ap-southeast-2" }
+    ap-south-1 : { Bucket: "buildkite-lambdas-ap-south-1" }
+    sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
   # build/mappings.yml
 
@@ -683,6 +692,7 @@ Resources:
             BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
             BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
             BUILDKITE_QUEUE="${BuildkiteQueue}" \
+            BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}" \
             BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
             BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
             BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
@@ -760,6 +770,9 @@ Resources:
         - Key: BuildkiteAgentRelease
           Value: !Ref BuildkiteAgentRelease
           PropagateAtLaunch: true
+        - Key: BuildkiteOrgSlug
+          Value: !Ref BuildkiteOrgSlug
+          PropagateAtLaunch: true
         - Key: BuildkiteQueue
           Value: !Ref BuildkiteQueue
           PropagateAtLaunch: true
@@ -769,7 +782,6 @@ Resources:
             Value: !Ref CostAllocationTagValue
             PropagateAtLaunch: true
           - !Ref "AWS::NoValue"
-
     CreationPolicy:
       ResourceSignal:
         Timeout: !Ref InstanceCreationTimeout
@@ -817,9 +829,9 @@ Resources:
       ScalingAdjustment: !Ref ScaleDownAdjustment
 
   AgentUtilizationAlarmHigh:
-   Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
-   Properties:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseAutoscaling
+    Properties:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
       Namespace: Buildkite
@@ -829,14 +841,20 @@ Resources:
       Threshold: 0
       AlarmActions: [ !Ref AgentScaleUpPolicy ]
       Dimensions:
-        - Name: Queue
-          Value: !Ref BuildkiteQueue
+        !If
+          - HasOrgSlug
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
+            - Name: Org
+              Value:  !If [ HasOrgSlug, !Ref BuildkiteOrgSlug, "" ]
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
       ComparisonOperator: GreaterThanThreshold
 
   AgentUtilizationAlarmLow:
-   Type: AWS::CloudWatch::Alarm
-   Condition: UseAutoscaling
-   Properties:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseAutoscaling
+    Properties:
       AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
       MetricName: UnfinishedJobsCount
       Namespace: Buildkite
@@ -846,8 +864,14 @@ Resources:
       Threshold: 0
       AlarmActions: [ !Ref AgentScaleDownPolicy ]
       Dimensions:
-        - Name: Queue
-          Value: !Ref BuildkiteQueue
+        !If
+          - HasOrgSlug
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
+            - Name: Org
+              Value: !If [ HasOrgSlug, !Ref BuildkiteOrgSlug, "" ]
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
       ComparisonOperator: LessThanOrEqualToThreshold
 
   LambdaExecutionRole:
@@ -892,11 +916,11 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-metrics-v3.0.0-lambda.zip"
+        S3Key: "buildkite-agent-metrics/v4.1.2/handler.zip"
       Role: !GetAtt LambdaExecutionRole.Arn
       Timeout: 120
-      Handler: handler.handle
-      Runtime: python2.7
+      Handler: handler
+      Runtime: go1.x
       MemorySize: 128
       Environment:
         Variables:
