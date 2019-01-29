@@ -15,7 +15,7 @@ ExecStart=/usr/bin/buildkite-agent start
 RestartSec=5
 Restart=on-failure
 TimeoutStartSec=10
-TimeoutStopSec=infinity
+TimeoutStopSec=0
 KillMode=process
 
 [Install]
