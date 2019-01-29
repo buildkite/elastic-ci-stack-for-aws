@@ -122,7 +122,7 @@ cat << EOF > /etc/lifecycled
 AWS_REGION=${AWS_REGION}
 LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
-CLOUDWATCH_GROUP=/buildkite/lifecycled
+LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
 EOF
 
 systemctl enable lifecycled.service
