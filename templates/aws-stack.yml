@@ -424,7 +424,8 @@ Mappings:
     ap-south-1 : { Bucket: "buildkite-lambdas-ap-south-1" }
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
-  # build/mappings.yml
+  AWSRegion2AMI:
+    ap-southeast-2: { AMI: "we use a custom AMI" }
 
 Resources:
   Vpc:

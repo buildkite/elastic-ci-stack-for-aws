@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Usage: buildkite ami
+# Summary: Create AMI Image for Buildkite instances
+# Help:
+#   buildkite ami
+
+set -eo pipefail
+
+docker-compose run --rm  -w "/buildkite-ci/packer/" buildkite_builder packer build buildkite-ami.json

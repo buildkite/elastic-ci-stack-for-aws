@@ -1,0 +1,11 @@
+ImageId=ami-0304352cca394bfb1
+KeyName=development-au-oct-18
+BuildkiteOrgSlug=oculo-1
+InstanceType=t3.micro
+SpotPrice=0.009
+MaxSize=3
+MinSize=1
+ScaleUpAdjustment=1
+ScaleDownAdjustment=-1
+ECRAccessPolicy=poweruser
+AssociatePublicIpAddress=true

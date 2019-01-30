@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Usage: buildkite cfn [action]
+# Summary: Manage Cloudformation stack for Buildkite
+# Help:
+#
+#   Available actions: create | update
+#
+# Examples:
+#
+# buildkite cfn create
+# buildkite cfn update
+
+set -eo pipefail
+
+case "$1" in
+  --complete)
+    echo create
+    echo update
+  ;;
+  create)
+    docker-compose run --rm buildkite_builder /buildkite-ci/scripts/cfn.sh create
+  ;;
+  update)
+    docker-compose run --rm buildkite_builder /buildkite-ci/scripts/cfn.sh update
+  ;;
+  *)
+    buildkite help cfn
+  ;;
+esac
