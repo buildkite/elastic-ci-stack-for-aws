@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Usage: buildkite build
+# Summary: Build the docker image needed for running the tools
+
+set -eo pipefail
+
+docker-compose build

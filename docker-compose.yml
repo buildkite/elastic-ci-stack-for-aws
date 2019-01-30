@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  buildkite_builder:
+    init: true
+    build: .
+    image: buildkite_builder:latest
+    volumes:
+    - .:/buildkite-ci/
+    tmpfs:
+    - /tmp
+    environment:
+      AWS_SDK_LOAD_CONFIG: "true"
+      AWS_ACCESS_KEY_ID:
+      AWS_SECRET_ACCESS_KEY:
+      AWS_SESSION_TOKEN:
+      AWS_SECURITY_TOKEN:
+      AWS_DEFAULT_REGION: ap-southeast-2
+      DRY_RUN:

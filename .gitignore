@@ -6,4 +6,5 @@ node_modules/
 .bundle/
 *.bak
 extra_tags.json
+.idea
 
