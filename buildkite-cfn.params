@@ -1,8 +1,8 @@
-ImageId=ami-0304352cca394bfb1
+ImageId=ami-080ff5b3d0eeb56f4
 KeyName=development-au-oct-18
 BuildkiteOrgSlug=oculo-1
 InstanceType=t3.micro
-SpotPrice=0.009
+SpotPrice=0.011
 MaxSize=3
 MinSize=1
 ScaleUpAdjustment=1

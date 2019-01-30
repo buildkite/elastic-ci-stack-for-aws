@@ -56,6 +56,10 @@
     {
       "type": "shell",
       "script": "scripts/install-git-lfs.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-dev-ssh-keys.sh"
     }
   ]
 }
