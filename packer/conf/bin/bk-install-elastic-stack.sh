@@ -108,7 +108,7 @@ EOF
 
   cat << EOF > /etc/systemd/system/buildkite-agent@.service.d/10-power-off-stop.conf
 [Service]
-ExecStopPost=/usr/local/bin/mark-asg-unhealthy
+ExecStopPost=/usr/local/bin/terminate-instance ${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY}
 ExecStopPost=/bin/sudo poweroff
 EOF
 fi

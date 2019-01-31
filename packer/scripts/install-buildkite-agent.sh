@@ -51,7 +51,7 @@ sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent@.service /etc/systemd/
 
 echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully
-sudo cp /tmp/conf/buildkite-agent/scripts/mark-asg-unhealthy /usr/local/bin/mark-asg-unhealthy
+sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
 
 echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
