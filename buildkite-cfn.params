@@ -1,13 +1,14 @@
 ImageId=ami-0e76a0b4e26d9f2a3
 KeyName=development-au-oct-18
 BuildkiteOrgSlug=oculo-1
-InstanceType=t3.micro
-SpotPrice=0.013
+InstanceType=t2.micro
+SpotPrice=0.008
 MaxSize=3
 MinSize=1
 ScaleUpAdjustment=1
 ScaleDownAdjustment=-1
 ECRAccessPolicy=poweruser
 AssociatePublicIpAddress=true
-EnableSecretsPlugin=false
+EnableSecretsPlugin=true
 ManagedPolicyARN=arn:aws:iam::544757391075:policy/BuildkitePolicy
+SecretsBucket=oculo-buildkite-secrets

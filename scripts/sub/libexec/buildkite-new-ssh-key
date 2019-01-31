@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Usage: buildkite new-ssh-key [action]
+# Summary: Generate a new github deployment key for a buildkite pipeline
+# Help:
+#   Examples:
+#
+#   buildkite new-ssh-key my-new-app-pipeline-slug
+
+set -eo pipefail
+
+: "${1:?"Need to pass in the Buildkite pipeline slug"}"
+SLUG=$1
+
+cd /tmp || exit
+ssh-keygen -P "" -o -a 100 -t ed25519 -f id_ed25519_buildkite -C "generated-${SLUG}-key"
+
+SECRETS_BUCKET="oculo-buildkite-secrets/${SLUG}"
+aws s3 cp --acl private --sse aws:kms id_ed25519_buildkite "s3://${SECRETS_BUCKET}/private_ssh_key"
+
+echo ""
+echo "Paste this following key as a Github Readonly Deployment Key"
+cat id_ed25519_buildkite.pub
+
+rm id_ed25519_buildkite.pub id_ed25519_buildkite
+
+cd - > /dev/null || exit
+echo ""
+echo "Done"
