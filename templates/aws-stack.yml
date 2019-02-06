@@ -19,6 +19,9 @@ Metadata:
         - BuildkiteAgentTags
         - BuildkiteAgentTimestampLines
         - BuildkiteAgentExperiments
+        - BuildkiteTerminateInstanceAfterJob
+        - BuildkiteTerminateInstanceAfterJobTimeout
+        - BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity
 
       - Label:
           default: Network Configuration
@@ -123,6 +126,28 @@ Parameters:
     Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/master/EXPERIMENTS.md.
     Type: String
     Default: ""
+
+  BuildkiteTerminateInstanceAfterJob:
+    Description: Set to "true" to terminate the instance after a job has completed.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  BuildkiteTerminateInstanceAfterJobTimeout:
+    Description: When BuilkditeTerminateInstanceAfterJob is "true", how many seconds to wait for a job before terminating the instance.
+    Type: Number
+    Default: 1800
+    MinValue: 1
+
+  BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity:
+    Description: Set to "true" to decrease the desired capacity of the autoscaling group by 1 when terminating an instance after the job completes.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   BuildkiteQueue:
     Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}"
@@ -697,6 +722,9 @@ Resources:
             BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
             BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
             BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
+            BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
+            BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT=${BuildkiteTerminateInstanceAfterJobTimeout} \
+            BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity} \
             AWS_DEFAULT_REGION=${AWS::Region} \
             SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
             ECR_PLUGIN_ENABLED=${EnableECRPlugin} \

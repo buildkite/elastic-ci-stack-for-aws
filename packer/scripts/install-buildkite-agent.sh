@@ -49,8 +49,9 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 echo "Adding systemd service template..."
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent@.service /etc/systemd/system/buildkite-agent@.service
 
-echo "Adding termination script..."
+echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully
+sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
 
 echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
