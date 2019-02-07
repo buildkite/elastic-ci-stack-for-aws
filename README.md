@@ -153,6 +153,8 @@ While not enforced, it is highly recommended you also set your `AgentsPerInstanc
 
 You may configure `BuildkiteTerminateInstanceAfterJobTimeout` to control how long an instance will wait for a job before terminating itself. You can use this setting to tune your ASG to optimize the queue for availability based on your tolerance for scaling events. The default value is 30 minutes (1800 seconds).
 
+Additionally you can set `BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity` to `true` to decrease the desired capacity of the autoscaling group by 1 when terminating an instance after the job completes. Use this option if you don't wish the terminated instance to be replaced by another in the autoscaling group.
+
 We strongly encourage you to find an alternative to this setting if at all possible. The turn around time for replacing these instances is currently slow (5-10 minutes depending on other stack configuration settings). If you need single use jobs, we suggest looking at our container plugins like `docker`, `docker-compose`, and `ecs`, all which can be found [here](https://buildkite.com/plugins).
 
 ## Docker Registry Support
