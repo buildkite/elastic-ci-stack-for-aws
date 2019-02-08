@@ -22,6 +22,7 @@ Metadata:
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteTerminateInstanceAfterJobTimeout
         - BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity
+        - BuilkditeAdditionalSudoPermissions
 
       - Label:
           default: Network Configuration
@@ -148,6 +149,11 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  BuildkiteAdditionalSudoPermissions:
+    Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo.
+    Type: String
+    Default: ""
 
   BuildkiteQueue:
     Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}"
@@ -725,6 +731,7 @@ Resources:
             BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
             BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT=${BuildkiteTerminateInstanceAfterJobTimeout} \
             BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity} \
+            BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS=${BuildkiteAdditionalSudoPermissions} \
             AWS_DEFAULT_REGION=${AWS::Region} \
             SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
             ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
