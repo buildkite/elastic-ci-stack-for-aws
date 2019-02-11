@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.1.0) (2019-02-11)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.4...v4.1.0)
+
+### Changed
+- Bump docker to 18.09.2 to fix CVE-2019-5736 [#532](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/532) (@lox)
+- Fix typo in docker experimental config [#528](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/528) (@lox)
+- Allow users to specify additional sudo permissions [#527](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/527) (@tduffield)
+- Add new "TerminateInstanceAfterJob" configuration [#523](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/523) (@tduffield)
+- Add Buildkite Org to Cloudwatch Metrics as a Dimension to support multiple orgs per AWS account [#510](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/510) (@lox)
+
 ## [v4.0.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.0.4) (2019-01-29)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.3...v4.0.4)
 
