@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_VERSION=18.09.1
+DOCKER_VERSION=18.09.2
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.23.2
 
