@@ -4,6 +4,9 @@ VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 PACKER_FILES = $(exec find packer/)
 
+AWS_REGION ?= us-east-1
+AMZN_LINUX2_AMI ?= $(shell aws ec2 describe-images --region $(AWS_REGION) --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????-x86_64-gp2' 'Name=state,Values=available' --output json | jq -r '.Images | sort_by(.CreationDate) | last(.[]).ImageId')
+
 all: packer build
 
 # Remove any built cloudformation templates and packer output
@@ -45,6 +48,7 @@ packer: packer.output env-AWS_REGION
 packer.output: $(PACKER_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
 		-e AWS_SESSION_TOKEN \
@@ -53,7 +57,7 @@ packer.output: $(PACKER_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer \
-		hashicorp/packer:1.0.4 build buildkite-ami.json | tee packer.output
+		hashicorp/packer:1.0.4 build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' buildkite-ami.json | tee packer.output
 
 # -----------------------------------------
 # Cloudformation helpers
