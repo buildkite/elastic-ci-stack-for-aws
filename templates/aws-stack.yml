@@ -46,6 +46,8 @@ Metadata:
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
+        - RootVolumeName
+        - RootVolumeType
         - ManagedPolicyARN
         - InstanceRoleName
 
@@ -257,6 +259,16 @@ Parameters:
     Type: Number
     Default: 250
     MinValue: 10
+
+  RootVolumeName:
+    Description: Name of the root block device for your AMI
+    Type: String
+    Default: "/dev/xvda"
+
+  RootVolumeType:
+    Description: Type of root volume to use
+    Type: String
+    Default: "gp2"
 
   SecurityGroupId:
     Type: String
@@ -697,8 +709,8 @@ Resources:
       SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
       ImageId: !If [ "UseDefaultAMI", !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'], !Ref ImageId ]
       BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: gp2 }
+        - DeviceName: !Ref RootVolumeName
+          Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
       UserData:
         "Fn::Base64": !Sub
           - |
