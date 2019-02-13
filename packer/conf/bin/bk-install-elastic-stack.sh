@@ -116,6 +116,9 @@ EOF
 ExecStopPost=/usr/local/bin/terminate-instance ${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY}
 ExecStopPost=/bin/sudo poweroff
 EOF
+
+  # If we modify the systemd, we need to rebuild the dependency tree
+  systemctl daemon-reload
 fi
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
