@@ -598,6 +598,7 @@ Resources:
               - autoscaling:RecordLifecycleActionHeartbeat
               - autoscaling:CompleteLifecycleAction
               - autoscaling:SetInstanceHealth
+              - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource: "*"
           - Effect: Allow
             Action:
