@@ -22,7 +22,7 @@ Metadata:
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteTerminateInstanceAfterJobTimeout
         - BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity
-        - BuilkditeAdditionalSudoPermissions
+        - BuildkiteAdditionalSudoPermissions
 
       - Label:
           default: Network Configuration
@@ -137,7 +137,7 @@ Parameters:
     Default: "false"
 
   BuildkiteTerminateInstanceAfterJobTimeout:
-    Description: When BuilkditeTerminateInstanceAfterJob is "true", how many seconds to wait for a job before terminating the instance.
+    Description: When BuildkiteTerminateInstanceAfterJob is "true", how many seconds to wait for a job before terminating the instance.
     Type: Number
     Default: 1800
     MinValue: 1
