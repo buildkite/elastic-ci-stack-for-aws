@@ -4,5 +4,5 @@
 
 set -eo pipefail
 
-git submodule update --init
+git submodule update --init --recursive
 docker-compose build
