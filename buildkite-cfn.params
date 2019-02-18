@@ -1,4 +1,4 @@
-ImageId=ami-0e76a0b4e26d9f2a3
+ImageId=ami-086159ffa9e323031
 KeyName=development-au-oct-18
 BuildkiteOrgSlug=oculo-1
 InstanceType=t2.micro

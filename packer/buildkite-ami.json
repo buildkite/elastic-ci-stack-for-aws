@@ -60,6 +60,10 @@
     {
       "type": "shell",
       "script": "scripts/install-dev-ssh-keys.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-cc-reporter.sh"
     }
   ]
 }
