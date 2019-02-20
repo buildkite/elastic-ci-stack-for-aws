@@ -1,12 +1,13 @@
 ImageId=ami-05d873a0dc1f44ef0
 KeyName=development-au-oct-18
 BuildkiteOrgSlug=oculo-1
-InstanceType=t2.micro
-SpotPrice=0.008
+InstanceType=m5d.large
+SpotPrice=0.045
 MaxSize=3
 MinSize=1
 ScaleUpAdjustment=1
 ScaleDownAdjustment=-1
+AgentsPerInstance=2
 ECRAccessPolicy=poweruser
 AssociatePublicIpAddress=true
 EnableSecretsPlugin=true
