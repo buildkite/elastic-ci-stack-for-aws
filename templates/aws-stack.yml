@@ -1015,23 +1015,14 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: DescribeECSResources
+        - PolicyName: AutoScalingGroups
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
             - Effect: Allow
               Action:
-                - ecs:Describe*
-                - ecs:List*
-              Resource: '*'
-        - PolicyName: ModifySpotFleet
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-            - Effect: Allow
-              Action:
-                - ec2:DescribeSpotFleetRequests
-                - ec2:ModifySpotFleetRequest
+                - ec2:DescribeAutoScalingGroups
+                - ec2:SetDesiredCapacity
               Resource: '*'
 
 
