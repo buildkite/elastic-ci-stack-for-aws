@@ -354,6 +354,14 @@ Parameters:
     Description: The value of the Cost Allocation Tag used for billing purposes
     Default: "buildkite-elastic-ci-stack-for-aws"
 
+  EnableExperimentalLambdaBasedAutoscaling:
+    Type: String
+    Description: Uses a custom lambda for autoscaling vs the standard AWS AutoScaling
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
 Outputs:
   ManagedSecretsBucket:
     Value:
@@ -406,11 +414,17 @@ Conditions:
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
 
-    UseAutoscaling:
+    HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
 
-    CreateMetricsStack:
-      Condition: UseAutoscaling
+    EnableLambdaAutoscaling:
+      !Equals [ !Ref EnableExperimentalLambdaBasedAutoscaling, "true" ]
+
+    UseLambdaAutoscaling:
+      !And [ Condition: EnableLambdaAutoscaling, Condition: HasVariableSize ]
+
+    UseNativeAutoscaling:
+      !And [ !Not [ Condition: EnableLambdaAutoscaling ], Condition: HasVariableSize ]
 
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
@@ -440,7 +454,7 @@ Mappings:
     poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
 
-  MetricsLambdaBucket:
+  LambdaBucket:
     us-east-1 : { Bucket: "buildkite-lambdas" }
     us-east-2 : { Bucket: "buildkite-lambdas-us-east-2" }
     us-west-1 : { Bucket: "buildkite-lambdas-us-west-1" }
@@ -784,6 +798,7 @@ Resources:
       LaunchConfigurationName: !Ref AgentLaunchConfiguration
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
+      Cooldown: 0
       MetricsCollection:
         - Granularity: 1Minute
           Metrics:
@@ -847,7 +862,7 @@ Resources:
 
   AgentScaleUpPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
-    Condition: UseAutoscaling
+    Condition: UseNativeAutoscaling
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
@@ -856,7 +871,7 @@ Resources:
 
   AgentScaleDownPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
-    Condition: UseAutoscaling
+    Condition: UseNativeAutoscaling
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
@@ -865,7 +880,7 @@ Resources:
 
   AgentUtilizationAlarmHigh:
     Type: AWS::CloudWatch::Alarm
-    Condition: UseAutoscaling
+    Condition: UseNativeAutoscaling
     Properties:
       AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
       MetricName: ScheduledJobsCount
@@ -888,7 +903,7 @@ Resources:
 
   AgentUtilizationAlarmLow:
     Type: AWS::CloudWatch::Alarm
-    Condition: UseAutoscaling
+    Condition: UseNativeAutoscaling
     Properties:
       AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
       MetricName: UnfinishedJobsCount
@@ -909,9 +924,9 @@ Resources:
               Value: !Ref BuildkiteQueue
       ComparisonOperator: LessThanOrEqualToThreshold
 
-  LambdaExecutionRole:
+  MetricsLambdaExecutionRole:
     Type: AWS::IAM::Role
-    Condition: CreateMetricsStack
+    Condition: UseNativeAutoscaling
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -924,13 +939,13 @@ Resources:
           - sts:AssumeRole
       Path: "/"
 
-  LambdaExecutionPolicy:
+  MetricsLambdaExecutionPolicy:
     Type: AWS::IAM::Policy
-    Condition: CreateMetricsStack
+    Condition: UseNativeAutoscaling
     Properties:
       PolicyName: AccessToCloudwatchForBuildkiteMetrics
       Roles:
-      - !Ref LambdaExecutionRole
+      - !Ref MetricsLambdaExecutionRole
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -943,16 +958,14 @@ Resources:
           Resource:
           - "*"
 
-  BuildkiteMetricsFunction:
+  MetricsFunction:
     Type: AWS::Lambda::Function
-    DependsOn:
-    - LambdaExecutionPolicy
-    Condition: CreateMetricsStack
+    Condition: UseNativeAutoscaling
     Properties:
       Code:
-        S3Bucket: { 'Fn::FindInMap': [MetricsLambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
+        S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
         S3Key: "buildkite-agent-metrics/v4.1.2/handler.zip"
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !GetAtt MetricsLambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
       Runtime: go1.x
@@ -965,22 +978,110 @@ Resources:
           AWS_STACK_NAME: !Ref "AWS::StackName"
           AWS_ACCOUNT_ID: !Ref "AWS::AccountId"
 
-  ScheduledRule:
+  MetricsLambdaScheduledRule:
     Type: "AWS::Events::Rule"
-    Condition: CreateMetricsStack
+    Condition: UseNativeAutoscaling
     Properties:
-      Description: "ScheduledRule"
+      Description: "BuildkiteMetricsScheduledRule"
       ScheduleExpression: "rate(1 minute)"
       State: "ENABLED"
       Targets:
-        - Arn: !GetAtt BuildkiteMetricsFunction.Arn
-          Id: "TargetBuildkiteMetricsFunction"
+        - Arn: !GetAtt MetricsFunction.Arn
+          Id: "TargetMetricsFunction"
 
-  PermissionForEventsToInvokeLambda:
+  PermissionForEventsToInvokeMetricsLambda:
     Type: "AWS::Lambda::Permission"
-    Condition: CreateMetricsStack
+    Condition: UseNativeAutoscaling
     Properties:
-      FunctionName: !Ref BuildkiteMetricsFunction
+      FunctionName: !Ref MetricsFunction
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
-      SourceArn: !GetAtt ScheduledRule.Arn
+      SourceArn: !GetAtt MetricsLambdaScheduledRule.Arn
+
+  AutoscalingLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: UseLambdaAutoscaling
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DescribeECSResources
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - ecs:Describe*
+                - ecs:List*
+              Resource: '*'
+        - PolicyName: ModifySpotFleet
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - ec2:DescribeSpotFleetRequests
+                - ec2:ModifySpotFleetRequest
+              Resource: '*'
+
+
+  # This mirrors the group that would be created by the lambda, but enforces
+  # a retention period and also ensures it's removed when the stack is removed
+  AutoscalingLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Condition: UseLambdaAutoscaling
+    Properties:
+      LogGroupName: !Join ["/", ["/aws/lambda", !Ref AutoscalingFunction]]
+      RetentionInDays: 1
+
+  AutoscalingFunction:
+    Type: AWS::Lambda::Function
+    Condition: UseLambdaAutoscaling
+    Properties:
+      Code:
+        S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
+        S3Key: "buildkite-agent-scaler/builds/2/handler.zip"
+      Role: !GetAtt AutoscalingLambdaExecutionRole.Arn
+      Timeout: 120
+      Handler: handler
+      Runtime: go1.x
+      MemorySize: 128
+      Environment:
+        Variables:
+          BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
+          BUILDKITE_QUEUE:       !Ref BuildkiteQueue
+          ASG_ID:                !Ref AgentAutoScaleGroup
+          MIN_SIZE:              !Ref MinSize
+          MAX_SIZE:              !Ref MaxSize
+          LAMBDA_TIMEOUT:        1m
+          LAMBDA_INTERVAL:       20s
+
+  AutoscalingLambdaScheduledRule:
+    Type: "AWS::Events::Rule"
+    Condition: UseLambdaAutoscaling
+    Properties:
+      Description: "ScheduledRule"
+      ScheduleExpression: "rate(1 minute)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt AutoscalingFunction.Arn
+          Id: "AutoscalingFunction"
+
+  PermissionForEventsToInvokeAutoscalingLambda:
+    Type: "AWS::Lambda::Permission"
+    Condition: UseLambdaAutoscaling
+    Properties:
+      FunctionName: !Ref AutoscalingFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt AutoscalingLambdaScheduledRule.Arn
