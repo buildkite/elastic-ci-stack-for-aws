@@ -1050,7 +1050,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-agent-scaler/builds/2/handler.zip"
+        S3Key: "buildkite-agent-scaler/builds/4/handler.zip"
       Role: !GetAtt AutoscalingLambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
@@ -1060,11 +1060,12 @@ Resources:
         Variables:
           BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
           BUILDKITE_QUEUE:       !Ref BuildkiteQueue
-          ASG_ID:                !Ref AgentAutoScaleGroup
+          AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
+          ASG_NAME:              !Ref AgentAutoScaleGroup
           MIN_SIZE:              !Ref MinSize
           MAX_SIZE:              !Ref MaxSize
           LAMBDA_TIMEOUT:        1m
-          LAMBDA_INTERVAL:       20s
+          LAMBDA_INTERVAL:       10s
 
   AutoscalingLambdaScheduledRule:
     Type: "AWS::Events::Rule"
