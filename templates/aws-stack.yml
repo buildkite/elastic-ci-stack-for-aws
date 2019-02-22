@@ -1021,8 +1021,8 @@ Resources:
             Statement:
             - Effect: Allow
               Action:
-                - ec2:DescribeAutoScalingGroups
-                - ec2:SetDesiredCapacity
+                - autoscaling:DescribeAutoScalingGroups
+                - autoscaling:SetDesiredCapacity
               Resource: '*'
 
 
