@@ -1,9 +1,13 @@
 {
+  "variables": {
+    "region": "us-east-1",
+    "ami": "ami-7105540e"
+  },
   "builders": [
     {
       "type": "amazon-ebs",
-      "region": "us-east-1",
-      "source_ami": "ami-7105540e",
+      "region": "{{user `region`}}",
+      "source_ami": "{{user `ami`}}",
       "instance_type": "i3.large",
       "spot_price": "auto",
       "spot_price_auto_product": "Linux/UNIX (Amazon VPC)",
