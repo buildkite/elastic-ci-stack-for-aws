@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.2.0) (2019-02-25)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.1.0...v4.2.0)
+
+### Added
+- Add an experimental lambda scaler [#529](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/529) (@lox)
+- Add helpers to Makefile for building packer image [#535](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/535) (@tduffield)
+- Allow users to configure the root block device [#534](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/534) (@tduffield)
+
+### Fixed
+- Fix typo in CF setting [#537](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/537) (@tduffield)
+- Make sure we reload the systemd unit files [#533](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/533) (@tduffield)
+
 ## [v4.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.1.0) (2019-02-11)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.0.4...v4.1.0)
 
