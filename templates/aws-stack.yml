@@ -49,7 +49,9 @@ Metadata:
         - RootVolumeName
         - RootVolumeType
         - ManagedPolicyARN
+        - ManagedPolicyPermissionBoundryARN
         - InstanceRoleName
+        - IAMRolePath
 
       - Label:
           default: Auto-scaling Configuration
@@ -285,6 +287,18 @@ Parameters:
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
 
+  ManagedPolicyPermissionBoundryARN:
+    Type: String
+    Description: Optional - A managed IAM permission boundry policy ARN to attach to around the instance role
+    Default: ""
+
+  IAMRolePath:
+    Type: String
+    Description: A path to namespace the IAM role - useful with permission boundries
+    Default: "/"
+    AllowedPattern: /[\w/]*
+    ConstraintDescription: "Must have a leading and trailing slash"
+
   InstanceRoleName:
     Type: String
     Description: Optional - A name for the IAM Role attached to the Instance Profile
@@ -422,6 +436,9 @@ Conditions:
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
+
+    UseManagedPolicyPermissionBoundryARN:
+      !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyPermissionBoundryARN ], "" ] ]
 
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
@@ -575,7 +592,7 @@ Resources:
   IAMInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      Path: /
+      Path: !Ref IAMRolePath
       Roles: [ !Ref IAMRole ]
 
   IAMRole:
@@ -606,7 +623,8 @@ Resources:
             Principal:
               Service: [ autoscaling.amazonaws.com, ec2.amazonaws.com ]
             Action: sts:AssumeRole
-      Path: /
+      Path: !Ref IAMRolePath
+      PermissionsBoundary: !If [ UseManagedPolicyPermissionBoundryARN, !Ref ManagedPolicyPermissionBoundryARN, !Ref "AWS::NoValue" ]
 
   IAMPolicies:
     Type: AWS::IAM::Policy
@@ -792,7 +810,7 @@ Resources:
                 Action:
                   - sns:Publish
                 Resource: !Ref AgentLifecycleTopic
-      Path: /
+      Path: !Ref IAMRolePath
 
   AgentLifecycleHook:
     Type: AWS::AutoScaling::LifecycleHook
@@ -950,7 +968,7 @@ Resources:
             - lambda.amazonaws.com
           Action:
           - sts:AssumeRole
-      Path: "/"
+      Path: !Ref IAMRolePath
 
   MetricsLambdaExecutionPolicy:
     Type: AWS::IAM::Policy
@@ -1015,7 +1033,7 @@ Resources:
     Type: AWS::IAM::Role
     Condition: UseLambdaAutoscaling
     Properties:
-      Path: "/"
+      Path: !Ref IAMRolePath
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
