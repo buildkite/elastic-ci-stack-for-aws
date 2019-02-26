@@ -101,6 +101,7 @@ hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
+priority=%n
 EOF
 
 if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" == "true" ]] ; then
