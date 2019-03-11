@@ -1041,7 +1041,7 @@ Resources:
             - Effect: Allow
               Action:
                 - cloudwatch:PutMetricData
-              Resource: '*
+              Resource: '*'
 
   # This mirrors the group that would be created by the lambda, but enforces
   # a retention period and also ensures it's removed when the stack is removed
