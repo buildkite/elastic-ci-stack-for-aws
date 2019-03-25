@@ -1082,7 +1082,7 @@ Resources:
           MIN_SIZE:              !Ref MinSize
           MAX_SIZE:              !Ref MaxSize
           LAMBDA_TIMEOUT:        1m
-          LAMBDA_INTERVAL:       10s
+          LAMBDA_INTERVAL:       8s
 
   AutoscalingLambdaScheduledRule:
     Type: "AWS::Events::Rule"
