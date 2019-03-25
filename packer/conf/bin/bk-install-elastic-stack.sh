@@ -104,12 +104,24 @@ experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 EOF
 
+# Add conditional config to the agent config
 if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" == "true" ]] ; then
   cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
 disconnect-after-job=true
 disconnect-after-job-timeout=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT}
 EOF
+elif [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
+  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
+disconnect-after-idle-timeout=${BUILDKITE_SCALE_DOWN_PERIOD}
+EOF
+fi
 
+# If we are using the lambda for autoscaling, always decrease capacity
+if [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
+  BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=true
+fi
+
+if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}" == "true" || "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
   mkdir -p /etc/systemd/system/buildkite-agent@.service.d/
 
   cat << EOF > /etc/systemd/system/buildkite-agent@.service.d/10-power-off-stop.conf
