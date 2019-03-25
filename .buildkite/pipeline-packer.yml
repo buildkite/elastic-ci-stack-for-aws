@@ -1,60 +1,21 @@
+---
 env:
-  AWS_STACK_NAME: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
-  AWS_STACK_QUEUE_NAME: "testqueue-${BUILDKITE_BUILD_NUMBER}"
+  AWS_DEFAULT_REGION: ap-southeast-2
 
 steps:
-  - name: ":bash: Lint"
-    command: .buildkite/steps/lint.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+  - label: ":git: Update submodules"
+    commands:
+      - git submodule update --init
 
-  - name: ":bash: Unit tests"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+  - label: ":packer:"
     plugins:
-      docker-compose#v2.1.0:
-        run: unit-tests
-        config: docker-compose.unit-tests.yml
-
-  - wait
-  - name: ":packer: Build"
-    command: .buildkite/steps/packer.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-
-  - wait
-  - name: ":cloudformation: Launch"
-    command: .buildkite/steps/test.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
-
-  - wait
-  - name: ":buildkite: Server Specs"
-    command: "goss validate --format documentation"
-    timeout_in_minutes: 5
-    agents:
-      stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
-
-  - wait
-  - name: ":cloudformation: 🚚 🌎"
-    command: .buildkite/steps/copy.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/mappings.yml"
-
-  - wait
-  - name: ":cloudformation: :rocket:"
-    command: .buildkite/steps/publish.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    concurrency_group: "aws-stack-publish"
-    concurrency: 1
-    artifact_paths: "build/*.yml"
-
-  - wait
-  - name: "Cleanup"
-    command: .buildkite/steps/cleanup.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+      - ecr#v1.2.0:
+          login: true
+          account_ids: "544757391075"
+      - cultureamp/aws-assume-role#v0.1.0:
+          role: "arn:aws:iam::544757391075:role/role-sts-oculo-continuous-integration"
+      - docker-compose#v3.0.0:
+          run: infrastructure_tools
+          shell: false
+          config:
+            - docker-compose.packer.yml

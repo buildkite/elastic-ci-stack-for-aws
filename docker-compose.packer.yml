@@ -6,7 +6,7 @@ services:
     image: 544757391075.dkr.ecr.ap-southeast-2.amazonaws.com/oculo/infrastructure_tools
     volumes:
       - .:/packer
-    working_dir: /packer
+    working_dir: /packer/packer
     command: ["packer", "build", "./buildkite-ami.json"]
     environment:
     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
