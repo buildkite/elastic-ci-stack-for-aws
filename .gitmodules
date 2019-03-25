@@ -1,11 +1,11 @@
-[submodule "plugins/secrets"]
-	path = plugins/secrets
+[submodule "packer/plugins/secrets"]
+	path = packer/plugins/secrets
 	url = https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks.git
 
-[submodule "plugins/ecr"]
-	path = plugins/ecr
+[submodule "packer/plugins/ecr"]
+	path = packer/plugins/ecr
 	url = https://github.com/buildkite-plugins/ecr-buildkite-plugin.git
 
-[submodule "plugins/docker-login"]
-	path = plugins/docker-login
+[submodule "packer/plugins/docker-login"]
+	path = packer/plugins/docker-login
 	url = https://github.com/buildkite-plugins/docker-login-buildkite-plugin.git

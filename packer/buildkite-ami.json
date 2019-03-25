@@ -7,7 +7,7 @@
       "spot_price": "auto",
       "spot_price_auto_product": "Linux/UNIX (Amazon VPC)",
       "ssh_username": "ec2-user",
-      "ami_name": "buildkite-stack-{{isotime | clean_ami_name}}",
+      "ami_name": "Oculo Buildkite Server {{timestamp}}",
       "ami_description": "Buildkite Elastic Stack (Amazon Linux 2 LTS w/ docker)",
       "source_ami_filter": {
         "filters": {
@@ -19,6 +19,10 @@
         },
         "owners": ["137112412989"],
         "most_recent": true
+      },
+      "tags": {
+        "Amazon_AMI_Management_Identifier": "oculo_buildkite_server_ami",
+        "source_ami": "{{ .SourceAMI }}"
       }
     }
   ],
@@ -43,6 +47,10 @@
     },
     {
       "type": "shell",
+      "script": "scripts/install-aws-ssm-agent.sh"
+    },
+    {
+      "type": "shell",
       "script": "scripts/install-lifecycled.sh"
     },
     {
@@ -64,6 +72,14 @@
     {
       "type": "shell",
       "script": "scripts/install-cc-reporter.sh"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "amazon-ami-management",
+      "regions": ["ap-southeast-2"],
+      "identifier": "oculo_ecs_server_ami",
+      "keep_releases": "3"
     }
   ]
 }

@@ -525,6 +525,7 @@ Resources:
   IAMRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !If [ SetInstanceRoleName, !Ref InstanceRoleName, !Sub "${AWS::StackName}-Role" ]
       ManagedPolicyArns: !If
           - HasManagedPolicies
           # Support multiple policies to attach by merging the values together and splitting on ','
@@ -580,6 +581,10 @@ Resources:
               - sqs:*
               - sns:Unsubscribe
               - sns:Subscribe
+            Resource: "*"
+          - Effect: Allow  # allow assumption of roles in other accounts
+            Action:
+              - sts:AssumeRole
             Resource: "*"
       Roles:
         - !Ref IAMRole

@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  infrastructure_tools:
+    init: true
+    image: 544757391075.dkr.ecr.ap-southeast-2.amazonaws.com/oculo/infrastructure_tools
+    volumes:
+      - .:/packer
+    working_dir: /packer
+    command: ["packer", "build", "./buildkite-ami.json"]
+    environment:
+    - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    - AWS_DEFAULT_REGION=ap-southeast-2
+    
