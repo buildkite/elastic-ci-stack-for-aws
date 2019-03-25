@@ -1,6 +1,7 @@
 #!/bin/bash
-
 set -eu -o pipefail
+
+AGENT_VERSION=3.10.1
 
 echo "Installing dependencies..."
 sudo yum update -y -q
@@ -10,9 +11,9 @@ echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
-echo "Downloading buildkite-agent v3.9.1 stable..."
+echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/3.9.1/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-amd64"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 

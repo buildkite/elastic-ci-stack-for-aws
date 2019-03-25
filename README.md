@@ -108,7 +108,7 @@ If you really want to store your secrets unencrypted, you can disable it entirel
 ## What’s On Each Machine?
 
 * [Amazon Linux 2 LTS](https://aws.amazon.com/amazon-linux-2/)
-* [Buildkite Agent v3.9.1](https://buildkite.com/docs/agent)
+* [Buildkite Agent v3.10.1](https://buildkite.com/docs/agent)
 * [Docker 18.09.1](https://www.docker.com)
 * [Docker Compose 1.23.2](https://docs.docker.com/compose/)
 * [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
