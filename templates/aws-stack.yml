@@ -1081,8 +1081,8 @@ Resources:
           ASG_NAME:              !Ref AgentAutoScaleGroup
           MIN_SIZE:              !Ref MinSize
           MAX_SIZE:              !Ref MaxSize
-          LAMBDA_TIMEOUT:        "1m"
-          LAMBDA_INTERVAL:       "8s"
+          LAMBDA_TIMEOUT:        "50s"
+          LAMBDA_INTERVAL:       "10s"
 
   AutoscalingLambdaScheduledRule:
     Type: "AWS::Events::Rule"
