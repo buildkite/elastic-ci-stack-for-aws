@@ -773,7 +773,7 @@ Resources:
                 - CreateSecretsBucket
                 - !Ref ManagedSecretsBucket
                 - !Ref SecretsBucket
-          - LambdaAutoscaling:
+            LambdaAutoscaling:
               !If
                 - UseLambdaAutoscaling
                 - true
@@ -1076,13 +1076,13 @@ Resources:
           BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
           BUILDKITE_QUEUE:       !Ref BuildkiteQueue
           AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
-          CLOUDWATCH_METRICS:    1
-          DISABLE_SCALE_IN:      1
+          CLOUDWATCH_METRICS:    "1"
+          DISABLE_SCALE_IN:      "1"
           ASG_NAME:              !Ref AgentAutoScaleGroup
           MIN_SIZE:              !Ref MinSize
           MAX_SIZE:              !Ref MaxSize
-          LAMBDA_TIMEOUT:        1m
-          LAMBDA_INTERVAL:       8s
+          LAMBDA_TIMEOUT:        "1m"
+          LAMBDA_INTERVAL:       "8s"
 
   AutoscalingLambdaScheduledRule:
     Type: "AWS::Events::Rule"
