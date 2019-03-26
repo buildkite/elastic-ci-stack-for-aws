@@ -1,0 +1,14 @@
+---
+env:
+  AWS_DEFAULT_REGION: ap-southeast-2
+
+steps:
+  - label: ":aws: Services"
+    plugins:
+      - ecr#v1.2.0:
+          login: true
+          account_ids: "544757391075"
+      - cultureamp/aws-assume-role#v0.1.0:
+          role: "arn:aws:iam::544757391075:role/role-sts-oculo-continuous-integration"
+      - docker-compose#v3.0.0:
+          run: infrastructure_tools
