@@ -102,6 +102,8 @@ build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
+spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
+no-color=true
 EOF
 
 # Add conditional config to the agent config
@@ -122,9 +124,9 @@ if [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
 fi
 
 if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}" == "true" || "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
-  mkdir -p /etc/systemd/system/buildkite-agent@.service.d/
+  mkdir -p /etc/systemd/system/buildkite-agent.service.d/
 
-  cat << EOF > /etc/systemd/system/buildkite-agent@.service.d/10-power-off-stop.conf
+  cat << EOF > /etc/systemd/system/buildkite-agent.service.d/10-power-off-stop.conf
 [Service]
 ExecStopPost=/usr/local/bin/terminate-instance ${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY}
 ExecStopPost=/bin/sudo poweroff
@@ -175,10 +177,8 @@ if ! docker ps ; then
   exit 1
 fi
 
-for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-  systemctl enable "buildkite-agent@${i}"
-  systemctl start "buildkite-agent@${i}"
-done
+systemctl enable "buildkite-agent"
+systemctl start "buildkite-agent"
 
 # let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \
