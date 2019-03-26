@@ -1,14 +1,10 @@
 #!/bin/bash
-
 set -euo pipefail
-
-if [[ "${1:-false}" == "true" ]] ; then
-  should_decrement="should"
-else
-  should_decrement="no-should"
-fi
 
 instance_id=$(curl -fsSL http://169.254.169.254/latest/meta-data/instance-id)
 region=$(curl -fsSL http://169.254.169.254/latest/meta-data/placement/availability-zone | head -c -1)
 
-aws autoscaling terminate-instance-in-auto-scaling-group --region "$region" --instance-id "$instance_id" "--${should_decrement}-decrement-desired-capacity"
+aws autoscaling terminate-instance-in-auto-scaling-group \
+  --region "$region" \
+  --instance-id "$instance_id" \
+  --should-decrement-desired-capacity
