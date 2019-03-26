@@ -52,6 +52,10 @@ service:
     enabled: true
     running: true
 
+  buildkite-agent:
+    enabled: true
+    running: true
+
 user:
   buildkite-agent:
     exists: true

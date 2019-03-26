@@ -1,5 +1,5 @@
 [Unit]
-Description=Buildkite Agent (%i)
+Description=Buildkite Agent
 Documentation=https://buildkite.com/agent
 After=syslog.target
 After=network.target
