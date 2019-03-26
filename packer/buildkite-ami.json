@@ -51,6 +51,12 @@
     {
       "type": "shell",
       "script": "scripts/install-git-lfs.sh"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "rm /home/ec2-user/.ssh/authorized_keys"
+      ]
     }
   ]
 }
