@@ -742,6 +742,8 @@ Resources:
             #!/bin/bash -xv
             BUILDKITE_STACK_NAME="${AWS::StackName}" \
             BUILDKITE_STACK_VERSION=%v \
+            BUILDKITE_LAMBDA_AUTOSCALING=${LambdaAutoscaling} \
+            BUILDKITE_SCALE_DOWN_PERIOD=${ScaleDownPeriod} \
             BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
             BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
             BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
@@ -771,6 +773,11 @@ Resources:
                 - CreateSecretsBucket
                 - !Ref ManagedSecretsBucket
                 - !Ref SecretsBucket
+            LambdaAutoscaling:
+              !If
+                - UseLambdaAutoscaling
+                - true
+                - false
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
@@ -987,9 +994,6 @@ Resources:
         Variables:
           BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
           BUILDKITE_QUEUE: !Ref BuildkiteQueue
-          AWS_STACK_ID: !Ref "AWS::StackId"
-          AWS_STACK_NAME: !Ref "AWS::StackName"
-          AWS_ACCOUNT_ID: !Ref "AWS::AccountId"
 
   MetricsLambdaScheduledRule:
     Type: "AWS::Events::Rule"
@@ -1037,7 +1041,14 @@ Resources:
                 - autoscaling:DescribeAutoScalingGroups
                 - autoscaling:SetDesiredCapacity
               Resource: '*'
-
+        - PolicyName: WriteCloudwatchMetrics
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: '*'
 
   # This mirrors the group that would be created by the lambda, but enforces
   # a retention period and also ensures it's removed when the stack is removed
@@ -1054,7 +1065,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-agent-scaler/builds/4/handler.zip"
+        S3Key: "buildkite-agent-scaler/v0.4.0/handler.zip"
       Role: !GetAtt AutoscalingLambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
@@ -1065,11 +1076,13 @@ Resources:
           BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
           BUILDKITE_QUEUE:       !Ref BuildkiteQueue
           AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
+          CLOUDWATCH_METRICS:    "1"
+          DISABLE_SCALE_IN:      "1"
           ASG_NAME:              !Ref AgentAutoScaleGroup
           MIN_SIZE:              !Ref MinSize
           MAX_SIZE:              !Ref MaxSize
-          LAMBDA_TIMEOUT:        1m
-          LAMBDA_INTERVAL:       10s
+          LAMBDA_TIMEOUT:        "1m"
+          LAMBDA_INTERVAL:       "8s"
 
   AutoscalingLambdaScheduledRule:
     Type: "AWS::Events::Rule"
