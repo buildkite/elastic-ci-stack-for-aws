@@ -106,29 +106,25 @@ spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 EOF
 
-# Add conditional config to the agent config
+# Support terminating the instance after a job
 if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" == "true" ]] ; then
-  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
-disconnect-after-job=true
-disconnect-after-job-timeout=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT}
-EOF
-elif [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
-  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
-disconnect-after-idle-timeout=${BUILDKITE_SCALE_DOWN_PERIOD}
-EOF
+  printf "disconnect-after-job=true\\ndisconnect-after-job-timeout=%d\\n" \
+    "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT}" >> /etc/buildkite-agent/buildkite-agent.cfg
 fi
 
-# If we are using the lambda for autoscaling, always decrease capacity
+# For autoscaling we need to terminate the instance after it's been idle
 if [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
-  BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=true
+  printf "disconnect-after-idle-timeout=%d\\n" \
+    "${BUILDKITE_SCALE_DOWN_IDLE_PERIOD}" >> /etc/buildkite-agent/buildkite-agent.cfg
 fi
 
+# If we are terminating the instance after a job or autoscaling, terminate and decrease desired count
 if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}" == "true" || "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
   mkdir -p /etc/systemd/system/buildkite-agent.service.d/
 
   cat << EOF > /etc/systemd/system/buildkite-agent.service.d/10-power-off-stop.conf
 [Service]
-ExecStopPost=/usr/local/bin/terminate-instance ${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY}
+ExecStopPost=/usr/local/bin/terminate-instance
 ExecStopPost=/bin/sudo poweroff
 EOF
 
