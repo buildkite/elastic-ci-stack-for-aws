@@ -11,9 +11,13 @@ devices=()
 
 for candidate in "${candidates[@]}" ; do
   if [[ -b $candidate ]] ; then
-    devices+=("$device")
+    devices+=("$candidate")
   fi
 done
+
+if [[ "${#devices[@]}" -gt 0 ]] ; then
+  mkdir -p "$devicemount"
+fi
 
 if [[ "${#devices[@]}" -eq 1 ]] ; then
   mkfs.xfs -f "${devices[0]}" > /dev/null
