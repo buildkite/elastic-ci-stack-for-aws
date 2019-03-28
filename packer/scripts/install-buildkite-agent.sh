@@ -43,6 +43,10 @@ echo "Creating builds dir..."
 sudo mkdir -p /var/lib/buildkite-agent/builds
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/builds
 
+echo "Creating git mirrors dir..."
+sudo mkdir -p /var/lib/buildkite-agent/git-mirrors
+sudo chown -R buildkite-agent: /var/lib/buildkite-agent/git-mirrors
+
 echo "Creating plugins dir..."
 sudo mkdir -p /var/lib/buildkite-agent/plugins
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
