@@ -331,6 +331,14 @@ Parameters:
     Description: The value of the Cost Allocation Tag used for billing purposes
     Default: "buildkite-elastic-ci-stack-for-aws"
 
+   EnableAgentGitMirrorsExperiment:
+    Type: String
+    Description: Enables the git-mirrors experiment in the agent
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
 Outputs:
   ManagedSecretsBucket:
     Value:
@@ -700,6 +708,7 @@ Resources:
             BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
             BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
             BUILDKITE_QUEUE="${BuildkiteQueue}" \
+            BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
             BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
             BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
             BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \

@@ -91,6 +91,15 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]] ; then
 	agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
 fi
 
+# Enable git mirrors
+if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
+  if [[ -z "$BUILDKITE_AGENT_EXPERIMENTS" ]] ; then
+    BUILDKITE_AGENT_EXPERIMENTS="git-mirrors"
+  else
+    BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
+  fi
+fi
+
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
 token="${BUILDKITE_AGENT_TOKEN}"
@@ -100,6 +109,7 @@ timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
+git-mirrors-path=/var/lib/buildkite-agent/git-mirrors
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
