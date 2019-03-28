@@ -331,7 +331,7 @@ Parameters:
     Description: The value of the Cost Allocation Tag used for billing purposes
     Default: "buildkite-elastic-ci-stack-for-aws"
 
-   EnableAgentGitMirrorsExperiment:
+  EnableAgentGitMirrorsExperiment:
     Type: String
     Description: Enables the git-mirrors experiment in the agent
     AllowedValues:
