@@ -3,7 +3,7 @@ template_path: .compiled-stack.yaml
 stack_name: buildkite
 
 parameters:
-  AgentsPerInstance: "2"
+  AgentsPerInstance: "3"
   AssociatePublicIpAddress: "true"
   BuildkiteAgentToken: !command_stdout "aws-kms decrypt -i AQECAHjyiQEnGbpdE89VCpDNudW0dSTn64bXL9vH9S/WfG1RPAAAAJIwgY8GCSqGSIb3DQEHBqCBgTB/AgEAMHoGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMrz4O+LTx5Olt4XEMAgEQgE2xi1ygqLZn1S0UUIfk2qxI1/AtywDw6baFLZ3Upf0cOLm3I44ZDYI1F0RW+vg2mYJ2jKb8yUNeDSUwz+uXdy0w5SAUsHHe2qi6aBtOqw=="
   BuildkiteAgentRelease: stable
