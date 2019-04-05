@@ -10,6 +10,7 @@ Metadata:
         Parameters:
         - BuildkiteAgentToken
         - BuildkiteQueue
+        - BuildkiteOrgSlug
 
       - Label:
           default: Advanced Buildkite Configuration
@@ -20,6 +21,7 @@ Metadata:
         - BuildkiteAgentExperiments
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteTerminateInstanceAfterJobTimeout
+        - BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity
         - BuildkiteAdditionalSudoPermissions
 
       - Label:
@@ -54,7 +56,10 @@ Metadata:
         Parameters:
         - MinSize
         - MaxSize
-        - ScaleDownIdlePeriod
+        - ScaleUpAdjustment
+        - ScaleDownAdjustment
+        - ScaleCooldownPeriod
+        - ScaleDownPeriod
         - InstanceCreationTimeout
 
       - Label:
@@ -96,6 +101,11 @@ Parameters:
       - edge
     Default: "stable"
 
+  BuildkiteOrgSlug:
+    Description: Optional Buildkite organization slug (e.g. "my-org"). This only needs to be set when running stacks for different Buildkite organisations in a single AWS account.
+    Type: String
+    Default: ""
+
   BuildkiteAgentToken:
     Description: Buildkite agent registration token
     Type: String
@@ -133,6 +143,14 @@ Parameters:
     Type: Number
     Default: 1800
     MinValue: 1
+
+  BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity:
+    Description: Set to "true" to decrease the desired capacity of the autoscaling group by 1 when terminating an instance after the job completes.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   BuildkiteAdditionalSudoPermissions:
     Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo.
@@ -208,11 +226,28 @@ Parameters:
     Type: Number
     Default: 0
 
-  ScaleDownIdlePeriod:
-    Description: Number of seconds an agent must be idle for before it scales in.
+  ScaleUpAdjustment:
+    Description: Number of instances to add on scale up events (ScheduledJobsCount > 0 for 1 min)
+    Type: Number
+    Default: 5
+    MinValue: 0
+
+  ScaleDownAdjustment:
+    Description: Number of instances to remove on scale down events (UnfinishedJobs == 0 for ScaleDownPeriod)
+    Type: Number
+    Default: -1
+    MaxValue: 0
+
+  ScaleCooldownPeriod:
+    Description: Minimum number of seconds to wait between scaling events. Must be greater than the time needed for an instance to boot.
     Type: Number
     Default: 300
     MinValue: 10
+
+  ScaleDownPeriod:
+    Description: Number of seconds UnfinishedJobs must equal 0 before scale down
+    Type: Number
+    Default: 1800
 
   InstanceCreationTimeout:
     Description: Timeout period for Autoscaling Group Creation Policy
@@ -339,6 +374,14 @@ Parameters:
       - "false"
     Default: "false"
 
+  EnableExperimentalLambdaBasedAutoscaling:
+    Type: String
+    Description: Uses a custom lambda for autoscaling vs the standard AWS AutoScaling
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
 Outputs:
   ManagedSecretsBucket:
     Value:
@@ -394,14 +437,23 @@ Conditions:
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
 
+    EnableLambdaAutoscaling:
+      !Equals [ !Ref EnableExperimentalLambdaBasedAutoscaling, "true" ]
+
     UseLambdaAutoscaling:
-      Condition: HasVariableSize
+      !And [ Condition: EnableLambdaAutoscaling, Condition: HasVariableSize ]
+
+    UseNativeAutoscaling:
+      !And [ !Not [ Condition: EnableLambdaAutoscaling ], Condition: HasVariableSize ]
 
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
     HasKeyName:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
+
+    HasOrgSlug:
+      !Not [ !Equals [ !Ref BuildkiteOrgSlug, "" ] ]
 
     EnableSshIngress:
       !And
@@ -699,7 +751,7 @@ Resources:
             BUILDKITE_STACK_NAME="${AWS::StackName}" \
             BUILDKITE_STACK_VERSION=%v \
             BUILDKITE_LAMBDA_AUTOSCALING=${LambdaAutoscaling} \
-            BUILDKITE_SCALE_DOWN_IDLE_PERIOD=${ScaleDownIdlePeriod} \
+            BUILDKITE_SCALE_DOWN_PERIOD=${ScaleDownPeriod} \
             BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
             BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
             BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
@@ -709,12 +761,14 @@ Resources:
             BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
             BUILDKITE_QUEUE="${BuildkiteQueue}" \
             BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
+            BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}" \
             BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
             BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
             BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
             BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
             BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
             BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT=${BuildkiteTerminateInstanceAfterJobTimeout} \
+            BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity} \
             BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS=${BuildkiteAdditionalSudoPermissions} \
             AWS_DEFAULT_REGION=${AWS::Region} \
             SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
@@ -731,8 +785,8 @@ Resources:
             LambdaAutoscaling:
               !If
                 - UseLambdaAutoscaling
-                - "true"
-                - "false"
+                - true
+                - false
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
@@ -773,7 +827,7 @@ Resources:
       LaunchConfigurationName: !Ref AgentLaunchConfiguration
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
-      Cooldown: "0"
+      Cooldown: 0
       MetricsCollection:
         - Granularity: 1Minute
           Metrics:
@@ -794,6 +848,9 @@ Resources:
           PropagateAtLaunch: true
         - Key: BuildkiteAgentRelease
           Value: !Ref BuildkiteAgentRelease
+          PropagateAtLaunch: true
+        - Key: BuildkiteOrgSlug
+          Value: !Ref BuildkiteOrgSlug
           PropagateAtLaunch: true
         - Key: BuildkiteQueue
           Value: !Ref BuildkiteQueue
@@ -831,6 +888,141 @@ Resources:
       FromPort: 22
       ToPort: 22
       CidrIp: 0.0.0.0/0
+
+  AgentScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: UseNativeAutoscaling
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      Cooldown: !Ref ScaleCooldownPeriod
+      ScalingAdjustment : !Ref ScaleUpAdjustment
+
+  AgentScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: UseNativeAutoscaling
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      Cooldown: !Ref ScaleCooldownPeriod
+      ScalingAdjustment: !Ref ScaleDownAdjustment
+
+  AgentUtilizationAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseNativeAutoscaling
+    Properties:
+      AlarmDescription: Scale-up if ScheduledJobs > 0 for 1 minute
+      MetricName: ScheduledJobsCount
+      Namespace: Buildkite
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      AlarmActions: [ !Ref AgentScaleUpPolicy ]
+      Dimensions:
+        !If
+          - HasOrgSlug
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
+            - Name: Org
+              Value:  !If [ HasOrgSlug, !Ref BuildkiteOrgSlug, "" ]
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
+      ComparisonOperator: GreaterThanThreshold
+
+  AgentUtilizationAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseNativeAutoscaling
+    Properties:
+      AlarmDescription: Scale-down if UnfinishedJobs == 0 for N minutes
+      MetricName: UnfinishedJobsCount
+      Namespace: Buildkite
+      Statistic: Maximum
+      Period: !Ref ScaleDownPeriod
+      EvaluationPeriods: 1
+      Threshold: 0
+      AlarmActions: [ !Ref AgentScaleDownPolicy ]
+      Dimensions:
+        !If
+          - HasOrgSlug
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
+            - Name: Org
+              Value: !If [ HasOrgSlug, !Ref BuildkiteOrgSlug, "" ]
+          - - Name: Queue
+              Value: !Ref BuildkiteQueue
+      ComparisonOperator: LessThanOrEqualToThreshold
+
+  MetricsLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: UseNativeAutoscaling
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+
+  MetricsLambdaExecutionPolicy:
+    Type: AWS::IAM::Policy
+    Condition: UseNativeAutoscaling
+    Properties:
+      PolicyName: AccessToCloudwatchForBuildkiteMetrics
+      Roles:
+      - !Ref MetricsLambdaExecutionRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          - cloudwatch:PutMetricData
+          Resource:
+          - "*"
+
+  MetricsFunction:
+    Type: AWS::Lambda::Function
+    Condition: UseNativeAutoscaling
+    Properties:
+      Code:
+        S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
+        S3Key: "buildkite-agent-metrics/v4.1.2/handler.zip"
+      Role: !GetAtt MetricsLambdaExecutionRole.Arn
+      Timeout: 120
+      Handler: handler
+      Runtime: go1.x
+      MemorySize: 128
+      Environment:
+        Variables:
+          BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
+          BUILDKITE_QUEUE: !Ref BuildkiteQueue
+
+  MetricsLambdaScheduledRule:
+    Type: "AWS::Events::Rule"
+    Condition: UseNativeAutoscaling
+    Properties:
+      Description: "BuildkiteMetricsScheduledRule"
+      ScheduleExpression: "rate(1 minute)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt MetricsFunction.Arn
+          Id: "TargetMetricsFunction"
+
+  PermissionForEventsToInvokeMetricsLambda:
+    Type: "AWS::Lambda::Permission"
+    Condition: UseNativeAutoscaling
+    Properties:
+      FunctionName: !Ref MetricsFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt MetricsLambdaScheduledRule.Arn
 
   AutoscalingLambdaExecutionRole:
     Type: AWS::IAM::Role
