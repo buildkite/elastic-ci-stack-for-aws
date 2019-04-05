@@ -10,7 +10,7 @@ sudo pip install --upgrade awscli
 
 echo "Installing zip utils..."
 sudo yum update -y -q
-sudo yum install -y zip unzip git
+sudo yum install -y zip unzip git pigz
 
 echo "Installing bk elastic stack bin files..."
 sudo chmod +x /tmp/conf/bin/bk-*
