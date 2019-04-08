@@ -479,14 +479,16 @@ Mappings:
     us-east-2 : { Bucket: "buildkite-lambdas-us-east-2" }
     us-west-1 : { Bucket: "buildkite-lambdas-us-west-1" }
     us-west-2 : { Bucket: "buildkite-lambdas-us-west-2" }
-    eu-west-1 : { Bucket: "buildkite-lambdas-eu-west-1" }
-    eu-west-2 : { Bucket: "buildkite-lambdas-eu-west-2" }
-    eu-central-1 : { Bucket: "buildkite-lambdas-eu-central-1" }
+    ap-south-1 : { Bucket: "buildkite-lambdas-ap-south-1" }
     ap-northeast-1 : { Bucket: "buildkite-lambdas-ap-northeast-1" }
     ap-northeast-2 : { Bucket: "buildkite-lambdas-ap-northeast-2" }
     ap-southeast-1 : { Bucket: "buildkite-lambdas-ap-southeast-1" }
     ap-southeast-2 : { Bucket: "buildkite-lambdas-ap-southeast-2" }
-    ap-south-1 : { Bucket: "buildkite-lambdas-ap-south-1" }
+    ca-central-1 : { Bucket: "buildkite-lambdas-ca-central-1" }
+    eu-central-1 : { Bucket: "buildkite-lambdas-eu-central-1" }
+    eu-west-1 : { Bucket: "buildkite-lambdas-eu-west-1" }
+    eu-west-2 : { Bucket: "buildkite-lambdas-eu-west-2" }
+    eu-west-3 : { Bucket: "buildkite-lambdas-eu-west-3" }
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
   # build/mappings.yml
