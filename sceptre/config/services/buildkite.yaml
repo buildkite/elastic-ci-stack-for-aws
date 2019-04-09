@@ -25,8 +25,8 @@ parameters:
   InstanceType: m5d.large
   KeyName: development-au-oct-18
   ManagedPolicyARN: arn:aws:iam::544757391075:policy/BuildkitePolicy,arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-  MaxSize: "3"
-  MinSize: "1"
+  MaxSize: "5"
+  MinSize: "2"
   RootVolumeSize: "250"
   ScaleCooldownPeriod: "300"
   ScaleDownAdjustment: "-1"
