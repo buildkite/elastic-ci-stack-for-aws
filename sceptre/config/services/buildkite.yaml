@@ -36,3 +36,4 @@ parameters:
   SpotPrice: "0.045"
   SleepyTime: !timestamp_from_local 18:45
   BreakfastTime: !timestamp_from_local 08:15
+  AvailabilityZones: "ap-southeast-2a,ap-southeast-2c"

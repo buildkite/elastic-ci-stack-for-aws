@@ -20,7 +20,7 @@ Resources:
       MinSize: 0
       MaxSize: !Ref MaxSize
       StartTime: !Ref SleepyTime
-      Recurrence: "0 9 * * MON-FRI"
+      Recurrence: "45 8 * * MON-FRI"
 
   BKAgentWakeForWork:
     Type: AWS::AutoScaling::ScheduledAction
@@ -31,4 +31,4 @@ Resources:
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       StartTime: !Ref BreakfastTime
-      Recurrence: "0 21 * * SUN-THU"
+      Recurrence: "15 22 * * SUN-THU"
