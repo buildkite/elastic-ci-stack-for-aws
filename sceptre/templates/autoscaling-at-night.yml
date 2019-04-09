@@ -5,12 +5,10 @@ Parameters:
   SleepyTime:
     Description: When to shut down the buildboxes
     Type: String
-    AllowedPattern: "\\d{2}:\\d{2}"
 
   BreakfastTime:
     Description: When to spin up the buildboxes
     Type: String
-    AllowedPattern: "\\d{2}:\\d{2}"
 
 Resources:
   BKAgentSleepAtNight:
