@@ -54,6 +54,7 @@ if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]] ; then
 fi
 
 ALL_REGIONS=(
+  us-east-1
   us-east-2
   us-west-1
   us-west-2
