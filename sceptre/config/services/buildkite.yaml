@@ -22,7 +22,7 @@ parameters:
   ImageId: !oculo_ami_id '*Oculo Buildkite Server*'
   InstanceCreationTimeout: PT5M
   InstanceRoleName: buildkite-instance-role
-  InstanceType: m5d.large
+  InstanceType: r4.large
   KeyName: development-au-oct-18
   ManagedPolicyARN: arn:aws:iam::544757391075:policy/BuildkitePolicy,arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
   MaxSize: "5"
@@ -36,4 +36,3 @@ parameters:
   SpotPrice: "0.045"
   SleepyTime: !timestamp_from_local 18:45
   BreakfastTime: !timestamp_from_local 08:15
-  AvailabilityZones: "ap-southeast-2a,ap-southeast-2c"
