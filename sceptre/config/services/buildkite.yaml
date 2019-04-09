@@ -34,3 +34,5 @@ parameters:
   ScaleUpAdjustment: "1"
   SecretsBucket: oculo-buildkite-secrets
   SpotPrice: "0.045"
+  SleepyTime: !timestamp_from_local 18:45
+  BreakfastTime: !timestamp_from_local 08:15

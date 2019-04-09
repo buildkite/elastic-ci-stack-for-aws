@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Buildkite stack %v"
+Description: "Buildkite stack"
 
 Metadata:
   AWS::CloudFormation::Interface:

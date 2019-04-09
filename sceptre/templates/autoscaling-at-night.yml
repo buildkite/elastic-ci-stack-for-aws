@@ -1,0 +1,36 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  SleepyTime:
+    Description: When to shut down the buildboxes
+    Type: String
+    AllowedPattern: "\\d{2}:\\d{2}"
+
+  BreakfastTime:
+    Description: When to spin up the buildboxes
+    Type: String
+    AllowedPattern: "\\d{2}:\\d{2}"
+
+Resources:
+  BKAgentSleepAtNight:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: UseAutoscaling
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      DesiredCapacity: 0
+      MinSize: 0
+      MaxSize: !Ref MaxSize
+      StartTime: !Ref SleepyTime
+      Recurrence: "0 9 * * MON-FRI"
+
+  BKAgentWakeForWork:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: UseAutoscaling
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      DesiredCapacity: !Ref MinSize
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
+      StartTime: !Ref BreakfastTime
+      Recurrence: "0 21 * * SUN-THU"
