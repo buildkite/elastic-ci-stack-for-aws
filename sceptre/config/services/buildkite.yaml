@@ -36,3 +36,4 @@ parameters:
   SpotPrice: "0.065"
   SleepyTime: !timestamp_from_local 18:45
   BreakfastTime: !timestamp_from_local 08:15
+  VpcId: !stack_output_external test-base::VpcId
