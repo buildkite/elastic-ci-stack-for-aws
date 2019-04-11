@@ -37,3 +37,4 @@ parameters:
   SleepyTime: !timestamp_from_local 18:45
   BreakfastTime: !timestamp_from_local 08:15
   VpcId: !stack_output_external test-base::VpcId
+  Subnets: subnet-0eef54fe3b9175f93,subnet-06e55242a0f368c12
