@@ -92,11 +92,22 @@ shell=powershell
 "@
 $OFS=" "
 
+# Add conditional config to the agent config
 If ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 disconnect-after-job=true
 disconnect-after-job-timeout=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT
 "@
+}
+ElseIf ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true") {
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
+disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_DOWN_PERIOD}
+"@
+}
+
+# If we are using the lambda for autoscaling, always decrease capacity
+If ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true") {
+  $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY = "true"
 }
 
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
@@ -128,7 +139,7 @@ nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
-If ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
+If (($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") -or ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true")) {
   nssm set buildkite-agent AppExit Default Exit
   nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1 $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY"
 }
