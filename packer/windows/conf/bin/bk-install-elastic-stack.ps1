@@ -135,7 +135,20 @@ if (! $?) {
   exit 1
 }
 
+# prevent password from being revealed by debug tracing
+Set-PSDebug -Trace 0
+
+Write-Output "Creating buildkite-agent user account in Administrators group"
+
+$Count = Get-Random -min 24 -max 32
+$Password = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count $Count | ForEach-Object {[char]$_})
+$UserName = "buildkite-agent"
+
+New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | ConvertTo-SecureString -AsPlainText -Force) | out-null
+Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
+
 nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
+nssm set buildkite-agent ObjectName .\$UserName $Password
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
@@ -144,6 +157,9 @@ If (($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") -or ($Env:BUILDKITE
   nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1 $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY"
 }
 Restart-Service buildkite-agent
+
+# renable debug tracing
+Set-PSDebug -Trace 2
 
 # let the stack know that this host has been initialized successfully
 cfn-signal `
