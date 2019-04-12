@@ -3,6 +3,6 @@ $ErrorActionPreference = "Stop"
 
 Write-Output "Stopping buildkite-agent gracefully"
 
-Stop-Service -Verbose buildkite-agent*
+Stop-Service -Verbose buildkite-agent
 
 Write-Output "All buildkite-agent processes have stopped"

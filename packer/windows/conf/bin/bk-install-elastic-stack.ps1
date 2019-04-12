@@ -86,6 +86,8 @@ plugins-path="C:\buildkite-agent\plugins"
 git-mirrors-path="C:\buildkite-agent\git-mirrors"
 experiment="${Env:BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
+spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
+no-color=true
 shell=powershell
 "@
 $OFS=" "
@@ -122,17 +124,15 @@ if (! $?) {
   exit 1
 }
 
-For ($i=1; $i -le ${Env:BUILDKITE_AGENTS_PER_INSTANCE}; $i++) {
-  nssm install buildkite-agent-$i C:\buildkite-agent\bin\buildkite-agent.exe start
-  nssm set buildkite-agent-$i AppStdout C:\buildkite-agent\buildkite-agent-$i.log
-  nssm set buildkite-agent-$i AppStderr C:\buildkite-agent\buildkite-agent-$i.log
-  nssm set buildkite-agent-$i AppEnvironmentExtra :HOME=C:\buildkite-agent
-  If ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
-    nssm set buildkite-agent-$i AppExit Default Exit
-    nssm set buildkite-agent-$i AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1 $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY"
-  }
-  Restart-Service buildkite-agent-$i
+nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
+nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
+nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
+nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
+If ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
+  nssm set buildkite-agent AppExit Default Exit
+  nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1 $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY"
 }
+Restart-Service buildkite-agent
 
 # let the stack know that this host has been initialized successfully
 cfn-signal `
