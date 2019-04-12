@@ -3,7 +3,7 @@ template_path: .compiled-stack.yaml
 stack_name: buildkite
 
 parameters:
-  AgentsPerInstance: "2"
+  AgentsPerInstance: "1"
   AssociatePublicIpAddress: "true"
   BuildkiteAgentToken: !command_stdout "aws-kms decrypt -i AQECAHjyiQEnGbpdE89VCpDNudW0dSTn64bXL9vH9S/WfG1RPAAAAJIwgY8GCSqGSIb3DQEHBqCBgTB/AgEAMHoGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMrz4O+LTx5Olt4XEMAgEQgE2xi1ygqLZn1S0UUIfk2qxI1/AtywDw6baFLZ3Upf0cOLm3I44ZDYI1F0RW+vg2mYJ2jKb8yUNeDSUwz+uXdy0w5SAUsHHe2qi6aBtOqw=="
   BuildkiteAgentRelease: stable
@@ -22,18 +22,18 @@ parameters:
   ImageId: !oculo_ami_id '*Oculo Buildkite Server*'
   InstanceCreationTimeout: PT5M
   InstanceRoleName: buildkite-instance-role
-  InstanceType: i3.large
+  InstanceType: c4.large
   KeyName: development-au-oct-18
   ManagedPolicyARN: arn:aws:iam::544757391075:policy/BuildkitePolicy,arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-  MaxSize: "6"
-  MinSize: "3"
+  MaxSize: "10"
+  MinSize: "6"
   RootVolumeSize: "250"
   ScaleCooldownPeriod: "300"
   ScaleDownAdjustment: "-1"
   ScaleDownPeriod: "1800"
   ScaleUpAdjustment: "1"
   SecretsBucket: oculo-buildkite-secrets
-  SpotPrice: "0.065"
+  SpotPrice: "0.050"
   SleepyTime: !timestamp_from_local 18:45
   BreakfastTime: !timestamp_from_local 08:15
   VpcId: !stack_output_external test-base::VpcId
