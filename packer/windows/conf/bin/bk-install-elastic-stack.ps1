@@ -63,6 +63,16 @@ If (Test-Path Env:BUILDKITE_AGENT_TAGS) {
   $agent_metadata += $Env:BUILDKITE_AGENT_TAGS.split(",")
 }
 
+# Enable git mirrors
+If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
+  If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_EXPERIMENTS)) {
+    $Env:BUILDKITE_AGENT_EXPERIMENTS = "git-mirrors"
+  }
+  Else {
+    $Env:BUILDKITE_AGENT_EXPERIMENTS += ",git-mirrors"
+  }
+}
+
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
@@ -73,6 +83,7 @@ timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
 plugins-path="C:\buildkite-agent\plugins"
+git-mirrors-path="C:\buildkite-agent\git-mirrors"
 experiment="${Env:BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 shell=powershell
