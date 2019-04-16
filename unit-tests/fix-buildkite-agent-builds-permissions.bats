@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-FIX_PERMISSIONS_SCRIPT="/src/packer/conf/buildkite-agent/scripts/fix-buildkite-agent-builds-permissions"
+FIX_PERMISSIONS_SCRIPT="/src/packer/linux/conf/buildkite-agent/scripts/fix-buildkite-agent-builds-permissions"
 
 @test "Slashes in the agent arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "/" "abc" "abc"
