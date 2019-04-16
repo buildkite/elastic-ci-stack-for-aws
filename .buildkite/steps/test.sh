@@ -36,6 +36,10 @@ cat << EOF > config.json
     "ParameterValue": "t2.nano"
   },
   {
+    "ParameterKey": "InstanceOperatingSystem",
+    "ParameterValue": "${os}"
+  },
+  {
     "ParameterKey": "VpcId",
     "ParameterValue": "${vpc_id}"
   },
@@ -79,7 +83,7 @@ cat << EOF > config.json
 EOF
 
 echo "--- Building templates"
-make mappings-for-image build "IMAGE_ID=$image_id"
+make "mappings-for-${os}-image" build "IMAGE_ID=$image_id"
 
 echo "--- Validating templates"
 make validate
