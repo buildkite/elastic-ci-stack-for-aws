@@ -38,19 +38,18 @@ mappings-for-windows-image: env-AWS_REGION env-IMAGE_ID
 	printf "Mappings:\n  AWSRegion2WindowsAMI:\n    %s: { AMI: %s }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings-windows.yml
 
-build: build/aws-stack.yml
-
 # Takes the mappings files and copies them into a generate stack template
-build/aws-stack.yml: templates/aws-stack.yml build/mappings-linux.yml build/mappings-windows.yml
+.PHONY: build/aws-stack.yml
+build/aws-stack.yml:
 	awk '{ \
-		if ($$0 == "  AWSRegion2LinuxAMI: {}") { \
+		if ($$0 == "  AWSRegion2LinuxAMI: {}" && system("test -f build/mappings-linux.yml") == 0) { \
 			system("grep -v Mappings: build/mappings-linux.yml") \
-		} else if ($$0 == "  AWSRegion2WindowsAMI: {}") { \
+		} else if ($$0 == "  AWSRegion2WindowsAMI: {}" && system("test -f build/mappings-windows.yml") == 0) { \
 			system("grep -v Mappings: build/mappings-windows.yml") \
 		} else { \
 			print \
 		}\
-	}' $< | sed "s/%v/$(VERSION)/" > $@
+	}' templates/aws-stack.yml | sed "s/%v/$(VERSION)/" > $@
 
 # -----------------------------------------
 # AMI creation with Packer
