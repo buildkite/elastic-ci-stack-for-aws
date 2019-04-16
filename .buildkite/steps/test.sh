@@ -2,6 +2,8 @@
 # shellcheck disable=SC1117
 set -eu
 
+os="${1:-linux}"
+
 # download parfait binary
 wget -N https://github.com/lox/parfait/releases/download/v1.1.3/parfait_linux_amd64
 mv parfait_linux_amd64 parfait
@@ -12,8 +14,8 @@ subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --quer
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 
-image_id=$(buildkite-agent meta-data get image_id)
-echo "Using AMI $image_id"
+image_id=$(buildkite-agent meta-data get "${os}_image_id")
+echo "Using AMI $image_id for $os"
 
 cat << EOF > config.json
 [

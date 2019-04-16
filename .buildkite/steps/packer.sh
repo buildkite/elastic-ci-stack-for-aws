@@ -33,4 +33,4 @@ fi
 image_id=$(grep -Eo "${AWS_REGION}: (ami-.+)$" "$packer_file" | awk '{print $2}')
 echo "AMI for ${AWS_REGION} is $image_id"
 
-buildkite-agent meta-data set image_id "$image_id"
+buildkite-agent meta-data set image_id "${os}_$image_id"

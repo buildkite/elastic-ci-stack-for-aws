@@ -16,20 +16,35 @@ steps:
         run: unit-tests
         config: docker-compose.unit-tests.yml
 
-  - wait
-  - name: ":packer: :linux:"
-    command: .buildkite/steps/packer.sh linux
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-
   - name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
   - wait
-  - name: ":cloudformation: Launch"
-    command: .buildkite/steps/test.sh
+  - name: ":cloudformation: :windows: Launch"
+    command: .buildkite/steps/test.sh windows
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    artifact_paths: "build/aws-stack.yml"
+
+  - wait
+  - name: ":buildkite: :windows: Test"
+    command: "echo hello world from windows"
+    timeout_in_minutes: 5
+    agents:
+      stack: "buildkite-aws-stack-test-windows-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-windows-${BUILDKITE_BUILD_NUMBER}"
+
+  - wait
+  - name: ":packer: :linux:"
+    command: .buildkite/steps/packer.sh linux
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
+  - wait
+  - name: ":cloudformation: :linux: Launch"
+    command: .buildkite/steps/test.sh linux
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
@@ -39,8 +54,8 @@ steps:
     command: "goss validate --format documentation"
     timeout_in_minutes: 5
     agents:
-      stack: "buildkite-aws-stack-test-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-${BUILDKITE_BUILD_NUMBER}"
+      stack: "buildkite-aws-stack-test-linux-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-linux-${BUILDKITE_BUILD_NUMBER}"
 
   - wait
   - name: ":cloudformation: 🚚 🌎"
