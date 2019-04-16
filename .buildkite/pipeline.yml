@@ -24,14 +24,14 @@ steps:
 
   - wait
   - name: ":cloudformation: :windows: Launch"
-    command: .buildkite/steps/test.sh windows
+    command: .buildkite/steps/launch.sh windows
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
 
   - wait
   - name: ":cloudformation: :windows: Test"
-    command: "echo hello world from windows"
+    command: "docker info"
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-windows-${BUILDKITE_BUILD_NUMBER}"
@@ -45,7 +45,7 @@ steps:
 
   - wait
   - name: ":cloudformation: :linux: Launch"
-    command: .buildkite/steps/test.sh linux
+    command: .buildkite/steps/launch.sh linux
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
