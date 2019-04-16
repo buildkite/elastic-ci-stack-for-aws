@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+
+  # map AWS_ECR_LOGIN_REGISTRY_IDS into the plugin list format
+  if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+    export BUILDKITE_PLUGIN_ECR_ACCOUNT_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
+  fi
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/pre-command
+fi
+
+if [[ -n "${DOCKER_LOGIN_USER:-}" && "${DOCKER_LOGIN_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_DOCKER_LOGIN_USERNAME="$DOCKER_LOGIN_USER"
+  export BUILDKITE_PLUGIN_DOCKER_LOGIN_PASSWORD_ENV="DOCKER_LOGIN_PASSWORD"
+  export BUILDKITE_PLUGIN_DOCKER_LOGIN_SERVER="${DOCKER_LOGIN_SERVER:-}"
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/docker-login/hooks/pre-command
+fi
