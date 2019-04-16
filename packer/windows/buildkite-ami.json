@@ -35,7 +35,7 @@
     },
     {
       "type": "file",
-      "source": "../plugins",
+      "source": "../../plugins",
       "destination": "C:/packer-temp"
     },
     {

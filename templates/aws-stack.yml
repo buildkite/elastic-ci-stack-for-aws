@@ -299,6 +299,14 @@ Parameters:
     Description: Optional - A name for the IAM Role attached to the Instance Profile
     Default: ""
 
+  InstanceOperatingSystem:
+    Type: String
+    Description: The operating system to run on the instances
+    AllowedValues:
+      - linux
+      - windows
+    Default: "linux"
+
   ECRAccessPolicy:
     Type: String
     Description: ECR access policy to give container instances
@@ -476,6 +484,12 @@ Conditions:
     HasManagedPolicies:
       !Or [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
 
+    UseWindowsAgents:
+      !Equals [ !Ref InstanceOperatingSystem, "windows" ]
+
+    UseLinuxAgents:
+      !Equals [ !Ref InstanceOperatingSystem, "linux" ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
@@ -500,7 +514,11 @@ Mappings:
     eu-west-3 : { Bucket: "buildkite-lambdas-eu-west-3" }
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
-  # build/mappings.yml
+  # Generated from Makefile via build/mappings-linux.yml
+  AWSRegion2LinuxAMI: {}
+
+  # Generated from Makefile via build/mappings-windows.yml
+  AWSRegion2WindowsAMI: {}
 
 Resources:
   Vpc:
@@ -732,8 +750,9 @@ Resources:
       Roles:
         - !Ref IAMRole
 
-  AgentLaunchConfiguration:
+  LinuxAgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
+    Condition: UseLinuxAgents
     Properties:
       AssociatePublicIpAddress: !Ref AssociatePublicIpAddress
       SecurityGroups: [ !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
@@ -799,6 +818,70 @@ Resources:
                 - true
                 - false
 
+  WindowsAgentLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Condition: UseWindowsAgents
+    Properties:
+      AssociatePublicIpAddress: !Ref AssociatePublicIpAddress
+      SecurityGroups: [ !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
+      KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
+      IamInstanceProfile: !Ref IAMInstanceProfile
+      InstanceType: !Ref InstanceType
+      SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
+      ImageId: !If [ "UseDefaultAMI", !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'], !Ref ImageId ]
+      BlockDeviceMappings:
+        - DeviceName: !Ref RootVolumeName
+          Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
+      UserData:
+        "Fn::Base64": !Sub
+          - |
+            <powershell>
+            $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
+            $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
+            powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
+
+            $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
+            $Env:BUILDKITE_STACK_VERSION="v4.3.1"
+            $Env:BUILDKITE_LAMBDA_AUTOSCALING="${LambdaAutoscaling}"
+            $Env:BUILDKITE_SCALE_DOWN_PERIOD="${ScaleDownPeriod}"
+            $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
+            $Env:BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}"
+            $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
+            $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
+            $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
+            $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
+            $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
+            $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
+            $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}"
+            $Env:BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}"
+            $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
+            $Env:BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}"
+            $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
+            $Env:BUILDKITE_LIFECYCLE_TOPIC="${AgentLifecycleTopic}"
+            $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
+            $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT="${BuildkiteTerminateInstanceAfterJobTimeout}"
+            $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY="${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity}"
+            $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
+            $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
+            $Env:AWS_DEFAULT_REGION="${AWS::Region}"
+            $Env:SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}"
+            $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
+            $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
+            $Env:AWS_REGION="${AWS::Region}"
+            powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
+            </powershell>
+          - LocalSecretsBucket:
+              !If
+                - CreateSecretsBucket
+                - !Ref ManagedSecretsBucket
+                - !Ref SecretsBucket
+            LambdaAutoscaling:
+              !If
+                - UseLambdaAutoscaling
+                - true
+                - false
+
+
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
 
@@ -835,7 +918,10 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
-      LaunchConfigurationName: !Ref AgentLaunchConfiguration
+      LaunchConfigurationName: !If
+        - UseWindowsAgents
+        - !Ref WindowsAgentLaunchConfiguration
+        - !Ref LinuxAgentLaunchConfiguration
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 0

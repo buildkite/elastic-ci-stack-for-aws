@@ -2,7 +2,9 @@
 
 VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
-PACKER_FILES = $(exec find packer/)
+
+PACKER_LINUX_FILES = $(exec find packer/linux)
+PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
 AWS_REGION ?= us-east-1
 AMZN_LINUX2_AMI ?= $(shell aws ec2 describe-images --region $(AWS_REGION) --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????-x86_64-gp2' 'Name=state,Values=available' --output json | jq -r '.Images | sort_by(.CreationDate) | last(.[]).ImageId')
@@ -11,8 +13,8 @@ all: packer build
 
 # Remove any built cloudformation templates and packer output
 clean:
-	-rm -f build/*
-	-rm packer.output
+	-rm -rf build/*
+	-rm packer*.output
 
 # Check for specific environment variables
 env-%:
@@ -24,28 +26,43 @@ env-%:
 # -----------------------------------------
 # Template creation
 
-mappings-for-image: env-AWS_REGION env-IMAGE_ID
+# Build a linux mapping file for a single region and image id pair
+mappings-for-linux-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
+	printf "Mappings:\n  AWSRegion2LinuxAMI:\n    %s: { AMI: %s }\n" \
+		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings-linux.yml
+
+# Build a windows mapping file for a single region and image id pair
+mappings-for-windows-image: env-AWS_REGION env-IMAGE_ID
+	mkdir -p build/
+	printf "Mappings:\n  AWSRegion2WindowsAMI:\n    %s: { AMI: %s }\n" \
+		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings-windows.yml
 
 build: build/aws-stack.yml
 
-build/aws-stack.yml: templates/aws-stack.yml build/mappings.yml
-	awk '{if($$0=="  # build/mappings.yml"){system("grep -v Mappings: build/mappings.yml")}else{print}}' templates/aws-stack.yml \
-		| sed "s/%v/$(VERSION)/" > build/aws-stack.yml
+# Takes the mappings files and copies them into a generate stack template
+build/aws-stack.yml: templates/aws-stack.yml build/mappings-linux.yml build/mappings-windows.yml
+	awk '{ \
+		if ($$0 == "  AWSRegion2LinuxAMI: {}") { \
+			system("grep -v Mappings: build/mappings-linux.yml") \
+		} else if ($$0 == "  AWSRegion2WindowsAMI: {}") { \
+			system("grep -v Mappings: build/mappings-windows.yml") \
+		} else { \
+			print \
+		}\
+	}' $< | sed "s/%v/$(VERSION)/" > $@
 
 # -----------------------------------------
 # AMI creation with Packer
 
-# Use packer to create an AMI
-packer: packer.output env-AWS_REGION
-	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" packer.output | cut -d' ' -f2) > build/mappings.yml
+build/mappings-linux.yml: packer-linux.output env-AWS_REGION
+	echo mkdir -p build
+	printf "Mappings:\n  AWSRegion2LinuxAMI:\n    %s: { AMI: %s }\n" \
+		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" $< \
+		| cut -d' ' -f2) > $@
 
-# Use packer to create an AMI and write the output to packer.output
-packer.output: $(PACKER_FILES)
+# Build linux packer image
+packer-linux.output: $(PACKER_LINUX_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -56,8 +73,31 @@ packer.output: $(PACKER_FILES)
 		-v ${HOME}/.aws:/root/.aws \
 		-v "$(PWD):/src" \
 		--rm \
-		-w /src/packer \
-		hashicorp/packer:1.0.4 build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' buildkite-ami.json | tee packer.output
+		-w /src/packer/linux \
+		hashicorp/packer:1.0.4 build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+			buildkite-ami.json | tee $@
+
+build/mappings-windows.yml: packer-windows.output env-AWS_REGION
+	echo mkdir -p build
+	printf "Mappings:\n  AWSRegion2WindowsAMI:\n    %s: { AMI: %s }\n" \
+		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" $< \
+		| cut -d' ' -f2) > $@
+
+# Build windows packer image
+packer-windows.output: $(PACKER_WINDOWS_FILES)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/windows \
+		hashicorp/packer:1.0.4 build -var 'region=$(AWS_REGION)' \
+			buildkite-ami.json | tee $@
 
 # -----------------------------------------
 # Cloudformation helpers
