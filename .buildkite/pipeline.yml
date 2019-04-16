@@ -16,6 +16,7 @@ steps:
         run: unit-tests
         config: docker-compose.unit-tests.yml
 
+  - wait
   - name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
     agents:
@@ -29,7 +30,7 @@ steps:
     artifact_paths: "build/aws-stack.yml"
 
   - wait
-  - name: ":buildkite: :windows: Test"
+  - name: ":cloudformation: :windows: Test"
     command: "echo hello world from windows"
     timeout_in_minutes: 5
     agents:
@@ -50,7 +51,7 @@ steps:
     artifact_paths: "build/aws-stack.yml"
 
   - wait
-  - name: ":buildkite: Server Specs"
+  - name: ":cloudformation: :linux: Test"
     command: "goss validate --format documentation"
     timeout_in_minutes: 5
     agents:
