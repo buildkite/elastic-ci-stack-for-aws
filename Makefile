@@ -24,28 +24,28 @@ env-%:
 	fi
 
 # -----------------------------------------
-# Template creation
 
-# Build a linux mapping file for a single region and image id pair
+build: packer build/aws-stack.yml
+
+# Build a mapping file for a single region and image id pair
 mappings-for-linux-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2LinuxAMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings-linux.yml
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: %s }\n" \
+		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build a windows mapping file for a single region and image id pair
 mappings-for-windows-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2WindowsAMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings-windows.yml
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { windows: %s }\n" \
+		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
-# Takes the mappings files and copies them into a generate stack template
+# Takes the mappings files and copies them into a generated stack template
 .PHONY: build/aws-stack.yml
 build/aws-stack.yml:
+	test -f build/mappings.yml
 	awk '{ \
-		if ($$0 == "  AWSRegion2LinuxAMI: {}" && system("test -f build/mappings-linux.yml") == 0) { \
-			system("grep -v Mappings: build/mappings-linux.yml") \
-		} else if ($$0 == "  AWSRegion2WindowsAMI: {}" && system("test -f build/mappings-windows.yml") == 0) { \
-			system("grep -v Mappings: build/mappings-windows.yml") \
+		if ($$0 ~ /AWSRegion2AMI:/ && system("test -f build/mappings.yml") == 0) { \
+			system("grep -v Mappings: build/mappings.yml") \
 		} else { \
 			print \
 		}\
@@ -54,11 +54,16 @@ build/aws-stack.yml:
 # -----------------------------------------
 # AMI creation with Packer
 
-build/mappings-linux.yml: packer-linux.output env-AWS_REGION
-	echo mkdir -p build
-	printf "Mappings:\n  AWSRegion2LinuxAMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" $< \
-		| cut -d' ' -f2) > $@
+packer: packer-linux.output packer-windows.output
+
+build/mappings.yml: build/linux-ami.txt build/windows-ami.txt
+	mkdir -p build
+	printf "Mappings:\n  AWSRegion2AMI:\n    %q : { linux: %q, windows: %q }\n" \
+		"$(AWS_REGION)" $$(cat build/linux-ami.txt) $$(cat build/windows-ami.txt) > $@
+
+build/linux-ami.txt: packer-linux.output env-AWS_REGION
+	mkdir -p build
+	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
 packer-linux.output: $(PACKER_LINUX_FILES)
@@ -76,11 +81,9 @@ packer-linux.output: $(PACKER_LINUX_FILES)
 		hashicorp/packer:1.0.4 build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
 			buildkite-ami.json | tee $@
 
-build/mappings-windows.yml: packer-windows.output env-AWS_REGION
-	echo mkdir -p build
-	printf "Mappings:\n  AWSRegion2WindowsAMI:\n    %s: { AMI: %s }\n" \
-		"$(AWS_REGION)" $$(grep -Eo "$(AWS_REGION): (ami-.+)" $< \
-		| cut -d' ' -f2) > $@
+build/windows-ami.txt: packer-windows.output env-AWS_REGION
+	mkdir -p build
+	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build windows packer image
 packer-windows.output: $(PACKER_WINDOWS_FILES)

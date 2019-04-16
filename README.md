@@ -280,7 +280,7 @@ Also keep in mind the EC2 HTTP metadata server is available from within builds, 
 To get started with customizing your own stack, or contributing fixes and features:
 
 ```bash
-# Build an AMI
+# Build all AMIs
 make build
 
 # Or, to set things up locally and create the stack on AWS

@@ -514,11 +514,8 @@ Mappings:
     eu-west-3 : { Bucket: "buildkite-lambdas-eu-west-3" }
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
-  # Generated from Makefile via build/mappings-linux.yml
-  AWSRegion2LinuxAMI: {}
-
-  # Generated from Makefile via build/mappings-windows.yml
-  AWSRegion2WindowsAMI: {}
+  # Generated from Makefile via build/mappings.yml
+  AWSRegion2AMI: { linux: !Ref ImageId, windows: !Ref ImageId }
 
 Resources:
   Vpc:
