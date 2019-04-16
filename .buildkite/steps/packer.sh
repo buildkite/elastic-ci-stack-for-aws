@@ -11,7 +11,7 @@ build_dir="build/${os}"
 agent_binary="buildkite-agent-${os}-amd64"
 
 if [[ "$os" == "windows" ]] ; then
-  binary_name+=".exe"
+  agent_binary+=".exe"
 fi
 
 mkdir -p "${build_dir}"
