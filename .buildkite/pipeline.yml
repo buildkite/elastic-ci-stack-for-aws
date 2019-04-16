@@ -17,8 +17,13 @@ steps:
         config: docker-compose.unit-tests.yml
 
   - wait
-  - name: ":packer: Build"
-    command: .buildkite/steps/packer.sh
+  - name: ":packer: :linux:"
+    command: .buildkite/steps/packer.sh linux
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
+  - name: ":packer: :windows:"
+    command: .buildkite/steps/packer.sh windows
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
