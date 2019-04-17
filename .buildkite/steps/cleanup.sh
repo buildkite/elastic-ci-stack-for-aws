@@ -2,23 +2,31 @@
 # shellcheck disable=SC2016
 set -uxo pipefail
 
-if [[ -n "${AWS_STACK_NAME:-}" ]] ; then
+delete_test_stack() {
+  local os="$1"
+  local stack_name; stack_name="buildkite-aws-stack-test-${os}-${BUILDKITE_BUILD_NUMBER}"
+
   secrets_bucket=$(aws cloudformation describe-stacks \
-    --stack-name "${AWS_STACK_NAME}" \
+    --stack-name "${stack_name}" \
     --query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsBucket`].OutputValue' \
     --output text)
 
   secrets_logging_bucket=$(aws cloudformation describe-stacks \
-    --stack-name "${AWS_STACK_NAME}" \
+    --stack-name "${stack_name}" \
     --query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsLoggingBucket`].OutputValue' \
     --output text)
 
-  echo "--- Deleting stack $AWS_STACK_NAME"
-  aws cloudformation delete-stack --stack-name "$AWS_STACK_NAME"
+  echo "--- Deleting stack $stack_name"
+  aws cloudformation delete-stack --stack-name "$stack_name"
 
-  echo "--- Deleting buckets for $AWS_STACK_NAME"
+  echo "--- Deleting buckets for $stack_name"
   aws s3 rb "s3://${secrets_bucket}" --force
   aws s3 rb "s3://${secrets_logging_bucket}" --force
+}
+
+if [[ -n "${BUILDKITE_BUILD_NUMBER:-}" ]] ; then
+  delete_test_stack "windows"
+  delete_test_stack "linux"
 fi
 
 if [[ $OSTYPE =~ ^darwin ]] ; then
