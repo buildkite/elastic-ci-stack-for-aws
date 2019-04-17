@@ -800,14 +800,10 @@ Resources:
               $Env:AWS_REGION="${AWS::Region}"
               powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
               </powershell>
-            - LocalSecretsBucket: !If
-                  - CreateSecretsBucket
-                  - !Ref ManagedSecretsBucket
-                  - !Ref SecretsBucket
-              LambdaAutoscaling: !If
-                  - UseLambdaAutoscaling
-                  - true
-                  - false
+            - {
+                LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
+                LambdaAutoscaling: !If [ UseLambdaAutoscaling, true, false ],
+              }
           - !Sub
             - |
               Content-Type: multipart/mixed; boundary="==BOUNDARY=="
@@ -849,14 +845,10 @@ Resources:
               AWS_REGION=${AWS::Region} \
                 /usr/local/bin/bk-install-elastic-stack.sh
               --==BOUNDARY==--
-            - LocalSecretsBucket: !If
-                  - CreateSecretsBucket
-                  - !Ref ManagedSecretsBucket
-                  - !Ref SecretsBucket
-              LambdaAutoscaling: !If
-                  - UseLambdaAutoscaling
-                  - true
-                  - false
+            - {
+                LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
+                LambdaAutoscaling: !If [ UseLambdaAutoscaling, true, false ],
+              }
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
