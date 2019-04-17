@@ -145,6 +145,8 @@ $Password = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count $Count | 
 $UserName = "buildkite-agent"
 
 New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | ConvertTo-SecureString -AsPlainText -Force) | out-null
+Add-LocalGroupMember -Group "docker-users" -Member $UserName | out-null
+
 If ($Env:BUILDKITE_WINDOWS_ADMINISTRATOR -eq "true") {
   Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
 }
