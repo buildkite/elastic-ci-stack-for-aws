@@ -442,9 +442,6 @@ Conditions:
     UseArtifactsBucket:
       !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
 
-    UseDefaultAMI:
-      !Equals [ !Ref ImageId, "" ]
-
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
 
@@ -747,9 +744,8 @@ Resources:
       Roles:
         - !Ref IAMRole
 
-  LinuxAgentLaunchConfiguration:
+  AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
-    Condition: UseLinuxAgents
     Properties:
       AssociatePublicIpAddress: !Ref AssociatePublicIpAddress
       SecurityGroups: [ !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
@@ -757,127 +753,110 @@ Resources:
       IamInstanceProfile: !Ref IAMInstanceProfile
       InstanceType: !Ref InstanceType
       SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
-      ImageId: !If [ "UseDefaultAMI", !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'], !Ref ImageId ]
+      ImageId: !If
+        - UseWindowsAgents
+        - !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'windows' ]
+        - !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'linux' ]
       BlockDeviceMappings:
         - DeviceName: !Ref RootVolumeName
           Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
       UserData:
-        "Fn::Base64": !Sub
-          - |
-            Content-Type: multipart/mixed; boundary="==BOUNDARY=="
-            MIME-Version: 1.0
-            --==BOUNDARY==
-            Content-Type: text/cloud-boothook; charset="us-ascii"
-            DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
-            DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
-              /usr/local/bin/bk-configure-docker.sh
+        Fn::Base64: !If
+          - UseWindowsAgents
+          - !Sub
+            - |
+              <powershell>
+              $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
+              $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
+              powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 
-            --==BOUNDARY==
-            Content-Type: text/x-shellscript; charset="us-ascii"
-            #!/bin/bash -xv
-            BUILDKITE_STACK_NAME="${AWS::StackName}" \
-            BUILDKITE_STACK_VERSION=%v \
-            BUILDKITE_LAMBDA_AUTOSCALING=${LambdaAutoscaling} \
-            BUILDKITE_SCALE_DOWN_PERIOD=${ScaleDownPeriod} \
-            BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
-            BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
-            BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
-            BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
-            BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
-            BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
-            BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
-            BUILDKITE_QUEUE="${BuildkiteQueue}" \
-            BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
-            BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}" \
-            BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
-            BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
-            BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
-            BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
-            BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
-            BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT=${BuildkiteTerminateInstanceAfterJobTimeout} \
-            BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity} \
-            BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS=${BuildkiteAdditionalSudoPermissions} \
-            AWS_DEFAULT_REGION=${AWS::Region} \
-            SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
-            ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
-            DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
-            AWS_REGION=${AWS::Region} \
-              /usr/local/bin/bk-install-elastic-stack.sh
-            --==BOUNDARY==--
-          - LocalSecretsBucket:
-              !If
-                - CreateSecretsBucket
-                - !Ref ManagedSecretsBucket
-                - !Ref SecretsBucket
-            LambdaAutoscaling:
-              !If
-                - UseLambdaAutoscaling
-                - true
-                - false
-
-  WindowsAgentLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    Condition: UseWindowsAgents
-    Properties:
-      AssociatePublicIpAddress: !Ref AssociatePublicIpAddress
-      SecurityGroups: [ !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
-      KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
-      IamInstanceProfile: !Ref IAMInstanceProfile
-      InstanceType: !Ref InstanceType
-      SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
-      ImageId: !If [ "UseDefaultAMI", !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'], !Ref ImageId ]
-      BlockDeviceMappings:
-        - DeviceName: !Ref RootVolumeName
-          Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
-      UserData:
-        "Fn::Base64": !Sub
-          - |
-            <powershell>
-            $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
-            $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
-            powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
-
-            $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
-            $Env:BUILDKITE_STACK_VERSION="v4.3.1"
-            $Env:BUILDKITE_LAMBDA_AUTOSCALING="${LambdaAutoscaling}"
-            $Env:BUILDKITE_SCALE_DOWN_PERIOD="${ScaleDownPeriod}"
-            $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
-            $Env:BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}"
-            $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
-            $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
-            $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
-            $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
-            $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
-            $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
-            $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}"
-            $Env:BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}"
-            $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
-            $Env:BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}"
-            $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
-            $Env:BUILDKITE_LIFECYCLE_TOPIC="${AgentLifecycleTopic}"
-            $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
-            $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT="${BuildkiteTerminateInstanceAfterJobTimeout}"
-            $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY="${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity}"
-            $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
-            $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
-            $Env:AWS_DEFAULT_REGION="${AWS::Region}"
-            $Env:SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}"
-            $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
-            $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
-            $Env:AWS_REGION="${AWS::Region}"
-            powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
-            </powershell>
-          - LocalSecretsBucket:
-              !If
-                - CreateSecretsBucket
-                - !Ref ManagedSecretsBucket
-                - !Ref SecretsBucket
-            LambdaAutoscaling:
-              !If
-                - UseLambdaAutoscaling
-                - true
-                - false
-
+              $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
+              $Env:BUILDKITE_STACK_VERSION="v4.3.1"
+              $Env:BUILDKITE_LAMBDA_AUTOSCALING="${LambdaAutoscaling}"
+              $Env:BUILDKITE_SCALE_DOWN_PERIOD="${ScaleDownPeriod}"
+              $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
+              $Env:BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}"
+              $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
+              $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
+              $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
+              $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
+              $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
+              $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
+              $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}"
+              $Env:BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}"
+              $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
+              $Env:BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}"
+              $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
+              $Env:BUILDKITE_LIFECYCLE_TOPIC="${AgentLifecycleTopic}"
+              $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
+              $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT="${BuildkiteTerminateInstanceAfterJobTimeout}"
+              $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY="${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity}"
+              $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
+              $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
+              $Env:AWS_DEFAULT_REGION="${AWS::Region}"
+              $Env:SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}"
+              $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
+              $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
+              $Env:AWS_REGION="${AWS::Region}"
+              powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
+              </powershell>
+            - LocalSecretsBucket: !If
+                  - CreateSecretsBucket
+                  - !Ref ManagedSecretsBucket
+                  - !Ref SecretsBucket
+              LambdaAutoscaling: !If
+                  - UseLambdaAutoscaling
+                  - true
+                  - false
+          - !Sub
+            - |
+              Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+              MIME-Version: 1.0
+              --==BOUNDARY==
+              Content-Type: text/cloud-boothook; charset="us-ascii"
+              DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+              DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
+                /usr/local/bin/bk-configure-docker.sh
+              --==BOUNDARY==
+              Content-Type: text/x-shellscript; charset="us-ascii"
+              #!/bin/bash -xv
+              BUILDKITE_STACK_NAME="${AWS::StackName}" \
+              BUILDKITE_STACK_VERSION=%v \
+              BUILDKITE_LAMBDA_AUTOSCALING=${LambdaAutoscaling} \
+              BUILDKITE_SCALE_DOWN_PERIOD=${ScaleDownPeriod} \
+              BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
+              BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
+              BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+              BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
+              BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
+              BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
+              BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
+              BUILDKITE_QUEUE="${BuildkiteQueue}" \
+              BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
+              BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}" \
+              BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+              BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
+              BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
+              BUILDKITE_LIFECYCLE_TOPIC=${AgentLifecycleTopic} \
+              BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
+              BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT=${BuildkiteTerminateInstanceAfterJobTimeout} \
+              BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=${BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity} \
+              BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS=${BuildkiteAdditionalSudoPermissions} \
+              AWS_DEFAULT_REGION=${AWS::Region} \
+              SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
+              ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
+              DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
+              AWS_REGION=${AWS::Region} \
+                /usr/local/bin/bk-install-elastic-stack.sh
+              --==BOUNDARY==--
+            - LocalSecretsBucket: !If
+                  - CreateSecretsBucket
+                  - !Ref ManagedSecretsBucket
+                  - !Ref SecretsBucket
+              LambdaAutoscaling: !If
+                  - UseLambdaAutoscaling
+                  - true
+                  - false
 
   AgentLifecycleTopic:
     Type: AWS::SNS::Topic
@@ -915,10 +894,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
-      LaunchConfigurationName: !If
-        - UseWindowsAgents
-        - !Ref WindowsAgentLaunchConfiguration
-        - !Ref LinuxAgentLaunchConfiguration
+      LaunchConfigurationName: !Ref AgentLaunchConfiguration
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 0
