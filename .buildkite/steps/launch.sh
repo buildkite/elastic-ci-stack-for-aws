@@ -17,6 +17,9 @@ az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$/
 image_id=$(buildkite-agent meta-data get "${os}_image_id")
 echo "Using AMI $image_id for $os"
 
+stack_name="buildkite-aws-stack-test-${os}-${BUILDKITE_BUILD_NUMBER}"
+stack_queue_name="testqueue-${os}-${BUILDKITE_BUILD_NUMBER}"
+
 cat << EOF > config.json
 [
   {
@@ -25,7 +28,7 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "BuildkiteQueue",
-    "ParameterValue": "${AWS_STACK_QUEUE_NAME}"
+    "ParameterValue": "${stack_queue_name}"
   },
   {
     "ParameterKey": "KeyName",
@@ -88,8 +91,8 @@ make "mappings-for-${os}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 echo "--- Validating templates"
 make validate
 
-echo "--- Creating stack ${AWS_STACK_NAME}"
-make create-stack "STACK_NAME=$AWS_STACK_NAME"
+echo "--- Creating stack ${stack_name}"
+make create-stack "STACK_NAME=$stack_name"
 
 echo "+++ ⌛️ Waiting for update to complete"
-./parfait watch-stack "${AWS_STACK_NAME}"
+./parfait watch-stack "${stack_name}"
