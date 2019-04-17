@@ -8,7 +8,7 @@
       "type": "amazon-ebs",
       "region": "{{user `region`}}",
       "source_ami": "{{user `ami`}}",
-      "instance_type": "i3.large",
+      "instance_type": "m5.xlarge",
       "spot_price": "auto",
       "spot_price_auto_product": "Linux/UNIX (Amazon VPC)",
       "ssh_username": "ec2-user",
