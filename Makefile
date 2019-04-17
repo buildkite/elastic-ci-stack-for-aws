@@ -30,13 +30,13 @@ build: packer build/aws-stack.yml
 # Build a mapping file for a single region and image id pair
 mappings-for-linux-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: %s }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: %s, windows: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build a windows mapping file for a single region and image id pair
 mappings-for-windows-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { windows: %s }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: '', windows: %s }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Takes the mappings files and copies them into a generated stack template
