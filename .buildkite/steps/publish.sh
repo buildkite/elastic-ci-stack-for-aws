@@ -29,7 +29,7 @@ echo "--- Fetching latest git tags"
 git fetch --tags
 
 echo "--- Building :cloudformation: templates"
-make build
+make build/aws-stack.yml
 
 # Publish the top-level mappings only on when we see the most recent tag on master
 if is_latest_tag ; then
