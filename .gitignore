@@ -1,5 +1,5 @@
 build/
-packer.output
+packer*.output
 config.json
 vendor/
 node_modules/

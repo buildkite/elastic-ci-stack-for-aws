@@ -14,7 +14,7 @@
         "owners": ["amazon"],
         "most_recent": true
       },
-      "instance_type": "i3.large",
+      "instance_type": "m5.xlarge",
       "spot_price": "auto",
       "spot_price_auto_product": "Windows (Amazon VPC)",
       "user_data_file":"scripts/ec2-userdata.ps1",
@@ -35,7 +35,7 @@
     },
     {
       "type": "file",
-      "source": "../plugins",
+      "source": "../../plugins",
       "destination": "C:/packer-temp"
     },
     {
