@@ -99,15 +99,11 @@ disconnect-after-job=true
 disconnect-after-job-timeout=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT
 "@
 }
-ElseIf ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true") {
-  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_DOWN_PERIOD}
-"@
-}
 
-# If we are using the lambda for autoscaling, always decrease capacity
 If ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true") {
-  $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY = "true"
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
+disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
+"@
 }
 
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
@@ -117,7 +113,6 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
 }
 
 nssm set lifecycled AppEnvironmentExtra :AWS_REGION=$Env:AWS_REGION
-nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_SNS_TOPIC=$Env:BUILDKITE_LIFECYCLE_TOPIC
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
 Restart-Service lifecycled
 
@@ -155,9 +150,10 @@ nssm set buildkite-agent ObjectName .\$UserName $Password
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
+
 If (($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") -or ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true")) {
   nssm set buildkite-agent AppExit Default Exit
-  nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1 $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY"
+  nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 }
 Restart-Service buildkite-agent
 

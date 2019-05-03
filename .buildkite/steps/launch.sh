@@ -84,10 +84,6 @@ cat << EOF > config.json
   {
     "ParameterKey": "EnableAgentGitMirrorsExperiment",
     "ParameterValue": "true"
-  },
-  {
-    "ParameterKey": "EnableExperimentalLambdaBasedAutoscaling",
-    "ParameterValue": "true"
   }
 ]
 EOF

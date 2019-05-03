@@ -116,34 +116,32 @@ spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 EOF
 
+terminate_instance_on_agent_stop() {
+  mkdir -p /etc/systemd/system/buildkite-agent.service.d/
+  cat << EOF > /etc/systemd/system/buildkite-agent.service.d/10-power-off-stop.conf
+[Service]
+ExecStopPost=/usr/local/bin/terminate-instance
+ExecStopPost=/bin/sudo poweroff
+EOF
+
+  # If we modify the systemd, we need to rebuild the dependency tree
+  systemctl daemon-reload
+}
+
 # Add conditional config to the agent config
 if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" == "true" ]] ; then
   cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
 disconnect-after-job=true
 disconnect-after-job-timeout=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT}
 EOF
-elif [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
-  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
-disconnect-after-idle-timeout=${BUILDKITE_SCALE_DOWN_PERIOD}
-EOF
+  terminate_instance_on_agent_stop
 fi
 
-# If we are using the lambda for autoscaling, always decrease capacity
 if [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
-  BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY=true
-fi
-
-if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}" == "true" || "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
-  mkdir -p /etc/systemd/system/buildkite-agent.service.d/
-
-  cat << EOF > /etc/systemd/system/buildkite-agent.service.d/10-power-off-stop.conf
-[Service]
-ExecStopPost=/usr/local/bin/terminate-instance ${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_DECREASE_DESIRED_CAPACITY}
-ExecStopPost=/bin/sudo poweroff
+  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
+disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 EOF
-
-  # If we modify the systemd, we need to rebuild the dependency tree
-  systemctl daemon-reload
+  terminate_instance_on_agent_stop
 fi
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
@@ -168,7 +166,6 @@ fi
 
 cat << EOF > /etc/lifecycled
 AWS_REGION=${AWS_REGION}
-LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
 EOF
