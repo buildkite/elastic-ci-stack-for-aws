@@ -223,13 +223,11 @@ Parameters:
     Description: A decimal factor to apply to scale out changes to speed up or slow down scale-out
     Type: Number
     Default: 1.0
-    MinValue: 0
 
   ScaleInFactor:
     Description:  A decimal factor to apply to scale in changes to speed up or slow down scale-out
     Type: Number
     Default: 1.0
-    MaxValue: 0
 
   ScaleInIdlePeriod:
     Description: Number of seconds an agent must be idle before terminating
@@ -778,7 +776,6 @@ Resources:
               BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
               BUILDKITE_QUEUE="${BuildkiteQueue}" \
               BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
-              BUILDKITE_ORG_SLUG="${BuildkiteOrgSlug}" \
               BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
               BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
               BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
@@ -825,9 +822,6 @@ Resources:
           PropagateAtLaunch: true
         - Key: BuildkiteAgentRelease
           Value: !Ref BuildkiteAgentRelease
-          PropagateAtLaunch: true
-        - Key: BuildkiteOrgSlug
-          Value: !Ref BuildkiteOrgSlug
           PropagateAtLaunch: true
         - Key: BuildkiteQueue
           Value: !Ref BuildkiteQueue
