@@ -99,11 +99,11 @@ Parameters:
       - edge
     Default: "stable"
 
-  BuildkiteAgentToken:
-    Description: Buildkite agent registration token
-    Type: String
-    NoEcho: true
+  BuildkiteAgentTokenParameterStoreKey:
+    Description: The SSM Parameter Store path to the Agent Token
+    Type: AWS::SSM::Parameter::Name
     MinLength: 1
+    Default: "/buildkite/agent_token"
 
   BuildkiteAgentTags:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
