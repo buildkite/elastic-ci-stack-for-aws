@@ -721,7 +721,7 @@ Resources:
               powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 
               $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
-              $Env:BUILDKITE_STACK_VERSION="v4.3.1"
+              $Env:BUILDKITE_STACK_VERSION=%v
               $Env:BUILDKITE_LAMBDA_AUTOSCALING="${LambdaAutoscaling}"
               $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
               $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
