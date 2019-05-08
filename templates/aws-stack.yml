@@ -101,8 +101,8 @@ Parameters:
 
   BuildkiteAgentToken:
     Description: Buildkite agent registration token
-    Type: String
-    NoEcho: true
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: /buildkite/agent_token
     MinLength: 1
 
   BuildkiteAgentTags:
