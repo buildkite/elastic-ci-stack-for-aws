@@ -56,8 +56,8 @@ Metadata:
         - MinSize
         - MaxSize
         - ScaleOutFactor
-        - ScaleInFactor
         - ScaleInIdlePeriod
+        - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
 
       - Label:
@@ -224,15 +224,18 @@ Parameters:
     Type: Number
     Default: 1.0
 
-  ScaleInFactor:
-    Description:  A decimal factor to apply to scale in changes to speed up or slow down scale-out
-    Type: Number
-    Default: 1.0
-
   ScaleInIdlePeriod:
     Description: Number of seconds an agent must be idle before terminating
     Type: Number
     Default: 600
+
+  ScaleOutForWaitingJobs:
+    Type: String
+    Description: Whether to scale-out for steps behind wait steps. Make sure you have a long enough idle period!
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   InstanceCreationTimeout:
     Description: Timeout period for Autoscaling Group Creation Policy
@@ -910,7 +913,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-agent-scaler/v0.4.1/handler.zip"
+        S3Key: "buildkite-agent-scaler/v1.0.0/handler.zip"
       Role: !GetAtt AutoscalingLambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
@@ -926,6 +929,8 @@ Resources:
           ASG_NAME:              !Ref AgentAutoScaleGroup
           MIN_SIZE:              !Ref MinSize
           MAX_SIZE:              !Ref MaxSize
+          SCALE_OUT_FACTOR:      !Ref ScaleOutFactor
+          INCLUDE_WAITING:       !Ref ScaleOutForWaitingJobs
           LAMBDA_TIMEOUT:        "50s"
           LAMBDA_INTERVAL:       "10s"
 
