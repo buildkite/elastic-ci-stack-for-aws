@@ -92,7 +92,7 @@ EOF
 echo "--- Creating an SSM secret ${ssm_secret_key}"
 aws ssm put-parameter \
   --name "${ssm_secret_key}" \
-  --type SecureString \
+  --type String \
   --value "$BUILDKITE_AWS_STACK_AGENT_TOKEN"
 
 echo "--- Building templates"
