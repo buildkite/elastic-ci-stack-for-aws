@@ -5,6 +5,7 @@ set -eu
 os="${1:-linux}"
 stack_name="buildkite-aws-stack-test-${os}-${BUILDKITE_BUILD_NUMBER}"
 stack_queue_name="testqueue-${os}-${BUILDKITE_BUILD_NUMBER}"
+stack_agent_token_secret_id="buildkite/${stack_name}/AgentToken"
 
 # download parfait binary
 wget -N https://github.com/lox/parfait/releases/download/v1.1.3/parfait_linux_amd64
@@ -30,8 +31,8 @@ fi
 cat << EOF > config.json
 [
   {
-    "ParameterKey": "BuildkiteAgentToken",
-    "ParameterValue": "$BUILDKITE_AWS_STACK_AGENT_TOKEN"
+    "ParameterKey": "BuildkiteAgentTokenSecretID",
+    "ParameterValue": "$stack_agent_token_secret_id"
   },
   {
     "ParameterKey": "BuildkiteQueue",
@@ -87,6 +88,11 @@ cat << EOF > config.json
   }
 ]
 EOF
+
+echo "--- Storing an agent token secret ${stack_agent_token_secret_id}"
+aws secretsmanager create-secret \
+  --name "${stack_agent_token_secret_id}" \
+  --secret-string "${BUILDKITE_AWS_STACK_AGENT_TOKEN}"
 
 echo "--- Building templates"
 make "mappings-for-${os}-image" build/aws-stack.yml "IMAGE_ID=$image_id"

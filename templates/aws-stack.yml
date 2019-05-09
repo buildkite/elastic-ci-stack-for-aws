@@ -99,11 +99,10 @@ Parameters:
       - edge
     Default: "stable"
 
-  BuildkiteAgentToken:
-    Description: Buildkite agent registration token
+  BuildkiteAgentTokenSecretID:
+    Description: The Secrets Manager SecretID for a Buildkite Agent Registration Token
     Type: String
-    NoEcho: true
-    MinLength: 1
+    Default: "buildkite/AgentToken"
 
   BuildkiteAgentTags:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
