@@ -266,6 +266,7 @@ Parameters:
   ImageId:
     Type: String
     Description: Optional - Custom AMI to use for instances (must be based on the stack's AMI)
+    AllowedPattern: "^ami\-\w+$"
     Default: ""
 
   ManagedPolicyARN:
