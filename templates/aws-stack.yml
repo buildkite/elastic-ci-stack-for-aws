@@ -410,6 +410,9 @@ Conditions:
     UseArtifactsBucket:
       !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
 
+    UseDefaultAMI:
+      !Equals [ !Ref ImageId, "" ]
+
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
 
@@ -706,10 +709,7 @@ Resources:
       IamInstanceProfile: !Ref IAMInstanceProfile
       InstanceType: !Ref InstanceType
       SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
-      ImageId: !If
-        - UseWindowsAgents
-        - !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'windows' ]
-        - !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'linux' ]
+      ImageId: !If [ UseDefaultAMI, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ], !Ref ImageId ]
       BlockDeviceMappings:
         - DeviceName: !Ref RootVolumeName
           Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
