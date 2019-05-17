@@ -89,22 +89,10 @@ priority=%n
 spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 shell=powershell
+disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
+disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 "@
 $OFS=" "
-
-# Add conditional config to the agent config
-If ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
-  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-disconnect-after-job=true
-disconnect-after-job-timeout=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT
-"@
-}
-
-If ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true") {
-  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
-"@
-}
 
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
   C:\buildkite-agent\bin\bk-fetch.ps1 -From "$Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" -To C:\buildkite-agent\elastic_bootstrap.ps1
@@ -150,11 +138,9 @@ nssm set buildkite-agent ObjectName .\$UserName $Password
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
+nssm set buildkite-agent AppExit Default Exit
+nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 
-If (($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") -or ($Env:BUILDKITE_LAMBDA_AUTOSCALING -eq "true")) {
-  nssm set buildkite-agent AppExit Default Exit
-  nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
-}
 Restart-Service buildkite-agent
 
 # renable debug tracing
