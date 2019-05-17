@@ -144,16 +144,9 @@ Metrics are collected with a Lambda function, polling every minute.
 
 ## Terminating the instance after job is complete
 
-You may set `BuildkiteTerminateInstanceAfterJob` to `true` to force the instance to terminate after it completes a job. Setting this value to `true` tells the stack to apply the following configurations:
-
-1. Sets `disconnect-after-job` and `disconnect-after-job-timeout` in the `buildkite-agent.cfg` file.
-2. Adds `ExecStopPost` steps to the agent's systemd service to mark the instance as unhealthy and to stop the instance.
+You may set `BuildkiteTerminateInstanceAfterJob` to `true` to force the instance to terminate after it completes a job. Setting this value to `true` tells the stack to enable `disconnect-after-job` in the `buildkite-agent.cfg` file.
 
 While not enforced, it is highly recommended you also set your `AgentsPerInstance` value to `1`.
-
-You may configure `BuildkiteTerminateInstanceAfterJobTimeout` to control how long an instance will wait for a job before terminating itself. You can use this setting to tune your ASG to optimize the queue for availability based on your tolerance for scaling events. The default value is 30 minutes (1800 seconds).
-
-Additionally you can set `BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity` to `true` to decrease the desired capacity of the autoscaling group by 1 when terminating an instance after the job completes. Use this option if you don't wish the terminated instance to be replaced by another in the autoscaling group.
 
 We strongly encourage you to find an alternative to this setting if at all possible. The turn around time for replacing these instances is currently slow (5-10 minutes depending on other stack configuration settings). If you need single use jobs, we suggest looking at our container plugins like `docker`, `docker-compose`, and `ecs`, all which can be found [here](https://buildkite.com/plugins).
 
