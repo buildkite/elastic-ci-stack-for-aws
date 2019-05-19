@@ -114,35 +114,9 @@ experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
-EOF
-
-terminate_instance_on_agent_stop() {
-  mkdir -p /etc/systemd/system/buildkite-agent.service.d/
-  cat << EOF > /etc/systemd/system/buildkite-agent.service.d/10-power-off-stop.conf
-[Service]
-ExecStopPost=/usr/local/bin/terminate-instance
-ExecStopPost=/bin/sudo poweroff
-EOF
-
-  # If we modify the systemd, we need to rebuild the dependency tree
-  systemctl daemon-reload
-}
-
-# Add conditional config to the agent config
-if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" == "true" ]] ; then
-  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
-disconnect-after-job=true
-disconnect-after-job-timeout=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB_TIMEOUT}
-EOF
-  terminate_instance_on_agent_stop
-fi
-
-if [[ "${BUILDKITE_LAMBDA_AUTOSCALING}" == "true" ]] ; then
-  cat << EOF >> /etc/buildkite-agent/buildkite-agent.cfg
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
+disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 EOF
-  terminate_instance_on_agent_stop
-fi
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
