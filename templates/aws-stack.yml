@@ -718,7 +718,6 @@ Resources:
 
               $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
               $Env:BUILDKITE_STACK_VERSION=%v
-              $Env:BUILDKITE_LAMBDA_AUTOSCALING="${LambdaAutoscaling}"
               $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
               $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
               $Env:BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}"
@@ -744,7 +743,6 @@ Resources:
               </powershell>
             - {
                 LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
-                LambdaAutoscaling: !If [ HasVariableSize, true, false ],
               }
           - !Sub
             - |
@@ -760,7 +758,6 @@ Resources:
               #!/bin/bash -xv
               BUILDKITE_STACK_NAME="${AWS::StackName}" \
               BUILDKITE_STACK_VERSION=%v \
-              BUILDKITE_LAMBDA_AUTOSCALING=${LambdaAutoscaling} \
               BUILDKITE_SCALE_IN_IDLE_PERIOD=${ScaleInIdlePeriod} \
               BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
               BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
@@ -785,7 +782,6 @@ Resources:
               --==BOUNDARY==--
             - {
                 LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
-                LambdaAutoscaling: !If [ HasVariableSize, true, false ],
               }
 
   AgentAutoScaleGroup:
