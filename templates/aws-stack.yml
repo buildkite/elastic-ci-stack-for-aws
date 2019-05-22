@@ -721,16 +721,12 @@ Resources:
               Tags:
                 - Key: Role
                   Value: buildkite-agent
-                  PropagateAtLaunch: true
                 - Key: Name
                   Value: buildkite-agent
-                  PropagateAtLaunch: true
                 - Key: BuildkiteAgentRelease
                   Value: !Ref BuildkiteAgentRelease
-                  PropagateAtLaunch: true
                 - Key: BuildkiteQueue
                   Value: !Ref BuildkiteQueue
-                  PropagateAtLaunch: true
                 - !If
                   - UseCostAllocationTags
                   - Key: !Ref CostAllocationTagName
