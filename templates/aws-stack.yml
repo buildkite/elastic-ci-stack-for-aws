@@ -697,28 +697,28 @@ Resources:
     Type: "AWS::EC2::LaunchTemplate"
     Properties:
       LaunchTemplateData:
-	        NetworkInterfaces:
-	          - DeviceIndex: 0
-	            AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
-	            Groups:
-	            - !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ]
-	        KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
-	        IamInstanceProfile:
-	          Arn: !GetAtt "IAMInstanceProfile.Arn"
-	        InstanceType: !Ref InstanceType
+          NetworkInterfaces:
+            - DeviceIndex: 0
+              AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
+              Groups:
+              - !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ]
+          KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
+          IamInstanceProfile:
+            Arn: !GetAtt "IAMInstanceProfile.Arn"
+          InstanceType: !Ref InstanceType
           MarketType: !If [ "UseSpotInstances", "spot", !Ref 'AWS::NoValue' ]
           SpotOptions: !If
             - UseSpotInstances
             - SpotOptions:
                 MaxPrice: !Ref SpotPrice
             - !Ref "AWS::NoValue"
-	        ImageId : !If [ UseDefaultAMI, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ], !Ref ImageId ]
-	        BlockDeviceMappings:
-	          - DeviceName: /dev/xvda
-	            Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
-	        TagSpecifications:
-	          - ResourceType: instance
-	            Tags:
+          ImageId: !If [ UseDefaultAMI, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ], !Ref ImageId ]
+          BlockDeviceMappings:
+            - DeviceName: /dev/xvda
+              Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
+          TagSpecifications:
+            - ResourceType: instance
+              Tags:
                 - Key: Role
                   Value: buildkite-agent
                   PropagateAtLaunch: true
@@ -819,8 +819,8 @@ Resources:
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       LaunchTemplate:
-	      LaunchTemplateId: !Ref AgentLaunchTemplate
-	      Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+        LaunchTemplateId: !Ref AgentLaunchTemplate
+        Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 0
