@@ -6,7 +6,10 @@ sudo yum update -y
 
 echo "Updating awscli..."
 sudo yum install -y python2-pip
+sudo yum install -y python3-pip python3 python3-setuptools
 sudo pip install --upgrade awscli
+sudo pip install future
+sudo pip3 install future
 
 echo "Installing zip utils..."
 sudo yum update -y -q
