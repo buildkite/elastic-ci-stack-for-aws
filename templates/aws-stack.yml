@@ -706,10 +706,10 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Ref InstanceType
-          MarketType: !If [ "UseSpotInstances", "spot", !Ref 'AWS::NoValue' ]
-          SpotOptions: !If
+          InstanceMarketOptions: !If
             - UseSpotInstances
-            - SpotOptions:
+            - MarketType: spot
+              SpotOptions:
                 MaxPrice: !Ref SpotPrice
             - !Ref "AWS::NoValue"
           ImageId: !If [ UseDefaultAMI, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ], !Ref ImageId ]
