@@ -244,7 +244,7 @@ Parameters:
   RootVolumeName:
     Description: Name of the root block device for your AMI
     Type: String
-    Default: "/dev/xvda"
+    Default: ""
 
   RootVolumeType:
     Description: Type of root volume to use
@@ -405,6 +405,9 @@ Conditions:
 
     UseDefaultAMI:
       !Equals [ !Ref ImageId, "" ]
+
+    UseDefaultRootVolumeName:
+      !Equals [ !Ref RootVolumeName, "" ]
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
@@ -714,7 +717,7 @@ Resources:
             - !Ref "AWS::NoValue"
           ImageId: !If [ UseDefaultAMI, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ], !Ref ImageId ]
           BlockDeviceMappings:
-            - DeviceName: /dev/xvda
+            - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
           TagSpecifications:
             - ResourceType: instance
