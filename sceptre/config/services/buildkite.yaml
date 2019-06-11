@@ -25,13 +25,13 @@ parameters:
   InstanceType: c4.large
   KeyName: development-au-oct-18
   ManagedPolicyARN: arn:aws:iam::544757391075:policy/BuildkitePolicy,arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-  MaxSize: "10"
+  MaxSize: "18"
   MinSize: "6"
   RootVolumeSize: "250"
-  ScaleCooldownPeriod: "300"
-  ScaleDownAdjustment: "-1"
-  ScaleDownPeriod: "1800"
-  ScaleUpAdjustment: "1"
+  ScaleCooldownPeriod: "120"
+  ScaleDownAdjustment: "-2"
+  ScaleDownPeriod: "600"
+  ScaleUpAdjustment: "3"
   SecretsBucket: oculo-buildkite-secrets
   SpotPrice: "0.050"
   SleepyTime: !timestamp_from_local 18:45
