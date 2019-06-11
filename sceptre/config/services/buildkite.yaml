@@ -29,8 +29,8 @@ parameters:
   MinSize: "6"
   RootVolumeSize: "250"
   ScaleCooldownPeriod: "120"
-  ScaleDownAdjustment: "-2"
-  ScaleDownPeriod: "600"
+  ScaleDownAdjustment: "-5"
+  ScaleDownPeriod: "300"
   ScaleUpAdjustment: "3"
   SecretsBucket: oculo-buildkite-secrets
   SpotPrice: "0.050"
