@@ -432,6 +432,15 @@ Conditions:
           - { Condition: HasKeyName }
           - !Not [ !Equals [ !Ref AuthorizedUsersUrl, "" ] ]
 
+    EnableRdpIngress:
+      !And
+        - { Condition : CreateSecurityGroup }
+        - { Condition : UseWindowsAgents }
+        # Enable ingress if a key can be specified another way
+        - !Or
+          - { Condition: HasKeyName }
+          - !Not [ !Equals [ !Ref AuthorizedUsersUrl, "" ] ]
+
     # Whether or not there's any managed polices to attach
     HasManagedPolicies:
       !Or [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
@@ -860,6 +869,16 @@ Resources:
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
+      CidrIp: 0.0.0.0/0
+
+  SecurityGroupRdpIngress:
+    Condition: EnableRdpIngress
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt SecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 3389
+      ToPort: 3389
       CidrIp: 0.0.0.0/0
 
   AutoscalingLambdaExecutionRole:
