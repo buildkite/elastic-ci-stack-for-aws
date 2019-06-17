@@ -94,12 +94,6 @@ disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 "@
 $OFS=" "
 
-If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
-  C:\buildkite-agent\bin\bk-fetch.ps1 -From "$Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" -To C:\buildkite-agent\elastic_bootstrap.ps1
-  C:\buildkite-agent\elastic_bootstrap.ps1
-  Remove-Item -Path C:\buildkite-agent\elastic_bootstrap.ps1
-}
-
 nssm set lifecycled AppEnvironmentExtra :AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
 Restart-Service lifecycled
@@ -132,6 +126,15 @@ New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | Conve
 If ($Env:BUILDKITE_WINDOWS_ADMINISTRATOR -eq "true") {
   Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
 }
+
+If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
+  Write-Output "Running the elastic bootstrap script"
+  C:\buildkite-agent\bin\bk-fetch.ps1 -From "$Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" -To C:\buildkite-agent\elastic_bootstrap.ps1
+  C:\buildkite-agent\elastic_bootstrap.ps1
+  Remove-Item -Path C:\buildkite-agent\elastic_bootstrap.ps1
+}
+
+Write-Output "Starting the Buildkite Agent"
 
 nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
 nssm set buildkite-agent ObjectName .\$UserName $Password
