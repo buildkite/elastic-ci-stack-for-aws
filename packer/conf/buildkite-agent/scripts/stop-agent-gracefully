@@ -5,7 +5,7 @@ set -eu -o pipefail
 eval "$(cat /var/lib/buildkite-agent/cfn-env)"
 
 echo "Stopping buildkite-agent gracefully"
-systemctl stop "buildkite-agent@*"
+systemctl stop "buildkite-agent"
 
 # Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycled handler script
 while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
