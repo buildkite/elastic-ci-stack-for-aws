@@ -3,7 +3,7 @@ version: '3.7'
 services:
   infrastructure_tools:
     init: true
-    image: 544757391075.dkr.ecr.ap-southeast-2.amazonaws.com/oculo/infrastructure_tools
+    image: 644358627301.dkr.ecr.ap-southeast-2.amazonaws.com/oculo/infrastructure_tools
     volumes:
       - .:/packer
     working_dir: /packer/packer

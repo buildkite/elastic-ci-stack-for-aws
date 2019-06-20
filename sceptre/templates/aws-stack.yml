@@ -467,7 +467,8 @@ Mappings:
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
   # Generated from Makefile via build/mappings.yml
-  AWSRegion2AMI: { linux: !Ref ImageId, windows: !Ref ImageId }
+  AWSRegion2AMI:
+    ap-southeast-2: { linux: "we use a custom AMI" }
 
 Resources:
   Vpc:

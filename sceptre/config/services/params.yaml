@@ -5,10 +5,9 @@ stack_name: buildkite
 parameters:
   AgentsPerInstance: "1"
   AssociatePublicIpAddress: "true"
-  BuildkiteAgentToken: !command_stdout "aws-kms decrypt -i AQECAHjyiQEnGbpdE89VCpDNudW0dSTn64bXL9vH9S/WfG1RPAAAAJIwgY8GCSqGSIb3DQEHBqCBgTB/AgEAMHoGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMrz4O+LTx5Olt4XEMAgEQgE2xi1ygqLZn1S0UUIfk2qxI1/AtywDw6baFLZ3Upf0cOLm3I44ZDYI1F0RW+vg2mYJ2jKb8yUNeDSUwz+uXdy0w5SAUsHHe2qi6aBtOqw=="
+  BuildkiteAgentToken: !command_stdout "aws-kms decrypt -i AQICAHihtY3YXtfZ8ZUBSjLlbexKyDbBJr+Bea+iGPcwHIoPvwEboSFKnWiIpwxLAfnC5WDBAAAAkjCBjwYJKoZIhvcNAQcGoIGBMH8CAQAwegYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAzQ4DKiJcQv10h0nWQCARCATQZqMyxR5Mn85F5yFfbEwvm76msKnQxzqdUhJ5p68LuZ4ybeArO9jb6BEcyBLpAXNI371W30LEwq1U2/AFCJwepdHfwePq7NbONGxt05"
   BuildkiteAgentRelease: stable
   BuildkiteAgentTimestampLines: "false"
-  BuildkiteOrgSlug: oculo-1
   BuildkiteQueue: default
   CostAllocationTagName: aws:createdBy
   CostAllocationTagValue: buildkite-elastic-ci-stack-for-aws
@@ -23,18 +22,14 @@ parameters:
   InstanceCreationTimeout: PT5M
   InstanceRoleName: buildkite-instance-role
   InstanceType: c4.large
-  KeyName: development-au-oct-18
-  ManagedPolicyARN: arn:aws:iam::544757391075:policy/BuildkitePolicy,arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+  KeyName: services-au-june-2019
+  ManagedPolicyARN: arn:aws:iam::644358627301:policy/BuildkitePolicy,arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
   MaxSize: "16"
   MinSize: "8"
   RootVolumeSize: "250"
-  ScaleCooldownPeriod: "120"
-  ScaleDownAdjustment: "-4"
-  ScaleDownPeriod: "300"
-  ScaleUpAdjustment: "4"
-  SecretsBucket: oculo-buildkite-secrets
+  SecretsBucket: oculo-services-buildkite-secrets
   SpotPrice: "0.050"
   SleepyTime: !timestamp_from_local 18:45
   BreakfastTime: !timestamp_from_local 08:15
-  VpcId: !stack_output_external test-base::VpcId
-  Subnets: subnet-0eef54fe3b9175f93,subnet-06e55242a0f368c12
+  VpcId: "vpc-65745902"
+  Subnets: subnet-184e5b7f,subnet-e4ab2fbc

@@ -3,7 +3,7 @@ version: '3.7'
 services:
   infrastructure_tools:
     init: true
-    image: 544757391075.dkr.ecr.ap-southeast-2.amazonaws.com/oculo/infrastructure_sceptre:latest
+    image: 644358627301.dkr.ecr.ap-southeast-2.amazonaws.com/oculo/infrastructure_sceptre:latest
     volumes:
       - ./sceptre/:/sceptre
     working_dir: /sceptre
