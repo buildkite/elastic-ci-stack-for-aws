@@ -70,6 +70,11 @@ if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
 	buildkite-agent-edge --version
 fi
 
+if [[ "${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" != "" ]] ; then
+  echo "buildkite-agent ALL=NOPASSWD: ${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" > /etc/sudoers.d/buildkite-agent-additional
+  chmod 440 /etc/sudoers.d/buildkite-agent-additional
+fi
+
 # Choose the right agent binary
 ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
 
@@ -86,6 +91,15 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]] ; then
 	agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
 fi
 
+# Enable git mirrors
+if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
+  if [[ -z "$BUILDKITE_AGENT_EXPERIMENTS" ]] ; then
+    BUILDKITE_AGENT_EXPERIMENTS="git-mirrors"
+  else
+    BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
+  fi
+fi
+
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
 token="${BUILDKITE_AGENT_TOKEN}"
@@ -95,7 +109,13 @@ timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
+git-mirrors-path=/var/lib/buildkite-agent/git-mirrors
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
+priority=%n
+spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
+no-color=true
+disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
+disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 EOF
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
@@ -120,7 +140,6 @@ fi
 
 cat << EOF > /etc/lifecycled
 AWS_REGION=${AWS_REGION}
-LIFECYCLED_SNS_TOPIC=${BUILDKITE_LIFECYCLE_TOPIC}
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
 EOF
@@ -139,10 +158,8 @@ if ! docker ps ; then
   exit 1
 fi
 
-for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-  systemctl enable "buildkite-agent@${i}"
-  systemctl start "buildkite-agent@${i}"
-done
+systemctl enable "buildkite-agent"
+systemctl start "buildkite-agent"
 
 # let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \

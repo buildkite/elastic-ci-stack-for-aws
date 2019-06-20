@@ -13,7 +13,6 @@ Parameters:
 Resources:
   BKAgentSleepAtNight:
     Type: AWS::AutoScaling::ScheduledAction
-    Condition: UseAutoscaling
     Properties:
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
       DesiredCapacity: 0
@@ -24,7 +23,6 @@ Resources:
 
   BKAgentWakeForWork:
     Type: AWS::AutoScaling::ScheduledAction
-    Condition: UseAutoscaling
     Properties:
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
       DesiredCapacity: !Ref MinSize

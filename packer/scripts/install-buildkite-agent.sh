@@ -1,6 +1,7 @@
 #!/bin/bash
-
 set -eu -o pipefail
+
+AGENT_VERSION=3.12.0
 
 echo "Installing dependencies..."
 sudo yum update -y -q
@@ -10,9 +11,9 @@ echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
-echo "Downloading buildkite-agent v3.8.4 stable..."
+echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/3.8.4/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-amd64"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
@@ -42,15 +43,20 @@ echo "Creating builds dir..."
 sudo mkdir -p /var/lib/buildkite-agent/builds
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/builds
 
+echo "Creating git mirrors dir..."
+sudo mkdir -p /var/lib/buildkite-agent/git-mirrors
+sudo chown -R buildkite-agent: /var/lib/buildkite-agent/git-mirrors
+
 echo "Creating plugins dir..."
 sudo mkdir -p /var/lib/buildkite-agent/plugins
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 echo "Adding systemd service template..."
-sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent@.service /etc/systemd/system/buildkite-agent@.service
+sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent.service /etc/systemd/system/buildkite-agent.service
 
-echo "Adding termination script..."
+echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully
+sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
 
 echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins

@@ -1,9 +1,9 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_VERSION=18.09.1
+DOCKER_VERSION=18.09.5
 DOCKER_RELEASE="stable"
-DOCKER_COMPOSE_VERSION=1.23.2
+DOCKER_COMPOSE_VERSION=1.24.0
 
 # This performs a manual install of Docker.
 

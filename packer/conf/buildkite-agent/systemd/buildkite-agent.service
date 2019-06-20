@@ -1,5 +1,5 @@
 [Unit]
-Description=Buildkite Agent (%i)
+Description=Buildkite Agent
 Documentation=https://buildkite.com/agent
 After=syslog.target
 After=network.target
@@ -12,8 +12,11 @@ Environment="HOME=/var/lib/buildkite-agent"
 Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 Environment="USER=buildkite-agent"
 ExecStart=/usr/bin/buildkite-agent start
+ExecStopPost=/usr/local/bin/terminate-instance
+ExecStopPost=/bin/sudo poweroff
 RestartSec=5
 Restart=on-failure
+RestartForceExitStatus=SIGPIPE
 TimeoutStartSec=10
 TimeoutStopSec=0
 KillMode=process

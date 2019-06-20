@@ -6,11 +6,14 @@ sudo yum update -y
 
 echo "Updating awscli..."
 sudo yum install -y python2-pip
+sudo yum install -y python3-pip python3 python3-setuptools
 sudo pip install --upgrade awscli
+sudo pip install future
+sudo pip3 install future
 
 echo "Installing zip utils..."
 sudo yum update -y -q
-sudo yum install -y zip unzip git
+sudo yum install -y zip unzip git pigz
 
 echo "Installing bk elastic stack bin files..."
 sudo chmod +x /tmp/conf/bin/bk-*
