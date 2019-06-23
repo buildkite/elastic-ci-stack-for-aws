@@ -8,7 +8,7 @@ Metadata:
       - Label:
           default: Buildkite Configuration
         Parameters:
-        - BuildkiteAgentToken
+        - BuildkiteAgentTokenPath
         - BuildkiteQueue
 
       - Label:
@@ -98,10 +98,9 @@ Parameters:
       - edge
     Default: "stable"
 
-  BuildkiteAgentToken:
+  BuildkiteAgentTokenPath:
     Description: Buildkite agent registration token
     Type: String
-    NoEcho: true
     MinLength: 1
 
   BuildkiteAgentTags:
@@ -769,7 +768,7 @@ Resources:
                   $Env:BUILDKITE_STACK_VERSION=%v
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
-                  $Env:BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}"
+                  $Env:BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name ${BuildkiteAgentTokenPath} --with-decryption | jq -r .Parameter.Value)"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
@@ -809,7 +808,7 @@ Resources:
                   BUILDKITE_STACK_VERSION=%v \
                   BUILDKITE_SCALE_IN_IDLE_PERIOD=${ScaleInIdlePeriod} \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
-                  BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
+                  BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name ${BuildkiteAgentTokenPath} --with-decryption | jq -r .Parameter.Value)" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
@@ -940,7 +939,7 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
+          BUILDKITE_AGENT_TOKEN_SSM_KEY: !Ref BuildkiteAgentTokenPath
           BUILDKITE_QUEUE:       !Ref BuildkiteQueue
           AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
           CLOUDWATCH_METRICS:    "1"
@@ -952,6 +951,8 @@ Resources:
           INCLUDE_WAITING:       !Ref ScaleOutForWaitingJobs
           LAMBDA_TIMEOUT:        "50s"
           LAMBDA_INTERVAL:       "10s"
+
+  # TODO: give lambda permission to decrypt chamber SSM key
 
   AutoscalingLambdaScheduledRule:
     Type: "AWS::Events::Rule"
