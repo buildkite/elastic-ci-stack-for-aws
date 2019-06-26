@@ -28,6 +28,7 @@ parameters:
   MinSize: "8"
   RootVolumeSize: "250"
   SecretsBucket: oculo-services-buildkite-secrets
+  SecurityGroupId: sg-019ed1d65f54a2c00  # group that blocks all inbound traffic - we can use AWS Session Manager
   SpotPrice: "0.050"
   SleepyTime: !timestamp_from_local 18:45
   BreakfastTime: !timestamp_from_local 08:15
