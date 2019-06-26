@@ -14,7 +14,7 @@ SLUG=$1
 cd /tmp || exit
 ssh-keygen -P "" -o -a 100 -t ed25519 -f id_ed25519_buildkite -C "generated-${SLUG}-key"
 
-SECRETS_BUCKET="oculo-buildkite-secrets/${SLUG}"
+SECRETS_BUCKET="oculo-services-buildkite-secrets/${SLUG}"
 aws s3 cp --acl private --sse aws:kms id_ed25519_buildkite "s3://${SECRETS_BUCKET}/private_ssh_key"
 
 echo ""
