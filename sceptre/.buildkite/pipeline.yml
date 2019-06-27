@@ -16,7 +16,7 @@ steps:
           run: infrastructure_tools
           shell: false
           command: ["sh", "-c", "merge-cfn-templates --cfn_templates_directory /sceptre/templates/regional && \
-            sceptre launch --var aws_region=ap-southeast-2 regional --yes"]
+            sceptre --var aws_region=ap-southeast-2 launch regional --yes"]
 
   - label: ":aws: Regional - us-west-2"
     plugins:
@@ -31,4 +31,4 @@ steps:
           run: infrastructure_tools
           shell: false
           command: ["sh", "-c", "merge-cfn-templates --cfn_templates_directory /sceptre/templates/regional && \
-            sceptre launch --var aws_region=us-west-2 regional --yes"]
+            sceptre --var aws_region=us-west-2 launch regional --yes"]
