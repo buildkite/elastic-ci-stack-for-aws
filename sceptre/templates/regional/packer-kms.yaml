@@ -3,7 +3,7 @@ Resources:
     DeletionPolicy: Retain
     Type: AWS::KMS::Key
     Properties:
-      Description: !Sub "Key for the ${EnvironmentName} tenant."
+      Description: "Packer key"
       PendingWindowInDays: 30
       KeyPolicy:
         Version: "2012-10-17"
