@@ -1,0 +1,3 @@
+template_path: regional/.compiled-stack.yaml
+
+stack_name: buildkite-regional
