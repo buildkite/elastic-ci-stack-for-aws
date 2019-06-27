@@ -1,0 +1,37 @@
+Resources:
+  PackerKey:
+    DeletionPolicy: Retain
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub "Key for the ${EnvironmentName} tenant."
+      PendingWindowInDays: 30
+      KeyPolicy:
+        Version: "2012-10-17"
+        Id: "default-key-policy"
+        Statement:
+          - Sid: "Enable IAM permission for key"
+            Effect: "Allow"
+            Principal:
+              AWS: 
+                - "arn:aws:iam::325964603643:root"
+                - "arn:aws:iam::544757391075:root"
+                - "arn:aws:iam::644358627301:root"
+                - "arn:aws:iam::094447749694:root"
+            Action:
+              - "kms:*"
+            Resource: "*"
+          - Sid: "Prevent key deletion"
+            Effect: "Deny"
+            Principal:
+              AWS: "*"
+            Action:
+              - kms:DisableKey
+              - kms:ScheduleKeyDeletion
+            Resource: "*"
+
+  PackerKeyAlias:
+    DeletionPolicy: Retain
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/packer-key"
+      TargetKeyId: !Ref PackerKey
