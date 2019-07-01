@@ -7,7 +7,7 @@ services:
     volumes:
       - ./sceptre/:/sceptre
     working_dir: /sceptre
-    command: ["sh", "-c", "merge-cfn-templates --cfn_templates_directory /sceptre/templates && sceptre launch services --yes"]
+    command: ["sh", "-c", "merge-cfn-templates --cfn_templates_directory /sceptre/templates && sceptre --var aws_region=ap-southeast-2 launch services --yes"]
     environment:
       AWS_DEFAULT_REGION: "ap-southeast-2"
       AWS_ACCESS_KEY_ID:
