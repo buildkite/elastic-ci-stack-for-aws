@@ -255,8 +255,12 @@ Parameters:
   
   RootVolumeEncrypted:
     Description: Enable encryption for the root block device for your AMI
-    Type: Boolean
-    Default: false
+    Type: String
+    Default: "false"
+    AllowedValues: [
+        "true",
+        "false"
+    ]
 
   RootVolumeKmsKeyId:
     Description: Optional - ARN of the AWS Key Management Service CMK used for encryption.\
