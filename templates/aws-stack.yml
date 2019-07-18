@@ -46,6 +46,8 @@ Metadata:
         - RootVolumeSize
         - RootVolumeName
         - RootVolumeType
+        - RootVolumeEncrypted
+        - RootVolumeKmsKeyId
         - ManagedPolicyARN
         - InstanceRoleName
 
@@ -250,6 +252,16 @@ Parameters:
     Description: Type of root volume to use
     Type: String
     Default: "gp2"
+  
+  RootVolumeEncrypted:
+    Description: Enable encryption for the root block device for your AMI
+    Type: Boolean
+    Default: false
+
+  RootVolumeKmsKeyId:
+    Description: Optional - ARN of the AWS Key Management Service CMK used for encryption.\
+    Type: String
+    Default: ""
 
   SecurityGroupId:
     Type: String
@@ -718,7 +730,7 @@ Resources:
           ImageId: !If [ UseDefaultAMI, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ], !Ref ImageId ]
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
-              Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
+              Ebs: { Encrypted: !Ref RootVolumeEncrypted, KmsKeyId: !Ref RootVolumeKmsKeyId, VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
           TagSpecifications:
             - ResourceType: instance
               Tags:
