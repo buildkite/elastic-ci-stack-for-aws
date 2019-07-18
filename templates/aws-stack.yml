@@ -263,7 +263,7 @@ Parameters:
     ]
 
   RootVolumeKmsKeyId:
-    Description: Optional - ARN of the AWS Key Management Service CMK used for encryption.\
+    Description: Optional - ARN of the AWS Key Management Service CMK used for encryption.
     Type: String
     Default: ""
 
