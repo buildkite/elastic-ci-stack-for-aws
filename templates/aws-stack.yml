@@ -8,6 +8,7 @@ Metadata:
       - Label:
           default: Buildkite Configuration
         Parameters:
+        - BuildkiteAgentToken
         - BuildkiteAgentTokenPath
         - BuildkiteQueue
 
@@ -98,10 +99,16 @@ Parameters:
       - edge
     Default: "stable"
 
-  BuildkiteAgentTokenPath:
+  BuildkiteAgentToken:
     Description: Buildkite agent registration token
     Type: String
-    MinLength: 1
+    NoEcho: true
+    Default: ""
+
+  BuildkiteAgentTokenPath:
+    Description: AWS SSM path to the Buildkite agent registration token (this takes precedence over BuildkiteAgentToken)
+    Type: String
+    Default: ""
 
   BuildkiteAgentTags:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
@@ -416,6 +423,9 @@ Conditions:
 
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
+
+    UseSSMAgentToken:
+      !Not [ !Equals [ !Ref BuildkiteAgentTokenPath, "" ] ]
 
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
@@ -768,7 +778,7 @@ Resources:
                   $Env:BUILDKITE_STACK_VERSION=%v
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
-                  $Env:BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name ${BuildkiteAgentTokenPath} --with-decryption | jq -r .Parameter.Value)"
+                  $Env:BUILDKITE_AGENT_TOKEN="${AgentTokenResolver}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
@@ -791,6 +801,7 @@ Resources:
                   </powershell>
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
+                    AgentTokenResolver: !If [ UseSSMAgentToken, !Sub "$(aws ssm get-parameter --name ${BuildkiteAgentTokenPath} --with-decryption | jq -r .Parameter.Value)", !Ref BuildkiteAgentToken ],
                   }
               - !Sub
                 - |
@@ -808,7 +819,7 @@ Resources:
                   BUILDKITE_STACK_VERSION=%v \
                   BUILDKITE_SCALE_IN_IDLE_PERIOD=${ScaleInIdlePeriod} \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
-                  BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name ${BuildkiteAgentTokenPath} --with-decryption | jq -r .Parameter.Value)" \
+                  BUILDKITE_AGENT_TOKEN="${AgentTokenResolver}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
@@ -830,6 +841,7 @@ Resources:
                   --==BOUNDARY==--
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
+                    AgentTokenResolver: !If [ UseSSMAgentToken, !Sub "$(aws ssm get-parameter --name ${BuildkiteAgentTokenPath} --with-decryption | jq -r .Parameter.Value)", !Ref BuildkiteAgentToken ],
                   }
 
   AgentAutoScaleGroup:
@@ -939,6 +951,7 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
+          BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
           BUILDKITE_AGENT_TOKEN_SSM_KEY: !Ref BuildkiteAgentTokenPath
           BUILDKITE_QUEUE:       !Ref BuildkiteQueue
           AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
