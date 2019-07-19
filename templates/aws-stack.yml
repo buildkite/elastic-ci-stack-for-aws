@@ -272,6 +272,11 @@ Parameters:
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
 
+  LambdaManagedPolicyARN:
+    Type: CommaDelimitedList
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the autoscaling lambda
+    Default: ""
+
   InstanceRoleName:
     Type: String
     Description: Optional - A name for the IAM Role attached to the Instance Profile
@@ -420,6 +425,9 @@ Conditions:
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
+
+    UseLambdaManagedPolicyARN:
+      !Not [ !Equals [ !Join [ "", !Ref LambdaManagedPolicyARN ], "" ] ]
 
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
@@ -907,8 +915,16 @@ Resources:
             - lambda.amazonaws.com
           Action:
           - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      ManagedPolicyArns: !Split
+        - ','
+        - !Join
+          - ','
+          - - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+            - !If
+              - UseLambdaManagedPolicyARN
+              - !Ref 'AWS::NoValue'
+              - !Join [ ',', !Ref LambdaManagedPolicyARN ] ]
+          - !Ref 'AWS::NoValue'
       Policies:
         - PolicyName: AutoScalingGroups
           PolicyDocument:
