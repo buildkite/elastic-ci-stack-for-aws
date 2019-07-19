@@ -981,8 +981,6 @@ Resources:
           LAMBDA_TIMEOUT:        "50s"
           LAMBDA_INTERVAL:       "10s"
 
-  # TODO: give lambda permission to decrypt chamber SSM key
-
   AutoscalingLambdaScheduledRule:
     Type: "AWS::Events::Rule"
     Condition: HasVariableSize
