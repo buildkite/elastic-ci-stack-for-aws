@@ -73,11 +73,6 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   }
 }
 
-# If the agent token path is set, use that instead of BUILDKITE_AGENT_TOKEN
-If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_TOKEN_PATH)) {
-    $Env:BUILDKITE_AGENT_TOKEN = aws ssm get-parameter --name ${Env:BUILDKITE_AGENT_TOKEN_PATH} --with-decryption | jq -r .Parameter.Value
-}
-
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
