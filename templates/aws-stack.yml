@@ -731,8 +731,6 @@ Resources:
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
-          Monitoring:
-            Enabled: "false"
           TagSpecifications:
             - ResourceType: instance
               Tags:
