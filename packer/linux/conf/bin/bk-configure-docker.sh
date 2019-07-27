@@ -15,5 +15,5 @@ fi
 
 # Set experimental in config
 if [[ "${DOCKER_EXPERIMENTAL:-false}" == "true" ]] ; then
-  cat <<< "$(jq '.experimental="true"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+  cat <<< "$(jq '.experimental=true' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 fi
