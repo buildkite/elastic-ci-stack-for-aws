@@ -102,7 +102,7 @@ fi
 
 # If the agent token path is set, use that instead of BUILDKITE_AGENT_TOKEN
 if [[ -z "${BUILDKITE_AGENT_TOKEN_PATH}" ]] ; then
-    BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value"
+    BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value)"
 fi
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
