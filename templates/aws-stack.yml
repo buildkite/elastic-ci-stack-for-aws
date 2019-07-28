@@ -10,6 +10,7 @@ Metadata:
         Parameters:
         - BuildkiteAgentToken
         - BuildkiteAgentTokenParameterStorePath
+        - BuildkiteAgentTokenParameterStoreKMSKey
         - BuildkiteQueue
 
       - Label:
