@@ -110,6 +110,11 @@ Parameters:
     Type: String
     Default: ""
 
+  BuildkiteAgentTokenParameterStoreKMSKey:
+    Description: AWS KMS key ID used to encrypt the SSM parameter (if encrypted)
+    Type: String
+    Default: ""
+
   BuildkiteAgentTags:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
     Type: String
@@ -272,11 +277,6 @@ Parameters:
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
 
-  LambdaManagedPolicyARN:
-    Type: CommaDelimitedList
-    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the autoscaling lambda
-    Default: ""
-
   InstanceRoleName:
     Type: String
     Description: Optional - A name for the IAM Role attached to the Instance Profile
@@ -426,14 +426,14 @@ Conditions:
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
 
-    UseLambdaManagedPolicyARN:
-      !Not [ !Equals [ !Join [ "", !Ref LambdaManagedPolicyARN ], "" ] ]
-
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
 
     UseSSMAgentToken:
       !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ] ]
+
+    AgentTokenEncrypted:
+      !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ] ]
 
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
@@ -916,15 +916,7 @@ Resources:
           Action:
           - sts:AssumeRole
       ManagedPolicyArns: !Split
-        - ','
-        - !Join
-          - ','
-          - - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-            - !If
-              - UseLambdaManagedPolicyARN
-              - !Ref 'AWS::NoValue'
-              - !Join [ ',', !Ref LambdaManagedPolicyARN ] ]
-          - !Ref 'AWS::NoValue'
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: AutoScalingGroups
           PolicyDocument:
@@ -935,6 +927,25 @@ Resources:
                 - autoscaling:DescribeAutoScalingGroups
                 - autoscaling:SetDesiredCapacity
               Resource: '*'
+        - !If
+            - AgentTokenEncrypted
+            - - PolicyName: DecryptAgentToken
+                PolicyDocument:
+                  Version: '2012-10-17'
+                  Statement:
+                  - Effect: Allow
+                    Action:
+                      - kms:Decrypt
+                    Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
+              - PolicyName: ReadAgentToken
+                PolicyDocument:
+                  Version: '2012-10-17'
+                  Statement:
+                  - Effect: Allow
+                    Action:
+                      - ssm:GetParameter
+                    Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${BuildkiteAgentTokenParameterStorePath}
+            - !Ref 'AWS::NoValue'
         - PolicyName: WriteCloudwatchMetrics
           PolicyDocument:
             Version: '2012-10-17'
