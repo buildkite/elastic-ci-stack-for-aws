@@ -9,7 +9,7 @@ Metadata:
           default: Buildkite Configuration
         Parameters:
         - BuildkiteAgentToken
-        - BuildkiteAgentTokenPath
+        - BuildkiteAgentTokenParameterStorePath
         - BuildkiteQueue
 
       - Label:
@@ -105,7 +105,7 @@ Parameters:
     NoEcho: true
     Default: ""
 
-  BuildkiteAgentTokenPath:
+  BuildkiteAgentTokenParameterStorePath:
     Description: AWS SSM path to the Buildkite agent registration token (this takes precedence over BuildkiteAgentToken)
     Type: String
     Default: ""
@@ -433,7 +433,7 @@ Conditions:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
 
     UseSSMAgentToken:
-      !Not [ !Equals [ !Ref BuildkiteAgentTokenPath, "" ] ]
+      !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ] ]
 
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
@@ -787,7 +787,7 @@ Resources:
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}"
-                  $Env:BUILDKITE_AGENT_TOKEN_PATH="${BuildkiteAgentTokenPath}"
+                  $Env:BUILDKITE_AGENT_TOKEN_PATH="${BuildkiteAgentTokenParameterStorePath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
@@ -828,7 +828,7 @@ Resources:
                   BUILDKITE_SCALE_IN_IDLE_PERIOD=${ScaleInIdlePeriod} \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
-                  BUILDKITE_AGENT_TOKEN_PATH="${BuildkiteAgentTokenPath}" \
+                  BUILDKITE_AGENT_TOKEN_PATH="${BuildkiteAgentTokenParameterStorePath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
@@ -968,7 +968,7 @@ Resources:
       Environment:
         Variables:
           BUILDKITE_AGENT_TOKEN: !If [ UseSSMAgentToken, !Ref 'AWS::NoValue', !Ref BuildkiteAgentToken ]
-          BUILDKITE_AGENT_TOKEN_SSM_KEY: !Ref BuildkiteAgentTokenPath
+          BUILDKITE_AGENT_TOKEN_SSM_KEY: !Ref BuildkiteAgentTokenParameterStorePath
           BUILDKITE_QUEUE:       !Ref BuildkiteQueue
           AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
           CLOUDWATCH_METRICS:    "1"
