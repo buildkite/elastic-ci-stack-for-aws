@@ -433,7 +433,7 @@ Conditions:
     UseSSMAgentToken:
       !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ] ]
 
-    AgentTokenEncrypted:
+    UseCustomerManagedKeyForParameterStore:
       !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ] ]
 
     HasVariableSize:
@@ -929,7 +929,7 @@ Resources:
                 - autoscaling:SetDesiredCapacity
               Resource: '*'
         - !If
-            - AgentTokenEncrypted
+            - UseCustomerManagedKeyForParameterStore
             - - PolicyName: DecryptAgentToken
                 PolicyDocument:
                   Version: '2012-10-17'
