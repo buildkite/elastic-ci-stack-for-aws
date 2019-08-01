@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Buildkite SSH Access to Packer Build boxes"
+
+Resources:
+  BuildkiteSSHToPacker:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to agents
+      VpcId:
+      Tags:
+      - Key: Name
+        Value: !Ref 'AWS::StackName'
+
+  PackerSshSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupName: !Ref BuildkiteSSHToPacker
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref SecurityGroup
