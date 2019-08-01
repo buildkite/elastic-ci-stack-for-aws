@@ -20,4 +20,4 @@ Resources:
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
-      SourceSecurityGroupId: !Ref SecurityGroup
+      SourceSecurityGroupId: !If [ CreateSecurityGroup, !Ref SecurityGroup, !Ref SecurityGroupId ]
