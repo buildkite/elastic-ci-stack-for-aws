@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Buildkite SSH Access to Packer Build boxes"
 
+Parameters:
+  SecurityGroupName:
+    Type: String
+    Default: ""
+    Description: "If you specify a SecurityGroupId in the params, set this as well"
+
 Resources:
   BuildkiteSSHToPacker:
     Type: AWS::EC2::SecurityGroup
@@ -20,4 +26,4 @@ Resources:
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
-      SourceSecurityGroupId: !If [ CreateSecurityGroup, !Ref SecurityGroup, !Ref SecurityGroupId ]
+      SourceSecurityGroupName: !If [ CreateSecurityGroup, !Ref SecurityGroup, !Ref SecurityGroupName ]
