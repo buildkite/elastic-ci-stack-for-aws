@@ -6,10 +6,12 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Enable access to agents
-      VpcId:
+      VpcId: !Ref VpcId
       Tags:
       - Key: Name
-        Value: !Ref 'AWS::StackName'
+        Value: !Sub "${AWS::StackName}-packer-ssh-security-group"
+      - Key: ApplyToPackerBuilder
+        Value: "true"
 
   PackerSshSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
