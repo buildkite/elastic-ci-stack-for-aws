@@ -22,12 +22,13 @@ parameters:
   InstanceCreationTimeout: PT5M
   InstanceRoleName: buildkite-instance-role
   InstanceType: c4.large
-#  KeyName: services-au-june-2019
   ManagedPolicyARN: arn:aws:iam::644358627301:policy/BuildkitePolicy,arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
   MaxSize: "16"
   MinSize: "8"
   RootVolumeSize: "250"
   SecretsBucket: oculo-services-buildkite-secrets
+# By turning off the KeyName, we disable SSH Ingress entirely to the BK instances
+#  KeyName: services-au-june-2019
 #  SecurityGroupId: sg-019ed1d65f54a2c00  # group that blocks all inbound traffic - we can use AWS Session Manager
 #  SecurityGroupName: "BuildkiteSecurityGroup"
   SpotPrice: "0.050"
