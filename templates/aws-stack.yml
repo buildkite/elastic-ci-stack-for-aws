@@ -489,6 +489,7 @@ Mappings:
     eu-west-1 : { Bucket: "buildkite-lambdas-eu-west-1" }
     eu-west-2 : { Bucket: "buildkite-lambdas-eu-west-2" }
     eu-west-3 : { Bucket: "buildkite-lambdas-eu-west-3" }
+    eu-north-1 : { Bucket: "buildkite-lambdas-eu-north-1" }
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
   # build/mappings.yml
