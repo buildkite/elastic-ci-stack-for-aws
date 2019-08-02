@@ -9,6 +9,8 @@ Metadata:
           default: Buildkite Configuration
         Parameters:
         - BuildkiteAgentToken
+        - BuildkiteAgentTokenParameterStorePath
+        - BuildkiteAgentTokenParameterStoreKMSKey
         - BuildkiteQueue
 
       - Label:
@@ -102,7 +104,17 @@ Parameters:
     Description: Buildkite agent registration token
     Type: String
     NoEcho: true
-    MinLength: 1
+    Default: ""
+
+  BuildkiteAgentTokenParameterStorePath:
+    Description: AWS SSM path to the Buildkite agent registration token (this takes precedence over BuildkiteAgentToken)
+    Type: String
+    Default: ""
+
+  BuildkiteAgentTokenParameterStoreKMSKey:
+    Description: AWS KMS key ID used to encrypt the SSM parameter (if encrypted)
+    Type: String
+    Default: ""
 
   BuildkiteAgentTags:
     Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
@@ -417,6 +429,12 @@ Conditions:
 
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
+
+    UseSSMAgentToken:
+      !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ] ]
+
+    UseCustomerManagedKeyForParameterStore:
+      !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ] ]
 
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
@@ -771,6 +789,7 @@ Resources:
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}"
+                  $Env:BUILDKITE_AGENT_TOKEN_PATH="${BuildkiteAgentTokenParameterStorePath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
@@ -811,6 +830,7 @@ Resources:
                   BUILDKITE_SCALE_IN_IDLE_PERIOD=${ScaleInIdlePeriod} \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_AGENT_TOKEN="${BuildkiteAgentToken}" \
+                  BUILDKITE_AGENT_TOKEN_PATH="${BuildkiteAgentTokenParameterStorePath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
@@ -897,7 +917,7 @@ Resources:
             - lambda.amazonaws.com
           Action:
           - sts:AssumeRole
-      ManagedPolicyArns:
+      ManagedPolicyArns: !Split
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: AutoScalingGroups
@@ -909,6 +929,25 @@ Resources:
                 - autoscaling:DescribeAutoScalingGroups
                 - autoscaling:SetDesiredCapacity
               Resource: '*'
+        - !If
+            - UseCustomerManagedKeyForParameterStore
+            - - PolicyName: DecryptAgentToken
+                PolicyDocument:
+                  Version: '2012-10-17'
+                  Statement:
+                  - Effect: Allow
+                    Action:
+                      - kms:Decrypt
+                    Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
+              - PolicyName: ReadAgentToken
+                PolicyDocument:
+                  Version: '2012-10-17'
+                  Statement:
+                  - Effect: Allow
+                    Action:
+                      - ssm:GetParameter
+                    Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${BuildkiteAgentTokenParameterStorePath}
+            - !Ref 'AWS::NoValue'
         - PolicyName: WriteCloudwatchMetrics
           PolicyDocument:
             Version: '2012-10-17'
@@ -941,7 +980,8 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          BUILDKITE_AGENT_TOKEN: !Ref BuildkiteAgentToken
+          BUILDKITE_AGENT_TOKEN: !If [ UseSSMAgentToken, !Ref 'AWS::NoValue', !Ref BuildkiteAgentToken ]
+          BUILDKITE_AGENT_TOKEN_SSM_KEY: !Ref BuildkiteAgentTokenParameterStorePath
           BUILDKITE_QUEUE:       !Ref BuildkiteQueue
           AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
           CLOUDWATCH_METRICS:    "1"
