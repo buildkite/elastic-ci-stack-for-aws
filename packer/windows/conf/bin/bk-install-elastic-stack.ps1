@@ -119,11 +119,32 @@ Set-PSDebug -Trace 0
 
 Write-Output "Creating buildkite-agent user account in Administrators group"
 
-$Count = Get-Random -min 24 -max 32
-$Password = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count $Count | ForEach-Object {[char]$_})
 $UserName = "buildkite-agent"
 
-New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | ConvertTo-SecureString -AsPlainText -Force) | out-null
+$StopLoop = $false
+[int]$RetryCount = "0"
+
+# a Try/Catch block is used in a loop to make a few extra attempts at creating the user account before finally giving up and failing
+# because sometimes the generated random password does not satisfy the system's password policy
+Do {
+  Try {
+    $Count = Get-Random -min 24 -max 32
+    $Password = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count $Count | ForEach-Object {[char]$_})
+
+    New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | ConvertTo-SecureString -AsPlainText -Force) | out-null
+    $StopLoop = $true
+  }
+  Catch {
+    If ($RetryCount -gt 10){
+      Write-Output "Could not create $UserName user after 10 retries."
+      exit 1
+    }
+    Else {
+      Write-Output "Could not create $UserName user, retrying..."
+      $RetryCount = $RetryCount + 1
+    }
+  }
+} While ($StopLoop -eq $false)
 
 If ($Env:BUILDKITE_WINDOWS_ADMINISTRATOR -eq "true") {
   Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
