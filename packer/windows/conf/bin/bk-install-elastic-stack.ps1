@@ -9,8 +9,10 @@ function on_error {
   $errorLine=$_.InvocationInfo.ScriptLineNumber
   $errorMessage=$_.Exception
 
+  $instance_id=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+
   aws autoscaling set-instance-health `
-    --instance-id "(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content" `
+    --instance-id "$instance_id" `
     --health-status Unhealthy
 
   cfn-signal `
