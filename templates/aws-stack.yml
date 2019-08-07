@@ -383,19 +383,32 @@ Parameters:
     Default: "false"
 
 Outputs:
+  VpcId:
+    Value: !Ref Vpc
+    Export:
+      Name: !Sub '${AWS::StackName}-VpcId'
+
   ManagedSecretsBucket:
     Value:
       !If [CreateSecretsBucket, !Ref ManagedSecretsBucket, "" ]
+    Export:
+      Name: !Sub '${AWS::StackName}-ManagedSecretsBucket'
 
   ManagedSecretsLoggingBucket:
     Value:
       !If [CreateSecretsBucket, !Ref ManagedSecretsLoggingBucket, "" ]
+    Export:
+      Name: !Sub '${AWS::StackName}-ManagedSecretsLoggingBucket'
 
   AutoScalingGroupName:
     Value: !Ref AgentAutoScaleGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AutoScalingGroupName'
 
   InstanceRoleName:
     Value: !Ref IAMRole
+    Export:
+      Name: !Sub '${AWS::StackName}-InstanceRoleName'
 
   AgentLifecycleTopic:
     Value: !Ref AgentLifecycleTopic
