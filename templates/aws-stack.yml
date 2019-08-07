@@ -48,6 +48,7 @@ Metadata:
         - RootVolumeSize
         - RootVolumeName
         - RootVolumeType
+        - RootVolumeKmsKeyId
         - ManagedPolicyARN
         - InstanceRoleName
 
@@ -274,6 +275,11 @@ Parameters:
     Type: String
     Description: Optional - Security group id to assign to instances
     Default: ""
+  
+  RootVolumeKmsKeyId:
+    Description: Optional - ARN of the AWS Key Management Service CMK used to use encryption (This will cause the Buildkite AMI to be copied to your account!)
+    Type: String
+    Default: ""
 
   ImageId:
     Type: String
@@ -466,6 +472,9 @@ Conditions:
     # Whether or not there's any managed polices to attach
     HasManagedPolicies:
       !Or [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
+
+    CreateEncryptedAMI:
+      !Not [ !Equals [ !Ref RootVolumeKmsKeyId, "" ] ]
 
 Mappings:
   ECRManagedPolicy:
@@ -732,7 +741,15 @@ Resources:
       IamInstanceProfile: !Ref IAMInstanceProfile
       InstanceType: !Ref InstanceType
       SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
-      ImageId: !If [ "UseDefaultAMI", !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'], !Ref ImageId ]
+      ImageId: 
+        !If
+          - "UseDefaultAMI"
+          - 
+            !If
+              - "CreateEncryptedAMI"
+              - !GetAtt EncryptedAMI.Id
+              - !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI']
+          - !Ref ImageId
       BlockDeviceMappings:
         - DeviceName: !Ref RootVolumeName
           Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
@@ -1114,3 +1131,88 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt AutoscalingLambdaScheduledRule.Arn
+
+  EncryptedAMI:
+    Type: Custom::AMI
+    Properties:
+      ServiceToken: !GetAtt CopyImageLambda.Arn
+      SourceImageId: !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI']
+      SourceRegion: !Ref 'AWS::Region'
+      KmsKeyId: !Ref RootVolumeKmsKeyId      
+
+  CopyImageLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Role: !GetAtt CopyImageLambdaExecutionRole.Arn
+      Timeout: 900
+      Handler: aws-copy/index.handler
+      Runtime: nodejs10.x
+      Code:
+        S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
+        S3Key: "buildkite-copy-ami/v0.0.1/handler.zip"
+
+  CopyImageLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: '*'
+        - PolicyName: KMSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - kms:CreateGrant
+                - kms:Decrypt
+                - kms:DescribeKey*
+                - kms:Encrypt
+                - kms:GenerateDataKey*
+                - kms:ListGrants
+                - kms:ReEncrypt*
+              Resource: !Ref RootVolumeKmsKeyId
+        - PolicyName: EC2Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - ec2:CopyImage
+                - ec2:CopySnapshot
+                - ec2:CreateImage
+                - ec2:CreateSnapshot
+                - ec2:DeleteSnapshot
+                - ec2:DeregisterImage
+                - ec2:Describe*
+                - ec2:ImportImage
+                - ec2:ImportSnapshot
+                - ec2:ModifyImageAttribute
+                - ec2:ModifySnapshotAttribute
+                - ec2:RegisterImage
+              Resource: '*'   
+        - PolicyName: WriteCloudwatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              Resource: '*'
