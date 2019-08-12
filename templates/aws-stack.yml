@@ -377,19 +377,20 @@ Parameters:
 
 Outputs:
   VpcId:
-    Value: !Ref Vpc
+    Value:
+      !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]
     Export:
       Name: !Sub '${AWS::StackName}-VpcId'
 
   ManagedSecretsBucket:
     Value:
-      !If [CreateSecretsBucket, !Ref ManagedSecretsBucket, "" ]
+      !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, "" ]
     Export:
       Name: !Sub '${AWS::StackName}-ManagedSecretsBucket'
 
   ManagedSecretsLoggingBucket:
     Value:
-      !If [CreateSecretsBucket, !Ref ManagedSecretsLoggingBucket, "" ]
+      !If [ CreateSecretsBucket, !Ref ManagedSecretsLoggingBucket, "" ]
     Export:
       Name: !Sub '${AWS::StackName}-ManagedSecretsLoggingBucket'
 
