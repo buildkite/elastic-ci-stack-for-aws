@@ -390,13 +390,13 @@ Outputs:
 
   ManagedSecretsBucket:
     Value:
-      !If [CreateSecretsBucket, !Ref ManagedSecretsBucket, "" ]
+      !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, "Undefined" ]
     Export:
       Name: !Sub '${AWS::StackName}-ManagedSecretsBucket'
 
   ManagedSecretsLoggingBucket:
     Value:
-      !If [CreateSecretsBucket, !Ref ManagedSecretsLoggingBucket, "" ]
+      !If [ CreateSecretsBucket, !Ref ManagedSecretsLoggingBucket, "Undefined" ]
     Export:
       Name: !Sub '${AWS::StackName}-ManagedSecretsLoggingBucket'
 
