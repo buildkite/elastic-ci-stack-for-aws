@@ -5,10 +5,16 @@ if [[ $EUID -eq 0 ]]; then
   exec >> /var/log/elastic-stack.log 2>&1 # Logs to elastic-stack.log
 fi
 
-DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-4h}
+# Load config from file if it exists
+if [[ -f /var/lib/buildkite-agent/cron-env ]] ; then
+  # shellcheck source=/dev/null
+  source /var/lib/buildkite-agent/cron-env
+else
+  DOCKER_PRUNE_UNTIL=4h
+fi
 
 ## ------------------------------------------
 ## Prune stuff that doesn't affect cache hits
 
-docker network prune --force --filter "until=${DOCKER_PRUNE_UNTIL}"
-docker container prune --force --filter "until=${DOCKER_PRUNE_UNTIL}"
+docker network prune --force --filter "until=${!DOCKER_PRUNE_UNTIL}"
+docker container prune --force --filter "until=${!DOCKER_PRUNE_UNTIL}"

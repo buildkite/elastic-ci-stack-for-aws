@@ -7,6 +7,11 @@ source ~/cfn-env
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
+if [[ -f ~/cron-env ]] ; then
+  # shellcheck source=/dev/null
+  source ~/cron-env
+fi
+
 echo "Checking docker"
 if ! docker ps ; then
   echo "^^^ +++"
@@ -17,13 +22,13 @@ if ! docker ps ; then
 fi
 
 echo "Checking disk space"
-if ! /usr/local/bin/bk-check-disk-space.sh ; then
+if ! /usr/local/bin/bk-check-disk-space.sh "${DISK_MIN_AVAILABLE:-5G}" ; then
 
   echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL:-4h}"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
 
   echo "Checking disk space again"
-  if ! /usr/local/bin/bk-check-disk-space.sh ; then
+  if ! /usr/local/bin/bk-check-disk-space.sh "${DISK_MIN_AVAILABLE:-5G}"; then
     echo "Disk health checks failed" >&2
     exit 1
   fi

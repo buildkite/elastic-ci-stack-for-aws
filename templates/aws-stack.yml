@@ -375,6 +375,16 @@ Parameters:
       - "false"
     Default: "false"
 
+  MinimumDiskAvailableBeforeCleanup:
+    Type: String
+    Description: Either a percentage (%) or absolute unit (B, MB, GB) of disk below which disk cleanup is run
+    Default: "2GB"
+
+  DockerPruneUntil:
+    Type: String
+    Description: How far back to prune docker networks images and containers on hourly cleanup
+    Default: "4h"
+
 Outputs:
   VpcId:
     Value:
@@ -857,6 +867,8 @@ Resources:
                   BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS=${BuildkiteAdditionalSudoPermissions} \
+                  DISK_MIN_AVAILABLE="${MinimumDiskAvailableBeforeCleanup}" \
+                  DOCKER_PRUNE_UNTIL="${DockerPruneUntil} \
                   AWS_DEFAULT_REGION=${AWS::Region} \
                   SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
                   ECR_PLUGIN_ENABLED=${EnableECRPlugin} \

@@ -5,8 +5,6 @@ if [[ $EUID -eq 0 ]]; then
   exec >> /var/log/elastic-stack.log 2>&1 # Logs to elastic-stack.log
 fi
 
-DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-1h}
-
 mark_instance_unhealthy() {
   # cancel any running buildkite builds
   killall -QUIT buildkite-agent || true
@@ -19,14 +17,22 @@ mark_instance_unhealthy() {
 
 trap mark_instance_unhealthy ERR
 
+# Load config from file if it exists
+if [[ -f /var/lib/buildkite-agent/cron-env ]] ; then
+  # shellcheck source=/dev/null
+  source /var/lib/buildkite-agent/cron-env
+else
+  DISK_MIN_AVAILABLE=5G
+fi
+
 ## -----------------------------------------------------------------
 ## Check disk, we only want to prune images/containers if we have to
 
-if ! /usr/local/bin/bk-check-disk-space.sh ; then
-  echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL}"
-  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
+if ! /usr/local/bin/bk-check-disk-space.sh "$DISK_MIN_AVAILABLE" ; then
+  echo "Cleaning up docker resources older than 1h"
+  docker image prune --all --force --filter "until=1h"
 
-  if ! /usr/local/bin/bk-check-disk-space.sh ; then
+  if ! /usr/local/bin/bk-check-disk-space.sh "$DISK_MIN_AVAILABLE" ; then
     echo "Disk health checks failed" >&2
     exit 1
   fi
