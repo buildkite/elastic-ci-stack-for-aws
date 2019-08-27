@@ -868,7 +868,7 @@ Resources:
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS=${BuildkiteAdditionalSudoPermissions} \
                   DISK_MIN_AVAILABLE="${MinimumDiskAvailableBeforeCleanup}" \
-                  DOCKER_PRUNE_UNTIL="${DockerPruneUntil} \
+                  DOCKER_PRUNE_UNTIL="${DockerPruneUntil}" \
                   AWS_DEFAULT_REGION=${AWS::Region} \
                   SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
                   ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
