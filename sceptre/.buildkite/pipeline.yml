@@ -32,3 +32,18 @@ steps:
           shell: false
           command: ["sh", "-c", "merge-cfn-templates --cfn_templates_directory /sceptre/templates/regional && \
             sceptre --var aws_region=us-west-2 launch regional --yes"]
+
+  - label: ":aws: Regional - eu-west-2"
+    plugins:
+      - ecr#v1.2.0:
+          login: true
+          account_ids: "644358627301"
+      - thedyrt/change-directory#v0.1.1:
+          cd: ./sceptre
+      - cultureamp/aws-assume-role#v0.1.0:
+          role: "arn:aws:iam::644358627301:role/role-sts-oculo-continuous-integration"
+      - docker-compose#v3.0.0:
+          run: infrastructure_tools
+          shell: false
+          command: ["sh", "-c", "merge-cfn-templates --cfn_templates_directory /sceptre/templates/regional && \
+            sceptre --var aws_region=eu-west-2 launch regional --yes"]
