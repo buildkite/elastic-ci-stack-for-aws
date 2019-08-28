@@ -1,0 +1,8 @@
+template_path: services/.compiled-stack.yaml
+
+stack_name: buildkite
+
+parameters:
+  #Add Back as Needed
+  VpcId: "vpc-65745902"
+  Subnets: subnet-184e5b7f,subnet-e4ab2fbc
