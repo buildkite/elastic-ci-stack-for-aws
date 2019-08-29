@@ -23,7 +23,8 @@ Resources:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !GetAtt BuildkiteSSHToPacker.GroupId
-      SourceSecurityGroupId: !If [ CreateSecurityGroup, !GetAtt SecurityGroup.GroupId, !Ref SecurityGroupId ]
+      CidrIp: "0.0.0.0/0"
+      #SourceSecurityGroupId: !If [ CreateSecurityGroup, !GetAtt SecurityGroup.GroupId, !Ref SecurityGroupId ]
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
