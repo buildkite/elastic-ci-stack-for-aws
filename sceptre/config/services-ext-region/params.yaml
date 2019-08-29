@@ -1,4 +1,4 @@
-template_path: services/.compiled-stack.yaml
+template_path: services-ext-region/.compiled-stack.yaml
 
 stack_name: buildkite
 
