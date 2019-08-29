@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Buildkite SSH Access to Packer Build boxes"
 
+Parameters:
+  VpcId:
+    Type: String
+    Description: VPC that security group will reside in
+    Default: ""
+
 Resources:
   BuildkiteSSHToPacker:
     Type: AWS::EC2::SecurityGroup
