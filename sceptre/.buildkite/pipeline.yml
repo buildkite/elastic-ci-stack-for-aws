@@ -64,4 +64,3 @@ steps:
           shell: false
           command: ["sh", "-c", "merge-cfn-templates --cfn_templates_directory /sceptre/templates/services-ext-region && \
             sceptre --var aws_region=us-west-2 --var VpcId=vpc-5c73c224 launch services-ext-region --yes"]
-
