@@ -56,6 +56,9 @@ Metadata:
         Parameters:
         - MinSize
         - MaxSize
+        - SpotInstancePools
+        - OndemandBaseCapacity
+        - OnDemandPercentageAboveBaseCapacity
         - ScaleOutFactor
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
@@ -209,7 +212,7 @@ Parameters:
     MinLength: 1
 
   SpotPrice:
-    Description: Spot bid price to use for the instances. 0 means normal (non-spot) instances
+    Description: Spot bid price to use for the instances. 0 allows you to specify mixed instances(a combination of On-Demand Instances and Spot Instances across multiple instance types)
     Type: String
     Default: 0
 
@@ -223,6 +226,21 @@ Parameters:
     Description: Minimum number of instances
     Type: Number
     Default: 0
+
+  SpotInstancePools:
+    Default: 4
+    Description: The number of Spot pools per Availability Zone
+    Type: Number
+
+  OndemandBaseCapacity:
+    Default: 0
+    Description: Minimum number of instances in ASG's initial capacity that must be fulfilled by On-Demand instances
+    Type: Number
+
+  OnDemandPercentageAboveBaseCapacity:
+    Default: 40
+    Description: Percentage of On-Demand Instances for additional capacity beyond the optional On-Demand base amount
+    Type: Number
 
   ScaleOutFactor:
     Description: A decimal factor to apply to scale out changes to speed up or slow down scale-out
@@ -872,9 +890,33 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
-      LaunchTemplate:
-        LaunchTemplateId: !Ref AgentLaunchTemplate
-        Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+      MixedInstancesPolicy: !if
+        - UseSpotInstances
+        - !Ref "AWS::NoValue"
+        - InstancesDistribution:
+            OnDemandBaseCapacity: !Ref OndemandBaseCapacity
+            OnDemandPercentageAboveBaseCapacity: !Ref OnDemandPercentageAboveBaseCapacity
+            SpotAllocationStrategy: lowest-price
+            SpotInstancePools:
+              Ref: SpotInstancePools
+          LaunchTemplate:
+            LaunchTemplateSpecification:
+              LaunchTemplateId: !Ref AgentLaunchTemplate
+              Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+            Overrides:
+            - InstanceType: t2.large
+            - InstanceType: t3.large
+            - InstanceType: c4.large
+            - InstanceType: c5.large
+            - InstanceType: m4.large
+            - InstanceType: m5.large
+            - InstanceType: r4.large
+            - InstanceType: r5.large
+      LaunchTemplate: !If
+        - UseSpotInstances
+        - LaunchTemplateId: !Ref AgentLaunchTemplate
+          Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+        - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 0
