@@ -890,7 +890,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
-      MixedInstancesPolicy: !if
+      MixedInstancesPolicy: !If
         - UseSpotInstances
         - !Ref "AWS::NoValue"
         - InstancesDistribution:
