@@ -9,7 +9,7 @@ Write-Output "Installing awscli"
 choco install -y awscli
 
 Write-Output "Installing Git for Windows"
-choco install -y git
+choco install -y git --version 2.22.0
 
 Write-Output "Installing nssm"
 choco install -y nssm
