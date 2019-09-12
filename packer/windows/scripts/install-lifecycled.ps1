@@ -12,5 +12,8 @@ Invoke-WebRequest -OutFile C:\lifecycled\bin\lifecycled.exe https://github.com/b
 
 Write-Output "Configure lifecycled to run on startup..."
 nssm install lifecycled C:\lifecycled\bin\lifecycled.exe
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set lifecycled AppStdout C:\lifecycled\lifecycled.log
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set lifecycled AppStderr C:\lifecycled\lifecycled.log
+If ($lastexitcode -ne 0) { Exit $lastexitcode }

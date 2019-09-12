@@ -50,6 +50,7 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   Write-Output "Downloading buildkite-agent edge..."
   Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-edge.exe -Uri "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-windows-amd64.exe"
   buildkite-agent-edge.exe --version
+  If ($lastexitcode -ne 0) { Exit $lastexitcode }
 }
 
 Copy-Item -Path C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe -Destination C:\buildkite-agent\bin\buildkite-agent.exe
@@ -110,7 +111,7 @@ do {
 
 docker ps
 if (! $?) {
-  echo "Failed to contact docker"
+  Write-Output "Failed to contact docker"
   exit 1
 }
 
@@ -157,12 +158,19 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
 Write-Output "Starting the Buildkite Agent"
 
 nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent ObjectName .\$UserName $Password
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppExit Default Exit
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Restart-Service buildkite-agent
 
@@ -177,7 +185,7 @@ cfn-signal `
   --exit-code 0 ; if (-not $?) {
     # This will fail if the stack has already completed, for instance if there is a min size
     # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
-    echo "Signal failed"
+    Write-Output "Signal failed"
   }
 
 Set-PSDebug -Off
