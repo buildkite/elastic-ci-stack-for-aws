@@ -1,13 +1,20 @@
 {
   "variables": {
-    "region": "us-east-1",
-    "ami": "ami-00b882ac5193044e4"
+    "region": "us-east-1"
   },
   "builders": [
     {
       "type": "amazon-ebs",
       "region": "{{user `region`}}",
-      "source_ami": "{{user `ami`}}",
+      "source_ami_filter": {
+        "filters": {
+          "name": "amzn2-ami-hvm-2.0.*-gp2",
+          "architecture": "x86_64",
+          "virtualization-type": "hvm"
+        },
+        "owners": ["amazon"],
+        "most_recent": true
+      },
       "instance_type": "m5.xlarge",
       "spot_price": "auto",
       "spot_price_auto_product": "Linux/UNIX (Amazon VPC)",
