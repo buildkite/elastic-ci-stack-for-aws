@@ -1,14 +1,26 @@
 {
   "variables": {
-    "region": "us-east-1",
-    "ami": "ami-00b882ac5193044e4"
+    "region": "us-east-1"
   },
   "builders": [
     {
       "type": "amazon-ebs",
       "region": "{{user `region`}}",
+<<<<<<< HEAD:packer/buildkite-ami.json
       "source_ami": "{{user `ami`}}",
       "instance_type": "i3.large",
+=======
+      "source_ami_filter": {
+        "filters": {
+          "name": "amzn2-ami-hvm-2.0.*-gp2",
+          "architecture": "x86_64",
+          "virtualization-type": "hvm"
+        },
+        "owners": ["amazon"],
+        "most_recent": true
+      },
+      "instance_type": "m5.xlarge",
+>>>>>>> db97804... Merge pull request #636 from cawilson/linux-dynamic-source-ami-filter:packer/linux/buildkite-ami.json
       "spot_price": "auto",
       "spot_price_auto_product": "Linux/UNIX (Amazon VPC)",
       "ssh_username": "ec2-user",
