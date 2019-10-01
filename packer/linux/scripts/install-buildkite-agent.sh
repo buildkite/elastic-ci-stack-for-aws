@@ -54,6 +54,9 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 echo "Adding systemd service template..."
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent.service /etc/systemd/system/buildkite-agent.service
 
+echo "Adding cloud-init failure safety check..."
+sudo cp /tmp/conf/buildkite-agent/systemd/system/cloud-final.service.d/10-power-off-on-failure.conf /etc/systemd/system/cloud-final.service.d/10-power-off-on-failure.conf
+
 echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully
 sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
