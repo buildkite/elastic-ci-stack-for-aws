@@ -22,13 +22,13 @@ if ! docker ps ; then
 fi
 
 echo "Checking disk space"
-if ! /usr/local/bin/bk-check-disk-space.sh "${DISK_MIN_AVAILABLE:-5G}" ; then
+if ! /usr/local/bin/bk-check-disk-space.sh "${DISK_MIN_AVAILABLE:-}" ; then
 
   echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL:-4h}"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
 
   echo "Checking disk space again"
-  if ! /usr/local/bin/bk-check-disk-space.sh "${DISK_MIN_AVAILABLE:-5G}"; then
+  if ! /usr/local/bin/bk-check-disk-space.sh "${DISK_MIN_AVAILABLE:-}"; then
     echo "Disk health checks failed" >&2
     exit 1
   fi
