@@ -7,7 +7,9 @@ set -euo pipefail
 # or 500M, or a percentage like 5%
 # min inodes must be a number, default to 250,000
 
-. "$(dirname "$0")"/dehumanize.sh
+dehumanize() {
+  "$(dirname "$0")"/dehumanize.sh "$@"
+}
 
 min_available=${1:-5G}
 docker_dir="/var/lib/docker/"
