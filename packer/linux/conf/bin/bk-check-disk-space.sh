@@ -7,10 +7,6 @@ set -euo pipefail
 # or 500M, or a percentage like 5%
 # min inodes must be a number, default to 250,000
 
-dehumanize() {
-  "$(dirname "$0")"/dehumanize.sh "$@"
-}
-
 min_available=${1:-5G}
 docker_dir="/var/lib/docker/"
 
@@ -30,7 +26,7 @@ if [[ $min_available =~ \%$ ]] ; then
     exit 1
   fi
 else
-  if [[ $disk_avail -lt $(dehumanize "$min_available") ]]; then
+  if [[ $disk_avail -lt $(/usr/local/bin/bk-parse-byte-units.sh "$min_available") ]]; then
     echo "Not enough disk space free, cutoff is ${min_available} 🚨" >&2
     exit 1
   fi
