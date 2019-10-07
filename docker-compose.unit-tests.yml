@@ -2,7 +2,7 @@ version: '3'
 
 services:
   unit-tests:
-    image: lucor/bats
+    build: ./unit-tests
     volumes:
       - .:/src:ro
     working_dir: /src
