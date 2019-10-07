@@ -26,9 +26,10 @@ if [[ $min_available =~ \%$ ]] ; then
     exit 1
   fi
 else
+  disk_avail_bytes="$((disk_avail*1024))"
   min_available_bytes="$(/usr/local/bin/bk-parse-byte-units.sh "$min_available")"
-  if [[ $disk_avail -lt $min_available_bytes ]]; then
-    echo "Not enough disk space free, cutoff is ${min_available} ($disk_avail < $min_available_bytes) 🚨" >&2
+  if [[ $disk_avail_bytes -lt $min_available_bytes ]]; then
+    echo "Not enough disk space free, cutoff is ${min_available} 🚨" >&2
     exit 1
   fi
 fi
