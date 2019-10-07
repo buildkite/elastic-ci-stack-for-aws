@@ -22,12 +22,13 @@ printf "Disk space free: %s (%s%%)\\n" "$disk_avail_human" "$disk_free_pct"
 # Check if the min_available is a percentage
 if [[ $min_available =~ \%$ ]] ; then
   if [[ $(echo "${disk_free_pct}<${min_available}" | sed 's/%//g' | bc) -gt 0 ]] ; then
-    echo "Not enough disk space free, cutoff is ${min_available} 🚨" >&2
+    echo "Not enough disk space free, cutoff percentage is ${min_available} 🚨" >&2
     exit 1
   fi
 else
-  if [[ $disk_avail -lt $(/usr/local/bin/bk-parse-byte-units.sh "$min_available") ]]; then
-    echo "Not enough disk space free, cutoff is ${min_available} 🚨" >&2
+  min_available_bytes="$(/usr/local/bin/bk-parse-byte-units.sh "$min_available")"
+  if [[ $disk_avail -lt $min_available_bytes ]]; then
+    echo "Not enough disk space free, cutoff is ${min_available} ($min_available_bytes bytes) 🚨" >&2
     exit 1
   fi
 fi
