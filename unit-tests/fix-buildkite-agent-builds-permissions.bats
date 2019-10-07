@@ -5,29 +5,14 @@ FIX_PERMISSIONS_SCRIPT="/src/packer/linux/conf/buildkite-agent/scripts/fix-build
 @test "Slashes in the agent arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "/" "abc" "abc"
 	[ "$status" -eq 1 ]
-}
-
-@test "Slashes in the agent arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc/" "abc" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the agent arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "/abc" "abc" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the agent arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc/def" "abc" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the agent arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc/def/ghi" "abc" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the agent arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "/abc/" "abc" "abc"
   [ "$status" -eq 1 ]
 }
@@ -35,29 +20,14 @@ FIX_PERMISSIONS_SCRIPT="/src/packer/linux/conf/buildkite-agent/scripts/fix-build
 @test "Slashes in the org arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "/" "abc"
 	[ "$status" -eq 1 ]
-}
-
-@test "Slashes in the org arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc/" "abc" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the org arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "/abc" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the org arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc/def" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the org arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc/def/ghi" "abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the org arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "/abc/" "abc"
   [ "$status" -eq 1 ]
 }
@@ -65,29 +35,14 @@ FIX_PERMISSIONS_SCRIPT="/src/packer/linux/conf/buildkite-agent/scripts/fix-build
 @test "Slashes in the pipeline arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc" "/"
 	[ "$status" -eq 1 ]
-}
-
-@test "Slashes in the pipeline arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc" "abc/"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the pipeline arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc" "/abc"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the pipeline arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc" "abc/def"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the pipeline arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc" "abc/def/ghi"
   [ "$status" -eq 1 ]
-}
-
-@test "Slashes in the pipeline arg cause an exit 1" {
   run "$FIX_PERMISSIONS_SCRIPT" "abc" "abc" "/abc/"
   [ "$status" -eq 1 ]
 }
