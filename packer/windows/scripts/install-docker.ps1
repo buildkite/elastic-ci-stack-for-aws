@@ -13,6 +13,8 @@ Start-Service docker
 
 Write-Output "Installing docker-compose"
 choco install -y docker-compose
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing jq"
 choco install -y jq
+If ($lastexitcode -ne 0) { Exit $lastexitcode }

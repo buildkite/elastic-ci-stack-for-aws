@@ -13,10 +13,12 @@ $env:PATH = "C:\buildkite-agent\bin;" + $env:PATH
 Write-Output "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-stable.exe -Uri "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-windows-amd64.exe"
 buildkite-agent-stable.exe --version
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Downloading buildkite-agent beta..."
 Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-beta.exe -Uri "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-windows-amd64.exe"
 buildkite-agent-beta.exe --version
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Creating hooks dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\hooks

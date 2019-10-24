@@ -9,6 +9,7 @@ Start-Process C:\packer-temp\amazon-cloudwatch-agent.msi -Wait
 
 Write-Output "Setting amazon cloudwatch agent start type to delayed-auto..."
 sc.exe config AmazonCloudWatchAgent start= delayed-auto
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Copying amazon cloudwatch agent config..."
 Copy-Item -Path C:\packer-temp\conf\awslogs\amazon-cloudwatch-agent.json -Destination C:\ProgramData\Amazon\AmazonCloudWatchAgent
