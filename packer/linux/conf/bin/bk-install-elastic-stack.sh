@@ -62,6 +62,12 @@ export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]-}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
 
+# cron-env is sourced by crontab entries and low disk scripts
+cat << EOF > /var/lib/buildkite-agent/cron-env
+export DISK_MIN_AVAILABLE=$DISK_MIN_AVAILABLE
+export DOCKER_PRUNE_UNTIL=$DOCKER_PRUNE_UNTIL
+EOF
+
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
 	echo "Downloading buildkite-agent edge..."
 	curl -Lsf -o /usr/bin/buildkite-agent-edge \
