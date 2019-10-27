@@ -9,3 +9,6 @@ tar -xvzf git-lfs.tgz -C git-lfs
 sudo chmod 755 git-lfs/git-lfs
 sudo ./git-lfs/install.sh
 rm -rf git-lfs.tgz git-lfs/
+
+echo "Setting Git credential helper to use ~/.git-credentials as source if clone via https"
+git config --global credential.helper 'store --file ~/.git-credentials'
