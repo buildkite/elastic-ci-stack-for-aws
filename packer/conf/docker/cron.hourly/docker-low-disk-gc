@@ -12,6 +12,7 @@ mark_instance_unhealthy() {
   killall -QUIT buildkite-agent || true
 
   # mark the instance for termination
+  echo "Marking instance as unhealthy"
   aws autoscaling set-instance-health \
     --instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
     --health-status Unhealthy
@@ -20,11 +21,13 @@ mark_instance_unhealthy() {
 trap mark_instance_unhealthy ERR
 
 ## -----------------------------------------------------------------
-## Check disk, we only want to prune images/containers if we have to
+## Check disk, we only want to prune images/containers/build caches
+## if we really need to
 
 if ! /usr/local/bin/bk-check-disk-space.sh ; then
   echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL}"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
+  docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL}"
 
   if ! /usr/local/bin/bk-check-disk-space.sh ; then
     echo "Disk health checks failed" >&2
