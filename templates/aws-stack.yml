@@ -384,7 +384,8 @@ Parameters:
 
 Outputs:
   VpcId:
-    Value: !Ref Vpc
+    Value:
+      !If [ CreateVpcResources, !Ref Vpc, !Ref VpcId ]
     Export:
       Name: !Sub '${AWS::StackName}-VpcId'
 
