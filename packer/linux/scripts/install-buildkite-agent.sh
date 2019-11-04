@@ -55,6 +55,7 @@ echo "Adding systemd service template..."
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent.service /etc/systemd/system/buildkite-agent.service
 
 echo "Adding cloud-init failure safety check..."
+sudo mkdir -p /etc/systemd/system/cloud-final.service.d/
 sudo cp /tmp/conf/buildkite-agent/systemd/cloud-final.service.d/10-power-off-on-failure.conf /etc/systemd/system/cloud-final.service.d/10-power-off-on-failure.conf
 
 echo "Adding termination scripts..."
