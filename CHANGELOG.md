@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.3.4...v4.3.5)
 
 ### Added
+- Bump buildkite-agent to v3.13.2 [#644](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/644) (@lox)
 - Prune docker builder cache in cleanup [#642](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/642) (@sj26)
 - Power off immediately if cloud-init fails [#638](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/638) (@dbaggerman)
 - Replaced Linux fixed AMI source with source AMI filter [#636](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/636) (@cawilson)
 - Bump docker version to 19.03.2 [#634](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/634) (@PaulLiang1)
 - Add cloudformation output exports [#616](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/616) (@jradtilbrook)
-- Bump buildkite-agent to v3.13.2 [#605](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/605) (@lox)
 - Add python3 and future lib to allow prepping for Python2 EOL [#583](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/583) (@GreyKn)
 
 ### Fixed
