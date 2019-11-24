@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-DISK_MIN_AVAILABLE=${DISK_MIN_AVAILABLE:-1048576} # 1GB
+DISK_MIN_AVAILABLE=${DISK_MIN_AVAILABLE:-5242880} # 5GB
 DISK_MIN_INODES=${DISK_MIN_INODES:-250000} # docker needs lots
 
 DOCKER_DIR="/var/lib/docker/"
