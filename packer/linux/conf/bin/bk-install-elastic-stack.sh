@@ -101,7 +101,7 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
 fi
 
 # If the agent token path is set, use that instead of BUILDKITE_AGENT_TOKEN
-if [[ -n "${BUILDKITE_AGENT_TOKEN_PATH}" ]] ; then
+if [[ -n "${BUILDKITE_AGENT_TOKEN_PATH:-}" ]] ; then
     BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
 fi
 
@@ -119,7 +119,7 @@ experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
-disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
+disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD:-}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 EOF
 
