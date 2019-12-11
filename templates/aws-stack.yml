@@ -622,6 +622,29 @@ Resources:
                  - !Join [ ',', !Ref ManagedPolicyARN ]
                  - !Ref 'AWS::NoValue'
           - !Ref 'AWS::NoValue'
+      Policies:
+        - !If
+          - UseCustomerManagedKeyForParameterStore
+          - PolicyName: DecryptAgentToken
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
+          - !Ref 'AWS::NoValue'
+        - !If
+          - UseSSMAgentToken
+          - PolicyName: ReadAgentToken
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BuildkiteAgentTokenParameterStorePath}
+          - !Ref 'AWS::NoValue'
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
