@@ -934,58 +934,45 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        !If
+        - PolicyName: AutoScalingGroups
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - autoscaling:DescribeAutoScalingGroups
+                - autoscaling:SetDesiredCapacity
+              Resource: '*'
+        - PolicyName: WriteCloudwatchMetrics
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: '*'
+        - !If
           - UseCustomerManagedKeyForParameterStore
-          - - PolicyName: AutoScalingGroups
-              PolicyDocument:
-                Version: '2012-10-17'
-                Statement:
-                - Effect: Allow
-                  Action:
-                    - autoscaling:DescribeAutoScalingGroups
-                    - autoscaling:SetDesiredCapacity
-                  Resource: '*'
-            - PolicyName: DecryptAgentToken
-              PolicyDocument:
-                Version: '2012-10-17'
-                Statement:
-                - Effect: Allow
-                  Action:
-                    - kms:Decrypt
-                  Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
-            - PolicyName: ReadAgentToken
-              PolicyDocument:
-                Version: '2012-10-17'
-                Statement:
-                - Effect: Allow
-                  Action:
-                    - ssm:GetParameter
-                  Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BuildkiteAgentTokenParameterStorePath}
-            - PolicyName: WriteCloudwatchMetrics
-              PolicyDocument:
-                Version: '2012-10-17'
-                Statement:
-                - Effect: Allow
-                  Action:
-                    - cloudwatch:PutMetricData
-                  Resource: '*'
-          - - PolicyName: AutoScalingGroups
-              PolicyDocument:
-                Version: '2012-10-17'
-                Statement:
-                - Effect: Allow
-                  Action:
-                    - autoscaling:DescribeAutoScalingGroups
-                    - autoscaling:SetDesiredCapacity
-                  Resource: '*'
-            - PolicyName: WriteCloudwatchMetrics
-              PolicyDocument:
-                Version: '2012-10-17'
-                Statement:
-                - Effect: Allow
-                  Action:
-                    - cloudwatch:PutMetricData
-                  Resource: '*'
+          - PolicyName: DecryptAgentToken
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
+          - !Ref 'AWS::NoValue'
+        - !If
+          - UseSSMAgentToken
+          - PolicyName: ReadAgentToken
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BuildkiteAgentTokenParameterStorePath}
+          - !Ref 'AWS::NoValue'
 
   # This mirrors the group that would be created by the lambda, but enforces
   # a retention period and also ensures it's removed when the stack is removed
