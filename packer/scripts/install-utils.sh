@@ -1,9 +1,6 @@
 #!/bin/bash
 set -eu -o pipefail
 
-echo "Updating core packages"
-sudo yum update -y
-
 echo "Updating awscli..."
 sudo yum install -y python2-pip
 sudo yum install -y python3-pip python3 python3-setuptools
