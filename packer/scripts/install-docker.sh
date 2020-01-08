@@ -3,7 +3,7 @@ set -eu -o pipefail
 
 DOCKER_VERSION=19.03.2
 DOCKER_RELEASE="stable"
-DOCKER_COMPOSE_VERSION=1.24.1
+DOCKER_COMPOSE_VERSION=1.25.1
 
 # This performs a manual install of Docker.
 
