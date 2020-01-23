@@ -76,6 +76,11 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   }
 }
 
+If (!Test-Path Env:BUILDKITE_GIT_MIRRORS_PATH) {
+  $Env:BUILDKITE_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
+}
+
+
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
@@ -86,7 +91,7 @@ timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
 plugins-path="C:\buildkite-agent\plugins"
-git-mirrors-path="C:\buildkite-agent\git-mirrors"
+git-mirrors-path="${Env:BUILDKITE_GIT_MIRRORS_PATH}"
 experiment="${Env:BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
