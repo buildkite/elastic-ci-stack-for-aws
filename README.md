@@ -216,7 +216,7 @@ If the file is private, you'll also need to create an IAM policy to allow the in
     {
       "Effect": "Allow",
       "Action": [
-        "s3:GetObject",
+        "s3:GetObject"
       ],
       "Resource": ["arn:aws:s3:::my_bucket_name/my_bootstrap.sh"]
     }
