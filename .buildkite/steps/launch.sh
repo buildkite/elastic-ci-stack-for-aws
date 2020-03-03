@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC1117
 set -eu
 
 os="${1:-linux}"
