@@ -6,7 +6,9 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 Write-Output "Installing awscli"
-choco install -y awscli
+# pinned because awscli v2 drops 'aws ecr get-login'
+# https://github.com/buildkite-plugins/ecr-buildkite-plugin/issues/37
+choco install -y awscli --version=1.18.11
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Git for Windows"
