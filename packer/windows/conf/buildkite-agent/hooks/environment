@@ -40,3 +40,15 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/environment
 fi
+
+if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+
+  # map AWS_ECR_LOGIN_REGISTRY_IDS into the plugin list format
+  if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+    export BUILDKITE_PLUGIN_ECR_ACCOUNT_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
+  fi
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/environment
+fi
