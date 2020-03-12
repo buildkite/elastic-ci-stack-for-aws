@@ -63,6 +63,18 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/environment
 fi
 
+if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+
+  # map AWS_ECR_LOGIN_REGISTRY_IDS into the plugin list format
+  if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+    export BUILDKITE_PLUGIN_ECR_ACCOUNT_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
+  fi
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/environment
+fi
+
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "false" ]] ; then
   # We need to scope the next bit to only the currently running agent dir and
   # pipeline, but we also need to control security and make sure arbitrary folders
