@@ -49,6 +49,8 @@ PLUGINS_ENABLED=()
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
 [[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker-login")
 
+[[ $ISOLATE_DOCKER_CONFIG == "true" ]] && DOCKER_CONFIG="export DOCKER_CONFIG=\$(mktemp -d)"
+
 # cfn-env is sourced by the environment hook in builds
 cat << EOF > /var/lib/buildkite-agent/cfn-env
 export DOCKER_VERSION=$DOCKER_VERSION
@@ -60,6 +62,7 @@ export AWS_DEFAULT_REGION=$AWS_REGION
 export AWS_REGION=$AWS_REGION
 export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]-}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
+${DOCKER_CONFIG:-""}
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
