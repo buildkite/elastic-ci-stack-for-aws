@@ -74,6 +74,7 @@ Metadata:
         Parameters:
         - EnableDockerUserNamespaceRemap
         - EnableDockerExperimental
+        - IsolateDockerConfig
 
       - Label:
           default: Docker Registry Configuration
@@ -350,6 +351,14 @@ Parameters:
   EnableDockerExperimental:
     Type: String
     Description: Enables Docker experimental features
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  IsolateDockerConfig:
+    Type: String
+    Description: Isolates Docker Configuration per step
     AllowedValues:
       - "true"
       - "false"
@@ -864,6 +873,7 @@ Resources:
                   $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
                   $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
                   $Env:AWS_REGION="${AWS::Region}"
+                  $Env:ISOLATE_DOCKER_CONFIG="${IsolateDockerConfig}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
                 - {
