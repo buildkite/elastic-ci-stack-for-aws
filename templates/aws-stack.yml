@@ -265,7 +265,7 @@ Parameters:
 
   SecurityGroupId:
     Type: String
-    Description: Optional - Security group id to assign to instances
+    Description: Optional - Comma separated list of security group ids to assign to instances
     Default: ""
 
   ImageId:
@@ -779,8 +779,7 @@ Resources:
           NetworkInterfaces:
             - DeviceIndex: 0
               AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
-              Groups:
-              - !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ]
+              Groups: !Split [ ",", !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
           KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
