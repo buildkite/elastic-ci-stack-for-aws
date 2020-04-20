@@ -4,6 +4,7 @@ Documentation=https://buildkite.com/agent
 After=syslog.target
 After=network.target
 After=docker.service
+After=iam-ssh-agent.service
 
 [Service]
 Type=simple
