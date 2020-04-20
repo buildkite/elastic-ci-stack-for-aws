@@ -9,6 +9,7 @@ Type=simple
 User=buildkite-agent
 Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 Environment="SSH_AUTH_SOCK=%t/ssh-agent.socket"
+EnvironmentFile=/etc/iam-ssh-agent
 ExecStart=/usr/bin/iam-ssh-agent daemon
 RestartSec=5
 Restart=on-failure
