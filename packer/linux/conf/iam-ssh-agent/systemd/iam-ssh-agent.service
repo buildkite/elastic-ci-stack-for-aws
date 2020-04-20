@@ -8,7 +8,8 @@ After=network.target
 Type=simple
 User=buildkite-agent
 Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
-ExecStart=/usr/bin/iam-ssh-agent daemon 
+Environment="SSH_AUTH_SOCK=%t/ssh-agent.socket"
+ExecStart=/usr/bin/iam-ssh-agent daemon
 RestartSec=5
 Restart=on-failure
 RestartForceExitStatus=SIGPIPE
