@@ -11,3 +11,5 @@ sudo curl --location --fail --output /tmp/iam-ssh-agent.rpm \
 sudo yum install --assumeyes /tmp/iam-ssh-agent.rpm
 
 rm /tmp/iam-ssh-agent.rpm
+
+sudo cp /tmp/conf/iam-ssh-agent/systemd/iam-ssh-agent.service /etc/systemd/system/iam-ssh-agent.service
