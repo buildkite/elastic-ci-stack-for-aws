@@ -12,4 +12,4 @@ sudo yum install --assumeyes /tmp/iam-ssh-agent.rpm
 
 sudo rm /tmp/iam-ssh-agent.rpm
 
-sudo cp /tmp/conf/iam-ssh-agent/systemd/iam-ssh-agent.service  /usr/lib/systemd/user/ssh-agent.service
+sudo cp /tmp/conf/iam-ssh-agent/systemd/iam-ssh-agent.service  /etc/systemd/system/ssh-agent.service
