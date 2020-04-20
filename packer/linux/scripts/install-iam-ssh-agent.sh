@@ -10,6 +10,6 @@ sudo curl --location --fail --output /tmp/iam-ssh-agent.rpm \
 
 sudo yum install --assumeyes /tmp/iam-ssh-agent.rpm
 
-rm /tmp/iam-ssh-agent.rpm
+sudo rm /tmp/iam-ssh-agent.rpm
 
 sudo cp /tmp/conf/iam-ssh-agent/systemd/iam-ssh-agent.service /var/lib/buildkite-agent/.config/systemd/user/ssh-agent.service
