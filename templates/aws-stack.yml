@@ -89,6 +89,7 @@ Metadata:
       - Label:
           default: IAM SSH Agent Configuration
         Parameters:
+          - SshAgentBackend
           - SshAgentBackendUrl
 
 Parameters:
