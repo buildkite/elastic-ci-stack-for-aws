@@ -7,6 +7,7 @@ After=network.target
 [Service]
 Type=simple
 User=buildkite-agent
+RuntimeDirectory=ssh-agent
 Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 Environment=SSH_AUTH_SOCK=%t/ssh-agent/socket
 EnvironmentFile=/etc/iam-ssh-agent

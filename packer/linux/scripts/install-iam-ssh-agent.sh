@@ -10,11 +10,4 @@ sudo curl --location --fail --output /tmp/iam-ssh-agent.rpm \
 sudo yum install --assumeyes /tmp/iam-ssh-agent.rpm
 sudo rm /tmp/iam-ssh-agent.rpm
 
-sudo groupadd ssh-agent
-sudo usermod -a -G ssh-agent ec2-user
-
-sudo mkdir /run/ssh-agent
-sudo chown root:ssh-agent /run/ssh-agent
-sudo chmod g+w,o-rx /run/ssh-agent
-
 sudo cp /tmp/conf/iam-ssh-agent/systemd/ssh-agent.service  /etc/systemd/system/ssh-agent.service
