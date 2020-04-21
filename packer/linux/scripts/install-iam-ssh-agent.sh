@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-IAM_SSH_AGENT_VERSION="0.3.0"
+IAM_SSH_AGENT_VERSION="0.3.1"
 
 echo "Installing iam-ssh-agent ${IAM_SSH_AGENT_VERSION}..."
 
