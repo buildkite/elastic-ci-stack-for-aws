@@ -56,7 +56,7 @@ service:
     enabled: true
     running: true
 
-  iam-ssh-agent:
+  ssh-agent:
     enabled: true
     running: true
 
