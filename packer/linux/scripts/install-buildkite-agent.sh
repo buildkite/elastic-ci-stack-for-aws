@@ -10,6 +10,7 @@ sudo yum install -y -q git-core
 echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
+sudo usermod -a -G ssh-agent buildkite-agent
 
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \

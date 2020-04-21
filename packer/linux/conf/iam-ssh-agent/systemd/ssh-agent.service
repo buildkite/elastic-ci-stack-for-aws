@@ -8,14 +8,11 @@ After=network.target
 Type=simple
 User=buildkite-agent
 Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
-Environment="SSH_AUTH_SOCK=%t/ssh-agent.socket"
+Environment=SSH_AUTH_SOCK=%t/ssh-agent/socket
 EnvironmentFile=/etc/iam-ssh-agent
-ExecStart=/usr/bin/iam-ssh-agent daemon
+ExecStart=/usr/bin/iam-ssh-agent daemon --bind-to $SSH_AUTH_SOCK
 RestartSec=5
-Restart=on-failure
-RestartForceExitStatus=SIGPIPE
-TimeoutStartSec=10
-TimeoutStopSec=0
+Restart=always
 KillMode=process
 
 [Install]
