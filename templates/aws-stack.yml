@@ -703,6 +703,12 @@ Resources:
               - sns:Unsubscribe
               - sns:Subscribe
             Resource: "*"
+          - !If
+              - UseSshAgentBackend
+              - Effect: Allow
+                Action: execute-api:Invoke
+                Resource: !Sub "${SshAgentBackend}/*/*"
+              - !Ref AWS::NoValue
       Roles:
         - !Ref IAMRole
 
