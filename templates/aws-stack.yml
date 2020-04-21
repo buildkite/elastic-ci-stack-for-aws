@@ -86,6 +86,11 @@ Metadata:
         - EnableECRPlugin
         - EnableDockerLoginPlugin
 
+      - Label:
+          default: IAM SSH Agent Configuration
+        Parameters:
+          - SshAgentBackend
+
 Parameters:
   KeyName:
     Description: Optional - SSH keypair used to access the buildkite instances, setting this will enable SSH ingress
@@ -374,6 +379,12 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  SshAgentBackend:
+    Type: String
+    Description: Optional - API Gateway Stage ARN for an IAM SSH Agent backend.
+    Default: ''
+    AllowedPattern: "arn:aws:execute-api:[a-z0-9\\-]+:\\d{12}:[a-z0-9]+\\/[a-zA-Z0-9]+"
 
 Outputs:
   VpcId:
