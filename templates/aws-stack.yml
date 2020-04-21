@@ -914,7 +914,6 @@ Resources:
                   AWS_REGION=${AWS::Region} \
                   IAM_SSH_AGENT_BACKEND_URL=${SshAgentBackendUrl} \
                     /usr/local/bin/bk-install-elastic-stack.sh
-                  }
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
                   SshAgentBackendUrl:
