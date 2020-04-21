@@ -384,13 +384,13 @@ Parameters:
     Type: String
     Description: Optional - API Gateway Stage ARN for an IAM SSH Agent backend.
     Default: ""
-    AllowedPattern: "arn:aws:execute-api:[a-z0-9\\-]+:\\d{12}:[a-z0-9]+/[a-zA-Z0-9]+"
+    AllowedPattern: "^$|^(arn:aws:execute-api:[a-z0-9\\-]+:\\d{12}:[a-z0-9]+/[a-zA-Z0-9]+)$"
 
   SshAgentBackendUrl:
     Type: String
     Description: Optional - API Gateway Stage URL for an IAM SSH Agent backend, allows you to override the default URL for the API Gateway with a VPC Endpoint URL.
     Default: ""
-    AllowedPattern: "https://[a-zA-Z0-9\\-]+|[a-zA-Z0-9\\-]+(\\.[a-zA-Z0-9\\-]+)+/[a-zA-Z0-9]+"
+    AllowedPattern: "^$|^(https://[a-zA-Z0-9\\-]+|[a-zA-Z0-9\\-]+(\\.[a-zA-Z0-9\\-]+)+/[a-zA-Z0-9]+)$"
 
 Outputs:
   VpcId:
