@@ -916,39 +916,37 @@ Resources:
                     /usr/local/bin/bk-install-elastic-stack.sh
                   }
                   --==BOUNDARY==--
-                - {
-                    LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
-                    SshAgentBackendUrl:
-                      !If
-                        - UseSshAgentBackend
-                        - !If
-                            - HasSshAgentBackendUrl
-                            - !Ref SshAgentBackendUrl
-                            - "Fn::Sub": [
-                                "https://${ApiId}.execute-api.${Region}.amazonaws.com/${Stage}",
-                                {
-                                  ApiId: {
-                                    "Fn::Select": [
-                                      5,
-                                      { "Fn::Split": [ ":", { "Fn::Select": [ 0, { "Fn::Split": [ "/", !Ref SshAgentBackend ] } ] } ] }
-                                    ]
-                                  },
-                                  Region: {
-                                    "Fn::Select": [
-                                      3,
-                                      { "Fn::Split": [ ":", { "Fn::Select": [ 0, { "Fn::Split": [ "/", !Ref SshAgentBackend ] } ] } ] }
-                                    ]
-                                  },
-                                  Stage: {
-                                    "Fn::Select": [
-                                      1,
-                                      { "Fn::Split": [ "/", !Ref SshAgentBackend ] }
-                                    ]
-                                  },
-                                },
-                              ]
-                        - !Ref AWS::NoValue
-                  }
+                - LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
+                  SshAgentBackendUrl:
+                    !If
+                      - UseSshAgentBackend
+                      - !If
+                        - HasSshAgentBackendUrl
+                        - !Ref SshAgentBackendUrl
+                        - "Fn::Sub": [
+                            "https://${ApiId}.execute-api.${Region}.amazonaws.com/${Stage}",
+                            {
+                              ApiId: {
+                                "Fn::Select": [
+                                  5,
+                                  { "Fn::Split": [ ":", { "Fn::Select": [ 0, { "Fn::Split": [ "/", !Ref SshAgentBackend ] } ] } ] }
+                                ]
+                              },
+                              Region: {
+                                "Fn::Select": [
+                                  3,
+                                  { "Fn::Split": [ ":", { "Fn::Select": [ 0, { "Fn::Split": [ "/", !Ref SshAgentBackend ] } ] } ] }
+                                ]
+                              },
+                              Stage: {
+                                "Fn::Select": [
+                                  1,
+                                  { "Fn::Split": [ "/", !Ref SshAgentBackend ] }
+                                ]
+                              }
+                            }
+                          ]
+                      - !Ref AWS::NoValue
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
