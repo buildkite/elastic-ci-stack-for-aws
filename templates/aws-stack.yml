@@ -50,6 +50,7 @@ Metadata:
         - RootVolumeType
         - ManagedPolicyARN
         - InstanceRoleName
+        - EbsOptimized
 
       - Label:
           default: Auto-scaling Configuration
@@ -262,6 +263,14 @@ Parameters:
     Description: Type of root volume to use
     Type: String
     Default: "gp2"
+
+  EbsOptimized:
+    Description: EbsOptimized
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   SecurityGroupId:
     Type: String
@@ -794,6 +803,7 @@ Resources:
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
+          EbsOptimized: !Ref EbsOptimized
           TagSpecifications:
             - ResourceType: instance
               Tags:
