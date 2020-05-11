@@ -140,7 +140,7 @@ If you have configured `MinSize` < `MaxSize`, the stack will automatically scale
 
 This means you can scale down to zero when idle, which means you can use larger instances for the same cost.
 
-Metrics are collected with a Lambda function, polling every minute.
+Metrics are collected with a Lambda function, polling every minute based on the queue the stack is configured with. The autoscaler monitors only one queue.
 
 ## Terminating the instance after job is complete
 
