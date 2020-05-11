@@ -2,6 +2,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Buildkite stack %v"
 
+Transform: AWS::Serverless-2016-10-31
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -484,24 +486,6 @@ Mappings:
     poweruser : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full      : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
 
-  LambdaBucket:
-    us-east-1 : { Bucket: "buildkite-lambdas" }
-    us-east-2 : { Bucket: "buildkite-lambdas-us-east-2" }
-    us-west-1 : { Bucket: "buildkite-lambdas-us-west-1" }
-    us-west-2 : { Bucket: "buildkite-lambdas-us-west-2" }
-    ap-south-1 : { Bucket: "buildkite-lambdas-ap-south-1" }
-    ap-northeast-1 : { Bucket: "buildkite-lambdas-ap-northeast-1" }
-    ap-northeast-2 : { Bucket: "buildkite-lambdas-ap-northeast-2" }
-    ap-southeast-1 : { Bucket: "buildkite-lambdas-ap-southeast-1" }
-    ap-southeast-2 : { Bucket: "buildkite-lambdas-ap-southeast-2" }
-    ca-central-1 : { Bucket: "buildkite-lambdas-ca-central-1" }
-    eu-central-1 : { Bucket: "buildkite-lambdas-eu-central-1" }
-    eu-west-1 : { Bucket: "buildkite-lambdas-eu-west-1" }
-    eu-west-2 : { Bucket: "buildkite-lambdas-eu-west-2" }
-    eu-west-3 : { Bucket: "buildkite-lambdas-eu-west-3" }
-    eu-north-1 : { Bucket: "buildkite-lambdas-eu-north-1" }
-    sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
-
   # Generated from Makefile via build/mappings.yml
   AWSRegion2AMI: { linux: !Ref ImageId, windows: !Ref ImageId }
 
@@ -949,10 +933,8 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
@@ -970,9 +952,15 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action:
-                  - cloudwatch:PutMetricData
+                Action: cloudwatch:PutMetricData
                 Resource: '*'
+        - PolicyName: ReadAgentToken
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ssm:GetParameter
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BuildkiteAgentTokenParameterStorePath}
         - !If
           - UseCustomerManagedKeyForParameterStore
           - PolicyName: DecryptAgentToken
@@ -984,71 +972,21 @@ Resources:
                     - kms:Decrypt
                   Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
           - !Ref 'AWS::NoValue'
-        - !If
-          - UseSSMAgentToken
-          - PolicyName: ReadAgentToken
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - ssm:GetParameter
-                  Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BuildkiteAgentTokenParameterStorePath}
-          - !Ref 'AWS::NoValue'
 
-  # This mirrors the group that would be created by the lambda, but enforces
-  # a retention period and also ensures it's removed when the stack is removed
-  AutoscalingLogGroup:
-    Type: "AWS::Logs::LogGroup"
+  Autoscaling:
+    Type: AWS::Serverless::Application
     Condition: HasVariableSize
     Properties:
-      LogGroupName: !Join ["/", ["/aws/lambda", !Ref AutoscalingFunction]]
-      RetentionInDays: 1
-
-  AutoscalingFunction:
-    Type: AWS::Lambda::Function
-    Condition: HasVariableSize
-    Properties:
-      Code:
-        S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-agent-scaler/v1.0.0/handler.zip"
-      Role: !GetAtt AutoscalingLambdaExecutionRole.Arn
-      Timeout: 120
-      Handler: handler
-      Runtime: go1.x
-      MemorySize: 128
-      Environment:
-        Variables:
-          BUILDKITE_AGENT_TOKEN: !If [ UseSSMAgentToken, !Ref 'AWS::NoValue', !Ref BuildkiteAgentToken ]
-          BUILDKITE_AGENT_TOKEN_SSM_KEY: !Ref BuildkiteAgentTokenParameterStorePath
-          BUILDKITE_QUEUE:       !Ref BuildkiteQueue
-          AGENTS_PER_INSTANCE:   !Ref AgentsPerInstance
-          CLOUDWATCH_METRICS:    "1"
-          DISABLE_SCALE_IN:      "1"
-          ASG_NAME:              !Ref AgentAutoScaleGroup
-          MIN_SIZE:              !Ref MinSize
-          MAX_SIZE:              !Ref MaxSize
-          SCALE_OUT_FACTOR:      !Ref ScaleOutFactor
-          INCLUDE_WAITING:       !Ref ScaleOutForWaitingJobs
-          LAMBDA_TIMEOUT:        "50s"
-          LAMBDA_INTERVAL:       "10s"
-
-  AutoscalingLambdaScheduledRule:
-    Type: "AWS::Events::Rule"
-    Condition: HasVariableSize
-    Properties:
-      Description: "ScheduledRule"
-      ScheduleExpression: "rate(1 minute)"
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt AutoscalingFunction.Arn
-          Id: "AutoscalingFunction"
-
-  PermissionForEventsToInvokeAutoscalingLambda:
-    Type: "AWS::Lambda::Permission"
-    Condition: HasVariableSize
-    Properties:
-      FunctionName: !Ref AutoscalingFunction
-      Action: "lambda:InvokeFunction"
-      Principal: "events.amazonaws.com"
-      SourceArn: !GetAtt AutoscalingLambdaScheduledRule.Arn
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:253121499730:applications/buildkite-elastic-ci-scaler
+        SemanticVersion: '0.1.0'
+      Parameters:
+        AutoscalingLambdaExecutionRole: !GetAtt AutoscalingLambdaExecutionRole.Arn
+        BuildkiteAgentTokenParameter: !Ref BuildkiteAgentTokenParameterStorePath
+        BuildkiteQueue: !Ref BuildkiteQueue
+        AgentsPerInstance: !Ref AgentsPerInstance
+        MinSize: !Ref MinSize
+        MaxSize: !Ref MaxSize
+        AutoScaleGroup: !Ref AgentAutoScaleGroup
+        ScaleOutFactor: !Ref ScaleOutFactor
+        ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
