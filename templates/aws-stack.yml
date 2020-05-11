@@ -989,7 +989,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:253121499730:applications/buildkite-elastic-ci-scaler
-        SemanticVersion: '0.1.0'
+        SemanticVersion: '0.1.1'
       Parameters:
         AutoscalingLambdaExecutionRole: !GetAtt AutoscalingLambdaExecutionRole.Arn
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
