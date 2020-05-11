@@ -625,11 +625,7 @@ Resources:
                 Resource:
                   !Sub
                     - arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
-                    - ParameterPath:
-                        !If
-                          - UseCustomerManagedParameterPath
-                          - !Ref BuildkiteAgentTokenParameterStorePath
-                          - !Ref BuildkiteAgentTokenParameter
+                    - ParameterPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         - !If
           - UseCustomerManagedKeyForParameterStore
           - PolicyName: DecryptAgentToken
@@ -972,7 +968,10 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: ssm:GetParameter
-                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BuildkiteAgentTokenParameterStorePath}
+                Resource:
+                  !Sub
+                    - arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
+                    - ParameterPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         - !If
           - UseCustomerManagedKeyForParameterStore
           - PolicyName: DecryptAgentToken
@@ -980,8 +979,7 @@ Resources:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
-                  Action:
-                    - kms:Decrypt
+                  Action: kms:Decrypt
                   Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
           - !Ref 'AWS::NoValue'
 
