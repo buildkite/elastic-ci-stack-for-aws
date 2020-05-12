@@ -456,6 +456,11 @@ Conditions:
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
 
+    CreateAutoscalingPolicyForManagedParameterStoreKey:
+      !And
+        - Condition: UseCustomerManagedKeyForParameterStore
+        - Condition: HasVariableSize
+
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
@@ -931,67 +936,14 @@ Resources:
       ToPort: 22
       CidrIp: 0.0.0.0/0
 
-  AutoscalingLambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Condition: HasVariableSize
-    Properties:
-      Path: "/"
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: AutoScalingGroups
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - autoscaling:DescribeAutoScalingGroups
-                  - autoscaling:SetDesiredCapacity
-                Resource: '*'
-        - PolicyName: WriteCloudwatchMetrics
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: cloudwatch:PutMetricData
-                Resource: '*'
-        - PolicyName: ReadAgentToken
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: ssm:GetParameter
-                Resource:
-                  !Sub
-                    - arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
-                    - ParameterPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
-        - !If
-          - UseCustomerManagedKeyForParameterStore
-          - PolicyName: DecryptAgentToken
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: kms:Decrypt
-                  Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
-          - !Ref 'AWS::NoValue'
-
   Autoscaling:
     Type: AWS::Serverless::Application
     Condition: HasVariableSize
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:253121499730:applications/buildkite-elastic-ci-scaler
-        SemanticVersion: '0.1.1'
+        SemanticVersion: '0.1.4'
       Parameters:
-        AutoscalingLambdaExecutionRole: !GetAtt AutoscalingLambdaExecutionRole.Arn
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteQueue: !Ref BuildkiteQueue
         AgentsPerInstance: !Ref AgentsPerInstance
@@ -1000,3 +952,26 @@ Resources:
         AutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
+
+  # Experiment to add permission to an identity created in a substack.
+  #
+  # This isn’t totally great because the lambda depends on this policy to
+  # execute but has no actual DependsOn relationship to it :/
+  #
+  # The alternatives are: we create the entire policy set / role outside the
+  # application which means having knowledge of what the lambda wants to do, or
+  # we pass the kms key for the parameter in to the substack and it knows to
+  # include decrypt permission for this key.
+  KmsDecryptPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateAutoscalingPolicyForManagedParameterStoreKey
+    Properties:
+      Roles:
+        - !GetAtt Autoscaling.Outputs.ExecutionRoleName
+      PolicyName: DecryptAgentToken
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: kms:Decrypt
+            Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}      
