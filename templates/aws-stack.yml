@@ -456,11 +456,6 @@ Conditions:
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
 
-    CreateAutoscalingPolicyForManagedParameterStoreKey:
-      !And
-        - Condition: UseCustomerManagedKeyForParameterStore
-        - Condition: HasVariableSize
-
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
@@ -631,17 +626,6 @@ Resources:
                   !Sub
                     - arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
                     - ParameterPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
-        - !If
-          - UseCustomerManagedKeyForParameterStore
-          - PolicyName: DecryptAgentToken
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - kms:Decrypt
-                  Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
-          - !Ref 'AWS::NoValue'
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -964,14 +948,15 @@ Resources:
   # include decrypt permission for this key.
   KmsDecryptPolicy:
     Type: AWS::IAM::Policy
-    Condition: CreateAutoscalingPolicyForManagedParameterStoreKey
+    Condition: UseCustomerManagedKeyForParameterStore
     Properties:
       Roles:
-        - !GetAtt Autoscaling.Outputs.ExecutionRoleName
+        - !If [ HasVariableSize, !GetAtt Autoscaling.Outputs.ExecutionRoleName, !Ref AWS::NoValue ]
+        - !Ref IAMRole
       PolicyName: DecryptAgentToken
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Action: kms:Decrypt
-            Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}      
+            Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
