@@ -3,6 +3,14 @@ set -eu -o pipefail
 
 AGENT_VERSION=3.25.0
 
+MACHINE=`uname -m`
+
+case "${MACHINE}" in
+	x86_64)    ARCH=amd64;;
+	aarch64)   ARCH=arm64;;
+	*)         ARCH=unknown;;
+esac
+
 echo "Installing dependencies..."
 sudo yum update -y -q
 sudo yum install -y -q git-core
@@ -12,16 +20,19 @@ sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-amd64"
-sudo chmod +x /usr/bin/buildkite-agent-stable
+mkdir -p buildkite-agent
+curl -Lsf -o buildkite-agent-linux.tar.gz \
+  "https://github.com/buildkite/agent/releases/download/v${AGENT_VERSION}/buildkite-agent-linux-${ARCH}-${AGENT_VERSION}.tar.gz"
+tar -C buildkite-agent -xvzf buildkite-agent-linux.tar.gz
+sudo cp buildkite-agent/buildkite-agent /usr/bin/buildkite-agent-stable
+rm -fr buildkite-agent buildkite-agent-linux.tar.gz
 buildkite-agent-stable --version
 
-echo "Downloading buildkite-agent beta..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
-  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64"
-sudo chmod +x /usr/bin/buildkite-agent-beta
-buildkite-agent-beta --version
+#echo "Downloading buildkite-agent beta..."
+#sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
+#  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-arm64"
+#sudo chmod +x /usr/bin/buildkite-agent-beta
+#buildkite-agent-beta --version
 
 echo "Adding scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/* /usr/bin
