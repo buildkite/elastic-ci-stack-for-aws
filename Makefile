@@ -9,6 +9,13 @@ PACKER_WINDOWS_FILES = $(exec find packer/windows)
 AWS_REGION ?= us-east-1
 AMZN_LINUX2_AMI ?= $(shell aws ec2 describe-images --region $(AWS_REGION) --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????-x86_64-gp2' 'Name=state,Values=available' --output json | jq -r '.Images | sort_by(.CreationDate) | last(.[]).ImageId')
 
+ARCH ?= x86_64
+ifeq ($(ARCH), arm64)
+  INSTANCE_TYPE = m6g.xlarge
+else
+  INSTANCE_TYPE = c5.xlarge
+endif
+
 all: packer build
 
 # Remove any built cloudformation templates and packer output
@@ -79,6 +86,7 @@ packer-linux.output: $(PACKER_LINUX_FILES)
 		--rm \
 		-w /src/packer/linux \
 		hashicorp/packer:1.0.4 build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+			-var 'arch=$(ARCH)' -var 'instance_type=$(INSTANCE_TYPE)' \
 			buildkite-ami.json | tee $@
 
 build/windows-ami.txt: packer-windows.output env-AWS_REGION
