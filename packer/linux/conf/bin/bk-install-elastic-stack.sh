@@ -62,13 +62,13 @@ export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]-}"
 export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
 
-if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
-	echo "Downloading buildkite-agent edge..."
-	curl -Lsf -o /usr/bin/buildkite-agent-edge \
-		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
-	chmod +x /usr/bin/buildkite-agent-edge
-	buildkite-agent-edge --version
-fi
+#if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
+#	echo "Downloading buildkite-agent edge..."
+#	curl -Lsf -o /usr/bin/buildkite-agent-edge \
+#		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
+#	chmod +x /usr/bin/buildkite-agent-edge
+#	buildkite-agent-edge --version
+#fi
 
 if [[ "${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" != "" ]] ; then
   echo "buildkite-agent ALL=NOPASSWD: ${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" > /etc/sudoers.d/buildkite-agent-additional
