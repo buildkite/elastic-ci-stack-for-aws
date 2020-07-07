@@ -37,6 +37,7 @@ Metadata:
           default: Instance Configuration
         Parameters:
         - ImageId
+        - ImageIdParameter
         - InstanceType
         - AgentsPerInstance
         - KeyName
