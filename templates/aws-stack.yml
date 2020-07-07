@@ -754,7 +754,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: HasImageIdParameter
     Properties:
-      TemplateURL: ssm-ami.yml
+      TemplateURL: https://s3.amazonaws.com/buildkite-aws-stack/ssm-ami/releases/0.1.0.yml
       Parameters:
         AmiParameterPath: !Ref ImageIdParameter
 
