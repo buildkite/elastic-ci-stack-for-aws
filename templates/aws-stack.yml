@@ -37,6 +37,7 @@ Metadata:
           default: Instance Configuration
         Parameters:
         - ImageId
+        - ImageIdParameter
         - InstanceType
         - AgentsPerInstance
         - KeyName
@@ -280,6 +281,11 @@ Parameters:
     Description: Optional - Custom AMI to use for instances (must be based on the stack's AMI)
     Default: ""
 
+  ImageIdParameter:
+    Type: String
+    Description: Optional - Custom AMI SSM Parameter to use for instances (must be based on the stack's AMI)
+    Default: ""
+
   ManagedPolicyARN:
     Type: CommaDelimitedList
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
@@ -439,8 +445,10 @@ Conditions:
     UseArtifactsBucket:
       !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
 
-    UseDefaultAMI:
-      !Equals [ !Ref ImageId, "" ]
+    HasImageId:
+      !Not [ !Equals [ !Ref ImageId, "" ] ]
+    HasImageIdParameter:
+      !Not [ !Equals [ !Ref ImageIdParameter, "" ] ]
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
@@ -743,6 +751,14 @@ Resources:
       Roles:
         - !Ref IAMRole
 
+  ImageIdParameterStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: HasImageIdParameter
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/buildkite-aws-stack/ssm-ami/releases/0.1.0.yml
+      Parameters:
+        AmiParameterPath: !Ref ImageIdParameter
+
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -752,7 +768,7 @@ Resources:
       IamInstanceProfile: !Ref IAMInstanceProfile
       InstanceType: !Ref InstanceType
       SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
-      ImageId: !If [ "UseDefaultAMI", !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'], !Ref ImageId ]
+      ImageId: !If [ HasImageId, !Ref ImageId, !If [ HasImageIdParameter, !GetAtt ImageIdParameterStack.Outputs.ImageId, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'AMI'] ] ]
       BlockDeviceMappings:
         - DeviceName: !Ref RootVolumeName
           Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
