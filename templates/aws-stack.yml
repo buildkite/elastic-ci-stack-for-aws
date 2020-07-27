@@ -289,18 +289,18 @@ Parameters:
   
   MetadataOptionsHttpEndpoint:
     Type: String
-    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
-    Default: ""
+    Description: Optional - "enabled" | "disabled" Whether the Instance Metadata endpoint is enabled.
+    Default: "enabled"
   
   MetadataOptionsHttpPutResponseHopLimit:
-    Type: String
-    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
-    Default: ""
+    Type: Number
+    Description: Optional - Number of hops that the PUT request can jump.
+    Default: 1
   
   MetadataOptionsHttpTokens:
     Type: String
-    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
-    Default: ""
+    Description: Optional - "optional" | "required" Whether to require tokens for using the Instance Metadata service.
+    Default: "optional"
 
   InstanceRoleName:
     Type: String
@@ -819,9 +819,9 @@ Resources:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Ref InstanceType
           MetadataOptions:
-            HttpEndpoint: String
-            HttpPutResponseHopLimit: Integer
-            HttpTokens: String
+            HttpEndpoint: !Ref MetadataOptionsHttpEndpoint
+            HttpPutResponseHopLimit: !Ref MetadataOptionsHttpPutResponseHopLimit
+            HttpTokens: !Ref MetadataOptionsHttpTokens
           InstanceMarketOptions: !If
             - UseSpotInstances
             - MarketType: spot
