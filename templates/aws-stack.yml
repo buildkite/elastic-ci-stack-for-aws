@@ -50,6 +50,9 @@ Metadata:
         - RootVolumeName
         - RootVolumeType
         - ManagedPolicyARN
+        - MetadataOptionsHttpEndpoint
+        - MetadataOptionsHttpPutResponseHopLimit
+        - MetadataOptionsHttpTokens
         - InstanceRoleName
 
       - Label:
@@ -281,6 +284,21 @@ Parameters:
 
   ManagedPolicyARN:
     Type: CommaDelimitedList
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
+    Default: ""
+  
+  MetadataOptionsHttpEndpoint:
+    Type: String
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
+    Default: ""
+  
+  MetadataOptionsHttpPutResponseHopLimit:
+    Type: String
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
+    Default: ""
+  
+  MetadataOptionsHttpTokens:
+    Type: String
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
 
@@ -800,6 +818,10 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Ref InstanceType
+          MetadataOptions:
+            HttpEndpoint: String
+            HttpPutResponseHopLimit: Integer
+            HttpTokens: String
           InstanceMarketOptions: !If
             - UseSpotInstances
             - MarketType: spot
