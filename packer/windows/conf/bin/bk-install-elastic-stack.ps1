@@ -66,7 +66,7 @@ If (Test-Path Env:BUILDKITE_AGENT_TAGS) {
   $agent_metadata += $Env:BUILDKITE_AGENT_TAGS.split(",")
 }
 
-# Enable git mirrors
+# Enable git-mirrors
 If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_EXPERIMENTS)) {
     $Env:BUILDKITE_AGENT_EXPERIMENTS = "git-mirrors"
@@ -74,6 +74,7 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   Else {
     $Env:BUILDKITE_AGENT_EXPERIMENTS += ",git-mirrors"
   }
+  $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
 }
 
 $OFS=","
@@ -86,7 +87,7 @@ timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
 plugins-path="C:\buildkite-agent\plugins"
-git-mirrors-path="C:\buildkite-agent\git-mirrors"
+git-mirrors-path="${Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${Env:BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
