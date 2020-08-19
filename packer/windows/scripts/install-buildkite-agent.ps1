@@ -29,7 +29,7 @@ Copy-Item -Path C:\packer-temp\conf\buildkite-agent\hooks\* -Destination C:\buil
 Write-Output "Creating builds dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\builds
 
-Write-Output "Creating git mirrors dir..."
+Write-Output "Creating git-mirrors dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\git-mirrors
 
 Write-Output "Creating plugins dir..."
