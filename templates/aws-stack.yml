@@ -206,7 +206,7 @@ Parameters:
   InstanceType:
     Description: Instance type
     Type: String
-    Default: t3.small
+    Default: t3.large
     MinLength: 1
 
   SpotPrice:
