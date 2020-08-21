@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/stable-4-5)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.3.5...stable-4-5)
+
+### Changed
+- Bump agent to v3.22.1 [#702](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/702) (@sj26)
+
 ## [v4.3.5](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v4.3.5) (2019-11-01)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.3.4...v4.3.5)
 
