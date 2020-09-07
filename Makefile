@@ -3,7 +3,7 @@
 VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 
-PACKER_VERSION ?= 1.3.5
+PACKER_VERSION ?= 1.4.0
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
