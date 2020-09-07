@@ -15,8 +15,6 @@
         "most_recent": true
       },
       "instance_type": "m5.xlarge",
-      "spot_price": "auto",
-      "spot_price_auto_product": "Windows (Amazon VPC)",
       "user_data_file":"scripts/ec2-userdata.ps1",
       "communicator": "winrm",
       "winrm_username": "Administrator",
