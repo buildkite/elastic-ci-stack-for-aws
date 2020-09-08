@@ -19,6 +19,8 @@ steps:
   - id: "packer-windows"
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
+    timeout_in_minutes: 60
+    retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
@@ -45,6 +47,8 @@ steps:
   - id: "packer-linux"
     name: ":packer: :linux:"
     command: .buildkite/steps/packer.sh linux
+    timeout_in_minutes: 60
+    retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:

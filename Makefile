@@ -3,6 +3,7 @@
 VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 
+PACKER_VERSION ?= 1.6.2
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
@@ -78,7 +79,7 @@ packer-linux.output: $(PACKER_LINUX_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
-		hashicorp/packer:1.0.4 build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+		hashicorp/packer:$(PACKER_VERSION) build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
 			buildkite-ami.json | tee $@
 
 build/windows-ami.txt: packer-windows.output env-AWS_REGION
@@ -98,7 +99,7 @@ packer-windows.output: $(PACKER_WINDOWS_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/windows \
-		hashicorp/packer:1.0.4 build -var 'region=$(AWS_REGION)' \
+		hashicorp/packer:$(PACKER_VERSION) build -var 'region=$(AWS_REGION)' \
 			buildkite-ami.json | tee $@
 
 # -----------------------------------------

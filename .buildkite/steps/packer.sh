@@ -16,7 +16,7 @@ fi
 mkdir -p "build/"
 
 # Build a hash of packer files and the agent versions
-packer_files_sha=$(find "packer/${os}" plugins/ -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
+packer_files_sha=$(find Makefile "packer/${os}" plugins/ -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
 stable_agent_sha=$(curl -Lfs "https://download.buildkite.com/agent/stable/latest/${agent_binary}.sha256")
 unstable_agent_sha=$(curl -Lfs "https://download.buildkite.com/agent/unstable/latest/${agent_binary}.sha256")
 packer_hash=$(echo "$packer_files_sha" "$stable_agent_sha" "$unstable_agent_sha" | sha1sum | awk '{print $1}')
@@ -24,8 +24,8 @@ packer_hash=$(echo "$packer_files_sha" "$stable_agent_sha" "$unstable_agent_sha"
 echo "Packer image hash for ${os} is ${packer_hash}"
 packer_file="packer-${packer_hash}-${os}.output"
 
-# Only build packer image if one with the same hash doesn't exist
-if ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
+# Only build packer image if one with the same hash doesn't exist, and we're not being forced
+if [[ -n "${PACKER_REBUILD:-}" ]] || ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
   make "packer-${os}.output"
   aws s3 cp "packer-${os}.output" "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}"
   mv "packer-${os}.output" "${packer_file}"
