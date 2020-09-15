@@ -273,10 +273,14 @@ Also keep in mind the EC2 HTTP metadata server is available from within builds, 
 To get started with customizing your own stack, or contributing fixes and features:
 
 ```bash
-# Build all AMIs
+# Checkout all submodules
+git submodule update --init --recursive
+
+# Build all AMIs and render a cloud formation template - this requires AWS credentials (in the ENV)
+# to build an AMI with packer
 make build
 
-# Or, to set things up locally and create the stack on AWS
+# To create a new stack on AWS using the local template
 make create-stack
 
 # You can use any of the AWS* environment variables that the aws-cli supports
