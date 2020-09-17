@@ -39,9 +39,11 @@ Metadata:
         - ImageId
         - ImageIdParameter
         - InstanceType
+        - InstanceType2
+        - InstanceType3
+        - InstanceType4
         - AgentsPerInstance
         - KeyName
-        - SpotPrice
         - SecretsBucket
         - ArtifactsBucket
         - AuthorizedUsersUrl
@@ -57,13 +59,7 @@ Metadata:
         Parameters:
         - MinSize
         - MaxSize
-        - SpotAllocationStrategy
-        - OnDemandBaseCapacity
-        - OnDemandPercentageAboveBaseCapacity
-        - InstanceType1
-        - InstanceType2
-        - InstanceType3
-        - InstanceType4
+        - OnDemandPercentage
         - ScaleOutFactor
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
@@ -216,11 +212,6 @@ Parameters:
     Default: t3.large
     MinLength: 1
 
-  SpotPrice:
-    Description: Maximum Spot bid price to use for the instances. 0 allows you to specify mixed instances (a combination of On-Demand and Spot Instances across multiple instances types)
-    Type: String
-    Default: 0
-
   MaxSize:
     Description: Maximum number of instances
     Type: Number
@@ -231,11 +222,6 @@ Parameters:
     Description: Minimum number of instances
     Type: Number
     Default: 0
-
-  InstanceType1:
-    Description: The primary instance type to use when requesting mixed instance types.
-    Type: String
-    Default: ""
 
   InstanceType2:
     Description: The secondary instance type to use when requesting mixed instances. Omit this parmameter to only request 1 instance type.
@@ -252,23 +238,12 @@ Parameters:
     Type: String
     Default: ""
 
-  SpotAllocationStrategy:
-    Description: Indicates how to allocate Spot capacity across Spot pools.
-    AllowedValues:
-    - capacity-optimized
-    - lowest-price
-    Type: String
-    Default: capacity-optimized
-
-  OnDemandBaseCapacity:
-    Description: Minimum number of instances in the ASG's initial capacity that must be fulfilled by On-Demand instances.
+  OnDemandPercentage:
+    Description: Percentage of total instances that should launch as OnDemand. Reduce this to use some Spot Instances when they're available.
     Type: Number
-    Default: 0
-
-  OnDemandPercentageAboveBaseCapacity:
-    Description: Percentage of On-Demand Instances for additional capacity beyond the optional On-Demand base amount.
-    Type: Number
-    Default: 40
+    Default: 100
+    MinValue: 0
+    MaxValue: 100
 
   ScaleOutFactor:
     Description: A decimal factor to apply to scale out changes to speed up or slow down scale-out
@@ -456,8 +431,6 @@ Outputs:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
 
 Conditions:
-    UseSpotInstances:
-      !Not [ !Equals [ !Ref SpotPrice, 0 ] ]
 
     CreateVpcResources:
       !Equals [ !Ref VpcId, "" ]
@@ -490,9 +463,6 @@ Conditions:
 
     UseDefaultRootVolumeName:
       !Equals [ !Ref RootVolumeName, "" ]
-
-    UseInstanceType1:
-      !Not [ !Equals [ !Ref InstanceType1, ""] ]
 
     UseInstanceType2:
       !Not [ !Equals [ !Ref InstanceType2, ""] ]
@@ -861,12 +831,6 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Ref InstanceType
-          InstanceMarketOptions: !If
-            - UseSpotInstances
-            - MarketType: spot
-              SpotOptions:
-                MaxPrice: !Ref SpotPrice
-            - !Ref "AWS::NoValue"
           ImageId: !If [ HasImageId, !Ref ImageId, !If [ HasImageIdParameter, !GetAtt ImageIdParameterStack.Outputs.ImageId, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ] ] ]
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
@@ -971,39 +935,28 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
-      MixedInstancesPolicy: !If
-        - UseSpotInstances
-        - !Ref "AWS::NoValue"
-        - InstancesDistribution:
-            OnDemandBaseCapacity: !Ref OnDemandBaseCapacity
-            OnDemandPercentageAboveBaseCapacity: !Ref OnDemandPercentageAboveBaseCapacity
-            SpotAllocationStrategy: !Ref SpotAllocationStrategy
-          LaunchTemplate:
-            LaunchTemplateSpecification:
-              LaunchTemplateId: !Ref AgentLaunchTemplate
-              Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
-            Overrides:
-            - InstanceType: !If
-              - UseInstanceType1
-              - !Ref InstanceType1
-              - !Ref InstanceType
-            - InstanceType: !If
-              - UseInstanceType2
-              - !Ref InstanceType2
-              - !Ref "AWS::NoValue"
-            - InstanceType: !If
-              - UseInstanceType3
-              - !Ref InstanceType3
-              - !Ref "AWS::NoValue"
-            - InstanceType: !If
-              - UseInstanceType4
-              - !Ref InstanceType4
-              - !Ref "AWS::NoValue"
-      LaunchTemplate: !If
-        - UseSpotInstances
-        - LaunchTemplateId: !Ref AgentLaunchTemplate
-          Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
-        - !Ref "AWS::NoValue"
+      MixedInstancesPolicy:
+        InstancesDistribution:
+          OnDemandPercentageAboveBaseCapacity: !Ref OnDemandPercentage
+          SpotAllocationStrategy: capacity-optimized
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref AgentLaunchTemplate
+            Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+          Overrides:
+          - InstanceType: !Ref InstanceType
+          - InstanceType: !If
+            - UseInstanceType2
+            - !Ref InstanceType2
+            - !Ref "AWS::NoValue"
+          - InstanceType: !If
+            - UseInstanceType3
+            - !Ref InstanceType3
+            - !Ref "AWS::NoValue"
+          - InstanceType: !If
+            - UseInstanceType4
+            - !Ref InstanceType4
+            - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 0
