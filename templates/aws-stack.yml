@@ -39,9 +39,6 @@ Metadata:
         - ImageId
         - ImageIdParameter
         - InstanceType
-        - InstanceType2
-        - InstanceType3
-        - InstanceType4
         - AgentsPerInstance
         - KeyName
         - SecretsBucket
@@ -207,7 +204,7 @@ Parameters:
     Default: ""
 
   InstanceType:
-    Description: Instance type
+    Description: Instance type. Comma separated list with 1-4 instance types. The order is a prioritised preference for launching OnDemand instances, and an non-prioritised list of types to consider for Spot Instances (where used).
     Type: String
     Default: t3.large
     MinLength: 1
@@ -222,21 +219,6 @@ Parameters:
     Description: Minimum number of instances
     Type: Number
     Default: 0
-
-  InstanceType2:
-    Description: The secondary instance type to use when requesting mixed instances. Omit this parmameter to only request 1 instance type.
-    Type: String
-    Default: ""
-
-  InstanceType3:
-    Description: The tertiary instance type to use when requesting mixed instances. Omit this parmameter to only request 2 instance types.
-    Type: String
-    Default: ""
-
-  InstanceType4:
-    Description: The quaternary instance type to use when requesting mixed instances. Omit this parmameter to only request 3 instance types.
-    Type: String
-    Default: ""
 
   OnDemandPercentage:
     Description: Percentage of total instances that should launch as OnDemand. Reduce this to use some Spot Instances when they're available.
@@ -465,13 +447,13 @@ Conditions:
       !Equals [ !Ref RootVolumeName, "" ]
 
     UseInstanceType2:
-      !Not [ !Equals [ !Ref InstanceType2, ""] ]
+      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
 
     UseInstanceType3:
-      !Not [ !Equals [ !Ref InstanceType3, ""] ]
+      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
 
     UseInstanceType4:
-      !Not [ !Equals [ !Ref InstanceType4, ""] ]
+      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
@@ -830,7 +812,7 @@ Resources:
           KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
-          InstanceType: !Ref InstanceType
+          InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
           ImageId: !If [ HasImageId, !Ref ImageId, !If [ HasImageIdParameter, !GetAtt ImageIdParameterStack.Outputs.ImageId, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ] ] ]
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
@@ -944,18 +926,18 @@ Resources:
             LaunchTemplateId: !Ref AgentLaunchTemplate
             Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
           Overrides:
-          - InstanceType: !Ref InstanceType
+          - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
           - InstanceType: !If
             - UseInstanceType2
-            - !Ref InstanceType2
+            - !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - InstanceType: !If
             - UseInstanceType3
-            - !Ref InstanceType3
+            - !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - InstanceType: !If
             - UseInstanceType4
-            - !Ref InstanceType4
+            - !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
