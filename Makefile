@@ -26,7 +26,7 @@ env-%:
 
 # -----------------------------------------
 
-build: packer build/aws-stack.yml
+build: packer build/mappings.yml build/aws-stack.yml
 
 # Build a mapping file for a single region and image id pair
 mappings-for-linux-image: env-AWS_REGION env-IMAGE_ID
