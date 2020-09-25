@@ -26,7 +26,7 @@ env-%:
 
 # -----------------------------------------
 
-build: packer build/aws-stack.yml
+build: packer build/mappings.yml build/aws-stack.yml
 
 # Build a mapping file for a single region and image id pair
 mappings-for-linux-image: env-AWS_REGION env-IMAGE_ID
@@ -42,7 +42,7 @@ mappings-for-windows-image: env-AWS_REGION env-IMAGE_ID
 
 # Takes the mappings files and copies them into a generated stack template
 .PHONY: build/aws-stack.yml
-build/aws-stack.yml: build/mappings.yml
+build/aws-stack.yml:
 	test -f build/mappings.yml
 	awk '{ \
 		if ($$0 ~ /AWSRegion2AMI:/ && system("test -f build/mappings.yml") == 0) { \
