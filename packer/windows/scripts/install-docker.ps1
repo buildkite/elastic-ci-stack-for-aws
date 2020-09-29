@@ -1,10 +1,13 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$docker_version="19.03.5"
+$docker_version="19.03.12"
 
 Write-Output "Upgrading DockerMsftProvider module"
 Update-Module -Name DockerMsftProvider -Force
+
+Write-Output "Printing available docker versions"
+Find-Package -providerName DockerMsftProvider -AllVersions
 
 Write-Output "Installing docker enterprise edition"
 Stop-Service docker
