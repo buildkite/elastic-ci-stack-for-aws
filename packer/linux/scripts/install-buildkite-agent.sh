@@ -60,6 +60,7 @@ sudo cp /tmp/conf/buildkite-agent/systemd/cloud-final.service.d/10-power-off-on-
 
 echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully
+sudo cp /tmp/conf/buildkite-agent/scripts/service-exit-handler /usr/local/bin/service-exit-handler
 sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
 
 echo "Copying built-in plugins..."

@@ -1,0 +1,15 @@
+#!/bin/sh
+set -euo pipefail
+
+echo "Buildkite agent service stopped, entered service-exit-handler" | logger
+systemctl is-failed buildkite-agent.service | logger
+echo "Service result: $SERVICE_RESULT Exit code: $EXIT_CODE Exit status: $EXIT_STATUS" | logger
+
+if [[ $EXIT_CODE != 0 ]]; then
+  echo "Service exited abnormally, systemd will try to restart it in 5 seconds" | logger
+  exit 0
+fi
+
+echo "Service exited normally, attempting to shut down EC2 instance" | logger
+./terminate-instance
+/bin/sudo poweroff
