@@ -112,7 +112,7 @@ cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
 token="${BUILDKITE_AGENT_TOKEN}"
 tags=$(IFS=, ; echo "${agent_metadata[*]}")
-tags-from-ec2=true
+tags-from-ec2-meta-data=true
 timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds

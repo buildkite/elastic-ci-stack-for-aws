@@ -82,7 +82,7 @@ Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
 tags=$agent_metadata
-tags-from-ec2=true
+tags-from-ec2-meta-data=true
 timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
