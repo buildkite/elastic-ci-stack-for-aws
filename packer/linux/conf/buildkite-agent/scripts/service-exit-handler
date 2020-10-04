@@ -12,4 +12,3 @@ fi
 
 echo "Service exited normally, attempting to shut down EC2 instance" | logger
 ./terminate-instance
-/bin/sudo poweroff
