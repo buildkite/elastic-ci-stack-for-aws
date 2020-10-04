@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -euo pipefail
 
 echo "Buildkite agent service stopped, entered service-exit-handler" | logger
