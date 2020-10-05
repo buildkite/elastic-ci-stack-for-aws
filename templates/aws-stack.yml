@@ -118,7 +118,7 @@ Parameters:
     Default: ""
 
   BuildkiteAgentTags:
-    Description: Additional tags seperated by commas to provide to the agent. E.g os=linux,llamas=always
+    Description: Additional tags separated by commas to provide to the agent. E.g os=linux,llamas=always
     Type: String
     Default: ""
 
