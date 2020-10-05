@@ -13,7 +13,6 @@ Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 Environment="USER=buildkite-agent"
 ExecStart=/usr/bin/buildkite-agent start
 ExecStopPost=/usr/local/bin/terminate-instance
-ExecStopPost=/bin/sudo poweroff
 RestartSec=5
 Restart=on-failure
 RestartForceExitStatus=SIGPIPE
