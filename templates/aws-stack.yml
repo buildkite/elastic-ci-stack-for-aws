@@ -204,12 +204,12 @@ Parameters:
     Default: ""
 
   InstanceType:
-    Description: Instance type. Comma separated list with 1-4 instance types. The order is a prioritised preference for launching OnDemand instances, and an non-prioritised list of types to consider for Spot Instances (where used).
+    Description: Instance type. Comma-separated list with 1-4 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
     Type: String
     Default: t3.large
     MinLength: 1
     AllowedPattern: "^[^,]+(,[^,]*){0,3}$"
-    ConstraintDescription: "must contain 1-4 instance types separated by commas"
+    ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
 
   MaxSize:
     Description: Maximum number of instances
