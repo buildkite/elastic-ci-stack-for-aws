@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [v5.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.5.0...master) (DRAFT)
+## [v5.0.0-beta1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.5.0...v5.0.0-beta1) (2020-10-08)
 
 ### Known issues
 * Spot instances may appear to hang in the Buildkite UI for a few minutes after they terminate [#733](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/733)
