@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Support for [buildkite/image-builder](https://github.com/buildkite/image-builder) which can enable you to customize AMIs based off the ones we ship [#692](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/692) ([keithduncan](https://github.com/keithduncan))
 * Support for multiple security groups on instances [#667](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/667) ([jdub](https://github.com/jdub))
 * AMI and Lambda Scaler support more regions: ap-east-1 (Hong Kong), me-south-1 (Bahrain), af-south-1 (Cape Town), eu-south-1 (Milan) [#718](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/718) ([JuanitoFatas](https://github.com/JuanitoFatas))
-* Support for loading BuildkiteAgentTokenPath from Parameter Store [#601](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/601) ([jradtilbrook](https://github.com/jradtilbrook)), [#625](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/625) ([jradtilbrook](https://github.com/jradtilbrook))
+* Support for loading BuildkiteAgentTokenPath from AWS Parameter Store [#601](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/601) ([jradtilbrook](https://github.com/jradtilbrook)), [#625](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/625) ([jradtilbrook](https://github.com/jradtilbrook))
 
 ### Changed
 * Use EC2 LaunchTemplate instead of a LaunchConfiguration [#589](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/589) ([lox](https://github.com/lox))
