@@ -5,8 +5,8 @@ is_latest_tag() {
   [[ "$BUILDKITE_TAG" = $(git describe --abbrev=0 --tags --match 'v*') ]]
 }
 
-is_release_candidate_tag() {
-  [[ "$BUILDKITE_TAG" =~ -rc ]]
+is_prerelease_tag() {
+  [[ "$BUILDKITE_TAG" =~ - ]]
 }
 
 s3_upload_templates() {
@@ -33,7 +33,7 @@ make build/aws-stack.yml
 
 # Publish the top-level mappings only on when we see the most recent tag on master
 if is_latest_tag ; then
-  if ! is_release_candidate_tag ; then
+  if ! is_prerelease_tag ; then
     s3_upload_templates "latest/"
   fi
   s3_upload_templates
