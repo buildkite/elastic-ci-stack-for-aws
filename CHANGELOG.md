@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [v5.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.5.0...master) (DRAFT)
 
-## Known issues
+### Known issues
 * Spot instances may appear to hang in the Buildkite UI for a few minutes after they terminate [#733](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/733)
 * Windows instances have issues with MinSize > 0 [#712](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/712)
 
