@@ -17,11 +17,11 @@ if [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
   # Spot termination time is provided as the third argument in RFC3339 format,
   # i.e. 2020-10-09T01:33:10Z
   SPOT_TERMINATION_TIME=$3
-  SPOT_TERMINATION_TIME_UNIX=$(date '+%s' -d ${SPOT_TERMINATION_TIME})
+  SPOT_TERMINATION_TIME_UNIX=$(date '+%s' -d "${SPOT_TERMINATION_TIME}")
   # Subtracts 20 seconds from the published spot termination time to give the
   # agent a little time to forcefully quit running jobs. If the agent doesn't
   # gracefully quit before this time we will send SIGQUIT.
-  STOP_BY_TIME_UNIX=$(expr ${SPOT_TERMINATION_TIME_UNIX} - 20)
+  STOP_BY_TIME_UNIX=$((SPOT_TERMINATION_TIME_UNIX - 20))
 
   echo "Waiting for agents to quit gracefully until 20 seconds before the spot termination time: ${SPOT_TERMINATION_TIME}"
   while [[ $(date '+%s') -lt $STOP_BY_TIME_UNIX ]]; do
