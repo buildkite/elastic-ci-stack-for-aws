@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-* Bump Buildkite Agent Scaler to v1.0.2 [#747](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/747) ([JuanitoFatas](https://github.com/JuanitoFatas))
+* Bump Buildkite Agent Scaler to v1.0.2 [4fafd8e](https://github.com/buildkite/elastic-ci-stack-for-aws/commit/4fafd8e85a888f0d7b23bb3a1420332fe4e9063c) ([JuanitoFatas](https://github.com/JuanitoFatas))
 
 ## [v5.0.0-beta1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.5.0...v5.0.0-beta1) (2020-10-08)
 
