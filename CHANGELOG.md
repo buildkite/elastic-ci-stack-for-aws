@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+* Bump Buildkite Agent Scaler to v1.0.2 [#747](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/747) ([JuanitoFatas](https://github.com/JuanitoFatas))
+
 ## [v5.0.0-beta1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v4.5.0...v5.0.0-beta1) (2020-10-08)
 
 ### Known issues
@@ -11,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Windows instances have issues with MinSize > 0 [#712](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/712)
 
 ### Added
-<!-- 
+<!--
     TODO: document the new lambda scaler properly as a new default and what it means. For now https://forum.buildkite.community/t/experimental-lambda-based-scaler/425 is a good starting point.
 -->
 * **Our previously experimental blazing fast lambda scaler is now the default** which makes for much faster scaling in response to pending jobs [#575](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/575) (@lox)
@@ -60,7 +64,7 @@ The following other parameters have been **added**:
 * `ScaleOutFactor` (default: `1.0`) is a multiplier that allows you to add extra agents when scaling up is needed
 * `ScaleInIdlePeriod` (default: `600` seconds) is used for scale-in by letting idle agents remove themselves from the ASG
 * `InstanceOperatingSystem` (default: `linux`) can be used to specify Windows if you need Windows Server 2019 instances
-* *Windows-only* `BuildkiteWindowsAdministrator` (default: `true`) adds the local "buildkite-agent" user account to the local Windows Administrator group 
+* *Windows-only* `BuildkiteWindowsAdministrator` (default: `true`) adds the local "buildkite-agent" user account to the local Windows Administrator group
 * *optional* `BuildkiteAgentTokenParameterStorePath` and `BuildkiteAgentTokenParameterStoreKMSKey` are for storing your token in [SSM Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) and are an alternative to `BuildkiteAgentToken`
 * *optional* `ScaleOutForWaitingJobs` (default: `false`) can help anticipate future job load and get your instances ready ahead of time
 
