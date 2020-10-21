@@ -1,6 +1,3 @@
-# Stop script execution when a non-terminating error occurs
-$ErrorActionPreference = "Stop"
-
 Write-Output "terminate-instance: waiting for 10 seconds to allow agent logs to drain to Cloudwatch..."
 Start-Sleep -Seconds 10
 
