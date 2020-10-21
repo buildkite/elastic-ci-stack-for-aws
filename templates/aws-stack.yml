@@ -939,6 +939,59 @@ Resources:
       AutoScalingReplacingUpdate:
         WillReplace: true
 
+  AsgProcessSuspenderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: [lambda.amazonaws.com]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: AsgProcessModification
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - 'autoscaling:SuspendProcesses'
+            Resource: '*'
+
+  AzRebalancingSuspenderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: 'Disables AZ Rebalancing on the agent ASG'
+      Code:
+        ZipFile: |
+          import cfnresponse
+          import boto3
+          def handler(event, context):
+            try:
+              if event['RequestType'] == 'Delete':
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
+              else:
+                client = boto3.client('autoscaling')
+                props = event['ResourceProperties']
+                response = client.suspend_processes(AutoScalingGroupName=props['AutoScalingGroupName'], ScalingProcesses=['AZRebalance'])
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
+            except BaseException as err:
+              print('ERROR: ', err)
+              cfnresponse.send(event, context, cfnresponse.FAILED, {}, "CustomResourcePhysicalID")
+      Handler: index.handler
+      Role: !GetAtt AsgProcessSuspenderRole.Arn
+      Runtime: 'python3.7'
+
+  AzRebalancingSuspender:
+    Type: AWS::CloudFormation::CustomResource
+    Version: 1.0
+    Properties:
+      ServiceToken: !GetAtt AzRebalancingSuspenderFunction.Arn
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Condition: CreateSecurityGroup
@@ -1072,3 +1125,4 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt AutoscalingLambdaScheduledRule.Arn
+
