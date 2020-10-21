@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-AGENT_VERSION=3.24.0
+AGENT_VERSION=3.25.0
 
 echo "Installing dependencies..."
 sudo yum update -y -q
