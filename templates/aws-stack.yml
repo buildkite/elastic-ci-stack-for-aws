@@ -959,7 +959,9 @@ Resources:
           - Effect: Allow
             Action:
             - 'autoscaling:SuspendProcesses'
-            Resource: '*'
+            Resource: !Sub
+              - "arn:aws:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/${LogicalGroupName}"
+              - LogicalGroupName: !Ref AgentAutoScaleGroup
 
   AzRebalancingSuspenderFunction:
     Type: AWS::Lambda::Function
