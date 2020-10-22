@@ -172,7 +172,7 @@ nssm set buildkite-agent AppExit Default Restart
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppRestartDelay 5000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
-nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1 3>&1 2>&1 > C:\buildkite-agent\buildkite-agent.log"
+nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Restart-Service buildkite-agent
