@@ -959,9 +959,7 @@ Resources:
           - Effect: Allow
             Action:
             - 'autoscaling:SuspendProcesses'
-            Resource: !Sub
-              - "arn:aws:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/${LogicalGroupName}"
-              - LogicalGroupName: !Ref AgentAutoScaleGroup
+            Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AgentAutoScaleGroup}
 
   AzRebalancingSuspenderFunction:
     Type: AWS::Lambda::Function
@@ -1127,4 +1125,3 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt AutoscalingLambdaScheduledRule.Arn
-
