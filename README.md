@@ -188,7 +188,7 @@ Metrics are calculated every minute from the Buildkite API using a lambda functi
 
 <img width="544" alt="cloudwatch" src="https://cloud.githubusercontent.com/assets/153/16836158/85abdbc6-49ff-11e6-814c-eaf2400e8333.png">
 
-You’ll find the stack’s metrics under "Custom Metrics > Buildkite" within CloudWatch.
+You’ll find the stack’s metrics under "Custom Namespaces > Buildkite" within CloudWatch.
 
 ## Reading Instance and Agent Logs
 
