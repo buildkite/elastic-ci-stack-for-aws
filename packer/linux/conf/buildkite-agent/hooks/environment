@@ -4,6 +4,9 @@ set -eu -o pipefail
 # shellcheck source=/dev/null
 source ~/cfn-env
 
+# a clean docker config for each job, for improved isolation
+export DOCKER_CONFIG=$(mktemp -d)
+
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
