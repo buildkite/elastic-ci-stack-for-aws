@@ -4,7 +4,7 @@ set -eu -o pipefail
 
 # clean up our temporary docker config
 if [[ -n "${BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY:-}" ]]; then
-  rmdir ${BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY}
+  rmdir "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
 fi
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
