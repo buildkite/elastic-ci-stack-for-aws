@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 # clean up our temporary docker config
-if [[ -n "${BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY:-}" ]]; then
+if [[ -n "${BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY:-}" && -d "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY" ]]; then
   rmdir "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
 fi
 
