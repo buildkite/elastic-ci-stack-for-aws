@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Support for loading BuildkiteAgentTokenPath from AWS Parameter Store [#601](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/601) ([jradtilbrook](https://github.com/jradtilbrook)), [#625](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/625) ([jradtilbrook](https://github.com/jradtilbrook))
 
 ### Changed
+* Docker configuration is now isolated per-step [#678](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/678) ([patrobinson](https://github.com/patrobinson)) [#756](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/756) ([yob](https://github.com/yob))
 * Use EC2 LaunchTemplate instead of a LaunchConfiguration [#589](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/589) ([lox](https://github.com/lox))
 * InstanceType default is now `t3.large` (was `t2.nano`) [#699](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/699) ([pda](https://github.com/pda))
 * Made ECR hook an `environment` hook (was `pre-command`). [#677](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/677) ([pda](https://github.com/pda))
