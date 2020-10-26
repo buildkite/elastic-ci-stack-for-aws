@@ -79,7 +79,7 @@ packer-linux.output: $(PACKER_LINUX_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
-		hashicorp/packer:$(PACKER_VERSION) build -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
 			buildkite-ami.json | tee $@
 
 build/windows-ami.txt: packer-windows.output env-AWS_REGION
@@ -99,7 +99,7 @@ packer-windows.output: $(PACKER_WINDOWS_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/windows \
-		hashicorp/packer:$(PACKER_VERSION) build -var 'region=$(AWS_REGION)' \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
 			buildkite-ami.json | tee $@
 
 # -----------------------------------------
