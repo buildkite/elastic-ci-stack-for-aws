@@ -2,7 +2,7 @@
 
 GIT_LFS_RELEASE="2.10.0"
 
-MACHINE=`uname -m`
+MACHINE=$(uname -m)
 
 case "${MACHINE}" in
 	x86_64)    ARCH=amd64;;

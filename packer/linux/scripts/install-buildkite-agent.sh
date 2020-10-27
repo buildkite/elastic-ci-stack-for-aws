@@ -3,7 +3,7 @@ set -eu -o pipefail
 
 AGENT_VERSION=3.25.0
 
-MACHINE=`uname -m`
+MACHINE="$(uname -m)"
 
 case "${MACHINE}" in
 	x86_64)    ARCH=amd64;;

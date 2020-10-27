@@ -3,7 +3,7 @@ set -eu -o pipefail
 
 LIFECYCLED_VERSION=v3.0.2
 
-MACHINE=`uname -m`
+MACHINE=$(uname -m)
 
 case "${MACHINE}" in
 	x86_64)    ARCH=amd64;;
