@@ -9,6 +9,11 @@ BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY=$(mktemp -d)
 export BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY
 export DOCKER_CONFIG="$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
 
+# on linux/arm64 we have to install docker-compose via pip, which
+# has a dependency on the cryptography package, which requires some
+# convincing to run with the version of openssl distributed with Amazon Linux 2
+export CRYPTOGRAPHY_ALLOW_OPENSSL_102=true
+
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
 
