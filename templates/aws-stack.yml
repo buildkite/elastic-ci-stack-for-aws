@@ -41,6 +41,7 @@ Metadata:
         - InstanceType
         - AgentsPerInstance
         - KeyName
+        - SpotPrice
         - SecretsBucket
         - ArtifactsBucket
         - AuthorizedUsersUrl
@@ -210,6 +211,11 @@ Parameters:
     MinLength: 1
     AllowedPattern: "^[\\w\\.]+(,[\\w\\.]*){0,3}$"
     ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
+
+  SpotPrice:
+    Description: Maximum spot price to use for the instances, in instance cost per hour. Values >0 will result in 100% of instances being spot. 0 means only use normal (non-spot) instances. This parameter is deprecated - we recommend setting to 0 and using OnDemandPercentage to opt into spot instances.
+    Type: String
+    Default: 0
 
   MaxSize:
     Description: Maximum number of instances
@@ -415,6 +421,8 @@ Outputs:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
 
 Conditions:
+    SpotPriceSet:
+      !Not [ !Equals [ !Ref SpotPrice, 0 ] ]
 
     CreateVpcResources:
       !Equals [ !Ref VpcId, "" ]
@@ -921,8 +929,9 @@ Resources:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       MixedInstancesPolicy:
         InstancesDistribution:
-          OnDemandPercentageAboveBaseCapacity: !Ref OnDemandPercentage
+          OnDemandPercentageAboveBaseCapacity: !If [ SpotPriceSet, 0, !Ref OnDemandPercentage ]
           SpotAllocationStrategy: capacity-optimized
+          SpotMaxPrice: !If [SpotPriceSet, !Ref SpotPrice, !Ref "AWS::NoValue"]
         LaunchTemplate:
           LaunchTemplateSpecification:
             LaunchTemplateId: !Ref AgentLaunchTemplate
