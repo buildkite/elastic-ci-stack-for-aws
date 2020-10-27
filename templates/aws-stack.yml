@@ -304,6 +304,7 @@ Parameters:
     Description: The operating system to run on the instances
     AllowedValues:
       - linux
+      - linuxarm
       - windows
     Default: "linux"
 

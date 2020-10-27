@@ -35,6 +35,25 @@ steps:
     artifact_paths:
       - build/s3secrets-helper-linux-amd64
 
+  - id: "s3secrets-helper-linux-arm64"
+    name: ":golang: :linux: s3secrets-helper-linux-arm64"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    plugins:
+      docker#v3.7.0:
+        image: "golang:1.15"
+        mount-checkout: false
+        volumes:
+          - "./build:/build:rw"
+          - "./plugins/secrets/s3secrets-helper:/s3secrets-helper:ro"
+        workdir: /s3secrets-helper
+        environment:
+          - "GOOS=linux"
+          - "GOARCH=arm64"
+        command: ["go", "build", "-o", "/build/s3secrets-helper-linux-arm64"]
+    artifact_paths:
+      - build/s3secrets-helper-linux-arm64
+
   - id: "s3secrets-helper-windows-amd64"
     name: ":golang: :windows: s3secrets-helper-windows-amd64.exe"
     agents:
@@ -79,8 +98,8 @@ steps:
     command: "docker info"
     timeout_in_minutes: 5
     agents:
-      stack: "buildkite-aws-stack-test-windows-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-windows-${BUILDKITE_BUILD_NUMBER}"
+      stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
     depends_on: "windows-launch"
 
   - id: "packer-linux"
@@ -108,9 +127,38 @@ steps:
     command: "goss validate --format documentation"
     timeout_in_minutes: 5
     agents:
-      stack: "buildkite-aws-stack-test-linux-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-linux-${BUILDKITE_BUILD_NUMBER}"
+      stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
     depends_on: "linux-launch"
+
+  - id: "packer-linux-arm64"
+    name: ":packer: :linux: :arm:"
+    command: .buildkite/steps/packer.sh linux arm64
+    timeout_in_minutes: 60
+    retry: { automatic: { limit: 3 } }
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    depends_on:
+      - "lint"
+      - "bats-tests"
+      - "s3secrets-helper-linux-arm64"
+
+  - id: "linux-arm64-launch"
+    name: ":cloudformation: :linux: :arm: Launch"
+    command: .buildkite/steps/launch.sh linux arm64
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    artifact_paths: "build/aws-stack.yml"
+    depends_on: "packer-linux-arm64"
+
+  - id: "linux-arm64-test"
+    name: ":cloudformation: :linux: :arm: Test"
+    command: "goss validate --format documentation"
+    timeout_in_minutes: 5
+    agents:
+      stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
+    depends_on: "linux-arm64-launch"
 
   - id: "copy-ami"
     name: ":cloudformation: 🚚 🌎"
@@ -120,6 +168,7 @@ steps:
     artifact_paths: "build/mappings.yml"
     depends_on:
       - "linux-test"
+      - "linux-arm64-test"
       - "windows-test"
 
   - id: "publish"
