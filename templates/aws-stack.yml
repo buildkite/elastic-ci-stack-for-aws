@@ -208,7 +208,7 @@ Parameters:
     Type: String
     Default: t3.large
     MinLength: 1
-    AllowedPattern: "^[^,]+(,[^,]*){0,3}$"
+    AllowedPattern: "^[\\w\\.]+(,[\\w\\.]*){0,3}$"
     ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
 
   MaxSize:
