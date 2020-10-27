@@ -28,11 +28,11 @@ sudo cp buildkite-agent/buildkite-agent /usr/bin/buildkite-agent-stable
 rm -fr buildkite-agent buildkite-agent-linux.tar.gz
 buildkite-agent-stable --version
 
-#echo "Downloading buildkite-agent beta..."
-#sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
-#  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-arm64"
-#sudo chmod +x /usr/bin/buildkite-agent-beta
-#buildkite-agent-beta --version
+echo "Downloading buildkite-agent beta..."
+sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
+  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-${ARCH}"
+sudo chmod +x /usr/bin/buildkite-agent-beta
+buildkite-agent-beta --version
 
 echo "Adding scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/* /usr/bin
