@@ -304,7 +304,6 @@ Parameters:
     Description: The operating system to run on the instances
     AllowedValues:
       - linux
-      - linuxarm
       - windows
     Default: "linux"
 
@@ -504,6 +503,17 @@ Conditions:
 
     UseLinuxAgents:
       !Equals [ !Ref InstanceOperatingSystem, "linux" ]
+
+    UsingArmInstances:
+      !Or
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "a1" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
 
 Mappings:
   ECRManagedPolicy:
@@ -824,7 +834,7 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-          ImageId: !If [ HasImageId, !Ref ImageId, !If [ HasImageIdParameter, !GetAtt ImageIdParameterStack.Outputs.ImageId, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ] ] ]
+          ImageId: !If [ HasImageId, !Ref ImageId, !If [ HasImageIdParameter, !GetAtt ImageIdParameterStack.Outputs.ImageId, !If [ UseWindowsAgents, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'windows'], !If [ UsingArmInstances, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'linuxarm'], !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', 'linux'] ] ] ] ]
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
