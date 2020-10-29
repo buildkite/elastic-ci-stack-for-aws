@@ -57,6 +57,7 @@ Metadata:
         Parameters:
         - MinSize
         - MaxSize
+        - OnDemandPercentage
         - ScaleOutFactor
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
@@ -204,13 +205,15 @@ Parameters:
     Default: ""
 
   InstanceType:
-    Description: Instance type
+    Description: Instance type. Comma-separated list with 1-4 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
     Type: String
     Default: t3.large
     MinLength: 1
+    AllowedPattern: "^[\\w\\.]+(,[\\w\\.]*){0,3}$"
+    ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
 
   SpotPrice:
-    Description: Spot bid price to use for the instances. 0 means normal (non-spot) instances
+    Description: Maximum spot price to use for the instances, in instance cost per hour. Values >0 will result in 100% of instances being spot. 0 means only use normal (non-spot) instances. This parameter is deprecated - we recommend setting to 0 and using OnDemandPercentage to opt into spot instances.
     Type: String
     Default: 0
 
@@ -224,6 +227,13 @@ Parameters:
     Description: Minimum number of instances
     Type: Number
     Default: 0
+
+  OnDemandPercentage:
+    Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
+    Type: Number
+    Default: 100
+    MinValue: 0
+    MaxValue: 100
 
   ScaleOutFactor:
     Description: A decimal factor to apply to scale out changes to speed up or slow down scale-out
@@ -411,7 +421,7 @@ Outputs:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
 
 Conditions:
-    UseSpotInstances:
+    SpotPriceSet:
       !Not [ !Equals [ !Ref SpotPrice, 0 ] ]
 
     CreateVpcResources:
@@ -445,6 +455,15 @@ Conditions:
 
     UseDefaultRootVolumeName:
       !Equals [ !Ref RootVolumeName, "" ]
+
+    UseInstanceType2:
+      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType3:
+      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType4:
+      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
@@ -803,13 +822,7 @@ Resources:
           KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
-          InstanceType: !Ref InstanceType
-          InstanceMarketOptions: !If
-            - UseSpotInstances
-            - MarketType: spot
-              SpotOptions:
-                MaxPrice: !Ref SpotPrice
-            - !Ref "AWS::NoValue"
+          InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
           ImageId: !If [ HasImageId, !Ref ImageId, !If [ HasImageIdParameter, !GetAtt ImageIdParameterStack.Outputs.ImageId, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ] ] ]
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
@@ -914,9 +927,29 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
-      LaunchTemplate:
-        LaunchTemplateId: !Ref AgentLaunchTemplate
-        Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+      MixedInstancesPolicy:
+        InstancesDistribution:
+          OnDemandPercentageAboveBaseCapacity: !If [ SpotPriceSet, 0, !Ref OnDemandPercentage ]
+          SpotAllocationStrategy: capacity-optimized
+          SpotMaxPrice: !If [SpotPriceSet, !Ref SpotPrice, !Ref "AWS::NoValue"]
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref AgentLaunchTemplate
+            Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+          Overrides:
+          - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+          - InstanceType: !If
+            - UseInstanceType2
+            - !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - InstanceType: !If
+            - UseInstanceType3
+            - !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - InstanceType: !If
+            - UseInstanceType4
+            - !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 0
