@@ -20,12 +20,9 @@ sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
-mkdir -p buildkite-agent
-curl -Lsf -o buildkite-agent-linux.tar.gz \
-  "https://github.com/buildkite/agent/releases/download/v${AGENT_VERSION}/buildkite-agent-linux-${ARCH}-${AGENT_VERSION}.tar.gz"
-tar -C buildkite-agent -xvzf buildkite-agent-linux.tar.gz
-sudo cp buildkite-agent/buildkite-agent /usr/bin/buildkite-agent-stable
-rm -fr buildkite-agent buildkite-agent-linux.tar.gz
+sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
+  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
+sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
 echo "Downloading buildkite-agent beta..."
