@@ -132,7 +132,7 @@ steps:
     depends_on: "linux-launch"
 
   - id: "packer-linux-arm64"
-    name: ":packer: :linux: :arm:"
+    name: ":packer: :linux: 💪"
     command: .buildkite/steps/packer.sh linux arm64
     timeout_in_minutes: 60
     retry: { automatic: { limit: 3 } }
@@ -144,7 +144,7 @@ steps:
       - "s3secrets-helper-linux-arm64"
 
   - id: "linux-arm64-launch"
-    name: ":cloudformation: :linux: :arm: Launch"
+    name: ":cloudformation: :linux: 💪 Launch"
     command: .buildkite/steps/launch.sh linux arm64
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -152,7 +152,7 @@ steps:
     depends_on: "packer-linux-arm64"
 
   - id: "linux-arm64-test"
-    name: ":cloudformation: :linux: :arm: Test"
+    name: ":cloudformation: :linux: 💪 Test"
     command: "goss validate --format documentation"
     timeout_in_minutes: 5
     agents:
