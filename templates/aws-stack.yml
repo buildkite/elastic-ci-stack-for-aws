@@ -86,6 +86,7 @@ Metadata:
         Parameters:
         - EnableSecretsPlugin
         - EnableECRPlugin
+        - EnableECRCredHelperPlugin
         - EnableDockerLoginPlugin
 
 Parameters:
@@ -340,6 +341,14 @@ Parameters:
       - "true"
       - "false"
     Default: "true"
+
+  EnableECRCredHelperPlugin:
+    Type: String
+    Description: Enables ecr credential helper plugin
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   EnableDockerLoginPlugin:
     Type: String
@@ -915,6 +924,7 @@ Resources:
                   AWS_DEFAULT_REGION=${AWS::Region} \
                   SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
                   ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
+                  ECR_CRED_HELPER_PLUGIN_ENABLED=${EnableECRCredHelperPlugin} \
                   DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
                   AWS_REGION=${AWS::Region} \
                     /usr/local/bin/bk-install-elastic-stack.sh

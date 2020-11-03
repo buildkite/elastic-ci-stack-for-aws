@@ -8,6 +8,9 @@ source ~/cfn-env
 BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY=$(mktemp -d)
 export BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY
 export DOCKER_CONFIG="$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
+DOCKER_CONFIG_FILE="${DOCKER_CONFIG}/config.json"
+# Write an empty docker config file
+echo '{}' > $DOCKER_CONFIG_FILE
 
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 cat ~/cfn-env
@@ -39,10 +42,12 @@ echo "Configuring built-in plugins"
 [[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}
 [[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/docker-login/}
 [[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ecr/}
+[[ ! ${ECR_CRED_HELPER_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ecr-cred-helper/}
 
 SECRETS_PLUGIN_ENABLED=0
 DOCKER_LOGIN_PLUGIN_ENABLED=0
 ECR_PLUGIN_ENABLED=0
+ECR_CRED_HELPER_PLUGIN_ENABLED=0
 
 for plugin in $PLUGINS_ENABLED ; do
   case "$plugin" in
@@ -58,8 +63,16 @@ for plugin in $PLUGINS_ENABLED ; do
       export ECR_PLUGIN_ENABLED=1
       echo "ECR plugin enabled"
       ;;
+    ecr-cred-helper)
+      export ECR_CRED_HELPER_PLUGIN_ENABLED=1
+      echo "ECR cred helper plugin enabled"
+      ;;
   esac
 done
+
+if [[ "${ECR_CRED_HELPER_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  cat <<< "$(jq '."credsStore"="ecr-login"' $DOCKER_CONFIG_FILE)" > $DOCKER_CONFIG_FILE
+fi
 
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"

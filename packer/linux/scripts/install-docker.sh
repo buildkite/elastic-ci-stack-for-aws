@@ -45,3 +45,6 @@ sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/j
 sudo chmod +x /usr/bin/jq
 jq --version
 
+echo "Installing ecr credential helper..."
+sudo amazon-linux-extras enable docker
+sudo yum install -y amazon-ecr-credential-helper
