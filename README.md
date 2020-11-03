@@ -146,8 +146,6 @@ Metrics are collected with a Lambda function, polling every minute based on the 
 
 You may set `BuildkiteTerminateInstanceAfterJob` to `true` to force the instance to terminate after it completes a job. Setting this value to `true` tells the stack to enable `disconnect-after-job` in the `buildkite-agent.cfg` file.
 
-While not enforced, it is highly recommended you also set your `AgentsPerInstance` value to `1`.
-
 We strongly encourage you to find an alternative to this setting if at all possible. The turn around time for replacing these instances is currently slow (5-10 minutes depending on other stack configuration settings). If you need single use jobs, we suggest looking at our container plugins like `docker`, `docker-compose`, and `ecs`, all which can be found [here](https://buildkite.com/plugins).
 
 ## Docker Registry Support
