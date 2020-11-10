@@ -4,6 +4,7 @@ set -eu -o pipefail
 DOCKER_VERSION=19.03.13
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.27.4
+JQ_VERSION=1.6
 
 # This performs a manual install of Docker.
 
@@ -41,7 +42,7 @@ sudo cp /tmp/conf/docker/cron.hourly/docker-low-disk-gc /etc/cron.hourly/docker-
 sudo chmod +x /etc/cron.hourly/docker-*
 
 echo "Downloading jq..."
-sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64
 sudo chmod +x /usr/bin/jq
 jq --version
 
