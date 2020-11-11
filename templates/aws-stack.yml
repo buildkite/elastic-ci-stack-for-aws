@@ -390,6 +390,14 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+  
+  EnableReplacementOfAutoScalingGroupOnUpdate:
+    Type: String
+    Description: Enables the replacement of the autoscaling group when asg dependencies are updated
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
 
 Outputs:
   VpcId:
@@ -970,7 +978,7 @@ Resources:
         Count: !Ref MinSize
     UpdatePolicy:
       AutoScalingReplacingUpdate:
-        WillReplace: true
+        WillReplace: !Ref EnableReplacementOfAutoScalingGroupOnUpdate
 
   AsgProcessSuspenderRole:
     Type: AWS::IAM::Role
