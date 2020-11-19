@@ -16,6 +16,44 @@ steps:
         run: unit-tests
         config: docker-compose.unit-tests.yml
 
+  - id: "s3secrets-helper-linux-amd64"
+    name: ":golang: s3secrets-helper-linux-amd64"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    plugins:
+      docker#v3.7.0:
+        image: "golang:1.15"
+        mount-checkout: false
+        volumes:
+          - "./build:/build:rw"
+          - "./plugins/secrets/s3secrets-helper:/s3secrets-helper:ro"
+        workdir: /s3secrets-helper
+        environment:
+          - "GOOS=linux"
+          - "GOARCH=amd64"
+        command: ["go", "build", "-o", "/build/s3secrets-helper-linux-amd64"]
+    artifact_paths:
+      - build/s3secrets-helper-linux-amd64
+
+  - id: "s3secrets-helper-windows-amd64"
+    name: ":golang: s3secrets-helper-windows-amd64"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    plugins:
+      docker#v3.7.0:
+        image: "golang:1.15"
+        mount-checkout: false
+        volumes:
+          - "./build:/build:rw"
+          - "./plugins/secrets/s3secrets-helper:/s3secrets-helper:ro"
+        workdir: /s3secrets-helper
+        environment:
+          - "GOOS=windows"
+          - "GOARCH=amd64"
+        command: ["go", "build", "-o", "/build/s3secrets-helper-windows-amd64"]
+    artifact_paths:
+      - build/s3secrets-helper-windows-amd64
+
   - id: "packer-windows"
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
@@ -26,6 +64,7 @@ steps:
     depends_on:
       - "lint"
       - "bats-tests"
+      - "s3secrets-helper-windows-amd64"
 
   - id: "windows-launch"
     name: ":cloudformation: :windows: Launch"
@@ -54,6 +93,7 @@ steps:
     depends_on:
       - "lint"
       - "bats-tests"
+      - "s3secrets-helper-linux-amd64"
 
   - id: "linux-launch"
     name: ":cloudformation: :linux: Launch"
