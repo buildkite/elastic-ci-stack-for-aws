@@ -36,7 +36,7 @@ steps:
       - build/s3secrets-helper-linux-amd64
 
   - id: "s3secrets-helper-windows-amd64"
-    name: ":golang: :windows: s3secrets-helper-windows-amd64"
+    name: ":golang: :windows: s3secrets-helper-windows-amd64.exe"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     plugins:
@@ -52,7 +52,7 @@ steps:
           - "GOARCH=amd64"
         command: ["go", "build", "-o", "/build/s3secrets-helper-windows-amd64.exe"]
     artifact_paths:
-      - build/s3secrets-helper-windows-amd64
+      - build/s3secrets-helper-windows-amd64.exe
 
   - id: "packer-windows"
     name: ":packer: :windows:"
