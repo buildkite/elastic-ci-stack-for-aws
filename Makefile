@@ -87,7 +87,7 @@ build/windows-ami.txt: packer-windows.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build windows packer image
-packer-windows.output: $(PACKER_WINDOWS_FILES) build/s3secrets-helper-windows-amd64
+packer-windows.output: $(PACKER_WINDOWS_FILES) build/s3secrets-helper-windows-amd64.exe
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -153,5 +153,5 @@ generate-toc:
 build/s3secrets-helper-linux-amd64:
 	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=amd64 go build -o ../../../$@
 
-build/s3secrets-helper-windows-amd64:
+build/s3secrets-helper-windows-amd64.exe:
 	cd plugins/secrets/s3secrets-helper && GOOD=windows GOARCH=amd64 go build -o ../../../$@

@@ -50,7 +50,7 @@ steps:
         environment:
           - "GOOS=windows"
           - "GOARCH=amd64"
-        command: ["go", "build", "-o", "/build/s3secrets-helper-windows-amd64"]
+        command: ["go", "build", "-o", "/build/s3secrets-helper-windows-amd64.exe"]
     artifact_paths:
       - build/s3secrets-helper-windows-amd64
 

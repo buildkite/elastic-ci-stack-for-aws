@@ -34,6 +34,11 @@
       "destination": "/tmp/plugins"
     },
     {
+      "type": "file",
+      "source": "../../build/s3secrets-helper-linux-amd64",
+      "destination": "/tmp/s3secrets-helper"
+    },
+    {
       "type": "shell",
       "script": "scripts/install-utils.sh"
     },
