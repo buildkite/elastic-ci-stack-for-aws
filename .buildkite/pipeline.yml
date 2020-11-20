@@ -17,7 +17,7 @@ steps:
         config: docker-compose.unit-tests.yml
 
   - id: "s3secrets-helper-linux-amd64"
-    name: ":golang: s3secrets-helper-linux-amd64"
+    name: ":golang: :linux: s3secrets-helper-linux-amd64"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     plugins:
@@ -36,7 +36,7 @@ steps:
       - build/s3secrets-helper-linux-amd64
 
   - id: "s3secrets-helper-windows-amd64"
-    name: ":golang: s3secrets-helper-windows-amd64"
+    name: ":golang: :windows: s3secrets-helper-windows-amd64"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     plugins:
