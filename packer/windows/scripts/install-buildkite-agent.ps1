@@ -45,3 +45,4 @@ Copy-Item -Path C:\packer-temp\conf\buildkite-agent\scripts\stop-agent-gracefull
 Write-Output "Copying built-in plugins..."
 New-Item -ItemType directory -Path "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins"
 Copy-Item -Recurse -Path C:\packer-temp\plugins\* -Destination "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins\"
+Copy-Item -Path C:\packer-temp\s3secrets-helper.exe -Destination C:\buildkite-agent\bin
