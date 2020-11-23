@@ -2,6 +2,7 @@
   "variables": {
     "region": "us-east-1",
     "arch": "x86_64",
+    "goarch": "amd64",
     "instance_type": "m5.xlarge"
   },
 
@@ -38,7 +39,7 @@
     },
     {
       "type": "file",
-      "source": "../../build/s3secrets-helper-linux-amd64",
+      "source": "../../build/s3secrets-helper-linux-{{user `goarch`}}",
       "destination": "/tmp/s3secrets-helper"
     },
     {

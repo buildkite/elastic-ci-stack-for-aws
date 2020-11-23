@@ -89,7 +89,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-am
 		--rm \
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
-			-var 'arch=x86_64' -var 'instance_type=$(X86_INSTANCE_TYPE)' \
+			-var 'arch=x86_64' -var 'goarch=amd64' -var 'instance_type=$(X86_INSTANCE_TYPE)' \
 			buildkite-ami.json | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -110,7 +110,7 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-ar
 		--rm \
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
-			-var 'arch=arm64' -var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
+			-var 'arch=arm64' -var 'goarch=arm64' -var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
 			buildkite-ami.json | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
