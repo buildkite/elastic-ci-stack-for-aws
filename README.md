@@ -26,7 +26,6 @@ Features:
 
 <!-- toc -->
 
-- [Contents](#contents)
 - [Getting Started](#getting-started)
 - [Build Secrets](#build-secrets)
 - [What’s On Each Machine?](#whats-on-each-machine)
