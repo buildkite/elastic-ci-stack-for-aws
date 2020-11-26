@@ -37,9 +37,9 @@ if [ "${MACHINE}" == "x86_64" ]; then
 	sudo chmod +x /usr/bin/docker-compose
 	docker-compose --version
 elif [[ "${MACHINE}" == "aarch64" ]]; then
-  sudo yum install -y gcc-c++ libffi-devel openssl-devel python3-devel
+  sudo yum install -y gcc-c++ libffi-devel openssl11 openssl11-devel python3-devel
   sudo pip3 install docker-compose
-	CRYPTOGRAPHY_ALLOW_OPENSSL_102=true docker-compose version
+	docker-compose version
 fi
 
 echo "Adding docker cron tasks..."
