@@ -138,13 +138,13 @@ windows_amd64_source_image_name=$(get_image_name "$windows_amd64_source_image_id
 # Copy to all other regions
 for region in ${ALL_REGIONS[*]}; do
   if [[ $region != "$source_region" ]] ; then
-    echo "--- Copying :linux: $linux_amd64_source_image_id to $region" >&2
+    echo "--- :linux: Copying Linux AMD64 $linux_amd64_source_image_id to $region" >&2
     IMAGES+=("$(copy_ami_to_region "$linux_amd64_source_image_id" "$source_region" "$region" "${linux_amd64_source_image_name}-${region}")")
 
-    echo "--- Copying :linux: :arm: $linux_arm64_source_image_id to $region" >&2
+    echo "--- :linux: Copying Linux ARM64 $linux_arm64_source_image_id to $region" >&2
     IMAGES+=("$(copy_ami_to_region "$linux_arm64_source_image_id" "$source_region" "$region" "${linux_arm64_source_image_name}-${region}")")
 
-    echo "--- Copying :windows: $windows_amd64_source_image_id to $region" >&2
+    echo "--- :windows: Copying Windows AMD64 $windows_amd64_source_image_id to $region" >&2
     IMAGES+=("$(copy_ami_to_region "$windows_amd64_source_image_id" "$source_region" "$region" "${windows_amd64_source_image_name}-${region}")")
   else
     IMAGES+=("$linux_amd64_source_image_id" "$linux_arm64_source_image_id" "$windows_amd64_source_image_id")
@@ -169,7 +169,7 @@ for region in ${ALL_REGIONS[*]}; do
 
   # Make the linux AMI public if it's not the source image
   if [[ $linux_amd64_image_id != "$linux_amd64_source_image_id" ]] ; then
-    echo "Making :linux: ${linux_amd64_image_id} public" >&2
+    echo ":linux: Making Linux AMD64 ${linux_amd64_image_id} public" >&2
     make_ami_public "$linux_amd64_image_id" "$region"
   fi
 
@@ -177,7 +177,7 @@ for region in ${ALL_REGIONS[*]}; do
 
   # Make the linux ARM AMI public if it's not the source image
   if [[ $linux_arm64_image_id != "$linux_arm64_source_image_id" ]] ; then
-    echo "Making :linux: :arm: ${linux_arm64_image_id} public" >&2
+    echo ":linux: Making Linux ARM64 ${linux_arm64_image_id} public" >&2
     make_ami_public "$linux_arm64_image_id" "$region"
   fi
 
@@ -185,7 +185,7 @@ for region in ${ALL_REGIONS[*]}; do
 
   # Make the windows AMI public if it's not the source image
   if [[ $windows_amd64_image_id != "$windows_amd64_source_image_id" ]] ; then
-    echo "Making :windows: ${windows_amd64_image_id} public" >&2
+    echo ":windows: Making Windows AMD64 ${windows_amd64_image_id} public" >&2
     make_ami_public "$windows_amd64_image_id" "$region"
   fi
 
