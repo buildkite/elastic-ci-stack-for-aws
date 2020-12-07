@@ -40,6 +40,9 @@ elif [[ "${MACHINE}" == "aarch64" ]]; then
   sudo yum install -y gcc-c++ libffi-devel openssl11 openssl11-devel python3-devel
   sudo pip3 install docker-compose
 	docker-compose version
+else
+  echo "No docker compose option configured for arch ${MACHINE}"
+  exit 1
 fi
 
 echo "Adding docker cron tasks..."
