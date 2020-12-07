@@ -970,17 +970,17 @@ Resources:
             Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
           Overrides:
           - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-          - InstanceType: !If
+          - !If
             - UseInstanceType2
-            - !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
-          - InstanceType: !If
+          - !If
             - UseInstanceType3
-            - !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
-          - InstanceType: !If
+          - !If
             - UseInstanceType4
-            - !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
