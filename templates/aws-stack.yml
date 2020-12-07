@@ -545,7 +545,7 @@ Mappings:
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
   # Generated from Makefile via build/mappings.yml
-  AWSRegion2AMI: { linux: !Ref ImageId, windows: !Ref ImageId }
+  AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
 
 Resources:
   Vpc:
@@ -851,11 +851,11 @@ Resources:
                   - !FindInMap
                     - AWSRegion2AMI
                     - !Ref 'AWS::Region'
-                    - 'linuxarm'
+                    - 'linuxarm64'
                   - !FindInMap
                     - AWSRegion2AMI
                     - !Ref 'AWS::Region'
-                    - 'linux'
+                    - 'linuxamd64'
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }

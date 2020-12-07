@@ -34,19 +34,19 @@ build: packer build/mappings.yml build/aws-stack.yml
 # Build a mapping file for a single region and image id pair
 mappings-for-linux-amd64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: %s, linuxarm: '', windows: '' }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: %s, linuxarm64: '', windows: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build a mapping file for a single region and image id pair
 mappings-for-linux-arm64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: '', linuxarm: %s, windows: '' }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: %s, windows: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build a windows mapping file for a single region and image id pair
 mappings-for-windows-amd64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: '', linuxarm: '', windows: %s }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: %s }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Takes the mappings files and copies them into a generated stack template
@@ -68,7 +68,7 @@ packer: packer-linux-amd64.output packer-linux-arm64.output packer-windows-amd64
 
 build/mappings.yml: build/linux-amd64-ami.txt build/linux-arm64-ami.txt build/windows-amd64-ami.txt
 	mkdir -p build
-	printf "Mappings:\n  AWSRegion2AMI:\n    %q : { linux: %q, linuxarm: %q, windows: %q }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %q : { linuxamd64: %q, linuxarm64: %q, windows: %q }\n" \
 		"$(AWS_REGION)" $$(cat build/linux-amd64-ami.txt) $$(cat build/linux-arm64-ami.txt) $$(cat build/windows-amd64-ami.txt) > $@
 
 build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
@@ -96,7 +96,7 @@ build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 	mkdir -p build
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
-# Build linuxarm packer image
+# Build linuxarm64 packer image
 packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-arm64
 	docker run \
 		-e AWS_DEFAULT_REGION  \
