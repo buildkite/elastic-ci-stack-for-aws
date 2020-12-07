@@ -4,6 +4,7 @@ set -eu -o pipefail
 DOCKER_VERSION=19.03.13
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.27.4
+MACHINE=$(uname -m)
 
 # This performs a manual install of Docker.
 
@@ -12,7 +13,7 @@ sudo groupadd docker
 sudo usermod -a -G docker ec2-user
 
 # Manual install ala https://docs.docker.com/engine/installation/binaries/
-curl -Lsf -o docker.tgz https://download.docker.com/linux/static/${DOCKER_RELEASE}/x86_64/docker-${DOCKER_VERSION}.tgz
+curl -Lsf -o docker.tgz "https://download.docker.com/linux/static/${DOCKER_RELEASE}/${MACHINE}/docker-${DOCKER_VERSION}.tgz"
 tar -xvzf docker.tgz
 sudo mv docker/* /usr/bin
 rm docker.tgz
@@ -30,18 +31,25 @@ sudo curl -Lfs -o /etc/systemd/system/docker.socket https://raw.githubuserconten
 sudo systemctl daemon-reload
 sudo systemctl enable docker.service
 
-echo "Downloading docker-compose..."
-sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
-sudo chmod +x /usr/bin/docker-compose
-docker-compose --version
+if [ "${MACHINE}" == "x86_64" ]; then
+	echo "Downloading docker-compose..."
+	sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
+	sudo chmod +x /usr/bin/docker-compose
+	docker-compose --version
+elif [[ "${MACHINE}" == "aarch64" ]]; then
+  sudo yum install -y gcc-c++ libffi-devel openssl11 openssl11-devel python3-devel
+  sudo pip3 install docker-compose
+	docker-compose version
+else
+  echo "No docker compose option configured for arch ${MACHINE}"
+  exit 1
+fi
 
 echo "Adding docker cron tasks..."
 sudo cp /tmp/conf/docker/cron.hourly/docker-gc /etc/cron.hourly/docker-gc
 sudo cp /tmp/conf/docker/cron.hourly/docker-low-disk-gc /etc/cron.hourly/docker-low-disk-gc
 sudo chmod +x /etc/cron.hourly/docker-*
 
-echo "Downloading jq..."
-sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
-sudo chmod +x /usr/bin/jq
+echo "Installing jq..."
+sudo yum install -y -q jq
 jq --version
-

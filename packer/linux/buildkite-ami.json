@@ -1,7 +1,11 @@
 {
   "variables": {
-    "region": "us-east-1"
+    "region": "us-east-1",
+    "arch": "x86_64",
+    "goarch": "amd64",
+    "instance_type": "m5.xlarge"
   },
+
   "builders": [
     {
       "type": "amazon-ebs",
@@ -9,15 +13,15 @@
       "source_ami_filter": {
         "filters": {
           "name": "amzn2-ami-hvm-2.0.*-gp2",
-          "architecture": "x86_64",
+          "architecture": "{{user `arch`}}",
           "virtualization-type": "hvm"
         },
         "owners": ["amazon"],
         "most_recent": true
       },
-      "instance_type": "m5.xlarge",
+      "instance_type": "{{user `instance_type`}}",
       "ssh_username": "ec2-user",
-      "ami_name": "buildkite-stack-linux-{{isotime | clean_resource_name}}",
+      "ami_name": "buildkite-stack-linux-{{user `arch`}}-{{isotime | clean_resource_name}}",
       "ami_description": "Buildkite Elastic Stack (Amazon Linux 2 LTS w/ docker)",
       "ami_groups": ["all"]
     }
@@ -35,7 +39,7 @@
     },
     {
       "type": "file",
-      "source": "../../build/s3secrets-helper-linux-amd64",
+      "source": "../../build/s3secrets-helper-linux-{{user `goarch`}}",
       "destination": "/tmp/s3secrets-helper"
     },
     {

@@ -63,9 +63,14 @@ export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
+	if [[ "$(uname -m)" == "aarch64" ]] ; then
+	  AGENT_ARCH="arm64"
+	else
+	  AGENT_ARCH="amd64"
+	fi
 	echo "Downloading buildkite-agent edge..."
 	curl -Lsf -o /usr/bin/buildkite-agent-edge \
-		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
+		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${AGENT_ARCH}"
 	chmod +x /usr/bin/buildkite-agent-edge
 	buildkite-agent-edge --version
 fi

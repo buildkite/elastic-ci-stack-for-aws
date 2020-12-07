@@ -2,8 +2,9 @@
 set -eu
 
 os="${1:-linux}"
-stack_name="buildkite-aws-stack-test-${os}-${BUILDKITE_BUILD_NUMBER}"
-stack_queue_name="testqueue-${os}-${BUILDKITE_BUILD_NUMBER}"
+arch="${2:-amd64}"
+stack_name="buildkite-aws-stack-test-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
+stack_queue_name="testqueue-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
 
 # download parfait binary
 wget -N https://github.com/lox/parfait/releases/download/v1.1.3/parfait_linux_amd64
@@ -15,8 +16,8 @@ subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --quer
 subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 
-image_id=$(buildkite-agent meta-data get "${os}_image_id")
-echo "Using AMI $image_id for $os"
+image_id=$(buildkite-agent meta-data get "${os}_${arch}_image_id")
+echo "Using AMI $image_id for $os/$arch"
 
 instance_type="t3.nano"
 instance_disk="10"
@@ -24,6 +25,10 @@ instance_disk="10"
 if [[ "$os" == "windows" ]] ; then
   instance_type="m5.large"
   instance_disk="100"
+fi
+
+if [[ "$arch" == "arm64" ]] ; then
+  instance_type="m6g.large"
 fi
 
 cat << EOF > config.json
@@ -88,7 +93,7 @@ cat << EOF > config.json
 EOF
 
 echo "--- Building templates"
-make "mappings-for-${os}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
+make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 
 echo "--- Validating templates"
 make validate
