@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 * Experimental support for ARM instance types (linux only) [#758](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/758) ([yob](https://github.com/yob))
 * Support up to four instance types and mixed combinations of Spot/OnDemand instances [#710](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/710) ([yob](https://github.com/yob))
+  * The `InstanceType` stack parameter can now be a CSV with up to 4 types
+  * The new `OnDemandPercentage` stack parameter can be reduced from 100% (the default) to allow some Spot instances
 
 ### Changed
 
