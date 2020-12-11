@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.0.1...v5.1.0) (2020-12-11)
+
+### Added
+
+* Experimental support for ARM instance types (linux only) [#758](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/758) ([yob](https://github.com/yob))
+* Support up to four instance types and mixed combinations of Spot/OnDemand instances [#710](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/710) ([yob](https://github.com/yob))
+
+### Changed
+
+* Update Buildkite Agent to v3.26.0 [#778](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/778) ([JuanitoFatas](https://github.com/JuanitoFatas))
+* Speed up secret downloads from S3 (from ~8 seconds to under 1 second) [#772](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/772) ([pda](https://github.com/pda))
+* ECR plugin now has its own log group header to make run time visible [#773](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/773) ([pda](https://github.com/pda))
+
+### Fixed
+
+* Avoid IAM changes for some kinds of stack updates (like changing InstanceType) [#781](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/781) ([yob](https://github.com/yob))
+* Improved documentation
+  * Add BUILDKITE_PLUGIN_S3_SECRETS_BUCKET_PREFIX to README [#775](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/775) ([maatthc](https://github.com/maatthc))
+  * Remove outdated advice re AgentsPerInstance [#760](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/760) ([niceking](https://github.com/niceking))
+
 ## [v5.0.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.0.0...v5.0.1) (2020-11-09)
 
 ### Fixed
