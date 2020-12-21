@@ -272,7 +272,7 @@ Parameters:
   RootVolumeType:
     Description: Type of root volume to use
     Type: String
-    Default: "gp2"
+    Default: "gp3"
 
   SecurityGroupId:
     Type: String
