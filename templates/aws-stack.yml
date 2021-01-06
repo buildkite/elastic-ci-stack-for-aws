@@ -50,6 +50,8 @@ Metadata:
         - RootVolumeName
         - RootVolumeType
         - ManagedPolicyARN
+        - MetadataOptionsHttpPutResponseHopLimit
+        - MetadataOptionsHttpTokens
         - InstanceRoleName
 
       - Label:
@@ -293,6 +295,21 @@ Parameters:
     Type: CommaDelimitedList
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
+
+  MetadataOptionsHttpPutResponseHopLimit:
+    Type: Number
+    Description: Optional - Number of hops that the PUT request can jump.
+    Default: 1
+    MinValue: 1
+    MaxValue: 64
+
+  MetadataOptionsHttpTokens:
+    Type: String
+    Description: Optional - "optional" | "required" Whether to require tokens for using the Instance Metadata service.
+    AllowedValues:
+      - optional
+      - required
+    Default: "required"
 
   InstanceRoleName:
     Type: String
@@ -835,6 +852,9 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+          MetadataOptions:
+            HttpPutResponseHopLimit: !Ref MetadataOptionsHttpPutResponseHopLimit
+            HttpTokens: !Ref MetadataOptionsHttpTokens
           ImageId: !If
             - HasImageId
             - !Ref ImageId
