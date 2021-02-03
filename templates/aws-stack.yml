@@ -51,6 +51,7 @@ Metadata:
         - RootVolumeType
         - ManagedPolicyARN
         - InstanceRoleName
+        - IMDSv2Tokens
 
       - Label:
           default: Auto-scaling Configuration
@@ -293,6 +294,14 @@ Parameters:
     Type: CommaDelimitedList
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
+
+  IMDSv2Tokens:
+    Type: String
+    Description: Whether IMDSv2 tokens must be used for the Instance Metadata Service.
+    AllowedValues:
+      - optional
+      - required
+    Default: optional
 
   InstanceRoleName:
     Type: String
@@ -835,6 +844,8 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+          MetadataOptions:
+            HttpTokens: !Ref IMDSv2Tokens
           ImageId: !If
             - HasImageId
             - !Ref ImageId
