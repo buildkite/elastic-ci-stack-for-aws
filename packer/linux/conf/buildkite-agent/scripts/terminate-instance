@@ -6,8 +6,9 @@ echo "sleeping for 10 seconds before terminating instance to allow agent logs to
 
 sleep 10
 
-instance_id=$(curl -fsSL http://169.254.169.254/latest/meta-data/instance-id)
-region=$(curl -fsSL http://169.254.169.254/latest/meta-data/placement/availability-zone | head -c -1)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+instance_id=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -fsSL http://169.254.169.254/latest/meta-data/instance-id)
+region=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -fsSL http://169.254.169.254/latest/meta-data/placement/availability-zone | head -c -1)
 
 echo "requesting instance termination..."
 
