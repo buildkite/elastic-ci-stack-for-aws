@@ -38,7 +38,17 @@ if [ "${MACHINE}" == "x86_64" ]; then
 	docker-compose --version
 elif [[ "${MACHINE}" == "aarch64" ]]; then
   sudo yum install -y gcc-c++ libffi-devel openssl11 openssl11-devel python3-devel
-  sudo pip3 install docker-compose
+
+  # docker-compose depends on the cryptography package, v3.4 of which
+  # introduces a build dependency on rust; let's avoid that for now.
+  # https://github.com/pyca/cryptography/blob/master/CHANGELOG.rst#34---2021-02-07
+  # This should be unpinned ASAP; hopefully docker-compose will offer binary
+  # download for arm64 at some point:
+  # https://github.com/docker/compose/issues/7472
+  CONSTRAINT_FILE="/tmp/docker-compose-pip-constraint"
+  echo 'cryptography<3.4' >"$CONSTRAINT_FILE"
+  sudo pip3 install --constraint "$CONSTRAINT_FILE" docker-compose
+
 	docker-compose version
 else
   echo "No docker compose option configured for arch ${MACHINE}"
