@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.1.0...v5.2.0) (2021-02-08)
+
+### Added
+
+* [buildkite-agent v3.27.0](https://github.com/buildkite/agent/releases/tag/v3.27.0) [#794](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/794) ([pda](https://github.com/pda))
+* agent names use client-side `%spawn` not server-side `%n` for numbering [#794](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/794) ([pda](https://github.com/pda))
+
+* `IMDSv2Tokens` parameter: optional / required [#786](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/786) ([holmesjr](https://github.com/holmesjr)) → [#788](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/788) & [#789](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/789) ([pda](https://github.com/pda))
+
+
+### Changed
+
+* Default to [`gp3` volumes](https://aws.amazon.com/about-aws/whats-new/2020/12/introducing-new-amazon-ebs-general-purpose-volumes-gp3/), previously `gp2` [#784](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/784) ([yob](https://github.com/yob))
+
+### Fixed
+
+* `c6gn.*` instances recognized as ARM [#785](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/785) ([yob](https://github.com/yob))
+* `s3secrets-helper` installation more resilient [#783](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/783) ([shevaun](https://github.com/shevaun))
+
 ## [v5.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.0.1...v5.1.0) (2020-12-11)
 
 ### Added
