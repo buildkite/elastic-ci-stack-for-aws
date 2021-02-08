@@ -86,7 +86,7 @@ If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PA
 
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
+name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true
