@@ -45,7 +45,7 @@ aws s3api list-buckets \
   --output text \
   --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date" )" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-(\d+-)?managedsecrets' \
+  | grep -E 'buildkite-aws-stack-test-.*-managedsecretsbucket' \
   | xargs -n1 -t -I% aws s3 rb s3://% --force
 
 echo "--- Deleting old cloudformation stacks"
