@@ -115,7 +115,7 @@ if [[ -n "${BUILDKITE_AGENT_TOKEN_PATH}" ]] ; then
 fi
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
+name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
 token="${BUILDKITE_AGENT_TOKEN}"
 tags=$(IFS=, ; echo "${agent_metadata[*]}")
 tags-from-ec2-meta-data=true
