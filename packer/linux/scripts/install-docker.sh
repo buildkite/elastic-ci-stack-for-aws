@@ -45,7 +45,9 @@ elif [[ "${MACHINE}" == "aarch64" ]]; then
   # This should be unpinned ASAP; hopefully docker-compose will offer binary
   # download for arm64 at some point:
   # https://github.com/docker/compose/issues/7472
-  sudo pip3 install --constraint <(echo 'cryptography<3.4') docker-compose
+  CONSTRAINT_FILE="/tmp/docker-compose-pip-constraint"
+  echo 'cryptography<3.4' >"$CONSTRAINT_FILE"
+  sudo pip3 install --constraint "$CONSTRAINT_FILE" docker-compose
 
 	docker-compose version
 else
