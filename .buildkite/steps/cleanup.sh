@@ -53,7 +53,7 @@ aws cloudformation describe-stacks \
   --output text \
   --query "$(printf 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date" )" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-\d+' \
+  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-[[:digit:]]+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
 
 echo "--- Deleting old packer builders"
