@@ -25,8 +25,9 @@ delete_test_stack() {
 }
 
 if [[ -n "${BUILDKITE_BUILD_NUMBER:-}" ]] ; then
-  delete_test_stack "windows"
-  delete_test_stack "linux"
+  delete_test_stack "windows-amd64"
+  delete_test_stack "linux-amd64"
+  delete_test_stack "linux-arm64"
 fi
 
 if [[ $OSTYPE =~ ^darwin ]] ; then
