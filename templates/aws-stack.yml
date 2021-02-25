@@ -308,6 +308,11 @@ Parameters:
     Description: Optional - A name for the IAM Role attached to the Instance Profile
     Default: ""
 
+  InstanceRolePermissionsBoundaryARN:
+    Type: String
+    Description: The ARN of the policy used to set the permissions boundary for the role.
+    Default: ""
+
   InstanceOperatingSystem:
     Type: String
     Description: The operating system to run on the instances
@@ -444,6 +449,9 @@ Conditions:
 
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
+
+    SetInstanceRolePermissionsBoundaryARN:
+      !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
 
     UseSpecifiedSecretsBucket:
       !Not [ !Equals [ !Ref SecretsBucket, "" ] ]
