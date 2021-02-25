@@ -91,16 +91,18 @@ IMAGES=(
 )
 
 # Configuration
-linux_source_image_id="${1:-}"
-windows_source_image_id="${2:-}"
+linux_amd64_source_image_id="${1:-}"
+linux_arm64_source_image_id="${1:-}"
+windows_amd64_source_image_id="${2:-}"
 
 source_region="${AWS_REGION}"
 mapping_file="build/mappings.yml"
 
 # Read the source images from meta-data if no arguments are provided
 if [ $# -eq 0 ] ; then
-    linux_source_image_id=$(buildkite-agent meta-data get "linux_image_id")
-    windows_source_image_id=$(buildkite-agent meta-data get "windows_image_id")
+    linux_amd64_source_image_id=$(buildkite-agent meta-data get "linux_amd64_image_id")
+    linux_arm64_source_image_id=$(buildkite-agent meta-data get "linux_arm64_image_id")
+    windows_amd64_source_image_id=$(buildkite-agent meta-data get "windows_amd64_image_id")
 fi
 
 # If we're not on the master branch or a tag build skip the copy
@@ -110,15 +112,16 @@ if [[ $BUILDKITE_BRANCH != "master" ]] && [[ "$BUILDKITE_TAG" != "$BUILDKITE_BRA
   cat << EOF > "$mapping_file"
 Mappings:
   AWSRegion2AMI:
-    ${AWS_REGION} : { linux: $linux_source_image_id, windows: $windows_source_image_id }
+    ${AWS_REGION} : { linuxamd64: $linux_amd64_source_image_id, linuxarm64: $linux_arm64_source_image_id, windows: $windows_amd64_source_image_id }
 EOF
   exit 0
 fi
 
-s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s.yml" \
+s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${BUILDKITE_AWS_STACK_BUCKET}" \
-  "${linux_source_image_id}" \
-  "${windows_source_image_id}" \
+  "${linux_amd64_source_image_id}" \
+  "${linux_arm64_source_image_id}" \
+  "${windows_amd64_source_image_id}" \
   "${BUILDKITE_BRANCH}")
 
 # Check if there is a previously copy in the cache bucket
@@ -128,19 +131,23 @@ if aws s3 cp "${s3_mappings_cache}" "$mapping_file" ; then
 fi
 
 # Get the image names to copy to other regions
-linux_source_image_name=$(get_image_name "$linux_source_image_id" "$source_region")
-windows_source_image_name=$(get_image_name "$windows_source_image_id" "$source_region")
+linux_amd64_source_image_name=$(get_image_name "$linux_amd64_source_image_id" "$source_region")
+linux_arm64_source_image_name=$(get_image_name "$linux_arm64_source_image_id" "$source_region")
+windows_amd64_source_image_name=$(get_image_name "$windows_amd64_source_image_id" "$source_region")
 
 # Copy to all other regions
 for region in ${ALL_REGIONS[*]}; do
   if [[ $region != "$source_region" ]] ; then
-    echo "--- Copying :linux: $linux_source_image_id to $region" >&2
-    IMAGES+=("$(copy_ami_to_region "$linux_source_image_id" "$source_region" "$region" "${linux_source_image_name}-${region}")")
+    echo "--- :linux: Copying Linux AMD64 $linux_amd64_source_image_id to $region" >&2
+    IMAGES+=("$(copy_ami_to_region "$linux_amd64_source_image_id" "$source_region" "$region" "${linux_amd64_source_image_name}-${region}")")
 
-    echo "--- Copying :windows: $windows_source_image_id to $region" >&2
-    IMAGES+=("$(copy_ami_to_region "$windows_source_image_id" "$source_region" "$region" "${windows_source_image_name}-${region}")")
+    echo "--- :linux: Copying Linux ARM64 $linux_arm64_source_image_id to $region" >&2
+    IMAGES+=("$(copy_ami_to_region "$linux_arm64_source_image_id" "$source_region" "$region" "${linux_arm64_source_image_name}-${region}")")
+
+    echo "--- :windows: Copying Windows AMD64 $windows_amd64_source_image_id to $region" >&2
+    IMAGES+=("$(copy_ami_to_region "$windows_amd64_source_image_id" "$source_region" "$region" "${windows_amd64_source_image_name}-${region}")")
   else
-    IMAGES+=("$linux_source_image_id" "$windows_source_image_id")
+    IMAGES+=("$linux_amd64_source_image_id" "$linux_arm64_source_image_id" "$windows_amd64_source_image_id")
   fi
 done
 
@@ -154,30 +161,39 @@ EOF
 echo "--- Waiting for AMIs to become available"  >&2
 
 for region in ${ALL_REGIONS[*]}; do
-  linux_image_id="${IMAGES[0]}"
-  windows_image_id="${IMAGES[1]}"
+  linux_amd64_image_id="${IMAGES[0]}"
+  linux_arm64_image_id="${IMAGES[1]}"
+  windows_amd64_image_id="${IMAGES[2]}"
 
-  wait_for_ami_to_be_available "$linux_image_id" "$region" >&2
+  wait_for_ami_to_be_available "$linux_amd64_image_id" "$region" >&2
 
   # Make the linux AMI public if it's not the source image
-  if [[ $linux_image_id != "$linux_source_image_id" ]] ; then
-    echo "Making :linux: ${linux_image_id} public" >&2
-    make_ami_public "$linux_image_id" "$region"
+  if [[ $linux_amd64_image_id != "$linux_amd64_source_image_id" ]] ; then
+    echo ":linux: Making Linux AMD64 ${linux_amd64_image_id} public" >&2
+    make_ami_public "$linux_amd64_image_id" "$region"
   fi
 
-  wait_for_ami_to_be_available "$windows_image_id" "$region" >&2
+  wait_for_ami_to_be_available "$linux_arm64_image_id" "$region" >&2
+
+  # Make the linux ARM AMI public if it's not the source image
+  if [[ $linux_arm64_image_id != "$linux_arm64_source_image_id" ]] ; then
+    echo ":linux: Making Linux ARM64 ${linux_arm64_image_id} public" >&2
+    make_ami_public "$linux_arm64_image_id" "$region"
+  fi
+
+  wait_for_ami_to_be_available "$windows_amd64_image_id" "$region" >&2
 
   # Make the windows AMI public if it's not the source image
-  if [[ $windows_image_id != "$windows_source_image_id" ]] ; then
-    echo "Making :windows: ${windows_image_id} public" >&2
-    make_ami_public "$windows_image_id" "$region"
+  if [[ $windows_amd64_image_id != "$windows_amd64_source_image_id" ]] ; then
+    echo ":windows: Making Windows AMD64 ${windows_amd64_image_id} public" >&2
+    make_ami_public "$windows_amd64_image_id" "$region"
   fi
 
   # Write yaml to file
-  echo "    $region : { linux: $linux_image_id, windows: $windows_image_id }"  >> "$mapping_file"
+  echo "    $region : { linuxamd64: $linux_amd64_image_id, linuxarm64: $linux_arm64_image_id, windows: $windows_amd64_image_id }"  >> "$mapping_file"
 
   # Shift off the processed images
-  IMAGES=("${IMAGES[@]:2}")
+  IMAGES=("${IMAGES[@]:3}")
 done
 
 echo "--- Uploading mapping to s3 cache"

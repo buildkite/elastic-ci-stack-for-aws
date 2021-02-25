@@ -10,6 +10,9 @@ PACKER_WINDOWS_FILES = $(exec find packer/windows)
 AWS_REGION ?= us-east-1
 AMZN_LINUX2_AMI ?= $(shell aws ec2 describe-images --region $(AWS_REGION) --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????-x86_64-gp2' 'Name=state,Values=available' --output json | jq -r '.Images | sort_by(.CreationDate) | last(.[]).ImageId')
 
+ARM64_INSTANCE_TYPE = m6g.xlarge
+AMD64_INSTANCE_TYPE = c5.xlarge
+
 all: packer build
 
 # Remove any built cloudformation templates and packer output
@@ -29,15 +32,21 @@ env-%:
 build: packer build/mappings.yml build/aws-stack.yml
 
 # Build a mapping file for a single region and image id pair
-mappings-for-linux-image: env-AWS_REGION env-IMAGE_ID
+mappings-for-linux-amd64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: %s, windows: '' }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: %s, linuxarm64: '', windows: '' }\n" \
+		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
+
+# Build a mapping file for a single region and image id pair
+mappings-for-linux-arm64-image: env-AWS_REGION env-IMAGE_ID
+	mkdir -p build/
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: %s, windows: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build a windows mapping file for a single region and image id pair
-mappings-for-windows-image: env-AWS_REGION env-IMAGE_ID
+mappings-for-windows-amd64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linux: '', windows: %s }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: %s }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Takes the mappings files and copies them into a generated stack template
@@ -55,19 +64,19 @@ build/aws-stack.yml:
 # -----------------------------------------
 # AMI creation with Packer
 
-packer: packer-linux.output packer-windows.output
+packer: packer-linux-amd64.output packer-linux-arm64.output packer-windows-amd64.output
 
-build/mappings.yml: build/linux-ami.txt build/windows-ami.txt
+build/mappings.yml: build/linux-amd64-ami.txt build/linux-arm64-ami.txt build/windows-amd64-ami.txt
 	mkdir -p build
-	printf "Mappings:\n  AWSRegion2AMI:\n    %q : { linux: %q, windows: %q }\n" \
-		"$(AWS_REGION)" $$(cat build/linux-ami.txt) $$(cat build/windows-ami.txt) > $@
+	printf "Mappings:\n  AWSRegion2AMI:\n    %q : { linuxamd64: %q, linuxarm64: %q, windows: %q }\n" \
+		"$(AWS_REGION)" $$(cat build/linux-amd64-ami.txt) $$(cat build/linux-arm64-ami.txt) $$(cat build/windows-amd64-ami.txt) > $@
 
-build/linux-ami.txt: packer-linux.output env-AWS_REGION
+build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	mkdir -p build
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
-packer-linux.output: $(PACKER_LINUX_FILES)
+packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-amd64
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -80,14 +89,36 @@ packer-linux.output: $(PACKER_LINUX_FILES)
 		--rm \
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+			-var 'arch=x86_64' -var 'goarch=amd64' -var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
 			buildkite-ami.json | tee $@
 
-build/windows-ami.txt: packer-windows.output env-AWS_REGION
+build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
+	mkdir -p build
+	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
+
+# Build linuxarm64 packer image
+packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-arm64
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/linux \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+			-var 'arch=arm64' -var 'goarch=arm64' -var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
+			buildkite-ami.json | tee $@
+
+build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 	mkdir -p build
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build windows packer image
-packer-windows.output: $(PACKER_WINDOWS_FILES)
+packer-windows-amd64.output: $(PACKER_WINDOWS_FILES) build/s3secrets-helper-windows-amd64.exe
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -149,3 +180,12 @@ validate: build/aws-stack.yml
 generate-toc:
 	docker run -it --rm -v "$(PWD):/app" node:slim bash \
 		-c "npm install -g markdown-toc && cd /app && markdown-toc -i README.md"
+
+build/s3secrets-helper-linux-amd64:
+	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=amd64 go build -o ../../../$@
+
+build/s3secrets-helper-linux-arm64:
+	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=arm64 go build -o ../../../$@
+
+build/s3secrets-helper-windows-amd64.exe:
+	cd plugins/secrets/s3secrets-helper && GOOD=windows GOARCH=amd64 go build -o ../../../$@

@@ -51,6 +51,7 @@ Metadata:
         - RootVolumeType
         - ManagedPolicyARN
         - InstanceRoleName
+        - IMDSv2Tokens
 
       - Label:
           default: Auto-scaling Configuration
@@ -272,7 +273,7 @@ Parameters:
   RootVolumeType:
     Description: Type of root volume to use
     Type: String
-    Default: "gp2"
+    Default: "gp3"
 
   SecurityGroupId:
     Type: String
@@ -294,14 +295,17 @@ Parameters:
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
 
+  IMDSv2Tokens:
+    Type: String
+    Description: Whether IMDSv2 tokens must be used for the Instance Metadata Service.
+    AllowedValues:
+      - optional
+      - required
+    Default: optional
+
   InstanceRoleName:
     Type: String
     Description: Optional - A name for the IAM Role attached to the Instance Profile
-    Default: ""
-
-  InstanceRolePermissionsBoundaryARN:
-    Type: String
-    Description: The ARN of the policy used to set the permissions boundary for the role.
     Default: ""
 
   InstanceOperatingSystem:
@@ -441,9 +445,6 @@ Conditions:
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
 
-    SetInstanceRolePermissionsBoundaryARN:
-      !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
-
     UseSpecifiedSecretsBucket:
       !Not [ !Equals [ !Ref SecretsBucket, "" ] ]
 
@@ -512,6 +513,18 @@ Conditions:
     UseLinuxAgents:
       !Equals [ !Ref InstanceOperatingSystem, "linux" ]
 
+    UsingArmInstances:
+      !Or
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "a1" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
+
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
@@ -542,7 +555,7 @@ Mappings:
     sa-east-1 : { Bucket: "buildkite-lambdas-sa-east-1" }
 
   # Generated from Makefile via build/mappings.yml
-  AWSRegion2AMI: { linux: !Ref ImageId, windows: !Ref ImageId }
+  AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
 
 Resources:
   Vpc:
@@ -832,7 +845,30 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-          ImageId: !If [ HasImageId, !Ref ImageId, !If [ HasImageIdParameter, !GetAtt ImageIdParameterStack.Outputs.ImageId, !FindInMap [ AWSRegion2AMI, !Ref 'AWS::Region', !Ref InstanceOperatingSystem ] ] ]
+          MetadataOptions:
+            HttpTokens: !Ref IMDSv2Tokens
+          ImageId: !If
+            - HasImageId
+            - !Ref ImageId
+            - !If
+              - HasImageIdParameter
+              - !GetAtt ImageIdParameterStack.Outputs.ImageId
+              - !If
+                - UseWindowsAgents
+                - !FindInMap
+                  - AWSRegion2AMI
+                  - !Ref 'AWS::Region'
+                  - 'windows'
+                - !If
+                  - UsingArmInstances
+                  - !FindInMap
+                    - AWSRegion2AMI
+                    - !Ref 'AWS::Region'
+                    - 'linuxarm64'
+                  - !FindInMap
+                    - AWSRegion2AMI
+                    - !Ref 'AWS::Region'
+                    - 'linuxamd64'
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
@@ -947,17 +983,17 @@ Resources:
             Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
           Overrides:
           - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-          - InstanceType: !If
+          - !If
             - UseInstanceType2
-            - !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
-          - InstanceType: !If
+          - !If
             - UseInstanceType3
-            - !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
-          - InstanceType: !If
+          - !If
             - UseInstanceType4
-            - !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
@@ -1004,7 +1040,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'autoscaling:SuspendProcesses'
-                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AgentAutoScaleGroup}
+                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
 
   AzRebalancingSuspenderFunction:
     Type: AWS::Lambda::Function

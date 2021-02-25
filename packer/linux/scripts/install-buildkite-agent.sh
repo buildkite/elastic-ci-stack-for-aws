@@ -1,7 +1,15 @@
 #!/bin/bash
 set -eu -o pipefail
 
-AGENT_VERSION=3.25.0
+AGENT_VERSION=3.27.0
+
+MACHINE="$(uname -m)"
+
+case "${MACHINE}" in
+	x86_64)    ARCH=amd64;;
+	aarch64)   ARCH=arm64;;
+	*)         ARCH=unknown;;
+esac
 
 echo "Installing dependencies..."
 sudo yum update -y -q
@@ -13,13 +21,13 @@ sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
 echo "Downloading buildkite-agent beta..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
-  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-${ARCH}"
 sudo chmod +x /usr/bin/buildkite-agent-beta
 buildkite-agent-beta --version
 
@@ -66,3 +74,4 @@ echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
 sudo cp -a /tmp/plugins/* /usr/local/buildkite-aws-stack/plugins/
 sudo chown -R buildkite-agent: /usr/local/buildkite-aws-stack
+sudo install --mode=0755 /tmp/s3secrets-helper /usr/local/bin/

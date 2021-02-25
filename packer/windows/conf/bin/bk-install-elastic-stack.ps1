@@ -9,7 +9,8 @@ function on_error {
   $errorLine=$_.InvocationInfo.ScriptLineNumber
   $errorMessage=$_.Exception
 
-  $instance_id=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+  $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 
   aws autoscaling set-instance-health `
     --instance-id "$instance_id" `
@@ -25,7 +26,8 @@ function on_error {
 
 trap {on_error}
 
-$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 $DOCKER_VERSION=(docker --version).split(" ")[2].Replace(",","")
 
 $PLUGINS_ENABLED=@()
@@ -84,7 +86,7 @@ If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PA
 
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
+name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true

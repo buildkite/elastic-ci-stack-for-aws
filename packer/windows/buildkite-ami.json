@@ -37,6 +37,11 @@
       "destination": "C:/packer-temp"
     },
     {
+      "type": "file",
+      "source": "../../build/s3secrets-helper-windows-amd64.exe",
+      "destination": "C:/packer-temp/s3secrets-helper.exe"
+    },
+    {
       "type": "powershell",
       "script": "scripts/install-utils.ps1"
     },

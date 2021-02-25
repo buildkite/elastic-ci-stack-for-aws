@@ -12,8 +12,9 @@ on_error() {
 	local errorLine="$1"
 
 	if [[ $exitCode != 0 ]] ; then
+	  TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
 		aws autoscaling set-instance-health \
-			--instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+			--instance-id "$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)" \
 			--health-status Unhealthy || true
 	fi
 
@@ -63,9 +64,14 @@ export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
+	if [[ "$(uname -m)" == "aarch64" ]] ; then
+	  AGENT_ARCH="arm64"
+	else
+	  AGENT_ARCH="amd64"
+	fi
 	echo "Downloading buildkite-agent edge..."
 	curl -Lsf -o /usr/bin/buildkite-agent-edge \
-		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
+		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${AGENT_ARCH}"
 	chmod +x /usr/bin/buildkite-agent-edge
 	buildkite-agent-edge --version
 fi
@@ -109,7 +115,7 @@ if [[ -n "${BUILDKITE_AGENT_TOKEN_PATH}" ]] ; then
 fi
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
+name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
 token="${BUILDKITE_AGENT_TOKEN}"
 tags=$(IFS=, ; echo "${agent_metadata[*]}")
 tags-from-ec2-meta-data=true

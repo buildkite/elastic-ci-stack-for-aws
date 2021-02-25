@@ -1,7 +1,7 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$AGENT_VERSION = "3.25.0"
+$AGENT_VERSION = "3.27.0"
 
 Write-Output "Creating bin dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\bin
@@ -45,3 +45,4 @@ Copy-Item -Path C:\packer-temp\conf\buildkite-agent\scripts\stop-agent-gracefull
 Write-Output "Copying built-in plugins..."
 New-Item -ItemType directory -Path "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins"
 Copy-Item -Recurse -Path C:\packer-temp\plugins\* -Destination "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins\"
+Copy-Item -Path C:\packer-temp\s3secrets-helper.exe -Destination C:\buildkite-agent\bin
