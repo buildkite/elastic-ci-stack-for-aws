@@ -643,7 +643,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !If [ SetInstanceRoleName, !Ref InstanceRoleName, !Sub "${AWS::StackName}-Role" ]
-      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN ]
+      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
       ManagedPolicyArns: !If
           - HasManagedPolicies
           # Support multiple policies to attach by merging the values together and splitting on ','
@@ -984,7 +984,7 @@ Resources:
   AsgProcessSuspenderRole:
     Type: AWS::IAM::Role
     Properties:
-      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN ]
+      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -1061,7 +1061,7 @@ Resources:
     Type: AWS::IAM::Role
     Condition: HasVariableSize
     Properties:
-      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN ]
+      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
       Path: "/"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
