@@ -308,6 +308,11 @@ Parameters:
     Description: Optional - A name for the IAM Role attached to the Instance Profile
     Default: ""
 
+  InstanceRolePermissionsBoundaryARN:
+    Type: String
+    Description: The ARN of the policy used to set the permissions boundary for the role.
+    Default: ""
+
   InstanceOperatingSystem:
     Type: String
     Description: The operating system to run on the instances
@@ -444,6 +449,9 @@ Conditions:
 
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
+
+    SetInstanceRolePermissionsBoundaryARN:
+      !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
 
     UseSpecifiedSecretsBucket:
       !Not [ !Equals [ !Ref SecretsBucket, "" ] ]
@@ -656,6 +664,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !If [ SetInstanceRoleName, !Ref InstanceRoleName, !Sub "${AWS::StackName}-Role" ]
+      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
       ManagedPolicyArns: !If
           - HasManagedPolicies
           # Support multiple policies to attach by merging the values together and splitting on ','
@@ -1019,6 +1028,7 @@ Resources:
   AsgProcessSuspenderRole:
     Type: AWS::IAM::Role
     Properties:
+      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -1095,6 +1105,7 @@ Resources:
     Type: AWS::IAM::Role
     Condition: HasVariableSize
     Properties:
+      PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
       Path: "/"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
