@@ -895,6 +895,7 @@ Resources:
                   <powershell>
                   $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
                   $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
+                  $Env:DOCKER_CLI_EXPERIMENTAL="${EnableDockerExperimental}"
                   powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 
                   $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
@@ -934,6 +935,7 @@ Resources:
                   Content-Type: text/cloud-boothook; charset="us-ascii"
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
+                  DOCKER_CLI_EXPERIMENTAL=${EnableDockerExperimental} \
                     /usr/local/bin/bk-configure-docker.sh
                   --==BOUNDARY==
                   Content-Type: text/x-shellscript; charset="us-ascii"
