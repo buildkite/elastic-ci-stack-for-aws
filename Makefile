@@ -8,7 +8,6 @@ PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
 AWS_REGION ?= us-east-1
-AMZN_LINUX2_AMI ?= $(shell aws ec2 describe-images --region $(AWS_REGION) --owners amazon --filters 'Name=name,Values=amzn2-ami-hvm-2.0.????????-x86_64-gp2' 'Name=state,Values=available' --output json | jq -r '.Images | sort_by(.CreationDate) | last(.[]).ImageId')
 
 ARM64_INSTANCE_TYPE = m6g.xlarge
 AMD64_INSTANCE_TYPE = c5.xlarge
@@ -88,7 +87,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-am
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
-		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
 			-var 'arch=x86_64' -var 'goarch=amd64' -var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
 			buildkite-ami.json | tee $@
 
@@ -109,7 +108,7 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-ar
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
-		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'ami=$(AMZN_LINUX2_AMI)' -var 'region=$(AWS_REGION)' \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
 			-var 'arch=arm64' -var 'goarch=arm64' -var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
 			buildkite-ami.json | tee $@
 
