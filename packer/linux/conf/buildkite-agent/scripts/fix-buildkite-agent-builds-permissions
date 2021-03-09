@@ -27,13 +27,16 @@ set -eu -o pipefail
 # In here we need to check that they both don't contain slashes or contain a
 # traversal component.
 
-AGENT_DIR="$1"
+BUILDS_PATH="$1"
+# => "/var/lib/buildkite-agent/builds"
+
+AGENT_DIR="$2"
 # => "my-agent-1"
 
-ORG_DIR="$2"
+ORG_DIR="$3"
 # => "my-org"
 
-PIPELINE_DIR="$3"
+PIPELINE_DIR="$4"
 # => "my-pipeline"
 
 # Make sure it doesn't contain any slashes by substituting slashes with nothing
@@ -72,9 +75,6 @@ exit_if_blank "${ORG_DIR}"
 exit_if_blank "${PIPELINE_DIR}"
 
 # If we make it here, we're safe to go!
-
-# We know the builds path:
-BUILDS_PATH="/var/lib/buildkite-agent/builds"
 
 # And now we can reconstruct the full agent builds path:
 PIPELINE_PATH="${BUILDS_PATH}/${AGENT_DIR}/${ORG_DIR}/${PIPELINE_DIR}"
