@@ -191,16 +191,11 @@ You’ll find the stack’s metrics under "Custom Namespaces > Buildkite" within
 
 ## Reading Instance and Agent Logs
 
-Each instance streams both system messages and Buildkite Agent logs to CloudWatch Logs under two log groups:
-
-* `/var/log/messages` - System logs
-* `/var/log/buildkite-agent.log` - Buildkite Agent logs
-* `/var/log/docker` - Docker daemon logs
-* `/var/log/elastic-stack.log` - Boot process logs
+Each instance streams file system logs such as `/var/log/messages` and `/var/log/docker` into namespaced AWS Log Groups.  A full list of files and log groups can be found in the relevant [Linux](https://github.com/buildkite/elastic-ci-stack-for-aws/blob/master/packer/linux/conf/awslogs/awslogs.conf) `awslogs.conf` file.
 
 Within each stream the logs are grouped by instance id.
 
-To debug an agent first find the instance id from the agent in Buildkite, head to your [CloudWatch Logs Dashboard](https://console.aws.amazon.com/cloudwatch/home?#logs:), choose either the system or Buildkite Agent log group, and then search for the instance id in the list of log streams.
+To debug an agent, first find the instance id from the agent in Buildkite, head to your [CloudWatch Logs Dashboard](https://console.aws.amazon.com/cloudwatch/home?#logs:), choose the desired log group, and then search for the instance id in the list of log streams.
 
 ## Customizing Instances with a Bootstrap Script
 
