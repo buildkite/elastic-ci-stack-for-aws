@@ -31,20 +31,6 @@ trap 'on_error $LINENO' ERR
 INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
-# Cloudwatch logs needs a region specifically configured
-cat << EOF > /etc/awslogs/awscli.conf
-[plugins]
-cwlogs = cwlogs
-[default]
-region = $AWS_REGION
-EOF
-
-systemctl enable awslogsd.service
-
-# Start logging daemons as soon as possible to ensure failures in this script get sent
-systemctl restart rsyslog
-systemctl restart awslogsd
-
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
