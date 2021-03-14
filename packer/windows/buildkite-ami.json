@@ -47,7 +47,7 @@
     },
     {
       "type": "powershell",
-      "script": "scripts/install-awslogs.ps1"
+      "script": "scripts/install-cloudwatch-agent.ps1"
     },
     {
       "type": "powershell",

@@ -36,7 +36,7 @@ port:
     - '::'
 
 service:
-  awslogsd:
+  amazon-cloudwatch-agent:
     enabled: true
     running: true
 

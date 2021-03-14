@@ -48,7 +48,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-awslogs.sh"
+      "script": "scripts/install-cloudwatch-agent.sh"
     },
     {
       "type": "shell",
