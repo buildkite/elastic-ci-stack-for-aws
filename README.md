@@ -191,7 +191,7 @@ You’ll find the stack’s metrics under "Custom Namespaces > Buildkite" within
 
 ## Reading Instance and Agent Logs
 
-Each instance streams file system logs such as `/var/log/messages` and `/var/log/docker` into namespaced AWS Log Groups.  A full list of files and log groups can be found in the relevant [Linux](https://github.com/buildkite/elastic-ci-stack-for-aws/blob/master/packer/linux/conf/awslogs/awslogs.conf) `awslogs.conf` file.
+Each instance streams file system logs such as `/var/log/messages` and `/var/log/docker` into namespaced AWS Log Groups.  A full list of files and log groups can be found in the relevant [Linux](https://github.com/buildkite/elastic-ci-stack-for-aws/blob/master/packer/linux/conf/cloudwatch-agent/config.json) CloudWatch agent `config.json` file.
 
 Within each stream the logs are grouped by instance id.
 
