@@ -110,9 +110,10 @@ Parameters:
     Default: ""
 
   BuildkiteAgentTokenParameterStorePath:
-    Description: AWS SSM path to the Buildkite agent registration token (this takes precedence over BuildkiteAgentToken)
+    Description: AWS SSM path to the Buildkite agent registration token (this takes precedence over BuildkiteAgentToken). Expects a leading slash ('/').
     Type: String
     Default: ""
+    AllowedPattern: "^$|^/[a-zA-Z0-9_.-]+$"
 
   BuildkiteAgentTokenParameterStoreKMSKey:
     Description: AWS KMS key ID used to encrypt the SSM parameter (if encrypted)
