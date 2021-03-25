@@ -63,6 +63,10 @@
     },
     {
       "type": "powershell",
+      "script": "scripts/install-session-manager-plugin.ps1"
+    },
+    {
+      "type": "powershell",
       "inline": ["Remove-Item -Path C:/packer-temp -Recurse"]
     },
     {
