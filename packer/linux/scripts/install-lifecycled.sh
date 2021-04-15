@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-LIFECYCLED_VERSION=v3.0.2
+LIFECYCLED_VERSION=v3.2.0
 
 MACHINE=$(uname -m)
 
