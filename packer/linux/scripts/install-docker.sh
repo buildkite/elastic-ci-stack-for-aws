@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_VERSION=19.03.13
+DOCKER_VERSION=20.10.6
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.27.4
 MACHINE=$(uname -m)
