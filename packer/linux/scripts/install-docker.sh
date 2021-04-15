@@ -3,7 +3,7 @@ set -eu -o pipefail
 
 DOCKER_VERSION=20.10.6
 DOCKER_RELEASE="stable"
-DOCKER_COMPOSE_VERSION=1.27.4
+DOCKER_COMPOSE_VERSION=1.28.6
 MACHINE=$(uname -m)
 
 # This performs a manual install of Docker.
@@ -47,7 +47,7 @@ elif [[ "${MACHINE}" == "aarch64" ]]; then
   # https://github.com/docker/compose/issues/7472
   CONSTRAINT_FILE="/tmp/docker-compose-pip-constraint"
   echo 'cryptography<3.4' >"$CONSTRAINT_FILE"
-  sudo pip3 install --constraint "$CONSTRAINT_FILE" docker-compose
+  sudo pip3 install --constraint "$CONSTRAINT_FILE" "docker-compose==${DOCKER_COMPOSE_VERSION}"
 
 	docker-compose version
 else
