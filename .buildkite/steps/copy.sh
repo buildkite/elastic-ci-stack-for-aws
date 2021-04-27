@@ -136,6 +136,7 @@ linux_arm64_source_image_name=$(get_image_name "$linux_arm64_source_image_id" "$
 windows_amd64_source_image_name=$(get_image_name "$windows_amd64_source_image_id" "$source_region")
 
 # Copy to all other regions
+# shellcheck disable=SC2048
 for region in ${ALL_REGIONS[*]}; do
   if [[ $region != "$source_region" ]] ; then
     echo "--- :linux: Copying Linux AMD64 $linux_amd64_source_image_id to $region" >&2
@@ -159,7 +160,7 @@ Mappings:
 EOF
 
 echo "--- Waiting for AMIs to become available"  >&2
-
+# shellcheck disable=SC2048
 for region in ${ALL_REGIONS[*]}; do
   linux_amd64_image_id="${IMAGES[0]}"
   linux_arm64_image_id="${IMAGES[1]}"
