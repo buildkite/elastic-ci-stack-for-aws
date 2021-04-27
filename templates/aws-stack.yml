@@ -737,12 +737,6 @@ Resources:
               - logs:PutLogEvents
               - logs:DescribeLogStreams
             Resource: "*"
-          - Effect: Allow
-            Action:
-              - sqs:*
-              - sns:Unsubscribe
-              - sns:Subscribe
-            Resource: "*"
       Roles:
         - !Ref IAMRole
 
