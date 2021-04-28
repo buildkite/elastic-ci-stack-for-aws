@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.2.0...v5.3.0) (2021-04-28)
+
+### Added
+* Support IAM Permissions Boundaries [#767](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/767) [#805](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/805) ([nitrocode](https://github.com/nitrocode))
+* Session manager plugin [#818](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/818) ([nitrocode](https://github.com/nitrocode))
+
+### Changed
+* Replace awslogs with the cloudwatch-agent [#811](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/811) ([yob](https://github.com/yob))
+* Avoid scaling down too aggressively when there are pending jobs in certain conditions [#823](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/823) ([yob](https://github.com/yob))
+* Bump docker from 19.03.x to 20.10.x [#826](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/826) ([yob](https://github.com/yob))
+* Bump docker-compose on all operating systems to 1.28.x [#825](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/825) ([yob](https://github.com/yob))
+* Bump agent from 3.27.0 to 3.29.0 [#827](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/827) ([yob](https://github.com/yob))
+* Bump lifecycled from 3.0.2 to 3.2.0 [#824](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/824) ([yob](https://github.com/yob))
+* Bump git on windows from 2.22.0 to 2.31.0 [#819](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/819) ([yob](https://github.com/yob))
+* Bump ECR plugin to v2.3.0 [#816](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/816) ([chloeruka](https://github.com/chloeruka))
+* Documentation improvements [#815](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/815) [#810](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/810) ([acaire](https://github.com/acaire))
+
+### Removed
+* Remove unnecessary IAM roles for SNS and SQS [#829](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/829) ([chloeruka](https://github.com/chloeruka))
+
 ## [v5.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.1.0...v5.2.0) (2021-02-08)
 
 ### Added
