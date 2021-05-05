@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.3.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.3.0...v5.3.1) (2021-05-05)
+
+### Fixed
+
+* Allow dashes and multiple forward slashes (/) in BuildkiteAgentTokenParameterStorePath [#835](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/835) [#837](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/837)  ([nitrocode](https://github.com/nitrocode))
+
 ## [v5.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.2.0...v5.3.0) (2021-04-28)
 
 ### Added
