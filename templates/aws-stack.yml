@@ -544,7 +544,6 @@ Conditions:
     UseMaxInstanceLifetime:
       !Not [ !Equals [ !Ref MaxInstanceLifetime, 0 ] ]
 
-
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
