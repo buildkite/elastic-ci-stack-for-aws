@@ -447,7 +447,9 @@ Conditions:
       !Equals [ !Ref SecurityGroupId, "" ]
 
     CreateSecretsBucket:
-      !Equals [ !Ref SecretsBucket, "" ]
+      !And
+         - !Equals [ !Ref EnableSecretsPlugin, "true"]
+         - !Equals [ !Ref SecretsBucket, "" ]
 
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
