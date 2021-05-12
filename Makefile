@@ -187,4 +187,4 @@ build/s3secrets-helper-linux-arm64:
 	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=arm64 go build -o ../../../$@
 
 build/s3secrets-helper-windows-amd64.exe:
-	cd plugins/secrets/s3secrets-helper && GOOD=windows GOARCH=amd64 go build -o ../../../$@
+	cd plugins/secrets/s3secrets-helper && GOOS=windows GOARCH=amd64 go build -o ../../../$@
