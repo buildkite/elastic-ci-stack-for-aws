@@ -26,8 +26,8 @@ sudo chown -R ec2-user:docker /etc/docker
 
 # Install systemd services
 echo "Installing systemd services"
-sudo curl -Lfs -o /etc/systemd/system/docker.service https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.service
-sudo curl -Lfs -o /etc/systemd/system/docker.socket https://raw.githubusercontent.com/moby/moby/master/contrib/init/systemd/docker.socket
+sudo curl -Lfs -o /etc/systemd/system/docker.service "https://raw.githubusercontent.com/moby/moby/v${DOCKER_VERSION}/contrib/init/systemd/docker.service"
+sudo curl -Lfs -o /etc/systemd/system/docker.socket "https://raw.githubusercontent.com/moby/moby/v${DOCKER_VERSION}/contrib/init/systemd/docker.socket"
 sudo systemctl daemon-reload
 sudo systemctl enable docker.service
 
