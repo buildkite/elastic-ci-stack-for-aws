@@ -782,7 +782,6 @@ Resources:
           - Effect: Allow
             Action:
               - s3:Get*
-              - s3:Get
               - s3:List*
             Resource:
               - !Sub "arn:aws:s3:::${ManagedSecretsBucket}/*"
@@ -800,7 +799,6 @@ Resources:
           - Effect: Allow
             Action:
               - s3:Get*
-              - s3:Get
               - s3:List*
             Resource:
               - !Sub "arn:aws:s3:::${SecretsBucket}/*"
