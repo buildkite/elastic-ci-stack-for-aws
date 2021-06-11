@@ -12,8 +12,9 @@ on_error() {
 	local errorLine="$1"
 
 	if [[ $exitCode != 0 ]] ; then
+	  TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
 		aws autoscaling set-instance-health \
-			--instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+			--instance-id "$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)" \
 			--health-status Unhealthy || true
 	fi
 
@@ -29,20 +30,6 @@ trap 'on_error $LINENO' ERR
 
 INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
-
-# Cloudwatch logs needs a region specifically configured
-cat << EOF > /etc/awslogs/awscli.conf
-[plugins]
-cwlogs = cwlogs
-[default]
-region = $AWS_REGION
-EOF
-
-systemctl enable awslogsd.service
-
-# Start logging daemons as soon as possible to ensure failures in this script get sent
-systemctl restart rsyslog
-systemctl restart awslogsd
 
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
@@ -63,9 +50,14 @@ export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
+	if [[ "$(uname -m)" == "aarch64" ]] ; then
+	  AGENT_ARCH="arm64"
+	else
+	  AGENT_ARCH="amd64"
+	fi
 	echo "Downloading buildkite-agent edge..."
 	curl -Lsf -o /usr/bin/buildkite-agent-edge \
-		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
+		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${AGENT_ARCH}"
 	chmod +x /usr/bin/buildkite-agent-edge
 	buildkite-agent-edge --version
 fi
@@ -91,27 +83,30 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]] ; then
 	agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
 fi
 
-# Enable git mirrors
+# Enable git-mirrors
 if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   if [[ -z "$BUILDKITE_AGENT_EXPERIMENTS" ]] ; then
     BUILDKITE_AGENT_EXPERIMENTS="git-mirrors"
   else
     BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
   fi
+  BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+else
+  BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 fi
 
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
+name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
 token="${BUILDKITE_AGENT_TOKEN}"
 tags=$(IFS=, ; echo "${agent_metadata[*]}")
-tags-from-ec2=true
+tags-from-ec2-meta-data=true
 timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
-git-mirrors-path=/var/lib/buildkite-agent/git-mirrors
+git-mirrors-path="${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${BUILDKITE_AGENTS_PER_INSTANCE}

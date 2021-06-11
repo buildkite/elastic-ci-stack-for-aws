@@ -25,8 +25,9 @@ delete_test_stack() {
 }
 
 if [[ -n "${BUILDKITE_BUILD_NUMBER:-}" ]] ; then
-  delete_test_stack "windows"
-  delete_test_stack "linux"
+  delete_test_stack "windows-amd64"
+  delete_test_stack "linux-amd64"
+  delete_test_stack "linux-arm64"
 fi
 
 if [[ $OSTYPE =~ ^darwin ]] ; then
@@ -44,7 +45,7 @@ aws s3api list-buckets \
   --output text \
   --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date" )" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-(\d+-)?managedsecrets' \
+  | grep -E 'buildkite-aws-stack-test-.*-managedsecretsbucket' \
   | xargs -n1 -t -I% aws s3 rb s3://% --force
 
 echo "--- Deleting old cloudformation stacks"
@@ -52,7 +53,7 @@ aws cloudformation describe-stacks \
   --output text \
   --query "$(printf 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date" )" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-\d+' \
+  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-[[:digit:]]+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
 
 echo "--- Deleting old packer builders"

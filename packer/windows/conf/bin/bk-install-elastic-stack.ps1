@@ -9,7 +9,8 @@ function on_error {
   $errorLine=$_.InvocationInfo.ScriptLineNumber
   $errorMessage=$_.Exception
 
-  $instance_id=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+  $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 
   aws autoscaling set-instance-health `
     --instance-id "$instance_id" `
@@ -25,7 +26,8 @@ function on_error {
 
 trap {on_error}
 
-$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 $DOCKER_VERSION=(docker --version).split(" ")[2].Replace(",","")
 
 $PLUGINS_ENABLED=@()
@@ -66,7 +68,7 @@ If (Test-Path Env:BUILDKITE_AGENT_TAGS) {
   $agent_metadata += $Env:BUILDKITE_AGENT_TAGS.split(",")
 }
 
-# Enable git mirrors
+# Enable git-mirrors
 If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_EXPERIMENTS)) {
     $Env:BUILDKITE_AGENT_EXPERIMENTS = "git-mirrors"
@@ -74,19 +76,25 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   Else {
     $Env:BUILDKITE_AGENT_EXPERIMENTS += ",git-mirrors"
   }
+  $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
+}
+
+# Get token from ssm param (if we have a path)
+If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PATH -ne "") {
+  $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
 }
 
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
+name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
 tags=$agent_metadata
-tags-from-ec2=true
+tags-from-ec2-meta-data=true
 timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
 plugins-path="C:\buildkite-agent\plugins"
-git-mirrors-path="C:\buildkite-agent\git-mirrors"
+git-mirrors-path="${Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${Env:BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
@@ -167,7 +175,9 @@ nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
-nssm set buildkite-agent AppExit Default Exit
+nssm set buildkite-agent AppExit Default Restart
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+nssm set buildkite-agent AppRestartDelay 10000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }

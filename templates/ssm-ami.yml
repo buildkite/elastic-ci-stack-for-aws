@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  AmiParameterPath:
+    Description: SSM Parameter Path for an aws:ec2:image Parameter.
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+
+Resources:
+  # This is a placeholder because a template must specify at least one resource
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/buildkite/${AWS::StackName}/placeholder"
+      RetentionInDays: 1
+
+Outputs:
+  ImageId:
+    Value: !Ref AmiParameterPath

@@ -4,13 +4,46 @@ set -eu -o pipefail
 # Import BUILDKITE_AGENTS_PER_INSTANCE
 eval "$(cat /var/lib/buildkite-agent/cfn-env)"
 
-echo "Stopping buildkite-agent gracefully"
-systemctl stop "buildkite-agent"
+LIFECYCLE_TRANSITION=${1:-}
 
-# Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycled handler script
-while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
-  echo "Waiting for all buildkite-agent processes to have stopped..."
-  sleep 5
-done
+echo "Stopping buildkite-agent gracefully due to the lifecycle transition: ${LIFECYCLE_TRANSITION}"
 
-echo "All buildkite-agent processes have stopped"
+if [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
+  # Send SIGTERM to the main buildkite-agent process in a non-blocking manner
+  # to start a graceful shutdown
+  systemctl kill --kill-who=main --signal=SIGTERM buildkite-agent
+
+
+  # Spot termination time is provided as the third argument in RFC3339 format,
+  # i.e. 2020-10-09T01:33:10Z
+  SPOT_TERMINATION_TIME=$3
+  SPOT_TERMINATION_TIME_UNIX=$(date '+%s' -d "${SPOT_TERMINATION_TIME}")
+  # Subtracts 20 seconds from the published spot termination time to give the
+  # agent a little time to forcefully quit running jobs. If the agent doesn't
+  # gracefully quit before this time we will send SIGQUIT.
+  STOP_BY_TIME_UNIX=$((SPOT_TERMINATION_TIME_UNIX - 20))
+
+  echo "Waiting for agents to quit gracefully until 20 seconds before the spot termination time: ${SPOT_TERMINATION_TIME}"
+  while [[ $(date '+%s') -lt $STOP_BY_TIME_UNIX ]]; do
+    if ! pgrep -u buildkite-agent buildkite-agent > /dev/null; then
+      echo "All buildkite agents have stopped gracefully"
+      exit 0
+    fi
+    sleep 1
+  done
+
+  # Agents are still running and we're close to time, so send SIGQUIT. We can let
+  # this script exit as spot will hard terminate in a matter of seconds.
+  echo "Agents are still running. Sending SIGQUIT ahead of forced spot termination at ${SPOT_TERMINATION_TIME}"
+  systemctl kill --kill-who=main --signal=SIGQUIT buildkite-agent
+else
+  systemctl stop "buildkite-agent"
+
+  # Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycled handler script
+  while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
+    echo "Waiting for all buildkite-agent processes to have stopped..."
+    sleep 5
+  done
+
+  echo "All buildkite-agent processes have stopped"
+fi

@@ -2,6 +2,11 @@
 
 set -eu -o pipefail
 
+# clean up our temporary docker config
+if [[ -n "${BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY:-}" && -d "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY" ]]; then
+  rm -rf "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
+fi
+
 if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
 

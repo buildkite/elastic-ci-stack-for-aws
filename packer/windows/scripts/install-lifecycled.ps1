@@ -1,7 +1,7 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$lifecycled_version = "v3.0.2"
+$lifecycled_version = "v3.2.0"
 
 Write-Output "Installing lifecycled ${lifecycled_version}..."
 

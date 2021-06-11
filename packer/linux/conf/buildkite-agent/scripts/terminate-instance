@@ -2,7 +2,14 @@
 
 set -euo pipefail
 
-instance_id=$(curl -fsSL http://169.254.169.254/latest/meta-data/instance-id)
-region=$(curl -fsSL http://169.254.169.254/latest/meta-data/placement/availability-zone | head -c -1)
+echo "sleeping for 10 seconds before terminating instance to allow agent logs to drain to cloudwatch..."
+
+sleep 10
+
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+instance_id=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -fsSL http://169.254.169.254/latest/meta-data/instance-id)
+region=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -fsSL http://169.254.169.254/latest/meta-data/placement/availability-zone | head -c -1)
+
+echo "requesting instance termination..."
 
 aws autoscaling terminate-instance-in-auto-scaling-group --region "$region" --instance-id "$instance_id" "--should-decrement-desired-capacity"

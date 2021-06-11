@@ -1,10 +1,14 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$docker_version="19.03.5"
+$docker_version="20.10.0"
+$docker_compose_version="1.28.5"
 
 Write-Output "Upgrading DockerMsftProvider module"
 Update-Module -Name DockerMsftProvider -Force
+
+Write-Output "Printing available docker versions"
+Find-Package -providerName DockerMsftProvider -AllVersions
 
 Write-Output "Installing docker enterprise edition"
 Stop-Service docker
@@ -12,7 +16,7 @@ Install-Package -Name docker -ProviderName DockerMsftProvider -Force -RequiredVe
 Start-Service docker
 
 Write-Output "Installing docker-compose"
-choco install -y docker-compose
+choco install -y docker-compose --version $docker_compose_version
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing jq"
