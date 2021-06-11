@@ -1087,6 +1087,6 @@ Resources:
         AgentsPerInstance: !Ref AgentsPerInstance
         MinSize: !Ref MinSize
         MaxSize: !Ref MaxSize
-        AutoScaleGroup: !Ref AgentAutoScaleGroup
+        AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
