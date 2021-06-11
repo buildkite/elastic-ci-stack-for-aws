@@ -322,7 +322,11 @@ We aim to support new regions within one month of general availability.
 
 ### Included Software
 
-We build and deploy an AMI built on Amazon Linux 2 LTS and Windows Server 2019.
+We build and deploy the following AMIs to all our supported regions:
+
+- Amazon Linux 2 LTS (x86_64)
+- Amazon Linux 2 LTS (arm64)
+- Windows Server 2019 (x86_64)
 
 [What expectations do customers have on tracking releases of Docker, Docker Compose, aws-cli, and the Buildkite Agent? Should we track minor releases within X days and major releases (that support our underlying OS) in major bumps to the elastic stack itself?]
 
