@@ -43,6 +43,7 @@ Features:
 - [Security](#security)
 - [Development](#development)
 - [Questions and Support](#questions-and-support)
+- [Support Policy](#support-policy)
 - [Licence](#licence)
 
 <!-- tocstop -->
@@ -308,6 +309,22 @@ Provide us with logs from Cloudwatch Logs:
 ```
 
 Alternately, drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
+
+## Support Policy
+
+We provide support for bug fixes on the current major release only.
+
+### AWS Regions
+
+We support all AWS Regions, except China and US GovCloud.
+
+We aim to support new regions within one month of general availability.
+
+### Included Software
+
+We build and deploy an AMI built on Amazon Linux 2 LTS and Windows Server 2019.
+
+[What expectations do customers have on tracking releases of Docker, Docker Compose, aws-cli, and the Buildkite Agent? Should we track minor releases within X days and major releases (that support our underlying OS) in major bumps to the elastic stack itself?]
 
 ## Licence
 
