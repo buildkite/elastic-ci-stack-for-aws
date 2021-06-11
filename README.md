@@ -40,6 +40,7 @@ Features:
 - [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
 - [Customizing Instances with a Bootstrap Script](#customizing-instances-with-a-bootstrap-script)
 - [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
+- [Using AWS Secrets Manager for your Buildkite Agent Token](#using-aws-secrets-manager-for-your-buildkite-agent-token)
 - [Security](#security)
 - [Development](#development)
 - [Questions and Support](#questions-and-support)
@@ -253,6 +254,12 @@ steps:
 ```
 
 See [Issue 81](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/81) for ideas on other solutions (contributions welcome!).
+
+## Using AWS Secrets Manager for your Buildkite Agent Token
+
+The Elastic CI Stack template integrates support for AWS SSM Parameter Store
+which supports transparently fetching secrets from AWS Secrets Manager. See
+the [secrets manager](./docs/secrets-manager.md) documentation for more details.
 
 ## Security
 
