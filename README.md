@@ -312,7 +312,7 @@ Alternately, drop by `#aws-stack` and `#aws` channels in [Buildkite Community Sl
 
 ## Support Policy
 
-We provide support for bug fixes on the current major release only.
+We provide support for security and bug fixes on the current major release only.
 
 ### AWS Regions
 
