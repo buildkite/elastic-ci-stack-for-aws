@@ -77,7 +77,7 @@ aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
   --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
 ```
 
-Provide us with logs from Cloudwatch Logs:
+Provide us with logs from CloudWatch Logs:
 
 ```
 /buildkite/elastic-stack/{instance-id}
