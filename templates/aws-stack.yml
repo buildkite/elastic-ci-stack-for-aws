@@ -392,7 +392,7 @@ Parameters:
   CostAllocationTagName:
     Type: String
     Description: The name of the Cost Allocation Tag used for billing purposes
-    Default: "aws:createdBy"
+    Default: "user:createdBy"
 
   CostAllocationTagValue:
     Type: String
