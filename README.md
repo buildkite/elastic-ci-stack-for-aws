@@ -2,7 +2,7 @@
 
 ![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)
 
-## Buildkite Elastic CI Stack
+## Buildkite Elastic CI Stack for AWS
 
 [Buildkite](https://buildkite.com/) is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
