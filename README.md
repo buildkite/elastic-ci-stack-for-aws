@@ -10,7 +10,7 @@ The Buildkite Elastic CI Stack gives you a private, autoscaling [Buildkite Agent
 
 ## Getting started
 
-See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, and the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci) for detailed information. 
+See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, and the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci-aws) for detailed information. 
 
 Or jump straight in:
 
