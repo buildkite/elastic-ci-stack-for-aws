@@ -851,6 +851,8 @@ Resources:
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
           MetadataOptions:
             HttpTokens: !Ref IMDSv2Tokens
+            # Allow containers using a Docker network on the host to receive IDMSv2 responses
+            HttpPutResponseHopLimit: 2
           ImageId: !If
             - HasImageId
             - !Ref ImageId
