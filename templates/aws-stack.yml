@@ -105,6 +105,12 @@ Parameters:
       - edge
     Default: "stable"
 
+  BuildkiteAgentToken:
+    Description: Buildkite agent registration token. Deprecated, use BuildkiteAgentTokenParameterStorePath instead.
+    Type: String
+    NoEcho: true
+    Default: ""
+
   BuildkiteAgentTokenParameterStorePath:
     Description: AWS SSM path to the Buildkite agent registration token (this takes precedence over BuildkiteAgentToken). Expects a leading slash ('/').
     Type: String
@@ -115,12 +121,6 @@ Parameters:
   BuildkiteAgentTokenParameterStoreKMSKey:
     Description: AWS KMS key ID used to encrypt the SSM parameter (if encrypted)
     Type: String
-    Default: ""
-
-  BuildkiteAgentToken:
-    Description: Buildkite agent registration token. Deprecated, use BuildkiteAgentTokenParameterStorePath instead.
-    Type: String
-    NoEcho: true
     Default: ""
 
   BuildkiteAgentTags:
