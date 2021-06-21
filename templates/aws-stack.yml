@@ -839,6 +839,8 @@ Resources:
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
           MetadataOptions:
             HttpTokens: !Ref IMDSv2Tokens
+            # Allow containers using a Docker network on the host to receive IDMSv2 responses
+            HttpPutResponseHopLimit: 2
           ImageId: !If
             - HasImageId
             - !Ref ImageId
@@ -1091,7 +1093,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
-        SemanticVersion: '1.1.0'
+        SemanticVersion: '1.1.1'
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteQueue: !Ref BuildkiteQueue
