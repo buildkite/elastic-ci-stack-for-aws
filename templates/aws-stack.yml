@@ -684,9 +684,9 @@ Resources:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
-                  Action: kms:Decrypt
-                  Resource:
-                    !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
+                  Action:
+                    - kms:Decrypt
+                  Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${BuildkiteAgentTokenParameterStoreKMSKey}
           - !Ref 'AWS:NoValue'
         - PolicyName: ReadAgentToken
           PolicyDocument:
