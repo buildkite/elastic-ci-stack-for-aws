@@ -91,7 +91,7 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: Optional - SSH keypair used to access the buildkite instances, setting this will enable SSH ingress
+    Description: Optional - SSH keypair used to access the buildkite instances via ec2_user, setting this will enable SSH ingress
     Type: String
     Default: ""
 
@@ -188,7 +188,7 @@ Parameters:
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress
+    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress. authorized_keys are applied to ec2_user
     Type: String
     Default: ""
 
@@ -392,7 +392,7 @@ Parameters:
   CostAllocationTagName:
     Type: String
     Description: The name of the Cost Allocation Tag used for billing purposes
-    Default: "aws:createdBy"
+    Default: "CreatedBy"
 
   CostAllocationTagValue:
     Type: String
@@ -851,6 +851,8 @@ Resources:
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
           MetadataOptions:
             HttpTokens: !Ref IMDSv2Tokens
+            # Allow containers using a Docker network on the host to receive IDMSv2 responses
+            HttpPutResponseHopLimit: 2
           ImageId: !If
             - HasImageId
             - !Ref ImageId
@@ -1170,7 +1172,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: { 'Fn::FindInMap': [LambdaBucket, !Ref 'AWS::Region', 'Bucket'] }
-        S3Key: "buildkite-agent-scaler/v1.1.0/handler.zip"
+        S3Key: "buildkite-agent-scaler/v1.1.1/handler.zip"
       Role: !GetAtt AutoscalingLambdaExecutionRole.Arn
       Timeout: 120
       Handler: handler
