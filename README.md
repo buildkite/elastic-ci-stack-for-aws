@@ -67,25 +67,6 @@ If you need to build your own AMI (because you've changed something in the `pack
 make packer
 ```
 
-## Questions and support
-
-Feel free to drop an email to support@buildkite.com with questions. It helps us if you can provide the following details:
-
-```
-# List your stack parameters
-aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
-  --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
-```
-
-Provide us with logs from CloudWatch Logs:
-
-```
-/buildkite/elastic-stack/{instance-id}
-/buildkite/systemd/{instance-id}
-```
-
-You can also drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
-
 ## Support Policy
 
 We provide support for security and bug fixes on the current major release only.
@@ -105,6 +86,25 @@ We build and deploy the following AMIs to all our supported regions:
 - Windows Server 2019 (x86_64)
 
 [What expectations do customers have on tracking releases of Docker, Docker Compose, aws-cli, and the Buildkite Agent? Should we track minor releases within X days and major releases (that support our underlying OS) in major bumps to the elastic stack itself?]
+
+## Questions and support
+
+Feel free to drop an email to support@buildkite.com with questions. It helps us if you can provide the following details:
+
+```
+# List your stack parameters
+aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
+  --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
+```
+
+Provide us with logs from CloudWatch Logs:
+
+```
+/buildkite/elastic-stack/{instance-id}
+/buildkite/systemd/{instance-id}
+```
+
+You can also drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
 
 ## Licence
 
