@@ -35,17 +35,15 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 priority=1
 EOF
 
-# Download the signing key for the repository
-if [ "${MACHINE}" = "x86_64" ]
-then
-  centos_key="https://centos.org/keys/RPM-GPG-KEY-CentOS-7"
-elif [ "${MACHINE}" = "aarch64" ]
-then
-  centos_key="https://centos.org/keys/RPM-GPG-KEY-CentOS-7-aarch64"
-fi
+import_rpm_key() {
+  local key="${1}"
+  local url="${2}"
+  sudo curl --fail --location --output "/etc/pki/rpm-gpg/${key}" "${url}"
+  sudo rpm -import "/etc/pki/rpm-gpg/${key}"
+}
 
-sudo curl --fail --location --output /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 "${centos_key}"
-sudo rpm -import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+import_rpm_key "RPM-GPG-KEY-CentOS-7" "https://centos.org/keys/RPM-GPG-KEY-CentOS-7"
+import_rpm_key "RPM-GPG-KEY-CentOS-7-aarch64" "https://centos.org/keys/RPM-GPG-KEY-CentOS-7-aarch64"
 
 # Do the install
 sudo yum install -y -q "docker-ce-${DOCKER_VERSION}" "docker-ce-cli-${DOCKER_VERSION}" containerd.io
