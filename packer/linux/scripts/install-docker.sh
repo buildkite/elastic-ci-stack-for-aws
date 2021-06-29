@@ -6,28 +6,42 @@ DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.28.6
 MACHINE=$(uname -m)
 
-# This performs a manual install of Docker.
-
 # Add docker group
 sudo groupadd docker
 sudo usermod -a -G docker ec2-user
 
-# Manual install ala https://docs.docker.com/engine/installation/binaries/
-curl -Lsf -o docker.tgz "https://download.docker.com/linux/static/${DOCKER_RELEASE}/${MACHINE}/docker-${DOCKER_VERSION}.tgz"
-tar -xvzf docker.tgz
-sudo mv docker/* /usr/bin
-rm docker.tgz
+# Add the Docker yum repository, but override the url to get CentOS 7 not
+# CentOS 2 (the default with Amazon Linux 2 applied to the interpolation)
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum-config-manager --setopt="docker-ce-stable.baseurl=https://download.docker.com/linux/centos/7/$MACHINE/stable" --save
 
-sudo mkdir -p /etc/docker
-sudo cp /tmp/conf/docker/daemon.json /etc/docker/daemon.json
-sudo cp /tmp/conf/docker/subuid /etc/subuid
-sudo cp /tmp/conf/docker/subgid /etc/subgid
-sudo chown -R ec2-user:docker /etc/docker
+# Add CentOS 7 Base and Extras to the yum repos list, needed for deps for
+# packages from the Docker yum repo
+cat << 'EOF' | sudo tee /etc/yum.repos.d/centos.repo
+[base]
+name=CentOS-7 - Base
+mirrorlist=http://mirrorlist.centos.org/?release=7&arch=$basearch&repo=os
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+priority=1
 
-# Install systemd services
-echo "Installing systemd services"
-sudo curl -Lfs -o /etc/systemd/system/docker.service "https://raw.githubusercontent.com/moby/moby/v${DOCKER_VERSION}/contrib/init/systemd/docker.service"
-sudo curl -Lfs -o /etc/systemd/system/docker.socket "https://raw.githubusercontent.com/moby/moby/v${DOCKER_VERSION}/contrib/init/systemd/docker.socket"
+[extras]
+name=CentOS-7 - Extras
+mirrorlist=http://mirrorlist.centos.org/?release=7&arch=$basearch&repo=extras
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+priority=1
+EOF
+
+# Download the signing key for the repository
+sudo curl --fail --location --output /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 https://centos.org/keys/RPM-GPG-KEY-CentOS-7
+sudo rpm -import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+# Do the install
+sudo yum install -y -q "docker-ce-${DOCKER_VERSION}" "docker-ce-cli-${DOCKER_VERSION}" containerd.io
+
 sudo systemctl daemon-reload
 sudo systemctl enable docker.service
 
