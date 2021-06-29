@@ -23,7 +23,6 @@ name=CentOS-7 - Base
 mirrorlist=http://mirrorlist.centos.org/?release=7&arch=$basearch&repo=os
 enabled=1
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 priority=1
 
 [extras]
@@ -31,7 +30,6 @@ name=CentOS-7 - Extras
 mirrorlist=http://mirrorlist.centos.org/?release=7&arch=$basearch&repo=extras
 enabled=1
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 priority=1
 EOF
 
