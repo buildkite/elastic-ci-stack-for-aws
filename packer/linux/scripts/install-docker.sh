@@ -36,7 +36,15 @@ priority=1
 EOF
 
 # Download the signing key for the repository
-sudo curl --fail --location --output /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 https://centos.org/keys/RPM-GPG-KEY-CentOS-7
+if [ "${MACHINE}" = "x86_64" ]
+then
+  centos_key="https://centos.org/keys/RPM-GPG-KEY-CentOS-7"
+elif [ "${MACHINE}" = "aarch64" ]
+then
+  centos_key="https://centos.org/keys/RPM-GPG-KEY-CentOS-7-aarch64"
+fi
+
+sudo curl --fail --location --output /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 "${centos_key}"
 sudo rpm -import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 # Do the install
