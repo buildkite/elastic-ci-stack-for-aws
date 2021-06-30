@@ -4,6 +4,7 @@ set -eu -o pipefail
 DOCKER_VERSION=20.10.6
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.28.6
+DOCKER_BUILDX_VERSION="0.5.1"
 MACHINE=$(uname -m)
 
 # This performs a manual install of Docker.
@@ -63,3 +64,21 @@ sudo chmod +x /etc/cron.hourly/docker-*
 echo "Installing jq..."
 sudo yum install -y -q jq
 jq --version
+
+echo "Installing docker buildx..."
+
+DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins
+sudo mkdir -p "${DOCKER_CLI_DIR}"
+
+case "${MACHINE}" in
+  x86_64)
+    BUILDX_ARCH="amd64";
+    ;;
+  aarch64)
+    BUILDX_ARCH="arm64";
+    ;;
+esac
+
+sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-buildx" "https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.linux-${BUILDX_ARCH}"
+sudo chmod +x "${DOCKER_CLI_DIR}/docker-buildx"
+docker buildx version
