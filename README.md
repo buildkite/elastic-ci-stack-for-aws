@@ -67,6 +67,36 @@ If you need to build your own AMI (because you've changed something in the `pack
 make packer
 ```
 
+## Support Policy
+
+We provide support for security and bug fixes on the current major release only.
+
+If there are any changes in the master branch since the last tagged release, we
+aim to publish a new tagged release of this template at the end of each month.
+
+### AWS Regions
+
+We support all AWS Regions, except China and US GovCloud.
+
+We aim to support new regions within one month of general availability.
+
+### Operating Systems
+
+We build and deploy the following AMIs to all our supported regions:
+
+- Amazon Linux 2 (x86_64)
+- Amazon Linux 2 (arm64)
+- Windows Server 2019 (x86_64)
+
+### Buildkite Agent
+
+The Elastic CI Stack template [published from the master branch](https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
+tracks the latest Buildkite Agent release.
+
+You may wish to preview any updates to your stack from this template
+[using a CloudFormation Stack Change Set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
+to decide whether to apply it.
+
 ## Questions and support
 
 Feel free to drop an email to support@buildkite.com with questions. It helps us if you can provide the following details:
