@@ -2,7 +2,6 @@
 set -eu -o pipefail
 
 DOCKER_VERSION=20.10.6
-DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.28.6
 MACHINE=$(uname -m)
 
