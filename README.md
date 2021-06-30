@@ -71,6 +71,9 @@ make packer
 
 We provide support for security and bug fixes on the current major release only.
 
+If there are any changes in the master branch since the last tagged release, we
+aim to publish a new tagged release of this template at the end of each month.
+
 ### AWS Regions
 
 We support all AWS Regions, except China and US GovCloud.
