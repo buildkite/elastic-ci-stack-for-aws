@@ -84,8 +84,8 @@ We aim to support new regions within one month of general availability.
 
 We build and deploy the following AMIs to all our supported regions:
 
-- Amazon Linux 2 LTS (x86_64)
-- Amazon Linux 2 LTS (arm64)
+- Amazon Linux 2 (x86_64)
+- Amazon Linux 2 (arm64)
 - Windows Server 2019 (x86_64)
 
 ## Questions and support
