@@ -61,11 +61,19 @@ AWS_PROFILE="some-profile" make create-stack
 aws-vault exec some-profile -- make create-stack
 ```
 
-If you need to build your own AMI (because you've changed something in the `packer` directory), run:
+If you need to build your own AMI (because you've changed something in the
+`packer` directory), run packer with AWS credentials in your shell environment:
 
 ```bash
 make packer
 ```
+
+This will boot and image three AWS EC2 instances in your account’s `us-east-1`
+default VPC:
+
+- Linux amd64
+- Linux arm64
+- Windows amd64
 
 ## Support Policy
 
