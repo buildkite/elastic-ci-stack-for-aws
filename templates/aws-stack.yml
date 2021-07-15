@@ -407,6 +407,21 @@ Parameters:
       - "false"
     Default: "false"
 
+Rules:
+  HasToken:
+    Assertions:
+      - Assert:
+          !Or
+            - !Not
+              - !Equals
+                - !Ref BuildkiteAgentToken
+                - ""
+            - !Not
+              - !Equals
+                - !Ref BuildkiteAgentTokenParameterStorePath
+                - ""
+        AssertDescription: "You must provide BuildkiteAgentToken or BuildkiteAgentTokenParameterStorePath"
+
 Outputs:
   VpcId:
     Value:
