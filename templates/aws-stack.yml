@@ -959,7 +959,7 @@ Resources:
                     /usr/local/bin/bk-configure-docker.sh
                   --==BOUNDARY==
                   Content-Type: text/x-shellscript; charset="us-ascii"
-                  #!/bin/bash -xv
+                  #!/bin/bash -v
                   BUILDKITE_STACK_NAME="${AWS::StackName}" \
                   BUILDKITE_STACK_VERSION=%v \
                   BUILDKITE_SCALE_IN_IDLE_PERIOD=${ScaleInIdlePeriod} \
