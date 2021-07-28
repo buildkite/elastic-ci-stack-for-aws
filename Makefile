@@ -75,7 +75,7 @@ build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
-packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-amd64
+packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -96,7 +96,7 @@ build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linuxarm64 packer image
-packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-arm64
+packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -117,7 +117,7 @@ build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build windows packer image
-packer-windows-amd64.output: $(PACKER_WINDOWS_FILES) build/s3secrets-helper-windows-amd64.exe
+packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -179,12 +179,3 @@ validate: build/aws-stack.yml
 generate-toc:
 	docker run -it --rm -v "$(PWD):/app" node:slim bash \
 		-c "npm install -g markdown-toc && cd /app && markdown-toc -i README.md"
-
-build/s3secrets-helper-linux-amd64:
-	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=amd64 go build -o ../../../$@
-
-build/s3secrets-helper-linux-arm64:
-	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=arm64 go build -o ../../../$@
-
-build/s3secrets-helper-windows-amd64.exe:
-	cd plugins/secrets/s3secrets-helper && GOOS=windows GOARCH=amd64 go build -o ../../../$@
