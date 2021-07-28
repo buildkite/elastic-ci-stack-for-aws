@@ -58,7 +58,7 @@
     },
     {
       "type": "shell",
-      "source": "scripts/install-s3secrets-helper.ps1"
+      "script": "scripts/install-s3secrets-helper.ps1"
     },
     {
       "type": "powershell",

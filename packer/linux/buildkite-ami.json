@@ -59,7 +59,7 @@
     },
     {
       "type": "shell",
-      "source": "scripts/install-s3secrets-helper.sh"
+      "script": "scripts/install-s3secrets-helper.sh"
     },
     {
       "type": "shell",
