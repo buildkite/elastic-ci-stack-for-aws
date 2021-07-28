@@ -74,4 +74,3 @@ echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
 sudo cp -a /tmp/plugins/* /usr/local/buildkite-aws-stack/plugins/
 sudo chown -R buildkite-agent: /usr/local/buildkite-aws-stack
-sudo install --mode=0755 /tmp/s3secrets-helper /usr/local/bin/
