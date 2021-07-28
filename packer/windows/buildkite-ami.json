@@ -57,7 +57,7 @@
       "script": "scripts/install-buildkite-agent.ps1"
     },
     {
-      "type": "shell",
+      "type": "powershell",
       "script": "scripts/install-s3secrets-helper.ps1"
     },
     {
