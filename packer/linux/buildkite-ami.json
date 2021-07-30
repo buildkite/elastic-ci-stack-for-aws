@@ -38,11 +38,6 @@
       "destination": "/tmp/plugins"
     },
     {
-      "type": "file",
-      "source": "../../build/s3secrets-helper-linux-{{user `goarch`}}",
-      "destination": "/tmp/s3secrets-helper"
-    },
-    {
       "type": "shell",
       "script": "scripts/install-utils.sh"
     },
@@ -61,6 +56,10 @@
     {
       "type": "shell",
       "script": "scripts/install-buildkite-agent.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-s3secrets-helper.sh"
     },
     {
       "type": "shell",
