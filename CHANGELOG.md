@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.5.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.4.0...v5.5.0) (2021-07-30)
+
+### Added
+
+* Template validation rules for the Buildkite Agent token [#873](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/873)
+* Secret redaction in build logs [agent#1452](https://github.com/buildkite/agent/pull/1452)
+* Support for the `pre-bootstrap` Buildkite Agent Lifecycle Hook [agent#1456](https://github.com/buildkite/agent/pull/1456)
+
+### Changed
+
+* Included buildkite-agent from 3.30.0 to 3.32.0 [#876](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/876) ([keithduncan](https://github.com/keithduncan))
+
+### Fixed
+
+* Remove logging of the Buildkite Agent token to CloudWatch Logs [#879](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/879)
+* Cross-region S3 bucket access for secrets [#875](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/875)
+* An error when handling zero length `environment` files [elastic-ci-stack-s3-secrets-hooks#42](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/pull/42)
+* A hang when loading ssh keys without a trailing newline [elastic-ci-stack-s3-secrets-hooks#44](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/pull/44)
+
 ## [v5.4.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.3.2...v5.4.0) (2021-06-30)
 
 ### Added
