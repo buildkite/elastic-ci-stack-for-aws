@@ -1018,7 +1018,7 @@ Resources:
             - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
-      Cooldown: 0
+      Cooldown: 60
       MetricsCollection:
         - Granularity: 1Minute
           Metrics:
