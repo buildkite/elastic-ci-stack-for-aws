@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 * Included buildkite-agent from 3.32.0 to 3.32.1
 
+### Fixed
+
+* A source of unexpected instance termination causing build failures [#888](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/888)
+
 ## [v5.5.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.4.0...v5.5.0) (2021-07-30)
 
 ### Added
