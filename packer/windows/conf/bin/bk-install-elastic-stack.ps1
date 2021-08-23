@@ -59,6 +59,14 @@ function set_unless_present() {
         declare -gx "${target}=${value}"
     fi
 }
+
+function set_always() {
+    local target=$1
+    local value=$2
+
+    echo "export ${target}=\"${value}\""
+    declare -gx "${target}=${value}"
+}
 '@
 
 Add-Content -Path C:\buildkite-agent\cfn-env -Value @"
