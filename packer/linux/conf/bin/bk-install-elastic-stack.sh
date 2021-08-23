@@ -76,15 +76,15 @@ EOF
 # variable substitution.
 cat << EOF >> /var/lib/buildkite-agent/cfn-env
 
+set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTANCE"
+set_always         "BUILDKITE_ECR_POLICY" "${BUILDKITE_ECR_POLICY:-none}"
+set_always         "BUILDKITE_SECRETS_BUCKET" "$BUILDKITE_SECRETS_BUCKET"
+set_always         "BUILDKITE_STACK_NAME" "$BUILDKITE_STACK_NAME"
+set_always         "BUILDKITE_STACK_VERSION" "$BUILDKITE_STACK_VERSION"
+set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
+set_always         "PLUGINS_ENABLED" "${PLUGINS_ENABLED[*]-}"
 set_unless_present "AWS_DEFAULT_REGION" "$AWS_REGION"
 set_unless_present "AWS_REGION" "$AWS_REGION"
-set_unless_present "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTANCE"
-set_unless_present "BUILDKITE_ECR_POLICY" "${BUILDKITE_ECR_POLICY:-none}"
-set_unless_present "BUILDKITE_SECRETS_BUCKET" "$BUILDKITE_SECRETS_BUCKET"
-set_unless_present "BUILDKITE_STACK_NAME" "$BUILDKITE_STACK_NAME"
-set_unless_present "BUILDKITE_STACK_VERSION" "$BUILDKITE_STACK_VERSION"
-set_unless_present "DOCKER_VERSION" "$DOCKER_VERSION"
-set_unless_present "PLUGINS_ENABLED" "${PLUGINS_ENABLED[*]-}"
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
