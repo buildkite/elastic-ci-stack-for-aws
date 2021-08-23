@@ -62,6 +62,14 @@ cat <<- "EOF" > /var/lib/buildkite-agent/cfn-env
 	        declare -gx "${target}=${value}"
 	    fi
 	}
+
+	function set_always() {
+	    local target=$1
+	    local value=$2
+
+	    echo "export ${target}=\"${value}\""
+	    declare -gx "${target}=${value}"
+	}
 EOF
 
 # Step 2: Populate the default variable values.  This time, we append to the file, and allow
