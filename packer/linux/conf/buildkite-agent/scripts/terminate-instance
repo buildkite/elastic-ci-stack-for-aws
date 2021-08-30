@@ -8,7 +8,7 @@ sleep 10
 
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
 instance_id=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -fsSL http://169.254.169.254/latest/meta-data/instance-id)
-region=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -fsSL http://169.254.169.254/latest/meta-data/placement/availability-zone | head -c -1)
+region=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -fsSL http://169.254.169.254/latest/meta-data/placement/region)
 
 echo "requesting instance termination..."
 
