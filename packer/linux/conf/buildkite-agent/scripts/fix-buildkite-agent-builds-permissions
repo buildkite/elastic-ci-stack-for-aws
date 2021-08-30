@@ -66,7 +66,7 @@ exit_if_contains_traversal "${AGENT_DIR}"
 exit_if_contains_traversal "${ORG_DIR}"
 exit_if_contains_traversal "${PIPELINE_DIR}"
 
-# Check them for blank vaues
+# Check them for blank values
 exit_if_blank "${AGENT_DIR}"
 exit_if_blank "${ORG_DIR}"
 exit_if_blank "${PIPELINE_DIR}"
