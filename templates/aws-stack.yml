@@ -477,6 +477,9 @@ Conditions:
     UseSpecifiedSecretsBucket:
       !Not [ !Equals [ !Ref SecretsBucket, "" ] ]
 
+    HasSecretsBucket:
+      !Or [ !Condition CreateSecretsBucket, !Condition UseSpecifiedSecretsBucket ]
+
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", !Ref AvailabilityZones ], "" ]  ]
 
@@ -778,9 +781,9 @@ Resources:
             Value: !Ref CostAllocationTagValue
           - !Ref "AWS::NoValue"
 
-  ManagedSecretsBucketPolicy:
+  SecretsBucketPolicy:
     Type: AWS::IAM::Policy
-    Condition: CreateSecretsBucket
+    Condition: HasSecretsBucket
     Properties:
       PolicyName: SecretsBucketPolicy
       PolicyDocument:
@@ -790,25 +793,12 @@ Resources:
               - s3:Get*
               - s3:List*
             Resource:
-              - !Sub "arn:aws:s3:::${ManagedSecretsBucket}/*"
-              - !Sub "arn:aws:s3:::${ManagedSecretsBucket}"
-      Roles:
-        - !Ref IAMRole
-
-  UnmanagedSecretsBucketPolicy:
-    Type: AWS::IAM::Policy
-    Condition: UseSpecifiedSecretsBucket
-    Properties:
-      PolicyName: SecretsBucketPolicy
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:Get*
-              - s3:List*
-            Resource:
-              - !Sub "arn:aws:s3:::${SecretsBucket}/*"
-              - !Sub "arn:aws:s3:::${SecretsBucket}"
+              - !Sub
+                  - "arn:aws:s3:::${Bucket}/*"
+                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
+              - !Sub
+                  - "arn:aws:s3:::${Bucket}"
+                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
       Roles:
         - !Ref IAMRole
 
