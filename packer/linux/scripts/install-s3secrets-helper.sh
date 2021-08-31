@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-S3_SECRETS_HELPER_VERSION=2.1.3
+S3_SECRETS_HELPER_VERSION=2.1.4
 
 MACHINE="$(uname -m)"
 
