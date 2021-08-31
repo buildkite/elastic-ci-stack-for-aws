@@ -11,6 +11,8 @@ on_error() {
 	local exitCode="$?"
 	local errorLine="$1"
 
+	# If the curl fails, we're already in the error trap...
+	# shellcheck disable=SC2155
 	local token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 
 	if [[ $exitCode != 0 ]] ; then
