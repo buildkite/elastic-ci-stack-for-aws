@@ -14,9 +14,9 @@ mark_instance_unhealthy() {
   # mark the instance for termination
   echo "Marking instance as unhealthy"
 
-  local token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location http://169.254.169.254/latest/api/token)
-  local instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location http://169.254.169.254/latest/meta-data/instance-id)
-  local region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location http://169.254.169.254/latest/meta-data/placement/region)
+  local token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
+  local instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
+  local region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
 
   aws autoscaling set-instance-health \
     --instance-id "${instance_id}" \
