@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.6.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.5.1...v5.6.0) (2021-08-31)
+
+### Added
+
+* Cross-region secrets bucket support to git-credentials-s3-secrets [elastic-ci-stack-s3-secrets-hooks#48](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/pull/48)
+* AssumeRole support in the ECR Login plug-in [ecr-buildkite-plugin#69](https://github.com/buildkite-plugins/ecr-buildkite-plugin/pull/69)
+
+### Changed
+
+* Instance IAM Profile role permissions to be more tightly scoped [#800](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/800) ([@nitrocode](https://github.com/nitrocode))
+* Import buildkite-lambda-scaler from the Severless Application Repository [#685](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/685)
+* The built-in environment hook no longer overwrites `AWS_REGION` and `AWS_DEFAULT_REGION` if already present [#892](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/892) ([@toothbrush](https://github.com/toothbrush))
+* Included buildkite-agent from 3.32.1 to 3.32.3
+
+### Fixed
+
+* Hourly disk check script on Linux [#898](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/898)
+* git-credentials-s3-secrets on Windows [elastic-ci-stack-s3-secrets-hooks#47](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/pull/47)
+* PowerShell hook support on Windows [agent#1497](https://github.com/buildkite/agent/pull/1497)
+
 ## [v5.5.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.5.0...v5.5.1) (2021-08-06)
 
 ### Changed
