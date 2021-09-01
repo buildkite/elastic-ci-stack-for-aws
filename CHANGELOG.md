@@ -20,8 +20,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-* Hourly disk check script [#898](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/898)
-* git-credentials-s3-secrets on Windows instances [elastic-ci-stack-s3-secrets-hooks#47](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/pull/47)
+* Hourly disk check script on Linux [#898](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/898)
+* git-credentials-s3-secrets on Windows [elastic-ci-stack-s3-secrets-hooks#47](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/pull/47)
+* PowerShell hook support on Windows [agent#1497](https://github.com/buildkite/agent/pull/1497)
 
 ## [v5.5.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.5.0...v5.5.1) (2021-08-06)
 
