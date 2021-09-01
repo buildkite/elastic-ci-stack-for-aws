@@ -1,7 +1,7 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$AGENT_VERSION = "3.32.2"
+$AGENT_VERSION = "3.32.3"
 
 Write-Output "Creating bin dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\bin
