@@ -82,3 +82,10 @@ esac
 sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-buildx" "https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.linux-${BUILDX_ARCH}"
 sudo chmod +x "${DOCKER_CLI_DIR}/docker-buildx"
 docker buildx version
+
+echo "Installing qemu..."
+sudo yum install -y qemu qemu-user-static
+
+curl --location --fail --silent --output /tmp/qemu-binfmt-conf.sh https://raw.githubusercontent.com/qemu/qemu/v6.1.0/scripts/qemu-binfmt-conf.sh
+chmod +x /tmp/qemu-binfmt-conf.sh
+/tmp/qemu-binfmt-conf.sh --qemu-suffix "-static" --qemu-path /usr/bin
