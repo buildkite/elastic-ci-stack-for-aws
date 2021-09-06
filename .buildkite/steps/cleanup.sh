@@ -32,10 +32,8 @@ fi
 
 if [[ $OSTYPE =~ ^darwin ]] ; then
   cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
-  cutoff_date_milli=$(gdate --date='-1 days' +%s%3N)
 else
   cutoff_date=$(date --date='-1 days' +%Y-%m-%d)
-  cutoff_date_milli=$(date --date='-1 days' +%s%3N)
 fi
 
 echo "--- Cleaning up resources older than ${cutoff_date}"
