@@ -42,6 +42,7 @@ Metadata:
         - ImageIdParameter
         - InstanceType
         - AgentsPerInstance
+        - KeyName
         - SpotPrice
         - SecretsBucket
         - ArtifactsBucket
@@ -91,6 +92,11 @@ Metadata:
         - EnableDockerLoginPlugin
 
 Parameters:
+  KeyName:
+    Description: Optional - SSH keypair used to access the buildkite instances via ec2_user, setting this will enable SSH ingress
+    Type: String
+    Default: ""
+
   BuildkiteAgentRelease:
     Type: String
     AllowedValues:
@@ -519,6 +525,17 @@ Conditions:
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
+    HasKeyName:
+      !Not [ !Equals [ !Ref KeyName, "" ] ]
+
+    EnableSshIngress:
+      !And
+        - { Condition : CreateSecurityGroup }
+        # Enable ingress if a key can be specified another way
+        - !Or
+          - { Condition: HasKeyName }
+          - !Not [ !Equals [ !Ref AuthorizedUsersUrl, "" ] ]
+
     # Whether or not there's any managed polices to attach
     HasManagedPolicies:
       !Or [ { Condition: UseManagedPolicyARN }, { Condition: UseECR } ]
@@ -841,6 +858,7 @@ Resources:
             - DeviceIndex: 0
               AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
               Groups: !Split [ ",", !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
+          KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
@@ -1083,6 +1101,16 @@ Resources:
       Tags:
       - Key: Name
         Value: !Ref 'AWS::StackName'
+
+  SecurityGroupSshIngress:
+    Condition: EnableSshIngress
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt SecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
 
   Autoscaling:
     Type: AWS::Serverless::Application
