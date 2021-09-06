@@ -1,7 +1,15 @@
 #!/bin/bash
 set -eu -o pipefail
 
-AGENT_VERSION=3.24.0
+AGENT_VERSION=3.32.3
+
+MACHINE="$(uname -m)"
+
+case "${MACHINE}" in
+	x86_64)    ARCH=amd64;;
+	aarch64)   ARCH=arm64;;
+	*)         ARCH=unknown;;
+esac
 
 echo "Installing dependencies..."
 sudo yum update -y -q
@@ -13,13 +21,13 @@ sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
 echo "Downloading buildkite-agent beta..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
-  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-${ARCH}"
 sudo chmod +x /usr/bin/buildkite-agent-beta
 buildkite-agent-beta --version
 

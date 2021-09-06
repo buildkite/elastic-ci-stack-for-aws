@@ -9,7 +9,8 @@ function on_error {
   $errorLine=$_.InvocationInfo.ScriptLineNumber
   $errorMessage=$_.Exception
 
-  $instance_id=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+  $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 
   aws autoscaling set-instance-health `
     --instance-id "$instance_id" `
@@ -25,7 +26,8 @@ function on_error {
 
 trap {on_error}
 
-$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 $DOCKER_VERSION=(docker --version).split(" ")[2].Replace(",","")
 
 $PLUGINS_ENABLED=@()
@@ -34,16 +36,50 @@ If ($Env:ECR_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "ecr" }
 If ($Env:DOCKER_LOGIN_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "docker-login" }
 
 # cfn-env is sourced by the environment hook in builds
-Set-Content -Path C:\buildkite-agent\cfn-env -Value @"
-export DOCKER_VERSION=$DOCKER_VERSION
-export BUILDKITE_STACK_NAME=$Env:BUILDKITE_STACK_NAME
-export BUILDKITE_STACK_VERSION=$Env:BUILDKITE_STACK_VERSION
-export BUILDKITE_AGENTS_PER_INSTANCE=$Env:BUILDKITE_AGENTS_PER_INSTANCE
-export BUILDKITE_SECRETS_BUCKET=$Env:BUILDKITE_SECRETS_BUCKET
-export AWS_DEFAULT_REGION=$Env:AWS_REGION
-export AWS_REGION=$Env:AWS_REGION
-export PLUGINS_ENABLED="$PLUGINS_ENABLED"
-export BUILDKITE_ECR_POLICY=$Env:BUILDKITE_ECR_POLICY
+
+# There's a confusing situation here, because this is PowerShell, writing out a script which will be
+# evaluated in Bash.  So take note of the mixed export / $Env:.. idioms.  This code mirrors the same
+# behaviour of the script in /packer/linux/conf/bin/bk-install-elastic-stack.sh.
+
+Set-Content -Path C:\buildkite-agent\cfn-env -Value @'
+# The Buildkite agent sets a number of variables such as AWS_DEFAULT_REGION to fixed values which
+# are determined at AMI-build-time.  However, sometimes a user might want to override such variables
+# using an env: block in their pipeline.yml.  This little helper is sets the environment variables
+# buildkite-agent and plugins expect, except if a user want to override them, for example to do a
+# deployment to a region other than where the Buildkite agent lives.
+function set_unless_present() {
+    local target=$1
+    local value=$2
+
+    if [[ -v "${target}" ]]; then
+        echo "^^^ +++"
+        echo "⚠️ ${target} already set, NOT overriding! (current value \"${!target}\" set by Buildkite step env configuration, or inherited from the buildkite-agent process environment)"
+    else
+        echo "export ${target}=\"${value}\""
+        declare -gx "${target}=${value}"
+    fi
+}
+
+function set_always() {
+    local target=$1
+    local value=$2
+
+    echo "export ${target}=\"${value}\""
+    declare -gx "${target}=${value}"
+}
+'@
+
+Add-Content -Path C:\buildkite-agent\cfn-env -Value @"
+
+set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$Env:BUILDKITE_AGENTS_PER_INSTANCE"
+set_always         "BUILDKITE_ECR_POLICY" "$Env:BUILDKITE_ECR_POLICY"
+set_always         "BUILDKITE_SECRETS_BUCKET" "$Env:BUILDKITE_SECRETS_BUCKET"
+set_always         "BUILDKITE_STACK_NAME" "$Env:BUILDKITE_STACK_NAME"
+set_always         "BUILDKITE_STACK_VERSION" "$Env:BUILDKITE_STACK_VERSION"
+set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
+set_always         "PLUGINS_ENABLED" "$PLUGINS_ENABLED"
+set_unless_present "AWS_DEFAULT_REGION" "$Env:AWS_REGION"
+set_unless_present "AWS_REGION" "$Env:AWS_REGION"
 "@
 
 If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
@@ -77,9 +113,14 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
 }
 
+# Get token from ssm param (if we have a path)
+If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PATH -ne "") {
+  $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
+}
+
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
+name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true
@@ -168,7 +209,9 @@ nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
-nssm set buildkite-agent AppExit Default Exit
+nssm set buildkite-agent AppExit Default Restart
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+nssm set buildkite-agent AppRestartDelay 10000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }

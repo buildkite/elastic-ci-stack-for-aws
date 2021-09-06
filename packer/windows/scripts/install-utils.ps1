@@ -12,7 +12,7 @@ choco install -y awscli --version=1.18.11
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Git for Windows"
-choco install -y git --version 2.22.0
+choco install -y git --version 2.31.0
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing nssm"

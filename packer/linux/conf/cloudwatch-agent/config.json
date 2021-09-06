@@ -1,0 +1,55 @@
+{
+	"agent": {
+		"run_as_user": "root"
+	},
+	"logs": {
+		"logs_collected": {
+			"files": {
+				"collect_list": [
+					{
+						"file_path": "/var/log/buildkite-agent",
+						"log_group_name": "/buildkite/buildkite-agent",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%b %d %H:%M:%S"
+					},
+					{
+						"file_path": "/var/log/cfn-init.log",
+						"log_group_name": "/buildkite/cfn-init",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
+					},
+					{
+						"file_path": "/var/log/cloud-init.log",
+						"log_group_name": "/buildkite/cloud-init",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
+					},
+					{
+						"file_path": "/var/log/cloud-init-output.log",
+						"log_group_name": "/buildkite/cloud-init/output",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
+					},
+					{
+						"file_path": "/var/log/docker",
+						"log_group_name": "/buildkite/docker-daemon",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
+					},
+					{
+						"file_path": "/var/log/elastic-stack.log",
+						"log_group_name": "/buildkite/elastic-stack",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
+					},
+					{
+						"file_path": "/var/log/messages",
+						"log_group_name": "/buildkite/system",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%b %d %H:%M:%S"
+					}
+				]
+			}
+		}
+	}
+}
