@@ -32,8 +32,10 @@ fi
 
 if [[ $OSTYPE =~ ^darwin ]] ; then
   cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
+  cutoff_date_milli=$(gdate --date='-1 days' +%s%3N)
 else
   cutoff_date=$(date --date='-1 days' +%Y-%m-%d)
+  cutoff_date_milli=$(date --date='-1 days' +%s%3N)
 fi
 
 echo "--- Cleaning up resources older than ${cutoff_date}"
@@ -60,3 +62,10 @@ aws ec2 describe-instances \
   --query "$(printf 'Reservations[].Instances[?LaunchTime<`%s`].[InstanceId]' "$cutoff_date")" \
   --output text \
   | xargs -n1 -t -I% aws ec2 terminate-instances --instance-ids "%"
+
+echo "--- Deleting old lambda logs after ${cutoff_date_milli}"
+aws logs describe-log-groups \
+  --log-group-name-prefix "/aws/lambda/buildkite-aws-stack-test-" \
+  --query "$(printf 'logGroups[?creationTime<`%s`].[logGroupName]' "$cutoff_date_milli" )" \
+  --output text \
+  | xargs -n1 -t -I% aws logs delete-log-group --log-group-name "%"
