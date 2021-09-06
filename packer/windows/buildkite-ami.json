@@ -37,11 +37,6 @@
       "destination": "C:/packer-temp"
     },
     {
-      "type": "file",
-      "source": "../../build/s3secrets-helper-windows-amd64.exe",
-      "destination": "C:/packer-temp/s3secrets-helper.exe"
-    },
-    {
       "type": "powershell",
       "script": "scripts/install-utils.ps1"
     },
@@ -60,6 +55,10 @@
     {
       "type": "powershell",
       "script": "scripts/install-buildkite-agent.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-s3secrets-helper.ps1"
     },
     {
       "type": "powershell",

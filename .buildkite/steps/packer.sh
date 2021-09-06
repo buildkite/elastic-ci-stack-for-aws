@@ -9,16 +9,12 @@ fi
 os="${1:-linux}"
 arch="${2:-amd64}"
 agent_binary="buildkite-agent-${os}-${arch}"
-s3secrets_binary="s3secrets-helper-${os}-${arch}"
 
 if [[ "$os" == "windows" ]] ; then
   agent_binary+=".exe"
-  s3secrets_binary+=".exe"
 fi
 
 mkdir -p "build/"
-
-buildkite-agent artifact download "build/$s3secrets_binary" .
 
 # Build a hash of packer files and the agent versions
 packer_files_sha=$(find Makefile "packer/${os}" plugins/ -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
