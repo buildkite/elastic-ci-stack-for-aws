@@ -6,7 +6,10 @@
 
 [Buildkite](https://buildkite.com/) is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
-The Buildkite Elastic CI Stack gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize legacy tests across hundreds of nodes, run tests and deployments for all your Linux-based services and apps, or run AWS ops tasks.
+The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling
+[Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize
+large test suites across thousands of nodes, run tests and deployments for Linux or Windows
+based services and apps, or run AWS ops tasks.
 
 ## Getting started
 
