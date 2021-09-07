@@ -13,9 +13,13 @@ fi
 devicemount=/ephemeral
 devices=($(sudo nvme list | grep "Amazon EC2 NVMe Instance Storage"| cut -f1 -d' '))
 
-if [[ "${#devices[@]}" -gt 0 ]] ; then
-  mkdir -p "$devicemount"
+if [ -z "${devices[@]}" ]
+then
+  echo "No Instance Storage NVMe drives to mount" >&2
+  exit 0
 fi
+
+mkdir -p "$devicemount"
 
 if [[ "${#devices[@]}" -eq 1 ]] ; then
   # Make an ext4 file system, [-F]orce creation
