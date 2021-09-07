@@ -26,12 +26,13 @@ if [[ "${#devices[@]}" -gt 0 ]] ; then
 fi
 
 if [[ "${#devices[@]}" -eq 1 ]] ; then
-  mkfs.xfs -f "${devices[0]}" > /dev/null
-  mount -t xfs -o noatime "${devices[0]}" "$devicemount"
+  # Make an ext4 file system, [-F]orce creation
+  mkfs.ext4 -F "${devices[0]}" > /dev/null
+  mount -t ext4 -o noatime "${devices[0]}" "$devicemount"
 
   if [ ! -f /etc/fstab.backup ]; then
     cp -rP /etc/fstab /etc/fstab.backup
-    echo "${devices[0]} $devicemount    xfs  defaults  0 0" >> /etc/fstab
+    echo "${devices[0]} $devicemount    ext4  defaults  0 0" >> /etc/fstab
   fi
 
 elif [[ "${#devices[@]}" -gt 1 ]] ; then
