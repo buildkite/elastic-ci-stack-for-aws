@@ -12,7 +12,7 @@ fi
 
 devices=($(sudo nvme list | grep "Amazon EC2 NVMe Instance Storage"| cut -f1 -d' '))
 
-if [ -z "${devices[@]}" ]
+if [ -z "${devices[*]}" ]
 then
   echo "No Instance Storage NVMe drives to mount" >&2
   exit 0
