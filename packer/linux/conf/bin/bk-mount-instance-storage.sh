@@ -35,7 +35,8 @@ elif [[ "${#devices[@]}" -gt 1 ]] ; then
   blockdev --setra 65536 "$logicalname"
 fi
 
-# Make an ext4 file system, [-F]orce creation
+# Make an ext4 file system, [-F]orce creation, don’t TRIM at fs creation time
+# (-E nodiscard)
 mkfs.ext4 -F -E nodiscard "$logicalname" > /dev/null
 
 devicemount=/mnt/ephemeral
