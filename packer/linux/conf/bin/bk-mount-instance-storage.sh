@@ -10,7 +10,6 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]] ; then
   exit 0
 fi
 
-devicemount=/ephemeral
 devices=($(sudo nvme list | grep "Amazon EC2 NVMe Instance Storage"| cut -f1 -d' '))
 
 if [ -z "${devices[@]}" ]
@@ -39,6 +38,7 @@ fi
 # Make an ext4 file system, [-F]orce creation
 mkfs.ext4 -F -E nodiscard "$logicalname" > /dev/null
 
+devicemount=/mnt/ephemeral
 mkdir -p "$devicemount"
 mount -t ext4 -o noatime "$logicalname" "$devicemount"
 
