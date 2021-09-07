@@ -9,7 +9,8 @@ function on_error {
   $errorLine=$_.InvocationInfo.ScriptLineNumber
   $errorMessage=$_.Exception
 
-  $instance_id=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+  $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 
   aws autoscaling set-instance-health `
     --instance-id "$instance_id" `
@@ -25,7 +26,8 @@ function on_error {
 
 trap {on_error}
 
-$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing http://169.254.169.254/latest/meta-data/instance-id).content
+$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 $DOCKER_VERSION=(docker --version).split(" ")[2].Replace(",","")
 
 $PLUGINS_ENABLED=@()
@@ -34,22 +36,57 @@ If ($Env:ECR_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "ecr" }
 If ($Env:DOCKER_LOGIN_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "docker-login" }
 
 # cfn-env is sourced by the environment hook in builds
-Set-Content -Path C:\buildkite-agent\cfn-env -Value @"
-export DOCKER_VERSION=$DOCKER_VERSION
-export BUILDKITE_STACK_NAME=$Env:BUILDKITE_STACK_NAME
-export BUILDKITE_STACK_VERSION=$Env:BUILDKITE_STACK_VERSION
-export BUILDKITE_AGENTS_PER_INSTANCE=$Env:BUILDKITE_AGENTS_PER_INSTANCE
-export BUILDKITE_SECRETS_BUCKET=$Env:BUILDKITE_SECRETS_BUCKET
-export AWS_DEFAULT_REGION=$Env:AWS_REGION
-export AWS_REGION=$Env:AWS_REGION
-export PLUGINS_ENABLED="$PLUGINS_ENABLED"
-export BUILDKITE_ECR_POLICY=$Env:BUILDKITE_ECR_POLICY
+
+# There's a confusing situation here, because this is PowerShell, writing out a script which will be
+# evaluated in Bash.  So take note of the mixed export / $Env:.. idioms.  This code mirrors the same
+# behaviour of the script in /packer/linux/conf/bin/bk-install-elastic-stack.sh.
+
+Set-Content -Path C:\buildkite-agent\cfn-env -Value @'
+# The Buildkite agent sets a number of variables such as AWS_DEFAULT_REGION to fixed values which
+# are determined at AMI-build-time.  However, sometimes a user might want to override such variables
+# using an env: block in their pipeline.yml.  This little helper is sets the environment variables
+# buildkite-agent and plugins expect, except if a user want to override them, for example to do a
+# deployment to a region other than where the Buildkite agent lives.
+function set_unless_present() {
+    local target=$1
+    local value=$2
+
+    if [[ -v "${target}" ]]; then
+        echo "^^^ +++"
+        echo "⚠️ ${target} already set, NOT overriding! (current value \"${!target}\" set by Buildkite step env configuration, or inherited from the buildkite-agent process environment)"
+    else
+        echo "export ${target}=\"${value}\""
+        declare -gx "${target}=${value}"
+    fi
+}
+
+function set_always() {
+    local target=$1
+    local value=$2
+
+    echo "export ${target}=\"${value}\""
+    declare -gx "${target}=${value}"
+}
+'@
+
+Add-Content -Path C:\buildkite-agent\cfn-env -Value @"
+
+set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$Env:BUILDKITE_AGENTS_PER_INSTANCE"
+set_always         "BUILDKITE_ECR_POLICY" "$Env:BUILDKITE_ECR_POLICY"
+set_always         "BUILDKITE_SECRETS_BUCKET" "$Env:BUILDKITE_SECRETS_BUCKET"
+set_always         "BUILDKITE_STACK_NAME" "$Env:BUILDKITE_STACK_NAME"
+set_always         "BUILDKITE_STACK_VERSION" "$Env:BUILDKITE_STACK_VERSION"
+set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
+set_always         "PLUGINS_ENABLED" "$PLUGINS_ENABLED"
+set_unless_present "AWS_DEFAULT_REGION" "$Env:AWS_REGION"
+set_unless_present "AWS_REGION" "$Env:AWS_REGION"
 "@
 
 If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   Write-Output "Downloading buildkite-agent edge..."
   Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-edge.exe -Uri "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-windows-amd64.exe"
   buildkite-agent-edge.exe --version
+  If ($lastexitcode -ne 0) { Exit $lastexitcode }
 }
 
 Copy-Item -Path C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe -Destination C:\buildkite-agent\bin\buildkite-agent.exe
@@ -65,7 +102,7 @@ If (Test-Path Env:BUILDKITE_AGENT_TAGS) {
   $agent_metadata += $Env:BUILDKITE_AGENT_TAGS.split(",")
 }
 
-# Enable git mirrors
+# Enable git-mirrors
 If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_EXPERIMENTS)) {
     $Env:BUILDKITE_AGENT_EXPERIMENTS = "git-mirrors"
@@ -73,19 +110,25 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
   Else {
     $Env:BUILDKITE_AGENT_EXPERIMENTS += ",git-mirrors"
   }
+  $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
+}
+
+# Get token from ssm param (if we have a path)
+If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PATH -ne "") {
+  $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
 }
 
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
-name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%n"
+name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
 tags=$agent_metadata
-tags-from-ec2=true
+tags-from-ec2-meta-data=true
 timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
 plugins-path="C:\buildkite-agent\plugins"
-git-mirrors-path="C:\buildkite-agent\git-mirrors"
+git-mirrors-path="${Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${Env:BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
@@ -110,7 +153,7 @@ do {
 
 docker ps
 if (! $?) {
-  echo "Failed to contact docker"
+  Write-Output "Failed to contact docker"
   exit 1
 }
 
@@ -119,32 +162,29 @@ Set-PSDebug -Trace 0
 
 Write-Output "Creating buildkite-agent user account in Administrators group"
 
+$lowerChars = [char[]](97..122)  # a-z
+$upperChars = [char[]](65..90)   # A-Z
+$numbers = [char[]](48..57)      # 0-9
+$specialChars = [char[]](40, 41, 33, 64, 36, 37, 45, 61, 46, 63, 42, 59, 38)  # ()!@$%-=.?*;&
+
+$minPasswordLength = 32
+$randomChars = @()
+
+Do {
+  $randomChars += Get-Random -Count 1 -InputObject $lowerChars
+  $randomChars += Get-Random -Count 1 -InputObject $upperChars
+  $randomChars += Get-Random -Count 1 -InputObject $numbers
+  $randomChars += Get-Random -Count 1 -InputObject $specialChars
+
+  # randomize the order of the random characters
+  $randomChars = Get-Random -Count $randomChars.Length -InputObject $randomChars
+} While ($randomChars.Length -lt $minPasswordLength)
+
+$Password = -join $randomChars
+
 $UserName = "buildkite-agent"
 
-$StopLoop = $false
-[int]$RetryCount = "0"
-
-# a Try/Catch block is used in a loop to make a few extra attempts at creating the user account before finally giving up and failing
-# because sometimes the generated random password does not satisfy the system's password policy
-Do {
-  Try {
-    $Count = Get-Random -min 24 -max 32
-    $Password = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count $Count | ForEach-Object {[char]$_})
-
-    New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | ConvertTo-SecureString -AsPlainText -Force) | out-null
-    $StopLoop = $true
-  }
-  Catch {
-    If ($RetryCount -gt 10){
-      Write-Output "Could not create $UserName user after 10 retries."
-      exit 1
-    }
-    Else {
-      Write-Output "Could not create $UserName user, retrying..."
-      $RetryCount = $RetryCount + 1
-    }
-  }
-} While ($StopLoop -eq $false)
+New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | ConvertTo-SecureString -AsPlainText -Force) | out-null
 
 If ($Env:BUILDKITE_WINDOWS_ADMINISTRATOR -eq "true") {
   Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
@@ -160,12 +200,21 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
 Write-Output "Starting the Buildkite Agent"
 
 nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent ObjectName .\$UserName $Password
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
-nssm set buildkite-agent AppExit Default Exit
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+nssm set buildkite-agent AppExit Default Restart
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+nssm set buildkite-agent AppRestartDelay 10000
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Restart-Service buildkite-agent
 
@@ -180,7 +229,7 @@ cfn-signal `
   --exit-code 0 ; if (-not $?) {
     # This will fail if the stack has already completed, for instance if there is a min size
     # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
-    echo "Signal failed"
+    Write-Output "Signal failed"
   }
 
 Set-PSDebug -Off

@@ -15,14 +15,12 @@
         "most_recent": true
       },
       "instance_type": "m5.xlarge",
-      "spot_price": "auto",
-      "spot_price_auto_product": "Windows (Amazon VPC)",
       "user_data_file":"scripts/ec2-userdata.ps1",
       "communicator": "winrm",
       "winrm_username": "Administrator",
       "winrm_use_ssl": true,
       "winrm_insecure": true,
-      "ami_name": "buildkite-stack-windows-{{isotime | clean_ami_name}}",
+      "ami_name": "buildkite-stack-windows-{{isotime | clean_resource_name}}",
       "ami_description": "Buildkite Elastic Stack (Windows Server 2019 w/ docker)",
       "ami_groups": ["all"]
     }
@@ -44,7 +42,7 @@
     },
     {
       "type": "powershell",
-      "script": "scripts/install-awslogs.ps1"
+      "script": "scripts/install-cloudwatch-agent.ps1"
     },
     {
       "type": "powershell",
@@ -57,6 +55,14 @@
     {
       "type": "powershell",
       "script": "scripts/install-buildkite-agent.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-s3secrets-helper.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-session-manager-plugin.ps1"
     },
     {
       "type": "powershell",

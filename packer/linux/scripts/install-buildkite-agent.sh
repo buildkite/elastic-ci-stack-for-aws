@@ -1,7 +1,15 @@
 #!/bin/bash
 set -eu -o pipefail
 
-AGENT_VERSION=3.13.2
+AGENT_VERSION=3.32.3
+
+MACHINE="$(uname -m)"
+
+case "${MACHINE}" in
+	x86_64)    ARCH=amd64;;
+	aarch64)   ARCH=arm64;;
+	*)         ARCH=unknown;;
+esac
 
 echo "Installing dependencies..."
 sudo yum update -y -q
@@ -13,13 +21,13 @@ sudo usermod -a -G docker buildkite-agent
 
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
 echo "Downloading buildkite-agent beta..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
-  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-amd64"
+  "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-${ARCH}"
 sudo chmod +x /usr/bin/buildkite-agent-beta
 buildkite-agent-beta --version
 
@@ -43,7 +51,7 @@ echo "Creating builds dir..."
 sudo mkdir -p /var/lib/buildkite-agent/builds
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/builds
 
-echo "Creating git mirrors dir..."
+echo "Creating git-mirrors dir..."
 sudo mkdir -p /var/lib/buildkite-agent/git-mirrors
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/git-mirrors
 
@@ -53,6 +61,10 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 echo "Adding systemd service template..."
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent.service /etc/systemd/system/buildkite-agent.service
+
+echo "Adding cloud-init failure safety check..."
+sudo mkdir -p /etc/systemd/system/cloud-final.service.d/
+sudo cp /tmp/conf/buildkite-agent/systemd/cloud-final.service.d/10-power-off-on-failure.conf /etc/systemd/system/cloud-final.service.d/10-power-off-on-failure.conf
 
 echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully

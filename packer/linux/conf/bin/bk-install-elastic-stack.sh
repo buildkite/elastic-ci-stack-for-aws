@@ -11,9 +11,13 @@ on_error() {
 	local exitCode="$?"
 	local errorLine="$1"
 
+	# If the curl fails, we're already in the error trap...
+	# shellcheck disable=SC2155
+	local token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
+
 	if [[ $exitCode != 0 ]] ; then
 		aws autoscaling set-instance-health \
-			--instance-id "$(curl http://169.254.169.254/latest/meta-data/instance-id)" \
+			--instance-id "$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")" \
 			--health-status Unhealthy || true
 	fi
 
@@ -30,42 +34,71 @@ trap 'on_error $LINENO' ERR
 INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
-# Cloudwatch logs needs a region specifically configured
-cat << EOF > /etc/awslogs/awscli.conf
-[plugins]
-cwlogs = cwlogs
-[default]
-region = $AWS_REGION
-EOF
-
-systemctl enable awslogsd.service
-
-# Start logging daemons as soon as possible to ensure failures in this script get sent
-systemctl restart rsyslog
-systemctl restart awslogsd
-
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
 [[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker-login")
 
 # cfn-env is sourced by the environment hook in builds
-cat << EOF > /var/lib/buildkite-agent/cfn-env
-export DOCKER_VERSION=$DOCKER_VERSION
-export BUILDKITE_STACK_NAME=$BUILDKITE_STACK_NAME
-export BUILDKITE_STACK_VERSION=$BUILDKITE_STACK_VERSION
-export BUILDKITE_AGENTS_PER_INSTANCE=$BUILDKITE_AGENTS_PER_INSTANCE
-export BUILDKITE_SECRETS_BUCKET=$BUILDKITE_SECRETS_BUCKET
-export AWS_DEFAULT_REGION=$AWS_REGION
-export AWS_REGION=$AWS_REGION
-export PLUGINS_ENABLED="${PLUGINS_ENABLED[*]-}"
-export BUILDKITE_ECR_POLICY=${BUILDKITE_ECR_POLICY:-none}
+
+# We will create it in two steps so that we don't need to go crazy with quoting and escaping. The
+# first sets up a helper function, the second populates the default values for some environment
+# variables.
+
+# Step 1: Helper function.  Note that we clobber the target file and DO NOT apply variable
+# substitution, this is controlled by the double-quoted "EOF".
+cat <<- "EOF" > /var/lib/buildkite-agent/cfn-env
+	# The Buildkite agent sets a number of variables such as AWS_DEFAULT_REGION to fixed values which
+	# are determined at AMI-build-time.  However, sometimes a user might want to override such variables
+	# using an env: block in their pipeline.yml.  This little helper is sets the environment variables
+	# buildkite-agent and plugins expect, except if a user want to override them, for example to do a
+	# deployment to a region other than where the Buildkite agent lives.
+	function set_unless_present() {
+	    local target=$1
+	    local value=$2
+
+	    if [[ -v "${target}" ]]; then
+	        echo "^^^ +++"
+	        echo "⚠️ ${target} already set, NOT overriding! (current value \"${!target}\" set by Buildkite step env configuration, or inherited from the buildkite-agent process environment)"
+	    else
+	        echo "export ${target}=\"${value}\""
+	        declare -gx "${target}=${value}"
+	    fi
+	}
+
+	function set_always() {
+	    local target=$1
+	    local value=$2
+
+	    echo "export ${target}=\"${value}\""
+	    declare -gx "${target}=${value}"
+	}
+EOF
+
+# Step 2: Populate the default variable values.  This time, we append to the file, and allow
+# variable substitution.
+cat << EOF >> /var/lib/buildkite-agent/cfn-env
+
+set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTANCE"
+set_always         "BUILDKITE_ECR_POLICY" "${BUILDKITE_ECR_POLICY:-none}"
+set_always         "BUILDKITE_SECRETS_BUCKET" "$BUILDKITE_SECRETS_BUCKET"
+set_always         "BUILDKITE_STACK_NAME" "$BUILDKITE_STACK_NAME"
+set_always         "BUILDKITE_STACK_VERSION" "$BUILDKITE_STACK_VERSION"
+set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
+set_always         "PLUGINS_ENABLED" "${PLUGINS_ENABLED[*]-}"
+set_unless_present "AWS_DEFAULT_REGION" "$AWS_REGION"
+set_unless_present "AWS_REGION" "$AWS_REGION"
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
+	if [[ "$(uname -m)" == "aarch64" ]] ; then
+	  AGENT_ARCH="arm64"
+	else
+	  AGENT_ARCH="amd64"
+	fi
 	echo "Downloading buildkite-agent edge..."
 	curl -Lsf -o /usr/bin/buildkite-agent-edge \
-		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-amd64"
+		"https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${AGENT_ARCH}"
 	chmod +x /usr/bin/buildkite-agent-edge
 	buildkite-agent-edge --version
 fi
@@ -91,30 +124,30 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]] ; then
 	agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
 fi
 
-# Enable git mirrors
+# Enable git-mirrors
 if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   if [[ -z "$BUILDKITE_AGENT_EXPERIMENTS" ]] ; then
     BUILDKITE_AGENT_EXPERIMENTS="git-mirrors"
   else
     BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
   fi
+  BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+else
+  BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 fi
 
-# If the agent token path is set, use that instead of BUILDKITE_AGENT_TOKEN
-if [[ -n "${BUILDKITE_AGENT_TOKEN_PATH}" ]] ; then
-    BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value)"
-fi
+BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
-name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%n"
+name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
 token="${BUILDKITE_AGENT_TOKEN}"
 tags=$(IFS=, ; echo "${agent_metadata[*]}")
-tags-from-ec2=true
+tags-from-ec2-meta-data=true
 timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=/var/lib/buildkite-agent/builds
 plugins-path=/var/lib/buildkite-agent/plugins
-git-mirrors-path=/var/lib/buildkite-agent/git-mirrors
+git-mirrors-path="${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${BUILDKITE_AGENTS_PER_INSTANCE}

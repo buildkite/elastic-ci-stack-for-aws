@@ -3,16 +3,21 @@ $ErrorActionPreference = "Stop"
 
 Write-Output "Installing chocolatey package manager"
 Set-ExecutionPolicy Bypass -Scope Process -Force
-iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 Write-Output "Installing awscli"
-choco install -y awscli
+# pinned because awscli v2 drops 'aws ecr get-login'
+# https://github.com/buildkite-plugins/ecr-buildkite-plugin/issues/37
+choco install -y awscli --version=1.18.11
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Git for Windows"
-choco install -y git
+choco install -y git --version 2.31.0
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing nssm"
 choco install -y nssm
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 # Make `Update-SessionEnvironment` available
 Write-Output "Importing the Chocolatey profile module"
@@ -34,13 +39,16 @@ Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Co
 
 # Set autocrlf to false so we don't end up with mismatched line endings
 git config --system core.autocrlf false
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 # disable Git Credential Manager for Windows so it doesn't interfere with buildkite's secrets plugin
 git config --system --unset credential.helper
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Configuring awscli to use v4 signatures..."
 $Env:AWS_CONFIG_FILE = "C:\buildkite-agent\.aws\config"
 $Env:AWS_SHARED_CREDENTIALS_FILE = "C:\buildkite-agent\.aws\credentials"
 aws configure set s3.signature_version s3v4
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 Remove-Item -Path Env:AWS_CONFIG_FILE
 Remove-Item -Path Env:AWS_SHARED_CREDENTIALS_FILE

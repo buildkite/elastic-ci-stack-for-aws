@@ -1,11 +1,16 @@
 #!/bin/bash
 set -eu -o pipefail
 
+echo "~~~ :earth_asia: Setting up environment variables"
 # shellcheck source=/dev/null
 source ~/cfn-env
 
+# a clean docker config for each job, for improved isolation
+BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY=$(mktemp -d)
+export BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY
+export DOCKER_CONFIG="$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
+
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
-cat ~/cfn-env
 
 echo "Configuring built-in plugins"
 
@@ -39,4 +44,16 @@ if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1
 
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/environment
+fi
+
+if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+
+  # map AWS_ECR_LOGIN_REGISTRY_IDS into the plugin list format
+  if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+    export BUILDKITE_PLUGIN_ECR_ACCOUNT_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
+  fi
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/environment
 fi

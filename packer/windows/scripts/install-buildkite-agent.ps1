@@ -1,7 +1,7 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$AGENT_VERSION = "3.13.2"
+$AGENT_VERSION = "3.32.3"
 
 Write-Output "Creating bin dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\bin
@@ -13,10 +13,12 @@ $env:PATH = "C:\buildkite-agent\bin;" + $env:PATH
 Write-Output "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-stable.exe -Uri "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-windows-amd64.exe"
 buildkite-agent-stable.exe --version
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Downloading buildkite-agent beta..."
 Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-beta.exe -Uri "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-windows-amd64.exe"
 buildkite-agent-beta.exe --version
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Creating hooks dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\hooks
@@ -27,7 +29,7 @@ Copy-Item -Path C:\packer-temp\conf\buildkite-agent\hooks\* -Destination C:\buil
 Write-Output "Creating builds dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\builds
 
-Write-Output "Creating git mirrors dir..."
+Write-Output "Creating git-mirrors dir..."
 New-Item -ItemType directory -Path C:\buildkite-agent\git-mirrors
 
 Write-Output "Creating plugins dir..."

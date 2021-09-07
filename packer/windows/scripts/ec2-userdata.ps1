@@ -20,9 +20,13 @@ write-output "Setting up WinRM"
 write-host "(host) setting up WinRM"
 
 winrm set "winrm/config" '@{MaxTimeoutms="1800000"}'
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 winrm set "winrm/config/winrs" '@{MaxMemoryPerShellMB="1024"}'
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 winrm set "winrm/config/service/auth" '@{Basic="true"}'
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 netsh advfirewall firewall add rule name="Port 5986" protocol=TCP dir=in localport=5986 action=allow
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Stop-Transcript
 </powershell>
