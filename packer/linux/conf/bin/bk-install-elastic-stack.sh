@@ -131,7 +131,13 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   else
     BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
   fi
-  BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+
+  if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
+  then
+    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
+  else
+    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+  fi
 else
   BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 fi
