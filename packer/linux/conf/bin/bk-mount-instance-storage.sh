@@ -11,14 +11,7 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]] ; then
 fi
 
 devicemount=/ephemeral
-candidates=( '/dev/nvme1n1' )
-devices=()
-
-for candidate in "${candidates[@]}" ; do
-  if [[ -b $candidate ]] ; then
-    devices+=("$candidate")
-  fi
-done
+devices=($(sudo nvme list | grep "Amazon EC2 NVMe Instance Storage"| cut -f1 -d' '))
 
 if [[ "${#devices[@]}" -gt 0 ]] ; then
   mkdir -p "$devicemount"
