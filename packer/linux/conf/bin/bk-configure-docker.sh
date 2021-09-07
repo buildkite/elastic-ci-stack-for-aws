@@ -20,5 +20,5 @@ fi
 
 # Move docker root to the ephemeral device
 if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]] ; then
-  cat <<< "$(jq '.data-root="/ephemeral/docker"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+  cat <<< "$(jq '.data-root="/mnt/ephemeral/docker"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 fi
