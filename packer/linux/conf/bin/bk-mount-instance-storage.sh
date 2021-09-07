@@ -11,7 +11,6 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]] ; then
 fi
 
 devicemount=/ephemeral
-logicalname=/dev/md0
 candidates=( '/dev/nvme1n1' )
 devices=()
 
@@ -36,6 +35,7 @@ if [[ "${#devices[@]}" -eq 1 ]] ; then
   fi
 
 elif [[ "${#devices[@]}" -gt 1 ]] ; then
+  logicalname=/dev/md0
   yes | mdadm \
     --create "$logicalname" \
     --level=0 \
