@@ -27,7 +27,7 @@ fi
 
 if [[ "${#devices[@]}" -eq 1 ]] ; then
   # Make an ext4 file system, [-F]orce creation
-  mkfs.ext4 -F "${devices[0]}" > /dev/null
+  mkfs.ext4 -F -E nodiscard "${devices[0]}" > /dev/null
   mount -t ext4 -o noatime "${devices[0]}" "$devicemount"
 
   if [ ! -f /etc/fstab.backup ]; then
