@@ -125,6 +125,7 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]] ; then
 fi
 
 # Enable git-mirrors
+BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   if [[ -z "$BUILDKITE_AGENT_EXPERIMENTS" ]] ; then
     BUILDKITE_AGENT_EXPERIMENTS="git-mirrors"
@@ -138,8 +139,6 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   else
     BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
   fi
-else
-  BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 fi
 
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
