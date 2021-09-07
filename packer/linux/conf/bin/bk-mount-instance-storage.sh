@@ -33,22 +33,21 @@ if [[ "${#devices[@]}" -eq 1 ]] ; then
 
 elif [[ "${#devices[@]}" -gt 1 ]] ; then
   logicalname=/dev/md0
-  yes | mdadm \
+  mdadm \
     --create "$logicalname" \
     --level=0 \
     -c256 \
     --raid-devices="${#devices[@]}" "${devices[@]}"
 
-  echo \'DEVICE "${devices[*]}"\' > /etc/mdadm.conf
+  echo "DEVICE ${devices[*]}" > /etc/mdadm.conf
 
   mdadm --detail --scan >> /etc/mdadm.conf
   blockdev --setra 65536 "$logicalname"
-  mkfs.xfs -f "$logicalname" > /dev/null
-  mkdir -p "$devicemount"
-  mount -t xfs -o noatime "$logicalname" "$devicemount"
+  mkfs.ext4 -F -E nodiscard "$logicalname" > /dev/null
+  mount -t ext4 -o noatime "$logicalname" "$devicemount"
 
   if [ ! -f /etc/fstab.backup ]; then
       cp -rP /etc/fstab /etc/fstab.backup
-      echo "$logicalname $devicemount    xfs  defaults  0 0" >> /etc/fstab
+      echo "$logicalname $devicemount    ext4  defaults  0 0" >> /etc/fstab
   fi
 fi
