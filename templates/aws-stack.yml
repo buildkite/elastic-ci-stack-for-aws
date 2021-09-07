@@ -41,6 +41,7 @@ Metadata:
         - ImageId
         - ImageIdParameter
         - InstanceType
+        - EnableInstanceStorage
         - AgentsPerInstance
         - KeyName
         - SpotPrice
@@ -385,7 +386,7 @@ Parameters:
 
   EnableInstanceStorage:
     Type: String
-    Description: Mount any Instance Storage on the EC2 instance (on /ephemeral)
+    Description: Mount available NVMe Instance Storage at /mnt/ephemeral
     AllowedValues:
       - "true"
       - "false"
