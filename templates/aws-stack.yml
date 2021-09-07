@@ -984,6 +984,7 @@ Resources:
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+                  BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
                   BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
