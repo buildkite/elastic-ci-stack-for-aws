@@ -24,8 +24,10 @@ then
 fi
 
 if [[ "${#devices[@]}" -eq 1 ]] ; then
+  echo "Mounting instance storage device directly" >&2
   logicalname="${devices[0]}"
 elif [[ "${#devices[@]}" -gt 1 ]] ; then
+  echo "Mounting instance storage devices using software RAID" >&2
   logicalname=/dev/md0
 
   mdadm \
@@ -42,9 +44,12 @@ fi
 
 # Make an ext4 file system, [-F]orce creation, don’t TRIM at fs creation time
 # (-E nodiscard)
+echo "Formatting $logicalname as ext4" >&2
 mkfs.ext4 -F -E nodiscard "$logicalname" > /dev/null
 
 devicemount=/mnt/ephemeral
+
+echo "Mounting $logicalname to $devicemount" >&2
 mkdir -p "$devicemount"
 mount -t ext4 -o noatime "$logicalname" "$devicemount"
 
