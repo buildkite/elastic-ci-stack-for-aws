@@ -1,6 +1,10 @@
 #!/bin/bash
 set -euxo pipefail
 
+# Write to system console and to our log file
+# See https://alestic.com/2010/12/ec2-user-data-output/
+exec > >(tee -a /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console) 2>&1
+
 # Mount instance storage if we can
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
 
