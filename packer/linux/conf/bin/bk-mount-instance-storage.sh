@@ -10,7 +10,7 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]] ; then
   exit 0
 fi
 
-devices=($(sudo nvme list | grep "Amazon EC2 NVMe Instance Storage"| cut -f1 -d' '))
+devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage"| cut -f1 -d' '))
 
 if [ -z "${devices[*]}" ]
 then
