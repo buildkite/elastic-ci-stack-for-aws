@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 # Write to system console and to our log file
 # See https://alestic.com/2010/12/ec2-user-data-output/
