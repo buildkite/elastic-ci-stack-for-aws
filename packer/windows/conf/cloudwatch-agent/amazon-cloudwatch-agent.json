@@ -22,11 +22,6 @@
             "file_path": "C:\\buildkite-agent\\buildkite-agent.log",
             "log_group_name": "/buildkite/buildkite-agent",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
-          },
-          {
-            "file_path": "C:\\lifecycled\\lifecycled.log",
-            "log_group_name": "/buildkite/lifecycled",
-            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
           }
         ]
       },

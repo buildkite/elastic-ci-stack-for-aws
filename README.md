@@ -6,7 +6,10 @@
 
 [Buildkite](https://buildkite.com/) is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
-The Buildkite Elastic CI Stack gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize legacy tests across hundreds of nodes, run tests and deployments for all your Linux-based services and apps, or run AWS ops tasks.
+The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling
+[Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize
+large test suites across thousands of nodes, run tests and deployments for Linux or Windows
+based services and apps, or run AWS ops tasks.
 
 ## Getting started
 
@@ -30,6 +33,30 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameters "$(cat config.json)"
 ```
+
+## Supported Features
+
+Most features are supported across both Linux and Windows. See below for details
+of per-operating system support:
+
+Feature | Linux | Windows
+--- | --- | ---
+Docker | ✅ | ✅ 
+Docker Compose | ✅ | ✅ 
+AWS CLI | ✅ | ✅ 
+S3 Secrets Bucket | ✅ | ✅ 
+ECR Login | ✅ | ✅ 
+Docker Login | ✅ | ✅ 
+CloudWatch Logs Agent | ✅ | ✅ 
+Per-Instance Bootstrap Script | ✅ | ✅ 
+🧑‍🔬 git-mirrors experiment | ✅ | ✅ 
+SSM Access | ✅ | ✅ 
+SSH Access | ✅ | 
+Periodic authorized_keys Refresh | ✅ | 
+Periodic Instance Health Check | ✅ | 
+git lfs | ✅ | 
+Additional sudo Permissions | ✅ | 
+RDP Access | | ✅ 
 
 ## Security
 
@@ -71,9 +98,9 @@ make packer
 This will boot and image three AWS EC2 instances in your account’s `us-east-1`
 default VPC:
 
-- Linux amd64
-- Linux arm64
-- Windows amd64
+- Linux (64-bit x86)
+- Linux (64-bit Arm)
+- Windows (64-bit x86)
 
 ## Support Policy
 
@@ -92,9 +119,9 @@ We aim to support new regions within one month of general availability.
 
 We build and deploy the following AMIs to all our supported regions:
 
-- Amazon Linux 2 (x86_64)
-- Amazon Linux 2 (arm64)
-- Windows Server 2019 (x86_64)
+- Amazon Linux 2 (64-bit x86)
+- Amazon Linux 2 (64-bit Arm)
+- Windows Server 2019 (64-bit x86)
 
 ### Buildkite Agent
 
