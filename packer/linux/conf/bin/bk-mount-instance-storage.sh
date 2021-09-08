@@ -50,10 +50,14 @@ mkfs.ext4 -F -E nodiscard "$logicalname" > /dev/null
 devicemount=/mnt/ephemeral
 
 echo "Mounting $logicalname to $devicemount" >&2
+
+fs_type="ext4"
+mount_options="defaults,noatime"
+
 mkdir -p "$devicemount"
-mount -t ext4 -o noatime "$logicalname" "$devicemount"
+mount -t "${fs_type}" -o "${mount_options}" "$logicalname" "$devicemount"
 
 if [ ! -f /etc/fstab.backup ]; then
   cp -rP /etc/fstab /etc/fstab.backup
-  echo "$logicalname $devicemount    ext4  defaults  0 0" >> /etc/fstab
+  echo "$logicalname $devicemount    ${fs_type}  ${mount_options}  0 0" >> /etc/fstab
 fi
