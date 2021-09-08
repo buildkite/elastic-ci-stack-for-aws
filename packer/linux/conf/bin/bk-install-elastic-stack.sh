@@ -170,6 +170,9 @@ if [[ -n "${BUILDKITE_AUTHORIZED_USERS_URL}" ]] ; then
 	/etc/cron.hourly/authorized_keys
 fi
 
+# Finish git lfs install
+su buildkite-agent -l -c 'git lfs install'
+
 if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 	/usr/local/bin/bk-fetch.sh "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" /tmp/elastic_bootstrap
 	bash < /tmp/elastic_bootstrap
