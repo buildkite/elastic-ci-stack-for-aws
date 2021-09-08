@@ -10,6 +10,11 @@ BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY=$(mktemp -d)
 export BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY
 export DOCKER_CONFIG="$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
 
+if [ "${BUILDKITE_DOCKER_EXPERIMENTAL:-false}" = "true" ]
+then
+  cat <<< "$(jq '.experimental="enabled"' "${DOCKER_CONFIG}/config.json")" > "${DOCKER_CONFIG}/config.json"
+fi
+
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 
 echo "Checking docker"
