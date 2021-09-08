@@ -34,6 +34,30 @@ aws cloudformation create-stack \
   --parameters "$(cat config.json)"
 ```
 
+## Supported Features
+
+Most features are supported across both Linux and Windows. See below for details
+of per-operating system support:
+
+Feature | Linux | Windows
+--- | --- | ---
+Docker | ✅ | ✅ 
+Docker Compose | ✅ | ✅ 
+AWS CLI | ✅ | ✅ 
+S3 Secrets Bucket | ✅ | ✅ 
+ECR Login | ✅ | ✅ 
+Docker Login | ✅ | ✅ 
+CloudWatch Logs Agent | ✅ | ✅ 
+Per-Instance Bootstrap Script | ✅ | ✅ 
+🧑‍🔬 git-mirrors experiment | ✅ | ✅ 
+SSM Access | ✅ | ✅ 
+SSH Access | ✅ | 
+Periodic authorized_keys Refresh | ✅ | 
+Periodic Instance Health Check | ✅ | 
+git lfs | ✅ | 
+Additional sudo Permissions | ✅ | 
+RDP Access | | ✅ 
+
 ## Security
 
 This repository hasn't been reviewed by security researchers so exercise caution and careful thought with what credentials you make available to your builds.
@@ -74,9 +98,9 @@ make packer
 This will boot and image three AWS EC2 instances in your account’s `us-east-1`
 default VPC:
 
-- Linux amd64
-- Linux arm64
-- Windows amd64
+- Linux (64-bit x86)
+- Linux (64-bit Arm)
+- Windows (64-bit x86)
 
 ## Support Policy
 
@@ -95,9 +119,9 @@ We aim to support new regions within one month of general availability.
 
 We build and deploy the following AMIs to all our supported regions:
 
-- Amazon Linux 2 (x86_64)
-- Amazon Linux 2 (arm64)
-- Windows Server 2019 (x86_64)
+- Amazon Linux 2 (64-bit x86)
+- Amazon Linux 2 (64-bit Arm)
+- Windows Server 2019 (64-bit x86)
 
 ### Buildkite Agent
 
