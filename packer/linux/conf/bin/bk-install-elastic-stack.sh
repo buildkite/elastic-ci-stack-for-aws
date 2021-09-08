@@ -136,6 +136,9 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
   then
     BUILDKITE_AGENT_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
+
+    mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+    chown buildkite-agent: "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
   else
     BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
   fi
@@ -144,7 +147,10 @@ fi
 BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
 if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
 then
-	BUILDKITE_AGENT_BUILD_PATH="/mnt/ephemeral/builds"
+  BUILDKITE_AGENT_BUILD_PATH="/mnt/ephemeral/builds"
+
+  mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
+  chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 fi
 
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
