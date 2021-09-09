@@ -41,6 +41,7 @@ Metadata:
         - ImageId
         - ImageIdParameter
         - InstanceType
+        - EnableInstanceStorage
         - AgentsPerInstance
         - KeyName
         - SpotPrice
@@ -378,6 +379,14 @@ Parameters:
   EnableDockerExperimental:
     Type: String
     Description: Enables Docker experimental features
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  EnableInstanceStorage:
+    Type: String
+    Description: Mount available NVMe Instance Storage at /mnt/ephemeral
     AllowedValues:
       - "true"
       - "false"
@@ -952,8 +961,13 @@ Resources:
                   MIME-Version: 1.0
                   --==BOUNDARY==
                   Content-Type: text/cloud-boothook; charset="us-ascii"
+                  BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
+                    /usr/local/bin/bk-mount-instance-storage.sh
+                  --==BOUNDARY==
+                  Content-Type: text/cloud-boothook; charset="us-ascii"
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
+                  BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                     /usr/local/bin/bk-configure-docker.sh
                   --==BOUNDARY==
                   Content-Type: text/x-shellscript; charset="us-ascii"
@@ -971,6 +985,7 @@ Resources:
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+                  BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
                   BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \

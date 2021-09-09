@@ -67,6 +67,10 @@
     },
     {
       "type": "shell",
+      "script": "scripts/install-nvme-cli.sh"
+    },
+    {
+      "type": "shell",
       "inline": [
         "rm /home/ec2-user/.ssh/authorized_keys"
       ]

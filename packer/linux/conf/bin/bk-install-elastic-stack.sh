@@ -126,15 +126,32 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]] ; then
 fi
 
 # Enable git-mirrors
+BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   if [[ -z "$BUILDKITE_AGENT_EXPERIMENTS" ]] ; then
     BUILDKITE_AGENT_EXPERIMENTS="git-mirrors"
   else
     BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
   fi
-  BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
-else
-  BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
+
+  if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
+  then
+    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
+
+    mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+    chown buildkite-agent: "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+  else
+    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+  fi
+fi
+
+BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
+if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
+then
+  BUILDKITE_AGENT_BUILD_PATH="/mnt/ephemeral/builds"
+
+  mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
+  chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 fi
 
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
@@ -146,7 +163,7 @@ tags=$(IFS=, ; echo "${agent_metadata[*]}")
 tags-from-ec2-meta-data=true
 timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
-build-path=/var/lib/buildkite-agent/builds
+build-path=${BUILDKITE_AGENT_BUILD_PATH}
 plugins-path=/var/lib/buildkite-agent/plugins
 git-mirrors-path="${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
