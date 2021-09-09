@@ -716,6 +716,16 @@ Resources:
                   !Sub
                     - arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
                     - ParameterPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
+        - PolicyName: ServerlessCloudformation
+          PolicyDocument:
+            Version: '2021-09-08'
+            Statement:
+              - Effect: Allow
+                Action: serverlessrepo:CreateCloudFormationTemplate
+                Resource: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
+              - Effect: Allow
+                Action: serverlessrepo:GetCloudFormationTemplate
+                Resource: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler      
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
