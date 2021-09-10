@@ -973,8 +973,8 @@ Resources:
                   Content-Type: text/x-shellscript; charset="us-ascii"
                   #!/bin/bash -v
                   BUILDKITE_STACK_NAME="${AWS::StackName}" \
-                  BUILDKITE_STACK_VERSION=%v \
-                  BUILDKITE_SCALE_IN_IDLE_PERIOD=${ScaleInIdlePeriod} \
+                  BUILDKITE_STACK_VERSION="%v" \
+                  BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}" \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
@@ -983,19 +983,19 @@ Resources:
                   BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
-                  BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT=${EnableAgentGitMirrorsExperiment} \
+                  BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}" \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
-                  BUILDKITE_ECR_POLICY=${ECRAccessPolicy} \
-                  BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BuildkiteTerminateInstanceAfterJob} \
-                  BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS=${BuildkiteAdditionalSudoPermissions} \
-                  AWS_DEFAULT_REGION=${AWS::Region} \
-                  SECRETS_PLUGIN_ENABLED=${EnableSecretsPlugin} \
-                  ECR_PLUGIN_ENABLED=${EnableECRPlugin} \
-                  DOCKER_LOGIN_PLUGIN_ENABLED=${EnableDockerLoginPlugin} \
-                  DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
-                  AWS_REGION=${AWS::Region} \
+                  BUILDKITE_ECR_POLICY="${ECRAccessPolicy}" \
+                  BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}" \
+                  BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}" \
+                  AWS_DEFAULT_REGION="${AWS::Region}" \
+                  SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}" \
+                  ECR_PLUGIN_ENABLED="${EnableECRPlugin}" \
+                  DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}" \
+                  DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
+                  AWS_REGION="${AWS::Region}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
                 - {
