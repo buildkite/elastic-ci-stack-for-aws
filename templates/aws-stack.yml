@@ -234,6 +234,11 @@ Parameters:
     Type: Number
     Default: 0
 
+  MaxInstanceLifetime:
+    Description: The maximum amount of time (in seconds) that an instance can be in service. The maximum duration applies to all current and future instances in the group. As an instance approaches its maximum duration, it is terminated and replaced, and cannot be used again.
+    Type: Number
+    Default: 0
+
   OnDemandPercentage:
     Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
     Type: Number
@@ -1032,6 +1037,7 @@ Resources:
             - !Ref "AWS::NoValue"
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
+      MaxInstanceLifetime: !Ref MaxInstanceLifetime
       Cooldown: 60
       MetricsCollection:
         - Granularity: 1Minute
