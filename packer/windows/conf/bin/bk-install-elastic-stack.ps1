@@ -36,16 +36,51 @@ If ($Env:ECR_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "ecr" }
 If ($Env:DOCKER_LOGIN_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "docker-login" }
 
 # cfn-env is sourced by the environment hook in builds
-Set-Content -Path C:\buildkite-agent\cfn-env -Value @"
-export DOCKER_VERSION=$DOCKER_VERSION
-export BUILDKITE_STACK_NAME=$Env:BUILDKITE_STACK_NAME
-export BUILDKITE_STACK_VERSION=$Env:BUILDKITE_STACK_VERSION
-export BUILDKITE_AGENTS_PER_INSTANCE=$Env:BUILDKITE_AGENTS_PER_INSTANCE
-export BUILDKITE_SECRETS_BUCKET=$Env:BUILDKITE_SECRETS_BUCKET
-export AWS_DEFAULT_REGION=$Env:AWS_REGION
-export AWS_REGION=$Env:AWS_REGION
-export PLUGINS_ENABLED="$PLUGINS_ENABLED"
-export BUILDKITE_ECR_POLICY=$Env:BUILDKITE_ECR_POLICY
+
+# There's a confusing situation here, because this is PowerShell, writing out a script which will be
+# evaluated in Bash.  So take note of the mixed export / $Env:.. idioms.  This code mirrors the same
+# behaviour of the script in /packer/linux/conf/bin/bk-install-elastic-stack.sh.
+
+Set-Content -Path C:\buildkite-agent\cfn-env -Value @'
+# The Buildkite agent sets a number of variables such as AWS_DEFAULT_REGION to fixed values which
+# are determined at AMI-build-time.  However, sometimes a user might want to override such variables
+# using an env: block in their pipeline.yml.  This little helper is sets the environment variables
+# buildkite-agent and plugins expect, except if a user want to override them, for example to do a
+# deployment to a region other than where the Buildkite agent lives.
+function set_unless_present() {
+    local target=$1
+    local value=$2
+
+    if [[ -v "${target}" ]]; then
+        echo "^^^ +++"
+        echo "⚠️ ${target} already set, NOT overriding! (current value \"${!target}\" set by Buildkite step env configuration, or inherited from the buildkite-agent process environment)"
+    else
+        echo "export ${target}=\"${value}\""
+        declare -gx "${target}=${value}"
+    fi
+}
+
+function set_always() {
+    local target=$1
+    local value=$2
+
+    echo "export ${target}=\"${value}\""
+    declare -gx "${target}=${value}"
+}
+'@
+
+Add-Content -Path C:\buildkite-agent\cfn-env -Value @"
+
+set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$Env:BUILDKITE_AGENTS_PER_INSTANCE"
+set_always         "BUILDKITE_ECR_POLICY" "$Env:BUILDKITE_ECR_POLICY"
+set_always         "BUILDKITE_SECRETS_BUCKET" "$Env:BUILDKITE_SECRETS_BUCKET"
+set_always         "BUILDKITE_STACK_NAME" "$Env:BUILDKITE_STACK_NAME"
+set_always         "BUILDKITE_STACK_VERSION" "$Env:BUILDKITE_STACK_VERSION"
+set_always         "BUILDKITE_DOCKER_EXPERIMENTAL" "$DOCKER_EXPERIMENTAL"
+set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
+set_always         "PLUGINS_ENABLED" "$PLUGINS_ENABLED"
+set_unless_present "AWS_DEFAULT_REGION" "$Env:AWS_REGION"
+set_unless_present "AWS_REGION" "$Env:AWS_REGION"
 "@
 
 If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
@@ -104,10 +139,6 @@ disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 "@
 $OFS=" "
-
-nssm set lifecycled AppEnvironmentExtra :AWS_REGION=$Env:AWS_REGION
-nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
-Restart-Service lifecycled
 
 # wait for docker to start
 $next_wait_time=0

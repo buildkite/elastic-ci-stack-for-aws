@@ -75,7 +75,7 @@ build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
-packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-amd64
+packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -96,7 +96,7 @@ build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linuxarm64 packer image
-packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/s3secrets-helper-linux-arm64
+packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -117,7 +117,7 @@ build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build windows packer image
-packer-windows-amd64.output: $(PACKER_WINDOWS_FILES) build/s3secrets-helper-windows-amd64.exe
+packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -146,7 +146,7 @@ create-stack: build/aws-stack.yml env-STACK_NAME
 		--stack-name $(STACK_NAME) \
 		--disable-rollback \
 		--template-body "file://$(PWD)/build/aws-stack.yml" \
-		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameters "$$(cat config.json)"
 
 update-stack: build/aws-stack.yml env-STACK_NAME
@@ -154,7 +154,7 @@ update-stack: build/aws-stack.yml env-STACK_NAME
 		--output text \
 		--stack-name $(STACK_NAME) \
 		--template-body "file://$(PWD)/build/aws-stack.yml" \
-		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameters "$$(cat config.json)"
 
 
@@ -179,12 +179,3 @@ validate: build/aws-stack.yml
 generate-toc:
 	docker run -it --rm -v "$(PWD):/app" node:slim bash \
 		-c "npm install -g markdown-toc && cd /app && markdown-toc -i README.md"
-
-build/s3secrets-helper-linux-amd64:
-	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=amd64 go build -o ../../../$@
-
-build/s3secrets-helper-linux-arm64:
-	cd plugins/secrets/s3secrets-helper && GOOS=linux GOARCH=arm64 go build -o ../../../$@
-
-build/s3secrets-helper-windows-amd64.exe:
-	cd plugins/secrets/s3secrets-helper && GOOD=windows GOARCH=amd64 go build -o ../../../$@

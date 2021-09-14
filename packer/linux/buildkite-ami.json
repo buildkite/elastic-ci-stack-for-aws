@@ -38,21 +38,12 @@
       "destination": "/tmp/plugins"
     },
     {
-      "type": "file",
-      "source": "../../build/s3secrets-helper-linux-{{user `goarch`}}",
-      "destination": "/tmp/s3secrets-helper"
-    },
-    {
       "type": "shell",
       "script": "scripts/install-utils.sh"
     },
     {
       "type": "shell",
       "script": "scripts/install-cloudwatch-agent.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
     },
     {
       "type": "shell",
@@ -64,11 +55,19 @@
     },
     {
       "type": "shell",
+      "script": "scripts/install-s3secrets-helper.sh"
+    },
+    {
+      "type": "shell",
       "script": "scripts/install-git-lfs.sh"
     },
     {
       "type": "shell",
       "script": "scripts/install-session-manager-plugin.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-nvme-cli.sh"
     },
     {
       "type": "shell",
