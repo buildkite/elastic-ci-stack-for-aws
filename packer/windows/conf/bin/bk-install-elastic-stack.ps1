@@ -140,6 +140,10 @@ disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 "@
 $OFS=" "
 
+nssm set lifecycled AppEnvironmentExtra :AWS_REGION=$Env:AWS_REGION
+nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
+Restart-Service lifecycled
+
 # wait for docker to start
 $next_wait_time=0
 do {
