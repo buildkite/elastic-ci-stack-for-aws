@@ -135,25 +135,30 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
   fi
 
   BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+  mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 
   if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
   then
     EPHEMERAL_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
     mkdir -p "${EPHEMERAL_GIT_MIRRORS_PATH}"
+
     mount -o bind "${EPHEMERAL_GIT_MIRRORS_PATH}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
     echo "${EPHEMERAL_GIT_MIRRORS_PATH} ${BUILDKITE_AGENT_GIT_MIRRORS_PATH} none defaults,bind 0 0" >>/etc/fstab
   fi
+
+  chown buildkite-agent: "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 fi
 
 BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
+mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
 if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
 then
   EPHEMERAL_BUILD_PATH="/mnt/ephemeral/builds"
   mkdir -p "${EPHEMERAL_BUILD_PATH}"
   mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
   echo "${EPHEMERAL_BUILD_PATH} ${BUILDKITE_AGENT_BUILD_PATH} none defaults,bind 0 0" >>/etc/fstab
-  chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 fi
+chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
 
