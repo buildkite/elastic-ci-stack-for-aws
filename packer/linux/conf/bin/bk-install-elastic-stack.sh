@@ -148,9 +148,10 @@ fi
 BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
 if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
 then
-  BUILDKITE_AGENT_BUILD_PATH="/mnt/ephemeral/builds"
-
-  mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
+  EPHEMERAL_BUILD_PATH="/mnt/ephemeral/builds"
+  mkdir -p "${EPHEMERAL_BUILD_PATH}"
+  mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
+  echo "${EPHEMERAL_BUILD_PATH} ${BUILDKITE_AGENT_BUILD_PATH} none defaults,bind 0 0" >>/etc/fstab
   chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 fi
 
