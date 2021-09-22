@@ -134,14 +134,14 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
     BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
   fi
 
+  BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+
   if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
   then
-    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
-
-    mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
-    chown buildkite-agent: "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
-  else
-    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+    EPHEMERAL_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
+    mkdir -p "${EPHEMERAL_GIT_MIRRORS_PATH}"
+    mount -o bind "${EPHEMERAL_GIT_MIRRORS_PATH}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+    echo "${EPHEMERAL_GIT_MIRRORS_PATH} ${BUILDKITE_AGENT_GIT_MIRRORS_PATH} none defaults,bind 0 0" >>/etc/fstab
   fi
 fi
 
