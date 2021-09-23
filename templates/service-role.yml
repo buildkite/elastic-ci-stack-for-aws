@@ -128,22 +128,22 @@ Resources:
             {
               "Effect": "Allow",
               "Action": [
-                  "ec2:CreateSubnet",
-                  "ec2:DeleteSubnet",
-                  "ec2:RunInstances"
+                "ec2:CreateSubnet",
+                "ec2:DeleteSubnet"
               ],
               "Resource": "arn:aws:ec2:*:*:subnet/*"
             },
             {
               "Effect": "Allow",
               "Action": [
-                  "ec2:AttachInternetGateway",
-                  "ec2:CreateRouteTable",
-                  "ec2:CreateSubnet",
-                  "ec2:CreateVpc",
-                  "ec2:DeleteVpc",
-                  "ec2:DetachInternetGateway",
-                  "ec2:ModifyVpcAttribute"
+                "ec2:CreateVpc",
+                "ec2:CreateSecurityGroup",
+                "ec2:ModifyVpcAttribute",
+                "ec2:AttachInternetGateway",
+                "ec2:DetachInternetGateway",
+                "ec2:CreateSubnet",
+                "ec2:CreateRouteTable",
+                "ec2:DeleteVpc"
               ],
               "Resource": "arn:aws:ec2:*:*:vpc/*"
             },
