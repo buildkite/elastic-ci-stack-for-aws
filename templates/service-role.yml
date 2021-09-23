@@ -176,7 +176,8 @@ Resources:
                 "lambda:GetFunctionCodeSigningConfig",
                 "lambda:AddPermission",
                 "lambda:RemovePermission",
-                "lambda:DeleteFunction"
+                "lambda:DeleteFunction",
+                "lambda:InvokeFunction"
               ],
               "Resource": "arn:aws:lambda:*:*:function:*"
             },
