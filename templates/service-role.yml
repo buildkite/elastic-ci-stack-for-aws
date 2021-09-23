@@ -1,27 +1,39 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Buildkite Elastic CI Stack Deploy Policies"
-
-Parameters:
-  Role:
-    Type: String
-    Default: ""
-
-Conditions:
-  HasRole:
-    !Not [ !Equals [ !Ref Role, "" ] ]
+Description: "Buildkite Elastic CI Stack CloudFormation service role"
 
 Outputs:
-  Policies:
-    Value:
-      !Join [ ",", [ !Ref SubstackCrudPolicy, !Ref CrudPolicy ] ]
+  RoleName:
+    Value: !Ref CloudFormationServiceRole
+  RoleArn:
+    Value: !GetAtt CloudFormationServiceRole.Arn
 
 Resources:
+  CloudFormationServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Service role for CloudFormation to create, update, and delete stacks for the Buildkite Elastic CI Stack for AWS template.
+      AssumeRolePolicyDocument:
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudformation.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      ManagedPolicyArns:
+        - !Ref SubstackCrudPolicy
+        - !Ref CrudPolicy
+
   SubstackCrudPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      Roles:
-        - !If [ HasRole, !Ref Role, !Ref AWS::NoValue ]
       PolicyDocument:
         {
           "Version": "2012-10-17",
@@ -46,8 +58,6 @@ Resources:
   CrudPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      Roles:
-        - !If [ HasRole, !Ref Role, !Ref AWS::NoValue ]
       PolicyDocument:
         {
             "Version": "2012-10-17",
