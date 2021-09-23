@@ -277,6 +277,7 @@ Resources:
                 "autoscaling:DeleteLifecycleHook",
                 "autoscaling:SetInstanceProtection",
                 "autoscaling:CreateAutoScalingGroup",
+                "autoscaling:EnableMetricsCollection",
                 "autoscaling:UpdateAutoScalingGroup",
                 "autoscaling:DeleteAutoScalingGroup",
                 "autoscaling:PutScalingPolicy",
