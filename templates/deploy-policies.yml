@@ -18,9 +18,8 @@ Outputs:
 
 Resources:
   SubstackCrudPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Properties:
-      PolicyName: ElasticCiStackCrudSubstackPermissions
       Roles:
         - !If [ HasRole, !Ref Role, !Ref AWS::NoValue ]
       PolicyDocument:
@@ -45,9 +44,8 @@ Resources:
         }
 
   CrudPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Properties:
-      PolicyName: ElasticCiStackCrudPermissions
       Roles:
         - !If [ HasRole, !Ref Role, !Ref AWS::NoValue ]
       PolicyDocument:
