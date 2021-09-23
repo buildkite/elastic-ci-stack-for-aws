@@ -196,6 +196,7 @@ Resources:
             {
               "Effect": "Allow",
               "Action": [
+                "s3:GetObject",
                 "s3:CreateBucket",
                 "s3:PutBucketAcl",
                 "s3:PutBucketLogging",
