@@ -76,9 +76,13 @@ If you want to explicitly specify which actions CloudFormation can perform on
 your behalf, you can either create your stack using credentials for an IAM
 identity with limited permissions, or provide an [AWS CloudFormation service role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html).
 
-The [service-role.yml](templates/service-role.yml) template contains an example
-service role and list of the IAM Actions required to create, update, and delete
-a CloudFormation Stack with the Buildkite Elastic CI Stack template.
+🧑‍🔬 [templates/service-role.yml](templates/service-role.yml) template contains an
+experimental service role and set of IAM Policies that list the IAM
+Actions necessary to create, update, and delete a CloudFormation Stack created
+with the Buildkite Elastic CI Stack template. The role created by this template
+is currently being tested, but it has not been tested enough to be depended on.
+There are likely to be missing permissions for some stack parameter
+permutations.
 
 ```bash
 aws cloudformation deploy --template-file templates/service-role.yml --stack-name buildkite-elastic-ci-stack-service-role --region us-east-1 --capabilities CAPABILITY_IAM
