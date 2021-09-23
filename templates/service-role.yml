@@ -153,11 +153,11 @@ Resources:
             {
               "Effect": "Allow",
               "Action": [
-                  "iam:CreateInstanceProfile",
-                  "iam:GetInstanceProfile",
-                  "iam:AddRoleToInstanceProfile",
-                  "iam:RemoveRoleFromInstanceProfile",
-                  "iam:DeleteInstanceProfile"
+                "iam:CreateInstanceProfile",
+                "iam:GetInstanceProfile",
+                "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:DeleteInstanceProfile"
               ],
               "Resource": "arn:aws:iam::*:instance-profile/*"
             },
@@ -165,9 +165,9 @@ Resources:
               "Effect": "Allow",
               "Action": [
                 "kms:DescribeKey",
-                  "kms:CreateGrant",
-                  "kms:Decrypt",
-                  "kms:Encrypt"
+                "kms:CreateGrant",
+                "kms:Decrypt",
+                "kms:Encrypt"
               ],
               "Resource": "arn:aws:kms:*:*:key/*"
             },
@@ -295,10 +295,11 @@ Resources:
             {
               "Effect": "Allow",
               "Action": [
-                  "events:PutRule",
-                  "events:PutTargets",
-                  "events:RemoveTargets",
-                  "events:DeleteRule"
+                "events:DescribeRule",
+                "events:PutRule",
+                "events:PutTargets",
+                "events:RemoveTargets",
+                "events:DeleteRule"
               ],
               "Resource": "arn:aws:events:*:253213882263:rule/*"
             }
