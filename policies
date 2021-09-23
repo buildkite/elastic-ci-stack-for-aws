@@ -123,21 +123,6 @@ arn:aws:iam::253213882263:policy/ElasticCIStackCRUDPolicy
         {
             "Effect": "Allow",
             "Action": [
-            	"iam:CreateRole",
-            	"iam:GetRole",
-            	"iam:GetRolePolicy",
-                "iam:AttachRolePolicy",
-                "iam:DetachRolePolicy",
-                "iam:PutRolePolicy",
-                "iam:DeleteRole",
-                "iam:DeleteRolePolicy",
-                "iam:PassRole"
-            ],
-            "Resource": "arn:aws:iam::*:role/*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
             	"kms:DescribeKey",
                 "kms:CreateGrant",
                 "kms:Decrypt",
