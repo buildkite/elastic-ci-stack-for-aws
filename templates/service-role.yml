@@ -284,6 +284,16 @@ Resources:
                 "autoscaling:AttachInstances"
               ],
               "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                  "events:PutRule",
+                  "events:PutTargets",
+                  "events:RemoveTargets",
+                  "events:DeleteRule"
+              ],
+              "Resource": "arn:aws:events:*:253213882263:rule/[*/]*"
             }
           ]
         }
