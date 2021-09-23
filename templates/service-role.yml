@@ -130,7 +130,9 @@ Resources:
               "Effect": "Allow",
               "Action": [
                 "ec2:CreateSubnet",
-                "ec2:DeleteSubnet"
+                "ec2:DeleteSubnet",
+                "ec2:AssociateRouteTable",
+                "ec2:DisassociateRouteTable"
               ],
               "Resource": "arn:aws:ec2:*:*:subnet/*"
             },
