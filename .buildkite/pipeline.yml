@@ -16,6 +16,15 @@ steps:
         run: unit-tests
         config: docker-compose.unit-tests.yml
 
+  - id: "deploy-service-role-stack"
+    name: ":aws-iam: :cloudformation:"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    command: .buildkite/steps/deploy-service-role-stack.sh
+    depends_on:
+      - "lint"
+      - "bats-tests"
+
   - id: "packer-windows"
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
