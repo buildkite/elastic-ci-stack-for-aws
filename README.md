@@ -67,6 +67,23 @@ Anyone with commit access to your codebase (including third-party pull-requests 
 
 Also keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
 
+### Limiting CloudFormation Permissions
+
+By default, CloudFormation will operate using the permissions granted to the
+identity of the credentials used to initiate a stack deployment or update.
+
+If you want to explicitly specify which actions CloudFormation can perform on
+your behalf, you can either create your stack using an IAM identity with limited
+permissions, or provide an [AWS CloudFormation service role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html).
+
+The [deploy-policies](templates/deploy-policies.yml) template contains a listing
+of the IAM Actions required to create, update, and delete a CloudFormation Stack
+created from the Buildkite Elastic CI Stack template.
+
+```bash
+aws cloudformation deploy --template-file deploy-policies.yml --stack-name buildkite-elastic-ci-stack-deploy-policies --region us-east-1 --capabilities CAPABILITY_IAM
+```
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
