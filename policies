@@ -85,27 +85,7 @@ arn:aws:iam::253213882263:policy/ElasticCIStackCRUDPolicy
         {
             "Effect": "Allow",
             "Action": "ec2:RunInstances",
-            "Resource": "arn:aws:ec2:*:*:instance/*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": "ec2:RunInstances",
-            "Resource": "arn:aws:ec2:*:*:network-interface/*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": "ec2:RunInstances",
-            "Resource": "arn:aws:ec2:*:*:security-group/*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": "ec2:RunInstances",
-            "Resource": "arn:aws:ec2:*:*:volume/*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": "ec2:RunInstances",
-            "Resource": "arn:aws:ec2:*::image/*"
+            "Resource": "*"
         },
         {
             "Effect": "Allow",
