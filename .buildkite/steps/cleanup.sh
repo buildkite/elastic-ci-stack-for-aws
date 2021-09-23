@@ -25,7 +25,7 @@ delete_test_stack() {
 }
 
 delete_service_role_stack() {
-  local service_role_stack="$(buildkite-agent meta-data get service-role-stack-name)"
+  local service_role_stack; service_role_stack="$(buildkite-agent meta-data get service-role-stack-name)"
   if [ -n "${service_role_stack}" ]
   then
     echo "--- Deleting service-role stack $service_role_stack"
