@@ -194,6 +194,7 @@ Resources:
               "Effect": "Allow",
               "Action": [
                 "s3:CreateBucket",
+                "s3:PutObjectAcl",
                 "s3:PutBucketLogging",
                 "s3:PutBucketTagging",
                 "s3:PutBucketVersioning"
