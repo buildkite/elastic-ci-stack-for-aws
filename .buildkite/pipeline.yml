@@ -42,7 +42,9 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
-    depends_on: "packer-windows"
+    depends_on:
+      - "packer-windows"
+      - "deploy-service-role-stack"
 
   - id: "test-windows"
     name: ":cloudformation: :windows: Test"
@@ -70,7 +72,9 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
-    depends_on: "packer-linux-amd64"
+    depends_on:
+      - "packer-linux-amd64"
+      - "deploy-service-role-stack"
 
   - id: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
@@ -98,7 +102,9 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
-    depends_on: "packer-linux-arm64"
+    depends_on:
+      - "packer-linux-arm64"
+      - "deploy-service-role-stack"
 
   - id: "test-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Test"
