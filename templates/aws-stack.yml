@@ -1054,6 +1054,8 @@ Resources:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
       MaxInstanceLifetime: !If [UseMaxInstanceLifetime, !Ref MaxInstanceLifetime, !Ref "AWS::NoValue"]
+      NewInstancesProtectedFromScaleIn: true
+
     CreationPolicy:
       ResourceSignal:
         Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, PT5M ], !Ref InstanceCreationTimeout ]

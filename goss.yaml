@@ -44,6 +44,10 @@ service:
     enabled: true
     running: true
 
+  lifecycled:
+    enabled: true
+    running: true
+
   sshd:
     enabled: true
     running: true
@@ -87,6 +91,9 @@ group:
 
 process:
   buildkite-agent:
+    running: true
+
+  lifecycled:
     running: true
 
   sshd:

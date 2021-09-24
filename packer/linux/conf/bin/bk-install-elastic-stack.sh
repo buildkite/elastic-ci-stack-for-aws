@@ -134,25 +134,31 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
     BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
   fi
 
+  BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+  mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+
   if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
   then
-    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
+    EPHEMERAL_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
+    mkdir -p "${EPHEMERAL_GIT_MIRRORS_PATH}"
 
-    mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
-    chown buildkite-agent: "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
-  else
-    BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
+    mount -o bind "${EPHEMERAL_GIT_MIRRORS_PATH}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+    echo "${EPHEMERAL_GIT_MIRRORS_PATH} ${BUILDKITE_AGENT_GIT_MIRRORS_PATH} none defaults,bind 0 0" >>/etc/fstab
   fi
+
+  chown buildkite-agent: "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 fi
 
 BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
+mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
 if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
 then
-  BUILDKITE_AGENT_BUILD_PATH="/mnt/ephemeral/builds"
-
-  mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
-  chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
+  EPHEMERAL_BUILD_PATH="/mnt/ephemeral/builds"
+  mkdir -p "${EPHEMERAL_BUILD_PATH}"
+  mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
+  echo "${EPHEMERAL_BUILD_PATH} ${BUILDKITE_AGENT_BUILD_PATH} none defaults,bind 0 0" >>/etc/fstab
 fi
+chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
 
@@ -196,6 +202,15 @@ if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 	bash < /tmp/elastic_bootstrap
 	rm /tmp/elastic_bootstrap
 fi
+
+cat << EOF > /etc/lifecycled
+AWS_REGION=${AWS_REGION}
+LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
+LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
+EOF
+
+systemctl enable lifecycled.service
+systemctl start lifecycled
 
 # wait for docker to start
 next_wait_time=0
