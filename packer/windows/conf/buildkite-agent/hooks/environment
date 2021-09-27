@@ -54,6 +54,7 @@ fi
 
 if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
   export BUILDKITE_PLUGIN_ECR_LOGIN=1
+  export BUILDKITE_PLUGIN_ECR_RETRIES=3
 
   # map AWS_ECR_LOGIN_REGISTRY_IDS into the plugin list format
   if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
