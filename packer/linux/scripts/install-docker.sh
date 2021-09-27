@@ -5,6 +5,7 @@ DOCKER_VERSION=20.10.6
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.28.6
 DOCKER_BUILDX_VERSION="0.5.1"
+BINFMT_VERSION="0.8"
 MACHINE=$(uname -m)
 
 # This performs a manual install of Docker.
@@ -89,3 +90,6 @@ sudo yum install -y qemu qemu-user-static
 curl --location --fail --silent --output /tmp/qemu-binfmt-conf.sh https://raw.githubusercontent.com/qemu/qemu/v6.1.0/scripts/qemu-binfmt-conf.sh
 chmod +x /tmp/qemu-binfmt-conf.sh
 sudo /tmp/qemu-binfmt-conf.sh --qemu-suffix "-static" --qemu-path /usr/bin
+
+echo "Updating binfmt..."
+docker run --rm --privileged "linuxkit/binfmt:v${BINFMT_VERSION}"
