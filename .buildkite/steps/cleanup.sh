@@ -18,17 +18,31 @@ delete_test_stack() {
 
   echo "--- Deleting stack $stack_name"
   aws cloudformation delete-stack --stack-name "$stack_name"
+  aws cloudformation wait stack-delete-complete --stack-name "$stack_name"
 
   echo "--- Deleting buckets for $stack_name"
   aws s3 rb "s3://${secrets_bucket}" --force
   aws s3 rb "s3://${secrets_logging_bucket}" --force
 }
 
+delete_service_role_stack() {
+  local service_role_stack; service_role_stack="$(buildkite-agent meta-data get service-role-stack-name)"
+  if [ -n "${service_role_stack}" ]
+  then
+    echo "--- Deleting service-role stack $service_role_stack"
+    aws cloudformation delete-stack --stack-name "$service_role_stack"
+  fi
+}
+
 if [[ -n "${BUILDKITE_BUILD_NUMBER:-}" ]] ; then
-  delete_test_stack "windows-amd64"
-  delete_test_stack "linux-amd64"
-  delete_test_stack "linux-arm64"
+  delete_test_stack "windows-amd64" &
+  delete_test_stack "linux-amd64" &
+  delete_test_stack "linux-arm64" &
+  wait
 fi
+
+# Must run after all the test stacks that use it have been successfully removed
+delete_service_role_stack
 
 if [[ $OSTYPE =~ ^darwin ]] ; then
   cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
@@ -62,7 +76,7 @@ aws cloudformation describe-stacks \
   --output text \
   --query "$(printf 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date" )" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-[[:digit:]]+' \
+  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-[[:digit:]]+|buildkite-elastic-ci-stack-service-role-[[:digit:]]+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
 
 echo "--- Deleting old packer builders"

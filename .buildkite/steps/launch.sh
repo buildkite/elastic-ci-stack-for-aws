@@ -19,6 +19,9 @@ az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$/
 image_id=$(buildkite-agent meta-data get "${os}_${arch}_image_id")
 echo "Using AMI $image_id for $os/$arch"
 
+service_role="$(buildkite-agent meta-data get service-role-arn)"
+echo "Using service role ${service_role}"
+
 instance_type="t3.nano"
 instance_disk="10"
 
@@ -99,7 +102,7 @@ echo "--- Validating templates"
 make validate
 
 echo "--- Creating stack ${stack_name}"
-make create-stack "STACK_NAME=$stack_name"
+make create-stack "STACK_NAME=$stack_name" "SERVICE_ROLE=$service_role"
 
 echo "+++ ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${stack_name}"

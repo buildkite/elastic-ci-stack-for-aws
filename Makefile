@@ -135,10 +135,13 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 # -----------------------------------------
 # Cloudformation helpers
 
-TEMPLATE = aws-stack.yml
-
 config.json:
 	cp config.json.example config.json
+
+SERVICE_ROLE=
+ifdef SERVICE_ROLE
+	role_arn="--role-arn=$(SERVICE_ROLE)"
+endif
 
 create-stack: build/aws-stack.yml env-STACK_NAME
 	aws cloudformation create-stack \
@@ -147,7 +150,8 @@ create-stack: build/aws-stack.yml env-STACK_NAME
 		--disable-rollback \
 		--template-body "file://$(PWD)/build/aws-stack.yml" \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-		--parameters "$$(cat config.json)"
+		--parameters "$$(cat config.json)" \
+		"$(role_arn)"
 
 update-stack: build/aws-stack.yml env-STACK_NAME
 	aws cloudformation update-stack \
@@ -155,8 +159,8 @@ update-stack: build/aws-stack.yml env-STACK_NAME
 		--stack-name $(STACK_NAME) \
 		--template-body "file://$(PWD)/build/aws-stack.yml" \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-		--parameters "$$(cat config.json)"
-
+		--parameters "$$(cat config.json)" \
+		"$(role_arn)"
 
 # -----------------------------------------
 # Other

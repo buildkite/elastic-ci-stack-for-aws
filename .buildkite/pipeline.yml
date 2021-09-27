@@ -16,6 +16,15 @@ steps:
         run: unit-tests
         config: docker-compose.unit-tests.yml
 
+  - id: "deploy-service-role-stack"
+    name: ":aws-iam: :cloudformation:"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    command: .buildkite/steps/deploy-service-role-stack.sh
+    depends_on:
+      - "lint"
+      - "bats-tests"
+
   - id: "packer-windows"
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
@@ -33,7 +42,9 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
-    depends_on: "packer-windows"
+    depends_on:
+      - "packer-windows"
+      - "deploy-service-role-stack"
 
   - id: "test-windows"
     name: ":cloudformation: :windows: Test"
@@ -61,7 +72,9 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
-    depends_on: "packer-linux-amd64"
+    depends_on:
+      - "packer-linux-amd64"
+      - "deploy-service-role-stack"
 
   - id: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
@@ -89,7 +102,9 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
-    depends_on: "packer-linux-arm64"
+    depends_on:
+      - "packer-linux-arm64"
+      - "deploy-service-role-stack"
 
   - id: "test-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Test"

@@ -30,7 +30,7 @@ aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml" \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
   --parameters "$(cat config.json)"
 ```
 
@@ -66,6 +66,27 @@ This repository hasn't been reviewed by security researchers so exercise caution
 Anyone with commit access to your codebase (including third-party pull-requests if you've enabled them in Buildkite) will have access to your secrets bucket files.
 
 Also keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
+
+### Limiting CloudFormation Permissions
+
+By default, CloudFormation will operate using the permissions granted to the
+identity of the credentials used to initiate a stack deployment or update.
+
+If you want to explicitly specify which actions CloudFormation can perform on
+your behalf, you can either create your stack using credentials for an IAM
+identity with limited permissions, or provide an [AWS CloudFormation service role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html).
+
+🧑‍🔬 [templates/service-role.yml](templates/service-role.yml) template contains an
+experimental service role and set of IAM Policies that list the IAM
+Actions necessary to create, update, and delete a CloudFormation Stack created
+with the Buildkite Elastic CI Stack template. The role created by this template
+is currently being tested, but it has not been tested enough to be depended on.
+There are likely to be missing permissions for some stack parameter
+permutations.
+
+```bash
+aws cloudformation deploy --template-file templates/service-role.yml --stack-name buildkite-elastic-ci-stack-service-role --region us-east-1 --capabilities CAPABILITY_IAM
+```
 
 ## Development
 
