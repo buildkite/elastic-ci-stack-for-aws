@@ -6,14 +6,14 @@ arch="${2:-amd64}"
 stack_name="buildkite-aws-stack-test-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
 
 secrets_bucket=$(aws cloudformation describe-stacks \
---stack-name "${stack_name}" \
---query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsBucket`].OutputValue' \
---output text)
+	--stack-name "${stack_name}" \
+	--query "Stacks[0].Outputs[?OutputKey=='ManagedSecretsBucket'].OutputValue" \
+	--output text)
 
 secrets_logging_bucket=$(aws cloudformation describe-stacks \
---stack-name "${stack_name}" \
---query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsLoggingBucket`].OutputValue' \
---output text)
+	--stack-name "${stack_name}" \
+	--query "Stacks[0].Outputs[?OutputKey=='ManagedSecretsLoggingBucket'].OutputValue" \
+	--output text)
 
 echo "--- Deleting stack $stack_name"
 aws cloudformation delete-stack --stack-name "$stack_name"
