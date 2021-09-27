@@ -18,6 +18,7 @@ delete_test_stack() {
 
   echo "--- Deleting stack $stack_name"
   aws cloudformation delete-stack --stack-name "$stack_name"
+  aws cloudformation wait stack-delete-complete --stack-name "$stack_name"
 
   echo "--- Deleting buckets for $stack_name"
   aws s3 rb "s3://${secrets_bucket}" --force
@@ -34,11 +35,13 @@ delete_service_role_stack() {
 }
 
 if [[ -n "${BUILDKITE_BUILD_NUMBER:-}" ]] ; then
-  delete_test_stack "windows-amd64"
-  delete_test_stack "linux-amd64"
-  delete_test_stack "linux-arm64"
+  delete_test_stack "windows-amd64" &
+  delete_test_stack "linux-amd64" &
+  delete_test_stack "linux-arm64" &
+  wait
 fi
 
+# Must run after all the test stacks that use it have been successfully removed
 delete_service_role_stack
 
 if [[ $OSTYPE =~ ^darwin ]] ; then

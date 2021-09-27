@@ -301,7 +301,7 @@ Resources:
                 "events:RemoveTargets",
                 "events:DeleteRule"
               ],
-              "Resource": "arn:aws:events:*:253213882263:rule/*"
+              "Resource": "arn:aws:events:*:*:rule/*"
             }
           ]
         }
