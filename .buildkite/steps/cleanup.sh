@@ -2,48 +2,6 @@
 # shellcheck disable=SC2016
 set -uxo pipefail
 
-delete_test_stack() {
-  local os="$1"
-  local stack_name; stack_name="buildkite-aws-stack-test-${os}-${BUILDKITE_BUILD_NUMBER}"
-
-  secrets_bucket=$(aws cloudformation describe-stacks \
-    --stack-name "${stack_name}" \
-    --query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsBucket`].OutputValue' \
-    --output text)
-
-  secrets_logging_bucket=$(aws cloudformation describe-stacks \
-    --stack-name "${stack_name}" \
-    --query 'Stacks[0].Outputs[?OutputKey==`ManagedSecretsLoggingBucket`].OutputValue' \
-    --output text)
-
-  echo "--- Deleting stack $stack_name"
-  aws cloudformation delete-stack --stack-name "$stack_name"
-  aws cloudformation wait stack-delete-complete --stack-name "$stack_name"
-
-  echo "--- Deleting buckets for $stack_name"
-  aws s3 rb "s3://${secrets_bucket}" --force
-  aws s3 rb "s3://${secrets_logging_bucket}" --force
-}
-
-delete_service_role_stack() {
-  local service_role_stack; service_role_stack="$(buildkite-agent meta-data get service-role-stack-name)"
-  if [ -n "${service_role_stack}" ]
-  then
-    echo "--- Deleting service-role stack $service_role_stack"
-    aws cloudformation delete-stack --stack-name "$service_role_stack"
-  fi
-}
-
-if [[ -n "${BUILDKITE_BUILD_NUMBER:-}" ]] ; then
-  delete_test_stack "windows-amd64" &
-  delete_test_stack "linux-amd64" &
-  delete_test_stack "linux-arm64" &
-  wait
-fi
-
-# Must run after all the test stacks that use it have been successfully removed
-delete_service_role_stack
-
 if [[ $OSTYPE =~ ^darwin ]] ; then
   cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
   cutoff_date_milli=$(gdate --date='-1 days' +%s%3N)

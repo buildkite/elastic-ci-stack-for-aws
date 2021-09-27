@@ -36,9 +36,9 @@ steps:
       - "lint"
       - "bats-tests"
 
-  - id: "launch-windows"
+  - id: "launch-windows-amd64"
     name: ":cloudformation: :windows: Launch"
-    command: .buildkite/steps/launch.sh windows
+    command: .buildkite/steps/launch.sh windows amd64
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
@@ -46,14 +46,23 @@ steps:
       - "packer-windows"
       - "deploy-service-role-stack"
 
-  - id: "test-windows"
+  - id: "test-windows-amd64"
     name: ":cloudformation: :windows: Test"
     command: "docker info"
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
-    depends_on: "launch-windows"
+    depends_on:
+      - "launch-windows-amd64"
+
+  - id: "delete-windows-amd64"
+    name: ":cloudformation: :windows: AMD64 Delete"
+    command: .buildkite/steps/delete.sh windows amd64
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    depends_on:
+      - "test-windows-amd64"
 
   - id: "packer-linux-amd64"
     name: ":packer: :linux: AMD64"
@@ -83,7 +92,16 @@ steps:
     agents:
       stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
-    depends_on: "launch-linux-amd64"
+    depends_on:
+      - "launch-linux-amd64"
+
+  - id: "delete-linux-amd64"
+    name: ":cloudformation: :linux: AMD64 Delete"
+    command: .buildkite/steps/delete.sh linux amd64
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    depends_on:
+      - "test-linux-amd64"
 
   - id: "packer-linux-arm64"
     name: ":packer: :linux: ARM64"
@@ -113,7 +131,26 @@ steps:
     agents:
       stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
-    depends_on: "launch-linux-arm64"
+    depends_on: 
+      - "launch-linux-arm64"
+
+  - id: "delete-linux-arm64"
+    name: ":cloudformation: :linux: ARM64 Delete"
+    command: .buildkite/steps/delete.sh linux arm64
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    depends_on:
+      - "test-linux-arm64"
+
+  - id: "delete-service-role-stack"
+    name: ":aws-iam: :cloudformation: Delete"
+    command: .buildkite/steps/delete-service-role-stack.sh
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    depends_on:
+      - "delete-windows-amd64"
+      - "delete-linux-amd64"
+      - "delete-linux-arm64"
 
   - id: "copy-ami"
     name: ":cloudformation: 🚚 🌎"
