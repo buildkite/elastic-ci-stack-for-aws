@@ -25,7 +25,7 @@ steps:
       - "lint"
       - "bats-tests"
 
-  - id: "packer-windows"
+  - id: "packer-windows-amd64"
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
     timeout_in_minutes: 60
@@ -37,17 +37,17 @@ steps:
       - "bats-tests"
 
   - id: "launch-windows-amd64"
-    name: ":cloudformation: :windows: Launch"
+    name: ":cloudformation: :windows: AMD64 Launch"
     command: .buildkite/steps/launch.sh windows amd64
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     depends_on:
-      - "packer-windows"
+      - "packer-windows-amd64"
       - "deploy-service-role-stack"
 
   - id: "test-windows-amd64"
-    name: ":cloudformation: :windows: Test"
+    name: ":cloudformation: :windows: AMD64 Test"
     command: "docker info"
     timeout_in_minutes: 5
     agents:
@@ -161,7 +161,7 @@ steps:
     depends_on:
       - "test-linux-amd64"
       - "test-linux-arm64"
-      - "test-windows"
+      - "test-windows-amd64"
 
   - id: "publish"
     name: ":cloudformation: :rocket:"
