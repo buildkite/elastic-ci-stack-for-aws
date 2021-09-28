@@ -5,6 +5,7 @@ if [[ -n "${DOCKER_LOGIN_USER:-}" && "${DOCKER_LOGIN_PLUGIN_ENABLED:-}" == "1" ]
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_USERNAME="$DOCKER_LOGIN_USER"
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_PASSWORD_ENV="DOCKER_LOGIN_PASSWORD"
   export BUILDKITE_PLUGIN_DOCKER_LOGIN_SERVER="${DOCKER_LOGIN_SERVER:-}"
+  export BUILDKITE_PLUGIN_DOCKER_LOGIN_RETRIES=3
 
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/docker-login/hooks/pre-command
