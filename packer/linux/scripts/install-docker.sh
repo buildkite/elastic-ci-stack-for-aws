@@ -84,8 +84,15 @@ sudo chmod +x "${DOCKER_CLI_DIR}/docker-buildx"
 docker buildx version
 
 echo "Installing qemu..."
-sudo yum install -y qemu qemu-user-static
+sudo yum install -y git glib2-devel libfdt-devel pixman-devel zlib-devel bzip2 ninja-build python3
 
-curl --location --fail --silent --output /tmp/qemu-binfmt-conf.sh https://raw.githubusercontent.com/qemu/qemu/v6.1.0/scripts/qemu-binfmt-conf.sh
+qemu_version="5.1.0"
+wget "https://download.qemu.org/qemu-${qemu_version}.tar.xz"
+tar xvJf "qemu-${qemu_version}.tar.xz"
+cd "qemu-${qemu_version}"
+./configure
+make install
+
+curl --location --fail --silent --output /tmp/qemu-binfmt-conf.sh "https://raw.githubusercontent.com/qemu/qemu/v${qemu_version}/scripts/qemu-binfmt-conf.sh"
 chmod +x /tmp/qemu-binfmt-conf.sh
 sudo /tmp/qemu-binfmt-conf.sh --qemu-suffix "-static" --qemu-path /usr/bin
