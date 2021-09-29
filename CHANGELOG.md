@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 * A frequent source of build interruption caused by scale-in [#923](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/923)
-* A resource ordering issue preventing instances from self terminating deleting their stack [#928](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/928)
+* A resource ordering issue preventing instances from self terminating when a stack [#928](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/928)
 * Support for `BuildkiteAdditionalSudoPermissions` with spaces [#916](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/916) ([@twunderlich-grapl](https://github.com/twunderlich-grapl))
 * Finish the git lfs install [#912](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/912) ([@pauldraper](https://github.com/pauldraper))
 
