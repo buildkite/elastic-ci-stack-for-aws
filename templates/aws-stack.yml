@@ -606,6 +606,8 @@ Resources:
   Subnet0:
     Type: AWS::EC2::Subnet
     Condition: CreateVpcResources
+    DependsOn:
+      - GatewayAttachment
     Properties:
       AvailabilityZone:
         !If
@@ -621,6 +623,8 @@ Resources:
   Subnet1:
     Type: AWS::EC2::Subnet
     Condition: CreateVpcResources
+    DependsOn:
+      - GatewayAttachment
     Properties:
       AvailabilityZone:
         !If
