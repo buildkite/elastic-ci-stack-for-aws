@@ -125,7 +125,7 @@ if [[ "${DOCKER_USERNS_REMAP:-false}" == "false" ]] ; then
   # => "my-pipeline"
 
   # Now we can pass this to the sudo script which will validate it before safely chmodding:
-  echo "Fixing permissions for '${AGENT_DIR}/${ORG_DIR}/${PIPELINE_DIR}'..."
+  echo "--- Fixing permissions for '${AGENT_DIR}/${ORG_DIR}/${PIPELINE_DIR}'..."
   sudo /usr/bin/fix-buildkite-agent-builds-permissions "${AGENT_DIR}" "${ORG_DIR}" "${PIPELINE_DIR}"
   echo
 fi
