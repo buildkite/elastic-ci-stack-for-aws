@@ -670,11 +670,11 @@ Resources:
   # a strict ordering can be established on teardown.
   VpcComplete:
     Type: AWS::CloudFormation::WaitConditionHandle
-    Condition: CreateVpcResources
-    DependsOn:
-      - RouteDefault
-      - Subnet0Routes
-      - Subnet1Routes
+    Metadata:
+      VpcResources: !If
+        - CreateVpcResources
+        - [ !Ref RouteDefault, !Ref Subnet0Routes, !Ref Subnet1Routes ]
+        - !Ref AWS::NoValue
 
   BuildkiteAgentTokenParameter:
     Type: AWS::SSM::Parameter
@@ -1004,6 +1004,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn:
       - IAMPolicies
+      - VpcComplete
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       MixedInstancesPolicy:
