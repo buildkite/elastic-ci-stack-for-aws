@@ -94,7 +94,7 @@ cat << EOF > config.json
   },
   {
     "ParameterKey": "ScaleInIdlePeriod",
-    "ParameterValue": "60",
+    "ParameterValue": "60"
   }
 ]
 EOF
