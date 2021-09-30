@@ -645,7 +645,8 @@ Resources:
   RouteDefault:
     Type: AWS::EC2::Route
     Condition: CreateVpcResources
-    DependsOn: GatewayAttachment
+    DependsOn:
+      - GatewayAttachment
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref Gateway
@@ -664,6 +665,16 @@ Resources:
     Properties:
       SubnetId: !Ref Subnet1
       RouteTableId: !Ref Routes
+
+  # A resource that depends on the leaf nodes of the VPC configuration so that
+  # a strict ordering can be established on teardown.
+  VpcComplete:
+    Type: AWS::CloudFormation::WaitConditionHandle
+    Condition: CreateVpcResources
+    DependsOn:
+      - RouteDefault
+      - Subnet0Routes
+      - Subnet1Routes
 
   BuildkiteAgentTokenParameter:
     Type: AWS::SSM::Parameter
