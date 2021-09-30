@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-* Included buildkite-agent from v3.32.3 to v3.33.2 [#932](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/932)
+* Included buildkite-agent from v3.32.3 to v3.33.3 [#932](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/932)
 * `EnableDockerExperimental` also enables Docker CLI experimental mode [#911](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/911)
 
 ### Fixed
