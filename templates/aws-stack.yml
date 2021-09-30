@@ -750,6 +750,36 @@ Resources:
       PolicyName: InstancePolicy
       PolicyDocument:
         Statement:
+          - !If
+            - HasSecretsBucket
+            - Effect: Allow
+              Action:
+                - s3:Get*
+                - s3:List*
+              Resource:
+                - !Sub
+                  - "arn:aws:s3:::${Bucket}/*"
+                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
+                - !Sub
+                  - "arn:aws:s3:::${Bucket}"
+                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
+            - !Ref AWS::NoValue
+          - !If
+            - UseArtifactsBucket
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:GetObjectAcl
+                - s3:GetObjectVersion
+                - s3:GetObjectVersionAcl
+                - s3:ListBucket
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:PutObjectVersionAcl
+              Resource:
+                - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
+                - !Sub "arn:aws:s3:::${ArtifactsBucket}"
+            - !Ref AWS::NoValue
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
@@ -817,50 +847,6 @@ Resources:
           - Key: !Ref CostAllocationTagName
             Value: !Ref CostAllocationTagValue
           - !Ref "AWS::NoValue"
-
-  SecretsBucketPolicy:
-    Type: AWS::IAM::Policy
-    Condition: HasSecretsBucket
-    Properties:
-      PolicyName: SecretsBucketPolicy
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:Get*
-              - s3:List*
-            Resource:
-              - !Sub
-                  - "arn:aws:s3:::${Bucket}/*"
-                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
-              - !Sub
-                  - "arn:aws:s3:::${Bucket}"
-                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
-      Roles:
-        - !Ref IAMRole
-
-  ArtifactsBucketPolicies:
-    Type: AWS::IAM::Policy
-    Condition: UseArtifactsBucket
-    Properties:
-      PolicyName: ArtifactsBucketPolicy
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectAcl
-              - s3:GetObjectVersion
-              - s3:GetObjectVersionAcl
-              - s3:ListBucket
-              - s3:PutObject
-              - s3:PutObjectAcl
-              - s3:PutObjectVersionAcl
-            Resource:
-              - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
-              - !Sub "arn:aws:s3:::${ArtifactsBucket}"
-      Roles:
-        - !Ref IAMRole
 
   ImageIdParameterStack:
     Type: AWS::CloudFormation::Stack
