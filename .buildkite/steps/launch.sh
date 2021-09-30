@@ -91,6 +91,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "EnableAgentGitMirrorsExperiment",
     "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "ScaleInIdlePeriod",
+    "ParameterValue": "60"
   }
 ]
 EOF

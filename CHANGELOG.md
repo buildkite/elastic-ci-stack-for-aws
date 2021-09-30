@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.7.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.6.1...v5.7.0) (2021-09-29)
+
+### Added
+
+* Support for storing builds, git-mirrors, and Docker on NVMe Instance Storage [#557](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/557) ([@lox](https://github.com/lox))
+* Retried login for ECR and generic Docker registries [#930](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/930)
+* Experimental CloudFormation service role, listing the IAM Actions required to create, update, and delete the template [#926](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/926)
+* A README feature matrix for Linux and Windows [#910](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/910)
+* qemu and binfmt hooks for cross-architecture Docker image builds [#903](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/903)
+* Tag pins for the included plugin [#906](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/906) ([@nitrocode](https://github.com/nitrocode))
+* Support for AWS SSM sessions [#905](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/905) ([@xiaket](https://github.com/xiaket))
+
+### Changed
+
+* Included buildkite-agent from v3.32.3 to v3.33.3 [#932](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/932)
+* `EnableDockerExperimental` also enables Docker CLI experimental mode [#911](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/911)
+
+### Fixed
+
+* A frequent source of build interruption caused by scale-in [#923](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/923)
+* A resource ordering issue preventing instances from self terminating when a stack [#928](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/928)
+* Support for `BuildkiteAdditionalSudoPermissions` with spaces [#916](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/916) ([@twunderlich-grapl](https://github.com/twunderlich-grapl))
+* Finish the git lfs install [#912](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/912) ([@pauldraper](https://github.com/pauldraper))
+
 ## [v5.6.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.6.0...v5.6.1) (2021-09-02)
 
 ## Fixed
