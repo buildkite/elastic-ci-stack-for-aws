@@ -649,7 +649,8 @@ Resources:
   RouteDefault:
     Type: AWS::EC2::Route
     Condition: CreateVpcResources
-    DependsOn: GatewayAttachment
+    DependsOn:
+      - GatewayAttachment
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref Gateway
@@ -668,6 +669,16 @@ Resources:
     Properties:
       SubnetId: !Ref Subnet1
       RouteTableId: !Ref Routes
+
+  # A resource that depends on the leaf nodes of the VPC configuration so that
+  # a strict ordering can be established on teardown.
+  VpcComplete:
+    Type: AWS::CloudFormation::WaitConditionHandle
+    Metadata:
+      VpcResources: !If
+        - CreateVpcResources
+        - [ !Ref RouteDefault, !Ref Subnet0Routes, !Ref Subnet1Routes ]
+        - !Ref AWS::NoValue
 
   BuildkiteAgentTokenParameter:
     Type: AWS::SSM::Parameter
@@ -743,26 +754,61 @@ Resources:
       PolicyName: InstancePolicy
       PolicyDocument:
         Statement:
+          - !If
+            - HasSecretsBucket
+            - Sid: SecretsBucket
+              Effect: Allow
+              Action:
+                - s3:Get*
+                - s3:List*
+              Resource:
+                - !Sub
+                  - "arn:aws:s3:::${Bucket}/*"
+                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
+                - !Sub
+                  - "arn:aws:s3:::${Bucket}"
+                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
+            - !Ref AWS::NoValue
+          - !If
+            - UseArtifactsBucket
+            - Sid: ArtifactsBucket
+              Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:GetObjectAcl
+                - s3:GetObjectVersion
+                - s3:GetObjectVersionAcl
+                - s3:ListBucket
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:PutObjectVersionAcl
+              Resource:
+                - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
+                - !Sub "arn:aws:s3:::${ArtifactsBucket}"
+            - !Ref AWS::NoValue
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
             Resource: "*"
-          - Effect: Allow
+          - Sid: TerminateInstance
+            Effect: Allow
             Action:
               - autoscaling:DescribeAutoScalingInstances
               - autoscaling:SetInstanceHealth
               - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
-          - Effect: Allow
+          - Sid: Logging
+            Effect: Allow
             Action:
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
               - logs:DescribeLogStreams
             Resource: "*"
-          - Effect: Allow
+          - Sid: Ssm
+            Effect: Allow
             Action:
               - ssm:DescribeInstanceProperties
               - ssm:ListAssociations
@@ -810,50 +856,6 @@ Resources:
           - Key: !Ref CostAllocationTagName
             Value: !Ref CostAllocationTagValue
           - !Ref "AWS::NoValue"
-
-  SecretsBucketPolicy:
-    Type: AWS::IAM::Policy
-    Condition: HasSecretsBucket
-    Properties:
-      PolicyName: SecretsBucketPolicy
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:Get*
-              - s3:List*
-            Resource:
-              - !Sub
-                  - "arn:aws:s3:::${Bucket}/*"
-                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
-              - !Sub
-                  - "arn:aws:s3:::${Bucket}"
-                  - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
-      Roles:
-        - !Ref IAMRole
-
-  ArtifactsBucketPolicies:
-    Type: AWS::IAM::Policy
-    Condition: UseArtifactsBucket
-    Properties:
-      PolicyName: ArtifactsBucketPolicy
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectAcl
-              - s3:GetObjectVersion
-              - s3:GetObjectVersionAcl
-              - s3:ListBucket
-              - s3:PutObject
-              - s3:PutObjectAcl
-              - s3:PutObjectVersionAcl
-            Resource:
-              - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
-              - !Sub "arn:aws:s3:::${ArtifactsBucket}"
-      Roles:
-        - !Ref IAMRole
 
   ImageIdParameterStack:
     Type: AWS::CloudFormation::Stack
@@ -1011,6 +1013,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn:
       - IAMPolicies
+      - VpcComplete
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       MixedInstancesPolicy:
