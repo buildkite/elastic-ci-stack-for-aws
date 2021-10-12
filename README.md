@@ -13,7 +13,7 @@ based services and apps, or run AWS ops tasks.
 
 ## Getting started
 
-See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, and the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci-aws) for detailed information. 
+See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci-aws), or the full [list of recommended resources]() for detailed information. 
 
 Or jump straight in:
 
@@ -153,6 +153,17 @@ tracks the latest Buildkite Agent release.
 You may wish to preview any updates to your stack from this template
 [using a CloudFormation Stack Change Set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
 to decide whether to apply it.
+
+## Recommended reading  
+
+To gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
+
+* [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic_ci_aws)
+* [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/tutorials/elastic-ci-stack-aws)
+* [Running Buildkite Agent on AWS](https://buildkite.com/docs/agent/v3/aws)
+* [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
+* [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
+* [CloudFormation Service Role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
 
 ## Questions and support
 
