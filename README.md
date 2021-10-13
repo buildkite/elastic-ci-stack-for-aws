@@ -161,6 +161,7 @@ To gain a better understanding of how Elastic CI Stack works and how to use it m
 * [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic_ci_aws)
 * [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/tutorials/elastic-ci-stack-aws)
 * [Running Buildkite Agent on AWS](https://buildkite.com/docs/agent/v3/aws)
+* [Template parameters for Elastic CI Stack for AWS](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
 * [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
 * [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
 * [CloudFormation Service Role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
