@@ -1,8 +1,9 @@
 # Releasing the Elastic CI Stack for AWS
 
 A super quick rundown of the steps to release the AWS Elastic Stack:
-
-1. Generate a changelog to preview the changes `ghch --format=markdown --from=v5.3.0 --next-version=v5.4.0` and decide whether this is a major, minor, or bugfix
+1. Install golang with brew install go
+1. Install [ghch](https://github.com/buildkite/ghch) with go get github.com/Songmu/ghch/cmd/ghch.
+1. Generate a changelog to preview the changes `ghch --format=markdown --from=v5.7.0 --next-version=v5.7.0` and decide whether this is a major, minor, or bugfix
 release. Re-run `ghch` if necessary to change the next version.
 1. Create a branch to update the changelog e.g. `keithduncan/release/v5.4.0`
 1. Update `CHANGELOG.md`, rearrange it into whatever categories makes sense,
@@ -28,9 +29,9 @@ Draft a Buildkite Changelog using the following template:
 > Title: Agent vx.x.x and AWS Elastic Stack vx.x.x release
 > Content:
 > The x.x.x version of the buildkite-agent and the x.x.x version of the AWS elastic stack are now available.
-> 
-> The agent has added the ability to do ____, and ____. This agent release has been added to the x.x.x release of the elastic stack, as well as ____ and ____. 
-> 
+>
+> The agent has added the ability to do ____, and ____. This agent release has been added to the x.x.x release of the elastic stack, as well as ____ and ____.
+>
 > For full list of additions, changes, and fixes, see the [buildkite-agent changelog](https://github.com/buildkite/agent/releases/tag/v3.31.0) and the [elastic-ci-stack-for-aws changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/releases/tag/v5.4.0) on GitHub.
 
 Publish a 🚀 Release category message in the [🤖 Agent Message Board](https://3.basecamp.com/3453178/buckets/11763568/message_boards/1730831248).
