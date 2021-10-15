@@ -11,15 +11,15 @@ usually Added, Changed, Fixed, Removed
 	1. Commit the changelog (don’t use [skip CI] in the commit message, that will prevent the tag from kicking off a build)
 	1. Push the branch
 1. While waiting for the branch to build, test and deploy...
-1. Draft a release in GitHub
+1. Draft a [release](https://github.com/buildkite/elastic-ci-stack-for-aws/releases) in GitHub
 	1. Fill in the release version as a git tag, use the release branch as a tag target
 	1. Set the release title to the the release version
-	1. Add upgrade instructions to the end of the GitHub release (copied and updated from the previous one)
+	1. Add upgrade instructions to the end of the GitHub release (copied and updated from the previous one) and update the version numbers in the links.
 	1. Save the release as a draft (doesn't create the tag until the release is published)
 1. Once the branch build has passed, deploy the stack and perform manual of
 changed aspects. Once you are satisfied the changes are good and there aren't any
-regressions, publish the draft GitHub release to create the tag and kick off the tag build process.
-1. Merge the release branch to the repository’s default branch
+regressions, publish the draft GitHub release to create the tag and kick off the tag build process, which builds in the Buildkite AWS Stack pipeline.
+1. Once the tag is building, merge the release branch to the repository’s default branch
 1. Update buildkite/docs with the versions of installed software
 
 ## Announcements
