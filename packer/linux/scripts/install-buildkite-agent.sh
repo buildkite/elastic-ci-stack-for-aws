@@ -20,6 +20,7 @@ sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 echo "Configuring docker userns-remap to use the buildkite-agent user"
+#shellcheck disable=SC2094 # Redirections to the same command are processed in order
 cat <<< "$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
