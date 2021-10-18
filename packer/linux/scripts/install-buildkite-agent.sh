@@ -19,6 +19,9 @@ echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
+echo "Configuring docker userns-remap to use the buildkite-agent user"
+cat <<< "$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
   "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"

@@ -11,6 +11,8 @@ exec > >(tee -a /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console
 # Set user namespace remapping in config
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]] ; then
   cat <<< "$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+else
+  cat <<< "$(jq 'del(."userns-remap")' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 fi
 
 # Set experimental in config
