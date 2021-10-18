@@ -12,6 +12,7 @@ exec > >(tee -a /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]] ; then
   cat <<< "$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 else
+  #shellcheck disable=SC2094 # Redirections to the same command are processed in order
   cat <<< "$(jq 'del(."userns-remap")' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 fi
 
