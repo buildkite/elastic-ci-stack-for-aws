@@ -1,8 +1,8 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$docker_version="20.10.0"
-$docker_compose_version="1.28.5"
+$docker_version="20.10.7"
+$docker_compose_version="1.29.2"
 
 Write-Output "Upgrading DockerMsftProvider module"
 Update-Module -Name DockerMsftProvider -Force
