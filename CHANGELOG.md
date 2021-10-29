@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.7.2](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.7.1...v5.7.2) (2021-10-29)
+
+### Changed
+
+* Upgrade Docker for Linux (20.10.9) and Windows (20.10.7) [#954](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/954) (@eleanorakh)
+* Upgrade docker-compose for Linux (1.29.2) and Windows (1.29.2) [#954](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/954) (@eleanorakh)
+
+### Fixed
+
+* `BuildkiteAgentTokenParameterStorePath` support for AWS Secrets Manager SSM references [#955](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/955) (@eleanorakh)
+* Build failures originating from the S3 Secrets hook [#956](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/956) (@eleanorakh)
+
 ## [v5.7.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.7.0...v5.7.1) (2021-10-14)
 
 ### Added
