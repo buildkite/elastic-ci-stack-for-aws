@@ -1,11 +1,12 @@
 # Updating buildkite-agent-scaler
 
 The [buildkite-agent-scaler](https://buildkite.com/buildkite/buildkite-agent-scaler)
-is brought in via the AWS Serverless Application Repository.
+is brought to the Elastic CI Stack for AWS template using the AWS
+Serverless Application Repository.
 
-Once you have [released](https://github.com/buildkite/buildkite-agent-scaler/blob/master/RELEASE.md) an updated
-version, you can incorporate it into the Elastic CI Stack
-for AWS template.
+Once you have [released](https://github.com/buildkite/buildkite-agent-scaler/blob/master/RELEASE.md)
+an updated version, you can incorporate it into the Elastic CI Stack for AWS
+template.
 
 1. Create a new branch
 1. In the [`templates/aws-stack.yml`](templates/aws-stack.yml)update the `Autoscaling` resource’s `SemanticVersion` property to the newly released version.
