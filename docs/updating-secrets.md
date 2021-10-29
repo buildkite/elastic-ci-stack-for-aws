@@ -1,5 +1,12 @@
 # Updating elastic-ci-stack-s3secrets-hooks
 
+The elastic-ci-stack-s3secrets-hooks are included in the AMIs by the Packer
+build. The hooks are copied in directly from the submodule, the binaries are
+downloaded from the GitHub release.
+
+See https://github.com/buildkite/elastic-ci-stack-for-aws/pull/956 for an
+example of updating elastic-ci-stack-s3secrets-hooks.
+
 1. Create a new branch
 1. Update the `plugins/secrets` git submodule and `.gitmodules` file for the new tag
 	1. `git submodule init`
