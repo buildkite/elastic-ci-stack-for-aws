@@ -1,6 +1,7 @@
 # Updating the Agent
 
-The `buildkite-agent` is built in to the AMIs by the Packer build.
+The `buildkite-agent` is built in to the AMIs by the Packer build. The agent 
+binary is downloaded from download.buildkite.com.
 
 Once you have [released](https://github.com/buildkite/agent/blob/master/RELEASE.md) an updated
 version of the agent, you can incorporate it into the Elastic CI Stack
@@ -20,12 +21,8 @@ example of updating the buildkite-agent.
 Update the `AGENT_VERSION` variable in [`packer/linux/scripts/install-buildkite-agent.sh`](packer/linux/scripts/install-buildkite-agent.sh)
 to change which version is installed during the Packer build for the Linux AMI.
 
-The agent binary is downloaded from download.buildkite.com.
-
 ## Windows
 
 Update the `AGENT_VERSION` variable in [`packer/windows/scripts/install-buildkite-agent.ps1`](packer/windows/scripts/install-buildkite-agent.ps1)
 to change which version is installed during the Packer build for the Windows
 AMI.
-
-The agent binary is downloaded from download.buildkite.com.
