@@ -1,7 +1,7 @@
 # Updating buildkite-agent-scaler
 
 The [buildkite-agent-scaler](https://buildkite.com/buildkite/buildkite-agent-scaler)
-is brought to the Elastic CI Stack for AWS template using the AWS
+is brought in to the Elastic CI Stack for AWS template using the AWS
 Serverless Application Repository.
 
 Once you have [released](https://github.com/buildkite/buildkite-agent-scaler/blob/master/RELEASE.md)
