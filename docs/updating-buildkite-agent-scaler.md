@@ -8,6 +8,9 @@ Once you have [released](https://github.com/buildkite/buildkite-agent-scaler/blo
 an updated version, you can incorporate it into the Elastic CI Stack for AWS
 template.
 
+See https://github.com/buildkite/elastic-ci-stack-for-aws/pull/955 for an
+example of updating the buildkite-agent-scaler.
+
 1. Create a new branch
 1. In the [`templates/aws-stack.yml`](templates/aws-stack.yml)update the `Autoscaling` resource’s `SemanticVersion` property to the newly released version.
 1. Push your branch and open a pull request
