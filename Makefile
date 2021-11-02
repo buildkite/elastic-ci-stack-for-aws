@@ -6,8 +6,11 @@ SHELL = /bin/bash -o pipefail
 PACKER_VERSION ?= 1.6.2
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
+export PACKER_LOG = 0
 
 AWS_REGION ?= us-east-1
+
+export AWS_DEFAULT_REGION = us-east-2
 
 ARM64_INSTANCE_TYPE = m6g.xlarge
 AMD64_INSTANCE_TYPE = c5.xlarge

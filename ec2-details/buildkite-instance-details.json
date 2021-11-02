@@ -1,0 +1,167 @@
+{
+    "Reservations": [
+        {
+            "Groups": [],
+            "Instances": [
+                {
+                    "AmiLaunchIndex": 0,
+                    "ImageId": "ami-021417f81e3b51afc",
+                    "InstanceId": "i-01eca8f03bf94e298",
+                    "InstanceType": "m5.2xlarge",
+                    "KeyName": "gsheeley",
+                    "LaunchTime": "2021-11-02T16:10:20.000Z",
+                    "Monitoring": {
+                        "State": "disabled"
+                    },
+                    "Placement": {
+                        "AvailabilityZone": "us-east-2b",
+                        "GroupName": "",
+                        "Tenancy": "default"
+                    },
+                    "PrivateDnsName": "ip-10-0-2-28.us-east-2.compute.internal",
+                    "PrivateIpAddress": "10.0.2.28",
+                    "ProductCodes": [],
+                    "PublicDnsName": "",
+                    "PublicIpAddress": "18.117.178.109",
+                    "State": {
+                        "Code": 16,
+                        "Name": "running"
+                    },
+                    "StateTransitionReason": "",
+                    "SubnetId": "subnet-0110c6b570b869896",
+                    "VpcId": "vpc-0c5d6b1649cd783ad",
+                    "Architecture": "x86_64",
+                    "BlockDeviceMappings": [
+                        {
+                            "DeviceName": "/dev/xvda",
+                            "Ebs": {
+                                "AttachTime": "2021-11-02T16:10:21.000Z",
+                                "DeleteOnTermination": true,
+                                "Status": "attached",
+                                "VolumeId": "vol-06486c63cff83140b"
+                            }
+                        }
+                    ],
+                    "ClientToken": "",
+                    "EbsOptimized": false,
+                    "EnaSupport": true,
+                    "Hypervisor": "xen",
+                    "IamInstanceProfile": {
+                        "Arn": "arn:aws:iam::335509591822:instance-profile/buildkite-IAMInstanceProfile-1UK8Q2RY72BV3",
+                        "Id": "AIPAU4HPOC4HL7O5IKWCC"
+                    },
+                    "NetworkInterfaces": [
+                        {
+                            "Association": {
+                                "IpOwnerId": "amazon",
+                                "PublicDnsName": "",
+                                "PublicIp": "18.117.178.109"
+                            },
+                            "Attachment": {
+                                "AttachTime": "2021-11-02T16:10:20.000Z",
+                                "AttachmentId": "eni-attach-0313ef25eaf39c068",
+                                "DeleteOnTermination": true,
+                                "DeviceIndex": 0,
+                                "Status": "attached"
+                            },
+                            "Description": "",
+                            "Groups": [
+                                {
+                                    "GroupName": "buildkite-SecurityGroup-SP24OV1AQ67R",
+                                    "GroupId": "sg-04a201492bcaaebe0"
+                                },
+                                {
+                                    "GroupName": "buildkite_ssh_for_real",
+                                    "GroupId": "sg-0818232aa0d8bf95a"
+                                }
+                            ],
+                            "Ipv6Addresses": [],
+                            "MacAddress": "06:03:ad:d2:20:c0",
+                            "NetworkInterfaceId": "eni-062e6fabf722216ad",
+                            "OwnerId": "335509591822",
+                            "PrivateIpAddress": "10.0.2.28",
+                            "PrivateIpAddresses": [
+                                {
+                                    "Association": {
+                                        "IpOwnerId": "amazon",
+                                        "PublicDnsName": "",
+                                        "PublicIp": "18.117.178.109"
+                                    },
+                                    "Primary": true,
+                                    "PrivateIpAddress": "10.0.2.28"
+                                }
+                            ],
+                            "SourceDestCheck": true,
+                            "Status": "in-use",
+                            "SubnetId": "subnet-0110c6b570b869896",
+                            "VpcId": "vpc-0c5d6b1649cd783ad",
+                            "InterfaceType": "interface"
+                        }
+                    ],
+                    "RootDeviceName": "/dev/xvda",
+                    "RootDeviceType": "ebs",
+                    "SecurityGroups": [
+                        {
+                            "GroupName": "buildkite-SecurityGroup-SP24OV1AQ67R",
+                            "GroupId": "sg-04a201492bcaaebe0"
+                        },
+                        {
+                            "GroupName": "buildkite_ssh_for_real",
+                            "GroupId": "sg-0818232aa0d8bf95a"
+                        }
+                    ],
+                    "SourceDestCheck": true,
+                    "Tags": [
+                        {
+                            "Key": "Name",
+                            "Value": "buildkite-agent"
+                        },
+                        {
+                            "Key": "BuildkiteQueue",
+                            "Value": "aws"
+                        },
+                        {
+                            "Key": "CreatedBy",
+                            "Value": "buildkite-elastic-ci-stack-for-aws"
+                        },
+                        {
+                            "Key": "Role",
+                            "Value": "buildkite-agent"
+                        },
+                        {
+                            "Key": "aws:ec2launchtemplate:id",
+                            "Value": "lt-0800bd69313638b36"
+                        },
+                        {
+                            "Key": "BuildkiteAgentRelease",
+                            "Value": "stable"
+                        },
+                        {
+                            "Key": "aws:ec2launchtemplate:version",
+                            "Value": "7"
+                        }
+                    ],
+                    "VirtualizationType": "hvm",
+                    "CpuOptions": {
+                        "CoreCount": 4,
+                        "ThreadsPerCore": 2
+                    },
+                    "CapacityReservationSpecification": {
+                        "CapacityReservationPreference": "open"
+                    },
+                    "HibernationOptions": {
+                        "Configured": false
+                    },
+                    "MetadataOptions": {
+                        "State": "applied",
+                        "HttpTokens": "optional",
+                        "HttpPutResponseHopLimit": 2,
+                        "HttpEndpoint": "enabled"
+                    }
+                }
+            ],
+            "OwnerId": "335509591822",
+            "ReservationId": "r-00678724488fa743a"
+        }
+    ]
+}

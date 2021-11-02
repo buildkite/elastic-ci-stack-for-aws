@@ -12,3 +12,11 @@
 	path = plugins/docker-login
 	url = https://github.com/buildkite-plugins/docker-login-buildkite-plugin.git
 	branch = v2.1.0
+
+[submodule "plugins/junit-annotate"]
+	path = plugins/junit-annotate
+	url = https://github.com/buildkite-plugins/junit-annotate-buildkite-plugin.git
+	
+[submodule "plugins/github-merged-pr"]
+	path = plugins/github-merged-pr
+	url = https://github.com/seek-oss/github-merged-pr-buildkite-plugin.git

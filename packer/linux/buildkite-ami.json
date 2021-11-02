@@ -1,28 +1,27 @@
 {
   "variables": {
-    "region": "us-east-1",
+    "region": "us-east-2",
     "arch": "x86_64",
     "goarch": "amd64",
     "instance_type": "m5.xlarge"
   },
-
   "builders": [
     {
       "type": "amazon-ebs",
       "region": "{{user `region`}}",
       "source_ami_filter": {
         "filters": {
-          "name": "amzn2-ami-hvm-2.0.*-gp2",
+          "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210430",
           "architecture": "{{user `arch`}}",
           "virtualization-type": "hvm"
         },
-        "owners": ["amazon"],
+        "owners": ["099720109477"],
         "most_recent": true
       },
       "instance_type": "{{user `instance_type`}}",
       "ssh_username": "ec2-user",
-      "ami_name": "buildkite-stack-linux-{{user `arch`}}-{{isotime | clean_resource_name}}",
-      "ami_description": "Buildkite Elastic Stack (Amazon Linux 2 LTS w/ docker)",
+      "ami_name": "path-buildkite-stack-ubuntu-{{user `arch`}}-{{isotime | clean_resource_name}}",
+      "ami_description": "Path Robotics' Buildkite Elastic Stack (Ubuntu w/ docker)",
       "ami_groups": ["all"]
     }
   ],
