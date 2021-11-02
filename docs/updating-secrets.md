@@ -4,6 +4,10 @@ The elastic-ci-stack-s3secrets-hooks are included in the AMIs by the Packer
 build. The hooks are copied in directly from the submodule, the binaries are
 downloaded from the GitHub release.
 
+Once you have [released](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/blob/master/RELEASE.md)
+an updated version of the s3secrets-hooks, you can incorporate it into the
+Elastic CI Stack for AWS template.
+
 See https://github.com/buildkite/elastic-ci-stack-for-aws/pull/956 for an
 example of updating elastic-ci-stack-s3secrets-hooks.
 
