@@ -12,7 +12,7 @@ See https://github.com/buildkite/elastic-ci-stack-for-aws/pull/955 for an
 example of updating the buildkite-agent-scaler.
 
 1. Create a new branch
-1. In the [`templates/aws-stack.yml`](templates/aws-stack.yml)update the `Autoscaling` resource’s `SemanticVersion` property to the newly released version.
+1. In the [`templates/aws-stack.yml`](templates/aws-stack.yml) update the `Autoscaling` resource’s `SemanticVersion` property to the newly released version.
 1. Push your branch and open a pull request
 1. Wait for CI to pass
 1. If needed for testing, create a stack with the branch’s published template to verify functionality
