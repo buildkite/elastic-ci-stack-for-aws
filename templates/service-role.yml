@@ -217,7 +217,13 @@ Resources:
             {
               "Effect": "Allow",
               "Action": [
-                "ssm:CreateDocument"
+                "ssm:ListDocuments",
+                "ssm:CreateDocument",
+                "ssm:GetDocument",
+                "ssm:UpdateDocument",
+                "ssm:UpdateDocumentMetadata",
+                "ssm:DescribeDocument",
+                "ssm:DeleteDocument"
               ],
               "Resource": "*"
             },
