@@ -210,8 +210,6 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppRestartDelay 5000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-Restart-Service buildkite-agent
-
 # renable debug tracing
 Set-PSDebug -Trace 2
 

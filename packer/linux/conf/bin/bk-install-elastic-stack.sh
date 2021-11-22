@@ -214,7 +214,6 @@ if ! docker ps ; then
 fi
 
 systemctl enable "buildkite-agent"
-systemctl start "buildkite-agent"
 
 # let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \
