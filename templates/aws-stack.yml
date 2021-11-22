@@ -843,7 +843,7 @@ Resources:
               - ec2messages:FailMessage
               - ec2messages:GetEndpoint
               - ec2messages:GetMessages
-              - ec2messages:SendRepl
+              - ec2messages:SendReply
             Resource: "*"
       Roles:
         - !Ref IAMRole
