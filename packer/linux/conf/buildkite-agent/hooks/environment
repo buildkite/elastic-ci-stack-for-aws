@@ -40,7 +40,7 @@ if ! /usr/local/bin/bk-check-disk-space.sh ; then
   fi
 fi
 
-if [ -n "${BUILDKITE_ARTIFACTS_BUCKET}" ]
+if [ -n "${BUILDKITE_ARTIFACTS_BUCKET:-}" ]
 then
   echo "Configuring artifacts"
 

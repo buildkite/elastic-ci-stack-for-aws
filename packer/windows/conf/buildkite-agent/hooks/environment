@@ -18,7 +18,7 @@ fi
 
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 
-if [ -n "${BUILDKITE_ARTIFACTS_BUCKET}" ]
+if [ -n "${BUILDKITE_ARTIFACTS_BUCKET:-}" ]
 then
   echo "Configuring artifacts"
 
