@@ -1130,6 +1130,72 @@ Resources:
       # them
       HeartbeatTimeout: 300
 
+  AutomationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ssm.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: RunInstanceShellScripts
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:document/AWS-RunShellScript
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+        - PolicyName: CompleteLifecycleActions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: autoscaling:CompleteLifecycleAction
+                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
+
+  BootHookAutomation:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        assumeRole: !GetAtt AutomationRole.Arn
+        description: Start the buildkite-agent and complete the launch lifecycle action
+        parameters:
+          InstanceId:
+            type: String
+          AutoScalingGroupName:
+            type: String
+            default: !Ref AgentAutoScaleGroup
+          LifecycleHook:
+            type: String
+            default: !Ref BootHook
+        mainSteps:
+          - name: RunCommand
+            action: aws:RunCommand
+            inputs:
+              DocumentName: AWS-RunShellScript
+              InstanceIds:
+                - "{{ InstanceId }}"
+              Parameters:
+                executionTimeout: 300
+                commands:
+                  - systemctl start buildkite-agent
+          - name: CompleteLifecycleAction
+            action: aws:executeAwsApi
+            inputs:
+              Service: autoscaling
+              Api: CompleteLifecycleAction
+              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
+              InstanceId: "{{ InstanceId }}"
+              LifecycleActionResult: "CONTINUE"
+              LifecycleHookName: "{{ LifecycleHook }}"
+
   ShutdownHook:
     Type: AWS::AutoScaling::LifecycleHook
     Properties:
