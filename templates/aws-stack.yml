@@ -66,6 +66,7 @@ Metadata:
         - SpotPrice
         - SecretsBucket
         - ArtifactsBucket
+        - ArtifactsBucketRegion
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - RootVolumeSize
@@ -203,6 +204,11 @@ Parameters:
     Description: Optional - Name of an existing S3 bucket for build artifact storage
     Type: String
     Default: ""
+
+  ArtifactsBucketRegion:
+     Description: Optional - Region for the ArtifactsBucket. If blank the bucket’s region is dynamically discovered.
+     Type: String
+     Default: ""
 
   BootstrapScriptUrl:
     Description: Optional - HTTPS or S3 URL to run on each instance during boot
