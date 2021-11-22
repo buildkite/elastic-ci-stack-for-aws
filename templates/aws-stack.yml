@@ -1219,7 +1219,7 @@ Resources:
             default: !Ref BootHook
         mainSteps:
           - name: RunCommand
-            action: aws:RunCommand
+            action: aws:runCommand
             inputs:
               DocumentName: AWS-RunShellScript
               InstanceIds:
@@ -1287,7 +1287,7 @@ Resources:
             default: !Ref ShutdownHook
         mainSteps:
           - name: RunCommand
-            action: aws:RunCommand
+            action: aws:runCommand
             inputs:
               DocumentName: AWS-RunShellScript
               InstanceIds:
