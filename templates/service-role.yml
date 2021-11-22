@@ -217,6 +217,13 @@ Resources:
             {
               "Effect": "Allow",
               "Action": [
+                "ssm:CreateDocument"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
                 "iam:ListPolicies",
                 "iam:ListInstanceProfiles",
                 "iam:ListRoles",
