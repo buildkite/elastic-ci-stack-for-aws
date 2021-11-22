@@ -46,10 +46,6 @@
     },
     {
       "type": "powershell",
-      "script": "scripts/install-lifecycled.ps1"
-    },
-    {
-      "type": "powershell",
       "script": "scripts/install-docker.ps1"
     },
     {

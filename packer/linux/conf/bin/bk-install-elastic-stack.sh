@@ -202,15 +202,6 @@ if [[ -n "${BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT}" ]] ; then
 	rm /tmp/elastic_bootstrap
 fi
 
-cat << EOF > /etc/lifecycled
-AWS_REGION=${AWS_REGION}
-LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
-LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
-EOF
-
-systemctl enable lifecycled.service
-systemctl start lifecycled
-
 # wait for docker to start
 next_wait_time=0
 until docker ps || [ $next_wait_time -eq 5 ]; do

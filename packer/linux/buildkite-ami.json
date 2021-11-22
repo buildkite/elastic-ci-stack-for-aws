@@ -47,10 +47,6 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
-    },
-    {
-      "type": "shell",
       "script": "scripts/install-docker.sh"
     },
     {
