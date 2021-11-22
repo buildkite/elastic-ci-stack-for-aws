@@ -135,7 +135,6 @@ priority=%n
 spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 shell=powershell
-disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 "@
 $OFS=" "
