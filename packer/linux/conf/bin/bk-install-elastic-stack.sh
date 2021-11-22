@@ -91,6 +91,15 @@ set_unless_present "AWS_DEFAULT_REGION" "$AWS_REGION"
 set_unless_present "AWS_REGION" "$AWS_REGION"
 EOF
 
+if [ -n "$BUILDKITE_ARTIFACTS_BUCKET" ]
+then
+	cat << EOF >> /var/lib/buildkite-agent/cfn-env
+
+set_always "BUILDKITE_ARTIFACTS_BUCKET" "$BUILDKITE_ARTIFACTS_BUCKET"
+set_always "BUILDKITE_ARTIFACTS_BUCKET_REGION" "$BUILDKITE_ARTIFACTS_BUCKET_REGION"
+EOF
+fi
+
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]] ; then
 	if [[ "$(uname -m)" == "aarch64" ]] ; then
 	  AGENT_ARCH="arm64"

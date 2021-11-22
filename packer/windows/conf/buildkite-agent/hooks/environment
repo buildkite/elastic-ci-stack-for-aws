@@ -18,6 +18,14 @@ fi
 
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 
+if [ -n "${BUILDKITE_ARTIFACTS_BUCKET}" ]
+then
+  echo "Configuring artifacts"
+
+  export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="s3://${BUILDKITE_ARTIFACTS_BUCKET}/${BUILDKITE_PIPELINE_ID}/${BUILDKITE_BUILD_ID}/${BUILDKITE_JOB_ID}"
+  export BUILDKITE_S3_DEFAULT_REGION="${BUILDKITE_ARTIFACTS_BUCKET_REGION}"
+fi
+
 echo "Configuring built-in plugins"
 
 [[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}

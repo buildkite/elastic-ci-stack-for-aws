@@ -83,6 +83,14 @@ set_unless_present "AWS_DEFAULT_REGION" "$Env:AWS_REGION"
 set_unless_present "AWS_REGION" "$Env:AWS_REGION"
 "@
 
+if ($Env:BUILDKITE_ARTIFACTS_BUCKET -ne "") {
+  Add-Content -Path C:\buildkite-agent\cfn-env -Value @"
+
+set_always "BUILDKITE_ARTIFACTS_BUCKET" "$BUILDKITE_ARTIFACTS_BUCKET"
+set_always "BUILDKITE_ARTIFACTS_BUCKET_REGION" "$BUILDKITE_ARTIFACTS_BUCKET_REGION"
+"@
+}
+
 If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   Write-Output "Downloading buildkite-agent edge..."
   Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-edge.exe -Uri "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-windows-amd64.exe"
