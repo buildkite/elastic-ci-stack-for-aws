@@ -975,6 +975,8 @@ Resources:
                   $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
                   $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
                   $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
+                  $Env:BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}"
+                  $Env:BUILDKITE_ARTIFACTS_BUCKET_REGION="${ArtifactsBucketRegion}"
                   $Env:AWS_DEFAULT_REGION="${AWS::Region}"
                   $Env:SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}"
                   $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
@@ -1021,6 +1023,8 @@ Resources:
                   BUILDKITE_ECR_POLICY="${ECRAccessPolicy}" \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}" \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}" \
+                  BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}" \
+                  BUILDKITE_ARTIFACTS_BUCKET_REGION="${ArtifactsBucketRegion}" \
                   AWS_DEFAULT_REGION="${AWS::Region}" \
                   SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}" \
                   ECR_PLUGIN_ENABLED="${EnableECRPlugin}" \
