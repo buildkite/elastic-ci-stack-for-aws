@@ -1072,7 +1072,6 @@ Resources:
       TerminationPolicies:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
-      NewInstancesProtectedFromScaleIn: true
     CreationPolicy:
       ResourceSignal:
         Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, PT5M ], !Ref InstanceCreationTimeout ]
