@@ -1158,7 +1158,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: ssm:SendCommand
-                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:document/AWS-RunShellScript
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/AWS-RunShellScript
               - Effect: Allow
                 Action: ssm:SendCommand
                 Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
