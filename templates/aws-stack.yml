@@ -1119,6 +1119,29 @@ Resources:
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         DisableScaleIn: "false"
 
+  EventBridgeRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StartSsmAutomation
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ssm:StartAutomationExecution
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${ShutdownHookAutomation}:$DEFAULT
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt AutomationRole.Arn
+
   AutomationRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1156,6 +1179,26 @@ Resources:
       # We give instances five minutes to respond to this hook else we abandon
       # them
       HeartbeatTimeout: 300
+
+  BootHookRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub Run the boot time AWS SSM Automation for ${BootHook}
+      EventPattern:
+        source:
+          - aws.autoscaling
+        detail-type:
+          - "EC2 Instance-launch Lifecycle Action"
+        detail:
+          AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+          RoleArn: !GetAtt EventBridgeRuleRole.Arn
+          Id: TargetSsmAutomation
+          InputTransformer:
+            InputPathsMap:
+              instanceid: "$.detail.EC2InstanceId"
+            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
 
   BootHookAutomation:
     Type: AWS::SSM::Document
@@ -1204,6 +1247,26 @@ Resources:
       # We give instances one hour to respond to this hook else we continue
       HeartbeatTimeout: 3600
       DefaultResult: CONTINUE
+
+  ShutdownHookRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub Run the shutdown time AWS SSM Automation for ${ShutdownHook}
+      EventPattern:
+        source:
+          - aws.autoscaling
+        detail-type:
+          - "EC2 Instance-terminate Lifecycle Action"
+        detail:
+          AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+          RoleArn: !GetAtt EventBridgeRuleRole.Arn
+          Id: TargetSsmAutomation
+          InputTransformer:
+            InputPathsMap:
+              instanceid: "$.detail.EC2InstanceId"
+            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
 
   ShutdownHookAutomation:
     Type: AWS::SSM::Document
