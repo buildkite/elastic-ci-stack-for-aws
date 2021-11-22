@@ -201,7 +201,7 @@ Parameters:
     Default: ""
 
   SecretsBucketRegion:
-    Description: Optional - Region for the SecretsBucket. If blank the bucket’s region is dynamically discovered.
+    Description: Optional - Region for the SecretsBucket. If blank the bucket's region is dynamically discovered.
     Type: String
     Default: ""
 
