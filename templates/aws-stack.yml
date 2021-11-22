@@ -1204,3 +1204,41 @@ Resources:
       # We give instances one hour to respond to this hook else we continue
       HeartbeatTimeout: 3600
       DefaultResult: CONTINUE
+
+  ShutdownHookAutomation:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        assumeRole: !GetAtt AutomationRole.Arn
+        description: Stop the buildkite-agent, wait for it to exit, complete the launch lifecycle action
+        parameters:
+          InstanceId:
+            type: String
+          AutoScalingGroupName:
+            type: String
+            default: !Ref AgentAutoScaleGroup
+          LifecycleHook:
+            type: String
+            default: !Ref ShutdownHook
+        mainSteps:
+          - name: RunCommand
+            action: aws:RunCommand
+            inputs:
+              DocumentName: AWS-RunShellScript
+              InstanceIds:
+                - "{{ InstanceId }}"
+              Parameters:
+                executionTimeout: 3600
+                commands:
+                  - systemctl stop buildkite-agent
+          - name: CompleteLifecycleAction
+            action: aws:executeAwsApi
+            inputs:
+              Service: autoscaling
+              Api: CompleteLifecycleAction
+              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
+              InstanceId: "{{ InstanceId }}"
+              LifecycleActionResult: "CONTINUE"
+              LifecycleHookName: "{{ LifecycleHook }}"
