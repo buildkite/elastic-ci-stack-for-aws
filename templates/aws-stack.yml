@@ -1168,8 +1168,9 @@ Resources:
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
       LifecycleHookName: ShutdownHook
       LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
-      # We give instances one hour to respond to this hook else we abandon them
+      # We give instances one hour to respond to this hook else we continue
       HeartbeatTimeout: 3600
+      DefaultResult: CONTINUE
 
   ShutdownHookFunction:
     Type: AWS::Lambda::Function
