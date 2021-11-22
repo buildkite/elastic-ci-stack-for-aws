@@ -1119,16 +1119,6 @@ Resources:
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         DisableScaleIn: "false"
 
-  BootHook:
-    Type: AWS::AutoScaling::LifecycleHook
-    Properties:
-      AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      LifecycleHookName: BootHook
-      LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
-      # We give instances five minutes to respond to this hook else we abandon
-      # them
-      HeartbeatTimeout: 300
-
   AutomationRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1156,6 +1146,16 @@ Resources:
               - Effect: Allow
                 Action: autoscaling:CompleteLifecycleAction
                 Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
+
+  BootHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      LifecycleHookName: BootHook
+      LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
+      # We give instances five minutes to respond to this hook else we abandon
+      # them
+      HeartbeatTimeout: 300
 
   BootHookAutomation:
     Type: AWS::SSM::Document
