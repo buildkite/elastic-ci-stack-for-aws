@@ -223,7 +223,10 @@ Resources:
                 "ssm:UpdateDocument",
                 "ssm:UpdateDocumentMetadata",
                 "ssm:DescribeDocument",
-                "ssm:DeleteDocument"
+                "ssm:DeleteDocument",
+                "ssm:ListTagsForResource",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource"
               ],
               "Resource": "*"
             },
