@@ -1118,3 +1118,65 @@ Resources:
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         DisableScaleIn: "false"
+
+  LifecycleHookLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CompleteLifecycleAction
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: autoscaling:CompleteLifecycleAction
+                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
+
+  BootHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      LifecycleHookName: BootHook
+      LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
+      # We give instances five minutes to respond to this hook else we abandon
+      # them
+      HeartbeatTimeout: 300
+
+  BootHookFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: 'Launch Buildkite Agent on Auto Scaling group instance'
+      Code:
+        ZipFile: |
+          
+      Handler: index.handler
+      Role: !GetAtt LifecycleHookLambdaRole.Arn
+      Runtime: 'nodejs14.x'
+
+  ShutdownHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      LifecycleHookName: ShutdownHook
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      # We give instances one hour to respond to this hook else we abandon them
+      HeartbeatTimeout: 3600
+
+  ShutdownHookFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: 'Terminate Buildkite Agent on Auto Scaling group instance'
+      Code:
+        ZipFile: |
+          
+      Handler: index.handler
+      Role: !GetAtt LifecycleHookLambdaRole.Arn
+      Runtime: 'nodejs14.x'
