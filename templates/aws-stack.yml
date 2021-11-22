@@ -817,7 +817,6 @@ Resources:
               - autoscaling:DescribeAutoScalingInstances
               - autoscaling:SetInstanceHealth
               - autoscaling:TerminateInstanceInAutoScalingGroup
-              - autoscaling:CompleteLifecycleAction
             Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
           - Sid: Logging
             Effect: Allow
