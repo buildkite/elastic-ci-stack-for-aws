@@ -1228,7 +1228,7 @@ Resources:
               InstanceIds:
                 - "{{ InstanceId }}"
               Parameters:
-                executionTimeout: 300
+                executionTimeout: "300"
                 commands:
                   - systemctl start buildkite-agent
           - name: CompleteLifecycleAction
@@ -1296,7 +1296,7 @@ Resources:
               InstanceIds:
                 - "{{ InstanceId }}"
               Parameters:
-                executionTimeout: 3600
+                executionTimeout: "3600"
                 commands:
                   - systemctl stop buildkite-agent
           - name: CompleteLifecycleAction
