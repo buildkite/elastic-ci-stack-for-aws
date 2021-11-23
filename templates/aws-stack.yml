@@ -65,6 +65,7 @@ Metadata:
         - KeyName
         - SpotPrice
         - SecretsBucket
+        - SecretsBucketRegion
         - ArtifactsBucket
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
@@ -196,6 +197,11 @@ Parameters:
 
   SecretsBucket:
     Description: Optional - Name of an existing S3 bucket containing pipeline secrets (Created if left blank)
+    Type: String
+    Default: ""
+
+  SecretsBucketRegion:
+    Description: Optional - Region for the SecretsBucket. If blank the bucket's region is dynamically discovered.
     Type: String
     Default: ""
 
@@ -955,6 +961,7 @@ Resources:
                   $Env:BUILDKITE_STACK_VERSION="%v"
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
+                  $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
                   $Env:BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
@@ -978,6 +985,7 @@ Resources:
                   </powershell>
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
+                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref AWS::Region, !Ref SecretsBucketRegion ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
                   }
               - !Sub
@@ -1001,6 +1009,7 @@ Resources:
                   BUILDKITE_STACK_VERSION="%v" \
                   BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}" \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
+                  BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
                   BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
@@ -1025,6 +1034,7 @@ Resources:
                   --==BOUNDARY==--
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
+                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref AWS::Region, !Ref SecretsBucketRegion ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
                   }
 
