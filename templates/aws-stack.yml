@@ -1138,6 +1138,7 @@ Resources:
                 Resource:
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${ShutdownHookAutomation}:$DEFAULT
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${SpotInteruptionAutomation}:$DEFAULT
               - Effect: Allow
                 Action: iam:PassRole
                 Resource: !GetAtt AutomationRole.Arn
@@ -1341,3 +1342,45 @@ Resources:
               InstanceId: "{{ InstanceId }}"
               LifecycleActionResult: "CONTINUE"
               LifecycleHookName: "{{ LifecycleHook }}"
+
+  SpotInterruptionRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub Run the spot interruption AWS SSM Automation for ${AgentAutoScaleGroup}
+      EventPattern:
+        source:
+          - aws.ec2
+        detail-type:
+          - EC2 Spot Instance Interruption Warning
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${SpotInteruptionAutomation}:$DEFAULT
+          RoleArn: !GetAtt EventBridgeRuleRole.Arn
+          Id: TargetSsmAutomation
+          InputTransformer:
+            InputPathsMap:
+              instanceid: "$.detail.instance-id"
+            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
+
+  SpotInteruptionAutomation:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        assumeRole: !GetAtt AutomationRole.Arn
+        description: Terminate the instance in the Auto Scaling group, making it go through the shutdown hook.
+        parameters:
+          InstanceId:
+            type: String
+          AutoScalingGroupName:
+            type: String
+            default: !Ref AgentAutoScaleGroup
+        mainSteps:
+          - name: TerminateInstanceInAutoScalingGroup
+            action: aws:executeAwsApi
+            inputs:
+              Service: autoscaling
+              Api: TerminateInstanceInAutoScalingGroup
+              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
+              InstanceId: "{{ InstanceId }}"
+              ShouldDecrementDesiredCapacity: false
