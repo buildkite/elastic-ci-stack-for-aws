@@ -1343,6 +1343,7 @@ Resources:
               LifecycleActionResult: "CONTINUE"
               LifecycleHookName: "{{ LifecycleHook }}"
 
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html#spot-instance-termination-notices
   SpotInterruptionRule:
     Type: AWS::Events::Rule
     Properties:
