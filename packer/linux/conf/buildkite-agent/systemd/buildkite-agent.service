@@ -16,7 +16,7 @@ RestartSec=5
 Restart=always
 RestartForceExitStatus=SIGPIPE
 TimeoutStartSec=10
-TimeoutStopSec=0
+TimeoutStopSec=3600
 KillMode=process
 
 [Install]
