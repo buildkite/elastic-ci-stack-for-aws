@@ -1161,10 +1161,15 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action: ssm:SendCommand
-                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/AWS-RunShellScript
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
               - Effect: Allow
                 Action: ssm:SendCommand
                 Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+              - Effect: Allow
+                Action:
+                  - ssm:ListCommands
+                  - ssm:ListCommandInvocations
+                Resource: "*"
         - PolicyName: CompleteLifecycleActions
           PolicyDocument:
             Version: '2012-10-17'
