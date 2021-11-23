@@ -1285,7 +1285,7 @@ Resources:
           AutoScalingGroupName: [ !Ref AgentAutoScaleGroup ]
           LifecycleHookName: [ !Ref ShutdownHook ]
       Targets:
-        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${ShutdownHookAutomation}:$DEFAULT
           RoleArn: !GetAtt EventBridgeRuleRole.Arn
           Id: TargetSsmAutomation
           InputTransformer:
