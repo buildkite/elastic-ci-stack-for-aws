@@ -1157,6 +1157,9 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
+                Action: ssm:DescribeInstanceInformation
+                Resource: "*"
+              - Effect: Allow
                 Action: ssm:SendCommand
                 Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/AWS-RunShellScript
               - Effect: Allow
