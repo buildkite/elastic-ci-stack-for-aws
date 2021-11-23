@@ -1201,7 +1201,7 @@ Resources:
           - "EC2 Instance-launch Lifecycle Action"
         detail:
           AutoScalingGroupName: [ !Ref AgentAutoScaleGroup ]
-          LifecycleHookName: [ BootHook ]
+          LifecycleHookName: [ !Ref BootHook ]
       Targets:
         - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
           RoleArn: !GetAtt EventBridgeRuleRole.Arn
@@ -1282,7 +1282,7 @@ Resources:
           - "EC2 Instance-terminate Lifecycle Action"
         detail:
           AutoScalingGroupName: [ !Ref AgentAutoScaleGroup ]
-          LifecycleHookName: [ ShutdownHook ]
+          LifecycleHookName: [ !Ref ShutdownHook ]
       Targets:
         - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
           RoleArn: !GetAtt EventBridgeRuleRole.Arn
