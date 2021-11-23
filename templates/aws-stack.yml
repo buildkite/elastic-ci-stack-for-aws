@@ -1189,7 +1189,7 @@ Resources:
       LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
       # We give instances five minutes to respond to this hook else we abandon
       # them
-      HeartbeatTimeout: 300
+      HeartbeatTimeout: !If [ UseLinuxAgents, 300, 600 ]
 
   BootHookRule:
     Type: AWS::Events::Rule
@@ -1249,7 +1249,7 @@ Resources:
                 InstanceIds:
                   - "{{ InstanceId }}"
                 Parameters:
-                  executionTimeout: "300"
+                  executionTimeout: "600"
                   commands:
                     - nssm start buildkite-agent
           - name: CompleteLifecycleAction
