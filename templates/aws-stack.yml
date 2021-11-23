@@ -1161,7 +1161,9 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action: ssm:SendCommand
-                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunPowerShellScript
               - Effect: Allow
                 Action: ssm:SendCommand
                 Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
@@ -1226,16 +1228,28 @@ Resources:
             type: String
             default: !Ref BootHook
         mainSteps:
-          - name: RunCommand
-            action: aws:runCommand
-            inputs:
-              DocumentName: AWS-RunShellScript
-              InstanceIds:
-                - "{{ InstanceId }}"
-              Parameters:
-                executionTimeout: "300"
-                commands:
-                  - systemctl start buildkite-agent
+          - !If
+            - UseLinuxAgents
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "300"
+                  commands:
+                    - systemctl start buildkite-agent
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunPowerShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "300"
+                  commands:
+                    - nssm start buildkite-agent
           - name: CompleteLifecycleAction
             action: aws:executeAwsApi
             inputs:
@@ -1294,16 +1308,28 @@ Resources:
             type: String
             default: !Ref ShutdownHook
         mainSteps:
-          - name: RunCommand
-            action: aws:runCommand
-            inputs:
-              DocumentName: AWS-RunShellScript
-              InstanceIds:
-                - "{{ InstanceId }}"
-              Parameters:
-                executionTimeout: "3600"
-                commands:
-                  - systemctl stop buildkite-agent
+          - !If
+            - UseLinuxAgents
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "3600"
+                  commands:
+                    - systemctl stop buildkite-agent
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunPowerShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "3600"
+                  commands:
+                    - nssm stop buildkite-agent
           - name: CompleteLifecycleAction
             action: aws:executeAwsApi
             inputs:
