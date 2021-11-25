@@ -1167,7 +1167,10 @@ Resources:
               - Effect: Allow
                 Action: ssm:StartAutomationExecution
                 Resource:
-                  - !If [ UseWarmPool, !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT, !Ref "AWS::NoValue" ]
+                  - !If
+                    - UseWarmPool
+                    - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+                    - !Ref "AWS::NoValue"
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${ShutdownHookAutomation}:$DEFAULT
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${SpotInteruptionAutomation}:$DEFAULT
               - Effect: Allow
