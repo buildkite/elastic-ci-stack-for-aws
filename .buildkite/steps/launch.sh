@@ -103,6 +103,7 @@ echo "--- Building templates"
 make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 
 echo "--- Validating templates"
+# 2021-11-25 KD: template larger than template-body supports, needs moving to s3
 # make validate
 
 echo "--- Creating stack ${stack_name}"
