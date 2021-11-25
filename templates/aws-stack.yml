@@ -1382,6 +1382,5 @@ Resources:
             inputs:
               Service: autoscaling
               Api: TerminateInstanceInAutoScalingGroup
-              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
               InstanceId: "{{ InstanceId }}"
               ShouldDecrementDesiredCapacity: false
