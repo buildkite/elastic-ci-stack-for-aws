@@ -103,7 +103,7 @@ echo "--- Building templates"
 make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 
 echo "--- Validating templates"
-make validate
+# make validate
 
 echo "--- Creating stack ${stack_name}"
 make create-stack "STACK_NAME=$stack_name" "SERVICE_ROLE=$service_role"
