@@ -1209,7 +1209,9 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: autoscaling:CompleteLifecycleAction
+                Action:
+                  - autoscaling:CompleteLifecycleAction
+                  - autoscaling:TerminateInstanceInAutoScalingGroup
                 Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
 
   BootHook:
