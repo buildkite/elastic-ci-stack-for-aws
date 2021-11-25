@@ -215,6 +215,12 @@ fi
 
 systemctl enable "buildkite-agent"
 
+# If warm pool is enabled, don't start the agent until the ASG BootHook
+if [ "${BUILDKITE_USE_WARM_POOL:-false}" == "false" ]
+then
+	systemctl start "buildkite-agent"
+fi
+
 # let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \
 	--region "$AWS_REGION" \

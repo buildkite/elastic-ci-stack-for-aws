@@ -991,11 +991,13 @@ Resources:
                   $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
                   $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
                   $Env:AWS_REGION="${AWS::Region}"
+                  $Env:BUILDKITE_WARM_POOL="${WarmPool}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
+                    WarmPool: !If [ UseWarmPool, "true", "false" ],
                   }
               - !Sub
                 - |
@@ -1038,11 +1040,13 @@ Resources:
                   DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}" \
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
                   AWS_REGION="${AWS::Region}" \
+                  BUILDKITE_WARM_POOL="${WarmPool}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
+                    WarmPool: !If [ UseWarmPool, "true", "false" ],
                   }
 
   AgentAutoScaleGroup:
@@ -1099,7 +1103,7 @@ Resources:
       AutoScalingReplacingUpdate:
         WillReplace: true
 
-  AsgWarmPool: 
+  WarmPool: 
     Type: AWS::AutoScaling::WarmPool
     Condition: UseWarmPool
     Properties:
@@ -1163,7 +1167,7 @@ Resources:
               - Effect: Allow
                 Action: ssm:StartAutomationExecution
                 Resource:
-                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+                  - !If [ UseWarmPool, !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT, !Ref "AWS::NoValue" ]
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${ShutdownHookAutomation}:$DEFAULT
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${SpotInteruptionAutomation}:$DEFAULT
               - Effect: Allow
@@ -1210,6 +1214,7 @@ Resources:
 
   BootHook:
     Type: AWS::AutoScaling::LifecycleHook
+    Condition: UseWarmPool
     Properties:
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
       LifecycleHookName: BootHook
@@ -1220,6 +1225,7 @@ Resources:
 
   BootHookRule:
     Type: AWS::Events::Rule
+    Condition: UseWarmPool
     Properties:
       Description: !Sub Run the boot time AWS SSM Automation for ${BootHook}
       EventPattern:
@@ -1241,6 +1247,7 @@ Resources:
 
   BootHookAutomation:
     Type: AWS::SSM::Document
+    Condition: UseWarmPool
     Properties:
       DocumentType: Automation
       Content:

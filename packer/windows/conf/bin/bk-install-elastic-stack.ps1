@@ -210,6 +210,11 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppRestartDelay 5000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
+# If warm pool is enabled, don't start the agent until the ASG BootHook
+If ($null -eq $Env:BUILDKITE_USE_WARM_POOL -or $Env:BUILDKITE_USE_WARM_POOL -eq "false") {
+  Restart-Service buildkite-agent 
+}
+
 # renable debug tracing
 Set-PSDebug -Trace 2
 
