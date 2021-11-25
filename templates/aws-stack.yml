@@ -231,11 +231,21 @@ Parameters:
 
   InstanceType:
     Description: Instance type. Comma-separated list with 1-4 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
-    Type: String
+    Type: CommaDelimitedList
     Default: t3.large
     MinLength: 1
     AllowedPattern: "^[\\w\\.]+(,[\\w\\.]*){0,3}$"
     ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
+
+  InstanceTypes:
+    Description: How many instance types are specified in InstanceType
+    Type: String
+    Default: "1"
+    AllowedValues:
+      - "1"
+      - "2"
+      - "3"
+      - "4"
 
   SpotPrice:
     Description: Maximum spot price to use for the instances, in instance cost per hour. Values >0 will result in 100% of instances being spot. 0 means only use normal (non-spot) instances. This parameter is deprecated - we recommend setting to 0 and using OnDemandPercentage to opt into spot instances.
@@ -462,6 +472,19 @@ Rules:
                 - !Ref BuildkiteAgentTokenParameterStorePath
                 - ""
         AssertDescription: "You must provide BuildkiteAgentToken or BuildkiteAgentTokenParameterStorePath"
+  WarmPoolInstanceTypeCompatible:
+    RuleCondition:
+      # If warm pool is enabled
+      !Not [ !Equals [ !Ref WarmPoolMinSize, 0 ] ]
+    Assertions:
+      # There must only be one instance type
+      - Assert:
+          !Equals [ !Ref InstanceTypes, "1" ]
+      # Spot must not be used
+      - Assert:
+          !And
+            - !Equals [ !Ref SpotPrice, 0 ]
+            - !Equals [ !Ref OnDemandPercentage, 100 ]
 
 Outputs:
   VpcId:
@@ -536,14 +559,21 @@ Conditions:
     UseDefaultRootVolumeName:
       !Equals [ !Ref RootVolumeName, "" ]
 
+    # If using spot, or multiple instances we need to use a MixedInstancesPolicy
+    UseMixedInstancesPolicy:
+      !Or
+        - !Not [ !Equals [ !Ref SpotPrice, 0 ] ]
+        - !Not [ !Equals [ !Ref OnDemandPercentage, 100 ] ]
+        - !Condition UseInstanceType2
+        - !Condition UseInstanceType3
+        - !Condition UseInstanceType4
+
     UseInstanceType2:
-      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
-
+      !Equals [ !Ref InstanceTypes, "2" ]
     UseInstanceType3:
-      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
-
+      !Equals [ !Ref InstanceTypes, "3" ]
     UseInstanceType4:
-      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
+      !Equals [ !Ref InstanceTypes, "4" ]
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
@@ -587,15 +617,15 @@ Conditions:
 
     UsingArmInstances:
       !Or
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "a1" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "m6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "m6gd" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "t4g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "a1" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "c6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "c6gd" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "c6gn" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "r6g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Select [ 0, !Ref InstanceType ] ] ], "r6gd" ]
 
     UseMaxInstanceLifetime:
       !Not [ !Equals [ !Ref MaxInstanceLifetime, 0 ] ]
@@ -912,7 +942,7 @@ Resources:
           KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
-          InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
+          InstanceType: !Select [ 0, !Ref InstanceType  ]
           MetadataOptions:
             HttpTokens: !Ref IMDSv2Tokens
             # Allow containers using a Docker network on the host to receive IDMSv2 responses
@@ -1056,29 +1086,38 @@ Resources:
       - VpcComplete
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
+      LaunchTemplate:
+        !If
+          - !Not [ UseMixedInstancesPolicy ]
+          - LaunchTemplateId: !Ref AgentLaunchTemplate
+            Version: !GetAtt AgentLaunchTemplate.LatestVersionNumber
+          - !Ref AWS::NoValue
       MixedInstancesPolicy:
-        InstancesDistribution:
-          OnDemandPercentageAboveBaseCapacity: !If [ SpotPriceSet, 0, !Ref OnDemandPercentage ]
-          SpotAllocationStrategy: capacity-optimized
-          SpotMaxPrice: !If [SpotPriceSet, !Ref SpotPrice, !Ref "AWS::NoValue"]
-        LaunchTemplate:
-          LaunchTemplateSpecification:
-            LaunchTemplateId: !Ref AgentLaunchTemplate
-            Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
-          Overrides:
-          - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-          - !If
-            - UseInstanceType2
-            - InstanceType: !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-            - !Ref "AWS::NoValue"
-          - !If
-            - UseInstanceType3
-            - InstanceType: !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-            - !Ref "AWS::NoValue"
-          - !If
-            - UseInstanceType4
-            - InstanceType: !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ]
-            - !Ref "AWS::NoValue"
+        !If
+          - UseMixedInstancesPolicy
+          - InstancesDistribution:
+              OnDemandPercentageAboveBaseCapacity: !If [ SpotPriceSet, 0, !Ref OnDemandPercentage ]
+              SpotAllocationStrategy: capacity-optimized
+              SpotMaxPrice: !If [SpotPriceSet, !Ref SpotPrice, !Ref "AWS::NoValue"]
+            LaunchTemplate:
+              LaunchTemplateSpecification:
+                LaunchTemplateId: !Ref AgentLaunchTemplate
+                Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
+              Overrides:
+              - InstanceType: !Select [ 0, !Ref InstanceType ]
+              - !If
+                - UseInstanceType2
+                - InstanceType: !Select [ 1, !Ref InstanceType ]
+                - !Ref "AWS::NoValue"
+              - !If
+                - UseInstanceType3
+                - InstanceType: !Select [ 2, !Ref InstanceType ]
+                - !Ref "AWS::NoValue"
+              - !If
+                - UseInstanceType4
+                - InstanceType: !Select [ 3, !Ref InstanceType ]
+                - !Ref "AWS::NoValue"
+          - !Ref AWS::NoValue
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 60
