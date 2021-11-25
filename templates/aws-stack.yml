@@ -1070,6 +1070,7 @@ Resources:
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 60
+      CapacityRebalance: true
       MetricsCollection:
         - Granularity: 1Minute
           Metrics:
