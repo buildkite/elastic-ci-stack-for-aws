@@ -1037,11 +1037,172 @@ Resources:
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
                   }
 
+  AutomationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ssm.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: RunInstanceShellScripts
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ssm:DescribeInstanceInformation
+                Resource: "*"
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunPowerShellScript
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+              - Effect: Allow
+                Action:
+                  - ssm:ListCommands
+                  - ssm:ListCommandInvocations
+                Resource: "*"
+        - PolicyName: CompleteLifecycleActions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - autoscaling:CompleteLifecycleAction
+                  - autoscaling:TerminateInstanceInAutoScalingGroup
+                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
+
+  BootHookAutomation:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        assumeRole: !GetAtt AutomationRole.Arn
+        description: Start the buildkite-agent and complete the launch lifecycle action
+        parameters:
+          InstanceId:
+            type: String
+          AutoScalingGroupName:
+            type: String
+          LifecycleHook:
+            type: String
+        mainSteps:
+          - !If
+            - UseLinuxAgents
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "300"
+                  commands:
+                    - systemctl start buildkite-agent
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunPowerShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "600"
+                  commands:
+                    - nssm start buildkite-agent
+          - name: CompleteLifecycleAction
+            action: aws:executeAwsApi
+            inputs:
+              Service: autoscaling
+              Api: CompleteLifecycleAction
+              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
+              InstanceId: "{{ InstanceId }}"
+              LifecycleActionResult: "CONTINUE"
+              LifecycleHookName: "{{ LifecycleHook }}"
+
+  ShutdownHookAutomation:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        assumeRole: !GetAtt AutomationRole.Arn
+        description: Stop the buildkite-agent, wait for it to exit, complete the launch lifecycle action
+        parameters:
+          InstanceId:
+            type: String
+          AutoScalingGroupName:
+            type: String
+          LifecycleHook:
+            type: String
+        mainSteps:
+          - !If
+            - UseLinuxAgents
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "3600"
+                  commands:
+                    - systemctl stop buildkite-agent
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunPowerShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "3600"
+                  commands:
+                    - nssm stop buildkite-agent
+          - name: CompleteLifecycleAction
+            action: aws:executeAwsApi
+            inputs:
+              Service: autoscaling
+              Api: CompleteLifecycleAction
+              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
+              InstanceId: "{{ InstanceId }}"
+              LifecycleActionResult: "CONTINUE"
+              LifecycleHookName: "{{ LifecycleHook }}"
+
+  SpotInteruptionAutomation:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        assumeRole: !GetAtt AutomationRole.Arn
+        description: Terminate the instance in the Auto Scaling group, making it go through the shutdown hook.
+        parameters:
+          InstanceId:
+            type: String
+          AutoScalingGroupName:
+            type: String
+        mainSteps:
+          - name: TerminateInstanceInAutoScalingGroup
+            action: aws:executeAwsApi
+            inputs:
+              Service: autoscaling
+              Api: TerminateInstanceInAutoScalingGroup
+              InstanceId: "{{ InstanceId }}"
+              ShouldDecrementDesiredCapacity: false
+
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn:
       - IAMPolicies
       - VpcComplete
+      - BootHookAutomation
+      - ShutdownHookAutomation
+      - SpotInteruptionAutomation
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       MixedInstancesPolicy:
@@ -1083,6 +1244,17 @@ Resources:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
       MaxInstanceLifetime: !If [UseMaxInstanceLifetime, !Ref MaxInstanceLifetime, !Ref "AWS::NoValue"]
+      LifecycleHookSpecificationList:
+        - LifecycleHookName: BootHook
+          LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
+          # We give instances five minutes to respond to this hook else we abandon
+          # them
+          HeartbeatTimeout: !If [ UseLinuxAgents, 300, 600 ]
+        - LifecycleHookName: ShutdownHook
+          LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+          # We give instances one hour to respond to this hook else we continue
+          HeartbeatTimeout: 3600
+          DefaultResult: CONTINUE
     CreationPolicy:
       ResourceSignal:
         Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, PT5M ], !Ref InstanceCreationTimeout ]
@@ -1154,56 +1326,6 @@ Resources:
                 Action: iam:PassRole
                 Resource: !GetAtt AutomationRole.Arn
 
-  AutomationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ssm.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: RunInstanceShellScripts
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: ssm:DescribeInstanceInformation
-                Resource: "*"
-              - Effect: Allow
-                Action: ssm:SendCommand
-                Resource:
-                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
-                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunPowerShellScript
-              - Effect: Allow
-                Action: ssm:SendCommand
-                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
-              - Effect: Allow
-                Action:
-                  - ssm:ListCommands
-                  - ssm:ListCommandInvocations
-                Resource: "*"
-        - PolicyName: CompleteLifecycleActions
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - autoscaling:CompleteLifecycleAction
-                  - autoscaling:TerminateInstanceInAutoScalingGroup
-                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
-
-  BootHook:
-    Type: AWS::AutoScaling::LifecycleHook
-    Properties:
-      AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      LifecycleHookName: BootHook
-      LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
-      # We give instances five minutes to respond to this hook else we abandon
-      # them
-      HeartbeatTimeout: !If [ UseLinuxAgents, 300, 600 ]
-
   BootHookRule:
     Type: AWS::Events::Rule
     Properties:
@@ -1215,75 +1337,17 @@ Resources:
           - "EC2 Instance-launch Lifecycle Action"
         detail:
           AutoScalingGroupName: [ !Ref AgentAutoScaleGroup ]
-          LifecycleHookName: [ !Ref BootHook ]
+          LifecycleHookName: BootHook
       Targets:
         - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
           RoleArn: !GetAtt EventBridgeRuleRole.Arn
           Id: TargetSsmAutomation
           InputTransformer:
             InputPathsMap:
-              instanceid: "$.detail.EC2InstanceId"
-            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
-
-  BootHookAutomation:
-    Type: AWS::SSM::Document
-    Properties:
-      DocumentType: Automation
-      Content:
-        schemaVersion: "0.3"
-        assumeRole: !GetAtt AutomationRole.Arn
-        description: Start the buildkite-agent and complete the launch lifecycle action
-        parameters:
-          InstanceId:
-            type: String
-          AutoScalingGroupName:
-            type: String
-            default: !Ref AgentAutoScaleGroup
-          LifecycleHook:
-            type: String
-            default: !Ref BootHook
-        mainSteps:
-          - !If
-            - UseLinuxAgents
-            - name: RunCommand
-              action: aws:runCommand
-              inputs:
-                DocumentName: AWS-RunShellScript
-                InstanceIds:
-                  - "{{ InstanceId }}"
-                Parameters:
-                  executionTimeout: "300"
-                  commands:
-                    - systemctl start buildkite-agent
-            - name: RunCommand
-              action: aws:runCommand
-              inputs:
-                DocumentName: AWS-RunPowerShellScript
-                InstanceIds:
-                  - "{{ InstanceId }}"
-                Parameters:
-                  executionTimeout: "600"
-                  commands:
-                    - nssm start buildkite-agent
-          - name: CompleteLifecycleAction
-            action: aws:executeAwsApi
-            inputs:
-              Service: autoscaling
-              Api: CompleteLifecycleAction
-              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
-              InstanceId: "{{ InstanceId }}"
-              LifecycleActionResult: "CONTINUE"
-              LifecycleHookName: "{{ LifecycleHook }}"
-
-  ShutdownHook:
-    Type: AWS::AutoScaling::LifecycleHook
-    Properties:
-      AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      LifecycleHookName: ShutdownHook
-      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
-      # We give instances one hour to respond to this hook else we continue
-      HeartbeatTimeout: 3600
-      DefaultResult: CONTINUE
+              instance: "$.detail.EC2InstanceId"
+              asg: "$.detail.AutoScalingGroupName"
+              hook: "$.detail.LifecycleHookName"
+            InputTemplate: "{\"InstanceId\":[<instance>],\"AutoScalingGroupName\":<asg>,\"LifecycleHook\":<hook>}"
 
   ShutdownHookRule:
     Type: AWS::Events::Rule
@@ -1296,65 +1360,17 @@ Resources:
           - "EC2 Instance-terminate Lifecycle Action"
         detail:
           AutoScalingGroupName: [ !Ref AgentAutoScaleGroup ]
-          LifecycleHookName: [ !Ref ShutdownHook ]
+          LifecycleHookName: [ ShutdownHook ]
       Targets:
         - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${ShutdownHookAutomation}:$DEFAULT
           RoleArn: !GetAtt EventBridgeRuleRole.Arn
           Id: TargetSsmAutomation
           InputTransformer:
             InputPathsMap:
-              instanceid: "$.detail.EC2InstanceId"
-            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
-
-  ShutdownHookAutomation:
-    Type: AWS::SSM::Document
-    Properties:
-      DocumentType: Automation
-      Content:
-        schemaVersion: "0.3"
-        assumeRole: !GetAtt AutomationRole.Arn
-        description: Stop the buildkite-agent, wait for it to exit, complete the launch lifecycle action
-        parameters:
-          InstanceId:
-            type: String
-          AutoScalingGroupName:
-            type: String
-            default: !Ref AgentAutoScaleGroup
-          LifecycleHook:
-            type: String
-            default: !Ref ShutdownHook
-        mainSteps:
-          - !If
-            - UseLinuxAgents
-            - name: RunCommand
-              action: aws:runCommand
-              inputs:
-                DocumentName: AWS-RunShellScript
-                InstanceIds:
-                  - "{{ InstanceId }}"
-                Parameters:
-                  executionTimeout: "3600"
-                  commands:
-                    - systemctl stop buildkite-agent
-            - name: RunCommand
-              action: aws:runCommand
-              inputs:
-                DocumentName: AWS-RunPowerShellScript
-                InstanceIds:
-                  - "{{ InstanceId }}"
-                Parameters:
-                  executionTimeout: "3600"
-                  commands:
-                    - nssm stop buildkite-agent
-          - name: CompleteLifecycleAction
-            action: aws:executeAwsApi
-            inputs:
-              Service: autoscaling
-              Api: CompleteLifecycleAction
-              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
-              InstanceId: "{{ InstanceId }}"
-              LifecycleActionResult: "CONTINUE"
-              LifecycleHookName: "{{ LifecycleHook }}"
+              instance: "$.detail.EC2InstanceId"
+              asg: "$.detail.AutoScalingGroupName"
+              hook: "$.detail.LifecycleHookName"
+            InputTemplate: "{\"InstanceId\":[<instance>],\"AutoScalingGroupName\":<asg>,\"LifecycleHook\":<hook>}"
 
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html#spot-instance-termination-notices
   SpotInterruptionRule:
@@ -1372,28 +1388,6 @@ Resources:
           Id: TargetSsmAutomation
           InputTransformer:
             InputPathsMap:
-              instanceid: "$.detail.instance-id"
-            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
-
-  SpotInteruptionAutomation:
-    Type: AWS::SSM::Document
-    Properties:
-      DocumentType: Automation
-      Content:
-        schemaVersion: "0.3"
-        assumeRole: !GetAtt AutomationRole.Arn
-        description: Terminate the instance in the Auto Scaling group, making it go through the shutdown hook.
-        parameters:
-          InstanceId:
-            type: String
-          AutoScalingGroupName:
-            type: String
-            default: !Ref AgentAutoScaleGroup
-        mainSteps:
-          - name: TerminateInstanceInAutoScalingGroup
-            action: aws:executeAwsApi
-            inputs:
-              Service: autoscaling
-              Api: TerminateInstanceInAutoScalingGroup
-              InstanceId: "{{ InstanceId }}"
-              ShouldDecrementDesiredCapacity: false
+              instance: "$.detail.instance-id"
+              asg: !Ref AgentAutoScaleGroup
+            InputTemplate: "{\"InstanceId\":[<instance>],\"AutoScalingGroupName\":<asg>}"
