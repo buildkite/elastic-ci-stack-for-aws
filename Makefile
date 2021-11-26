@@ -149,7 +149,7 @@ create-stack: build/aws-stack.yml env-STACK_NAME env-BUILDKITE_AWS_STACK_BUCKET 
 		--output text \
 		--stack-name $(STACK_NAME) \
 		--disable-rollback \
-		--template-url "s3://$(BUILDKITE_AWS_STACK_BUCKET)/$(BUCKET_PREFIX)/aws-stack.yml" \
+		--template-url "https://$(BUILDKITE_AWS_STACK_BUCKET).s3.amazonaws.com/$(BUCKET_PREFIX)/aws-stack.yml" \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameters "$$(cat config.json)" \
 		"$(role_arn)"
@@ -180,7 +180,7 @@ validate: build/aws-stack.yml env-BUILDKITE_AWS_STACK_BUCKET env-BUCKET_PREFIX
 	aws s3 cp --content-type 'text/yaml' --acl public-read build/aws-stack.yml "s3://$(BUILDKITE_AWS_STACK_BUCKET)/$(BUCKET_PREFIX)/aws-stack.yml"
 	aws cloudformation validate-template \
 		--output text \
-		--template-url "s3://$(BUILDKITE_AWS_STACK_BUCKET)/$(BUCKET_PREFIX)/aws-stack.yml"
+		--template-url "https://$(BUILDKITE_AWS_STACK_BUCKET).s3.amazonaws.com/$(BUCKET_PREFIX)/aws-stack.yml"
 
 generate-toc:
 	docker run -it --rm -v "$(PWD):/app" node:slim bash \
