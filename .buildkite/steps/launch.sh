@@ -103,11 +103,10 @@ echo "--- Building templates"
 make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 
 echo "--- Validating templates"
-# 2021-11-25 KD: template larger than template-body supports, needs moving to s3
-# make validate
+make validate "BUCKET_PREFIX=$stack_name"
 
 echo "--- Creating stack ${stack_name}"
-make create-stack "STACK_NAME=$stack_name" "SERVICE_ROLE=$service_role"
+make create-stack "BUCKET_PREFIX=$stack_name" "STACK_NAME=$stack_name" "SERVICE_ROLE=$service_role"
 
 echo "+++ ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${stack_name}"

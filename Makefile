@@ -143,12 +143,13 @@ ifdef SERVICE_ROLE
 	role_arn="--role-arn=$(SERVICE_ROLE)"
 endif
 
-create-stack: build/aws-stack.yml env-STACK_NAME
+create-stack: build/aws-stack.yml env-STACK_NAME env-BUILDKITE_AWS_STACK_BUCKET env-BUCKET_PREFIX
+	aws s3 cp --content-type 'text/yaml' --acl public-read build/aws-stack.yml "s3://$(BUILDKITE_AWS_STACK_BUCKET)/$(BUCKET_PREFIX)/aws-stack.yml"
 	aws cloudformation create-stack \
 		--output text \
 		--stack-name $(STACK_NAME) \
 		--disable-rollback \
-		--template-body "file://$(PWD)/build/aws-stack.yml" \
+		--template-url "s3://$(BUILDKITE_AWS_STACK_BUCKET)/$(BUCKET_PREFIX)/aws-stack.yml" \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameters "$$(cat config.json)" \
 		"$(role_arn)"
@@ -175,10 +176,11 @@ bump-agent-version:
 	git add README.md packer/linux/scripts/install-buildkite-agent.sh packer/windows/scripts/install-buildkite-agent.ps1
 	git commit -m "Bump buildkite-agent to v$(AGENT_VERSION)"
 
-validate: build/aws-stack.yml
+validate: build/aws-stack.yml env-BUILDKITE_AWS_STACK_BUCKET env-BUCKET_PREFIX
+	aws s3 cp --content-type 'text/yaml' --acl public-read build/aws-stack.yml "s3://$(BUILDKITE_AWS_STACK_BUCKET)/$(BUCKET_PREFIX)/aws-stack.yml"
 	aws cloudformation validate-template \
 		--output text \
-		--template-body "file://$(PWD)/build/aws-stack.yml"
+		--template-url "s3://$(BUILDKITE_AWS_STACK_BUCKET)/$(BUCKET_PREFIX)/aws-stack.yml"
 
 generate-toc:
 	docker run -it --rm -v "$(PWD):/app" node:slim bash \
