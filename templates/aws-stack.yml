@@ -473,19 +473,19 @@ Rules:
                 - !Ref BuildkiteAgentTokenParameterStorePath
                 - ""
         AssertDescription: "You must provide BuildkiteAgentToken or BuildkiteAgentTokenParameterStorePath"
-  WarmPoolInstanceTypeCompatible:
-    RuleCondition:
-      # If warm pool is enabled
-      !Not [ !Equals [ !Ref WarmPoolMinSize, 0 ] ]
-    Assertions:
-      # There must only be one instance type
-      - Assert:
-          !Equals [ !Ref InstanceTypes, "1" ]
-      # Spot must not be used
-      - Assert:
-          !And
-            - !Equals [ !Ref SpotPrice, 0 ]
-            - !Equals [ !Ref OnDemandPercentage, 100 ]
+  # WarmPoolInstanceTypeCompatible:
+  #   RuleCondition:
+  #     # If warm pool is enabled
+  #     !Not [ !Equals [ !Ref WarmPoolMinSize, 0 ] ]
+  #   Assertions:
+  #     # There must only be one instance type
+  #     - Assert:
+  #         !Equals [ !Ref InstanceTypes, "1" ]
+  #     # Spot must not be used
+  #     - Assert:
+  #         !And
+  #           - !Equals [ !Ref SpotPrice, 0 ]
+  #           - !Equals [ !Ref OnDemandPercentage, 100 ]
 
 Outputs:
   VpcId:
