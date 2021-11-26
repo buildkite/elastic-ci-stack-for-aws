@@ -568,6 +568,8 @@ Conditions:
         - !Condition UseInstanceType2
         - !Condition UseInstanceType3
         - !Condition UseInstanceType4
+    UseSingleInstanceLaunchTemplate:
+      !Not [ !Condition UseMixedInstancesPolicy ]
 
     UseInstanceType2:
       !Equals [ !Ref InstanceTypes, "2" ]
@@ -1089,7 +1091,7 @@ Resources:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       LaunchTemplate:
         !If
-          - !Not [ !Condition UseMixedInstancesPolicy ]
+          - UseSingleInstanceLaunchTemplate
           - LaunchTemplateId: !Ref AgentLaunchTemplate
             Version: !GetAtt AgentLaunchTemplate.LatestVersionNumber
           - !Ref AWS::NoValue
