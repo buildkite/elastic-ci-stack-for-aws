@@ -233,8 +233,9 @@ Parameters:
     Description: Instance type. Comma-separated list with 1-4 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
     Type: CommaDelimitedList
     Default: t3.large
-    MinLength: 1
-    AllowedPattern: "^[\\w\\.]+(,[\\w\\.]*){0,3}$"
+    # AllowedPattern and MinLength not allowed on a CommaDelimitedList :(
+    # MinLength: 1
+    # AllowedPattern: "^[\\w\\.]+(,[\\w\\.]*){0,3}$"
     ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
 
   InstanceTypes:
