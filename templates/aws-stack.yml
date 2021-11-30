@@ -1296,7 +1296,8 @@ Resources:
           InputTransformer:
             InputPathsMap:
               token: "$.detail.LifecycleActionToken"
-            InputTemplate: "{\"LifecycleActionToken\":[<token>]}"
+              instanceid: "$.detail.EC2InstanceId"
+            InputTemplate: "{\"InstanceId\":[<instanceid>],\"LifecycleActionToken\":[<token>]}"
 
   BootHookWarmedAutomation:
     Type: AWS::SSM::Document
@@ -1308,6 +1309,8 @@ Resources:
         assumeRole: !GetAtt AutomationRole.Arn
         description: Complete the Warmed:Pending:Wait lifecycle action
         parameters:
+          InstanceId:
+            type: String
           LifecycleActionToken:
             type: String
           AutoScalingGroupName:
