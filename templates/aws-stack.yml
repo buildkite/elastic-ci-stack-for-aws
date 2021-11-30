@@ -1211,7 +1211,11 @@ Resources:
                 Resource:
                   - !If
                     - UseWarmPool
-                    - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+                    - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookWarmedAutomation}:$DEFAULT
+                    - !Ref "AWS::NoValue"
+                  - !If
+                    - UseWarmPool
+                    - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookInServiceAutomation}:$DEFAULT
                     - !Ref "AWS::NoValue"
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${ShutdownHookAutomation}:$DEFAULT
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${SpotInteruptionAutomation}:$DEFAULT
@@ -1270,11 +1274,11 @@ Resources:
       # them
       HeartbeatTimeout: !If [ UseLinuxAgents, 300, 600 ]
 
-  BootHookRule:
+  BootHookWarmedRule:
     Type: AWS::Events::Rule
     Condition: UseWarmPool
     Properties:
-      Description: !Sub Run the boot time AWS SSM Automation for ${BootHook}
+      Description: !Sub Run the ${BootHook} warmed AWS SSM Automation
       EventPattern:
         source:
           - aws.autoscaling
@@ -1283,8 +1287,10 @@ Resources:
         detail:
           AutoScalingGroupName: [ !Ref AgentAutoScaleGroup ]
           LifecycleHookName: [ !Ref BootHook ]
+          # Launching directly into the WarmPool
+          Destination: [ "WarmPool" ]
       Targets:
-        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookAutomation}:$DEFAULT
+        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookWarmedAutomation}:$DEFAULT
           RoleArn: !GetAtt EventBridgeRuleRole.Arn
           Id: TargetSsmAutomation
           InputTransformer:
@@ -1292,7 +1298,60 @@ Resources:
               instanceid: "$.detail.EC2InstanceId"
             InputTemplate: "{\"InstanceId\":[<instanceid>]}"
 
-  BootHookAutomation:
+  BootHookWarmedAutomation:
+    Type: AWS::SSM::Document
+    Condition: UseWarmPool
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        assumeRole: !GetAtt AutomationRole.Arn
+        description: Complete the Warmed:Pending:Wait lifecycle action
+        parameters:
+          InstanceId:
+            type: String
+          AutoScalingGroupName:
+            type: String
+            default: !Ref AgentAutoScaleGroup
+          LifecycleHook:
+            type: String
+            default: !Ref BootHook
+        mainSteps:
+          - name: CompleteLifecycleAction
+            action: aws:executeAwsApi
+            inputs:
+              Service: autoscaling
+              Api: CompleteLifecycleAction
+              AutoScalingGroupName: "{{ AutoScalingGroupName }}"
+              InstanceId: "{{ InstanceId }}"
+              LifecycleActionResult: "CONTINUE"
+              LifecycleHookName: "{{ LifecycleHook }}"
+
+  BootHookInServiceRule:
+    Type: AWS::Events::Rule
+    Condition: UseWarmPool
+    Properties:
+      Description: !Sub Run the ${BootHook} in service AWS SSM Automation
+      EventPattern:
+        source:
+          - aws.autoscaling
+        detail-type:
+          - "EC2 Instance-launch Lifecycle Action"
+        detail:
+          AutoScalingGroupName: [ !Ref AgentAutoScaleGroup ]
+          LifecycleHookName: [ !Ref BootHook ]
+          # Launching directly into the ASG, or moving from the WarmPool into the ASG
+          Destination: [ "AutoScalingGroup" ]
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${BootHookInServiceAutomation}:$DEFAULT
+          RoleArn: !GetAtt EventBridgeRuleRole.Arn
+          Id: TargetSsmAutomation
+          InputTransformer:
+            InputPathsMap:
+              instanceid: "$.detail.EC2InstanceId"
+            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
+
+  BootHookInServiceAutomation:
     Type: AWS::SSM::Document
     Condition: UseWarmPool
     Properties:
