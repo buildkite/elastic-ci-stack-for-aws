@@ -1295,8 +1295,8 @@ Resources:
           Id: TargetSsmAutomation
           InputTransformer:
             InputPathsMap:
-              instanceid: "$.detail.EC2InstanceId"
-            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
+              token: "$.detail.LifecycleActionToken"
+            InputTemplate: "{\"LifecycleActionToken\":[<token>]}"
 
   BootHookWarmedAutomation:
     Type: AWS::SSM::Document
@@ -1308,7 +1308,7 @@ Resources:
         assumeRole: !GetAtt AutomationRole.Arn
         description: Complete the Warmed:Pending:Wait lifecycle action
         parameters:
-          InstanceId:
+          LifecycleActionToken:
             type: String
           AutoScalingGroupName:
             type: String
@@ -1323,7 +1323,7 @@ Resources:
               Service: autoscaling
               Api: CompleteLifecycleAction
               AutoScalingGroupName: "{{ AutoScalingGroupName }}"
-              InstanceId: "{{ InstanceId }}"
+              LifecycleActionToken: "{{ LifecycleActionToken }}"
               LifecycleActionResult: "CONTINUE"
               LifecycleHookName: "{{ LifecycleHook }}"
 
@@ -1348,8 +1348,9 @@ Resources:
           Id: TargetSsmAutomation
           InputTransformer:
             InputPathsMap:
+              token: "$.detail.LifecycleActionToken"
               instanceid: "$.detail.EC2InstanceId"
-            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
+            InputTemplate: "{\"InstanceId\":[<instanceid>],\"LifecycleActionToken\":[<token>]}"
 
   BootHookInServiceAutomation:
     Type: AWS::SSM::Document
@@ -1361,6 +1362,8 @@ Resources:
         assumeRole: !GetAtt AutomationRole.Arn
         description: Start the buildkite-agent and complete the launch lifecycle action
         parameters:
+          LifecycleActionToken:
+            type: String
           InstanceId:
             type: String
           AutoScalingGroupName:
@@ -1398,7 +1401,7 @@ Resources:
               Service: autoscaling
               Api: CompleteLifecycleAction
               AutoScalingGroupName: "{{ AutoScalingGroupName }}"
-              InstanceId: "{{ InstanceId }}"
+              LifecycleActionToken: "{{ LifecycleActionToken }}"
               LifecycleActionResult: "CONTINUE"
               LifecycleHookName: "{{ LifecycleHook }}"
 
@@ -1430,8 +1433,9 @@ Resources:
           Id: TargetSsmAutomation
           InputTransformer:
             InputPathsMap:
+              token: "$.detail.LifecycleActionToken"
               instanceid: "$.detail.EC2InstanceId"
-            InputTemplate: "{\"InstanceId\":[<instanceid>]}"
+            InputTemplate: "{\"InstanceId\":[<instanceid>],\"LifecycleActionToken\":[<token>]}"
 
   ShutdownHookAutomation:
     Type: AWS::SSM::Document
@@ -1442,6 +1446,8 @@ Resources:
         assumeRole: !GetAtt AutomationRole.Arn
         description: Stop the buildkite-agent, wait for it to exit, complete the launch lifecycle action
         parameters:
+          LifecycleActionToken:
+            type: String
           InstanceId:
             type: String
           AutoScalingGroupName:
@@ -1479,7 +1485,7 @@ Resources:
               Service: autoscaling
               Api: CompleteLifecycleAction
               AutoScalingGroupName: "{{ AutoScalingGroupName }}"
-              InstanceId: "{{ InstanceId }}"
+              LifecycleActionToken: "{{ LifecycleActionToken }}"
               LifecycleActionResult: "CONTINUE"
               LifecycleHookName: "{{ LifecycleHook }}"
 
