@@ -1278,7 +1278,7 @@ Resources:
     Type: AWS::Events::Rule
     Condition: UseWarmPool
     Properties:
-      Description: !Sub Run the ${BootHook} warmed AWS SSM Automation
+      Description: !Sub Run the ${AgentAutoScaleGroup} ${BootHook} warmed AWS SSM Automation ${BootHookWarmedAutomation}
       EventPattern:
         source:
           - aws.autoscaling
@@ -1331,7 +1331,7 @@ Resources:
     Type: AWS::Events::Rule
     Condition: UseWarmPool
     Properties:
-      Description: !Sub Run the ${BootHook} in service AWS SSM Automation
+      Description: !Sub Run the ${AgentAutoScaleGroup} ${BootHook} in service AWS SSM Automation ${BootHookInServiceAutomation}
       EventPattern:
         source:
           - aws.autoscaling
@@ -1418,7 +1418,7 @@ Resources:
   ShutdownHookRule:
     Type: AWS::Events::Rule
     Properties:
-      Description: !Sub Run the shutdown time AWS SSM Automation for ${ShutdownHook}
+      Description: !Sub Run the ${AgentAutoScaleGroup} ${ShutdownHook} AWS SSM Automation ${ShutdownHookAutomation}
       EventPattern:
         source:
           - aws.autoscaling
