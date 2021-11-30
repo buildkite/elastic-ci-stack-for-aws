@@ -1317,6 +1317,21 @@ Resources:
             type: String
             default: !Ref BootHook
         mainSteps:
+          - !If
+            - UseLinuxAgents
+            - name: RunCommand
+              action: aws:runCommand
+              inputs:
+                DocumentName: AWS-RunShellScript
+                InstanceIds:
+                  - "{{ InstanceId }}"
+                Parameters:
+                  executionTimeout: "300"
+                  commands:
+                    # Wait for cloud-init to complete
+                    - cloud-init status --wait
+            # TODO add a wait barrier for Windows instances to complete cloud-init
+            - !Ref AWS::NoValue
           - name: CompleteLifecycleAction
             action: aws:executeAwsApi
             inputs:
