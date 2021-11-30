@@ -1394,6 +1394,9 @@ Resources:
                 Parameters:
                   executionTimeout: "300"
                   commands:
+                    # Wait for cloud-init to complete
+                    - cloud-init status --wait
+                    # Start the buildkite-agent
                     - systemctl start buildkite-agent
             - name: RunCommand
               action: aws:runCommand
