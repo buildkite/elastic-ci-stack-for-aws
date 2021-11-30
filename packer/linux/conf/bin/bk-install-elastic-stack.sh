@@ -216,7 +216,7 @@ fi
 systemctl enable "buildkite-agent"
 
 # If warm pool is enabled, don't start the agent until the ASG BootHook
-if [ "${BUILDKITE_USE_WARM_POOL:-false}" == "false" ]
+if [ "${BUILDKITE_WARM_POOL:-false}" == "false" ]
 then
 	systemctl start "buildkite-agent"
 fi
