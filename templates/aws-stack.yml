@@ -1145,14 +1145,6 @@ Resources:
       AutoScalingReplacingUpdate:
         WillReplace: true
 
-  WarmPool: 
-    Type: AWS::AutoScaling::WarmPool
-    Condition: UseWarmPool
-    Properties:
-      AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      MinSize: !Ref WarmPoolMinSize
-      PoolState: Stopped
-
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Condition: CreateSecurityGroup
@@ -1548,3 +1540,14 @@ Resources:
               Api: TerminateInstanceInAutoScalingGroup
               InstanceId: "{{ InstanceId }}"
               ShouldDecrementDesiredCapacity: false
+
+  WarmPool:
+    Type: AWS::AutoScaling::WarmPool
+    Condition: UseWarmPool
+    DependsOn:
+      - BootHookWarmedRule
+      - BootHookInServiceRule
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      MinSize: !Ref WarmPoolMinSize
+      PoolState: Stopped
