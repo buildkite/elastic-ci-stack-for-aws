@@ -111,7 +111,7 @@ if [[ "${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" != "" ]] ; then
 fi
 
 # Choose the right agent binary
-ln -s "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
+ln -sf "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
 
 agent_metadata=(
 	"queue=${BUILDKITE_QUEUE}"
