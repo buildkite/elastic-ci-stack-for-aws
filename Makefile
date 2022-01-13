@@ -61,6 +61,30 @@ build/aws-stack.yml:
 	}' templates/aws-stack.yml | sed "s/%v/$(VERSION)/" > $@
 
 # -----------------------------------------
+# Instance family mapping update.
+# Unlike AMI mapping, these change infrequently so the results are committed.
+
+# requires AWS authentication
+build/InstanceFamilies.yaml:
+	echo "  InstanceFamilies:" > $@
+	aws ec2 describe-instance-types | jq -r '.InstanceTypes | sort_by(.InstanceType) | .[] | \
+	    (.InstanceType | split(".")[0]) as $$family | \
+	    (.ProcessorInfo.SupportedArchitectures | map(select(. == "x86_64" or . == "arm64"))) as $$arch | \
+	    select($$arch | length > 0) | \
+	    [$$family + ":", $$arch[0]] | \
+	    join(" ")' | uniq | xargs printf '    %-8s { Arch: %-6s }\n' >> $@
+
+.PHONY: update-instance-families-mapping
+update-instance-families-mapping:
+	test -f build/InstanceFamilies.yaml
+	awk '/^  InstanceFamilies:/ { system("cat build/InstanceFamilies.yaml"); replace=1; next } \
+	    /^$$/ { replace=0 } \
+	    replace { next } \
+	    { print }' templates/aws-stack.yml > templates/aws-stack.yml.tmp
+	mv templates/aws-stack.yml.tmp templates/aws-stack.yml
+
+
+# -----------------------------------------
 # AMI creation with Packer
 
 packer: packer-linux-amd64.output packer-linux-arm64.output packer-windows-amd64.output

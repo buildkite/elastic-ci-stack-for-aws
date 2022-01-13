@@ -581,17 +581,9 @@ Conditions:
       !Equals [ !Ref InstanceOperatingSystem, "linux" ]
 
     UsingArmInstances:
-      !Or
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "a1" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
+      !Equals
+        - !FindInMap [ InstanceFamilies, !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "Arch"]
+        - arm64
 
 Mappings:
   ECRManagedPolicy:
@@ -602,6 +594,86 @@ Mappings:
 
   # Generated from Makefile via build/mappings.yml
   AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
+
+  # Update this using `make build/InstanceFamilies.yaml update-instance-families-mapping`
+  InstanceFamilies:
+    a1:      { Arch: arm64  }
+    c1:      { Arch: x86_64 }
+    c3:      { Arch: x86_64 }
+    c4:      { Arch: x86_64 }
+    c5:      { Arch: x86_64 }
+    c5a:     { Arch: x86_64 }
+    c5ad:    { Arch: x86_64 }
+    c5d:     { Arch: x86_64 }
+    c5n:     { Arch: x86_64 }
+    c6g:     { Arch: arm64  }
+    c6gd:    { Arch: arm64  }
+    c6gn:    { Arch: arm64  }
+    c6i:     { Arch: x86_64 }
+    cc2:     { Arch: x86_64 }
+    d2:      { Arch: x86_64 }
+    d3:      { Arch: x86_64 }
+    d3en:    { Arch: x86_64 }
+    dl1:     { Arch: x86_64 }
+    f1:      { Arch: x86_64 }
+    g2:      { Arch: x86_64 }
+    g3:      { Arch: x86_64 }
+    g3s:     { Arch: x86_64 }
+    g4ad:    { Arch: x86_64 }
+    g4dn:    { Arch: x86_64 }
+    g5:      { Arch: x86_64 }
+    g5g:     { Arch: arm64  }
+    h1:      { Arch: x86_64 }
+    i2:      { Arch: x86_64 }
+    i3:      { Arch: x86_64 }
+    i3en:    { Arch: x86_64 }
+    im4gn:   { Arch: arm64  }
+    inf1:    { Arch: x86_64 }
+    is4gen:  { Arch: arm64  }
+    m1:      { Arch: x86_64 }
+    m2:      { Arch: x86_64 }
+    m3:      { Arch: x86_64 }
+    m4:      { Arch: x86_64 }
+    m5:      { Arch: x86_64 }
+    m5a:     { Arch: x86_64 }
+    m5ad:    { Arch: x86_64 }
+    m5d:     { Arch: x86_64 }
+    m5dn:    { Arch: x86_64 }
+    m5n:     { Arch: x86_64 }
+    m5zn:    { Arch: x86_64 }
+    m6a:     { Arch: x86_64 }
+    m6g:     { Arch: arm64  }
+    m6gd:    { Arch: arm64  }
+    m6i:     { Arch: x86_64 }
+    p2:      { Arch: x86_64 }
+    p3:      { Arch: x86_64 }
+    p3dn:    { Arch: x86_64 }
+    p4d:     { Arch: x86_64 }
+    r3:      { Arch: x86_64 }
+    r4:      { Arch: x86_64 }
+    r5:      { Arch: x86_64 }
+    r5a:     { Arch: x86_64 }
+    r5ad:    { Arch: x86_64 }
+    r5b:     { Arch: x86_64 }
+    r5d:     { Arch: x86_64 }
+    r5dn:    { Arch: x86_64 }
+    r5n:     { Arch: x86_64 }
+    r6g:     { Arch: arm64  }
+    r6gd:    { Arch: arm64  }
+    r6i:     { Arch: x86_64 }
+    t1:      { Arch: x86_64 }
+    t2:      { Arch: x86_64 }
+    t3:      { Arch: x86_64 }
+    t3a:     { Arch: x86_64 }
+    t4g:     { Arch: arm64  }
+    u-12tb1: { Arch: x86_64 }
+    u-6tb1:  { Arch: x86_64 }
+    u-9tb1:  { Arch: x86_64 }
+    vt1:     { Arch: x86_64 }
+    x1:      { Arch: x86_64 }
+    x1e:     { Arch: x86_64 }
+    x2gd:    { Arch: arm64  }
+    z1d:     { Arch: x86_64 }
 
 Resources:
   Vpc:
