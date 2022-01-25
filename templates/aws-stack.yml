@@ -580,17 +580,24 @@ Conditions:
     UseLinuxAgents:
       !Equals [ !Ref InstanceOperatingSystem, "linux" ]
 
+    # Unfortunately, Cloudformation's !Or intrinsic function only accepts
+    # between 2 and 10 arguments.  To get around this, we're grouping the
+    # instance families in sub-conditionals.  At least this doesn't force us
+    # into using a Custom Resource.
     UsingArmInstances:
       !Or
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "a1" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7g" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
 
 Mappings:
