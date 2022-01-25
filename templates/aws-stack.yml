@@ -592,6 +592,10 @@ Conditions:
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "g5g" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "Im4gn" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "Is4gen" ]
         - !Or
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
@@ -599,6 +603,7 @@ Conditions:
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "x2gd" ]
 
 Mappings:
   ECRManagedPolicy:
