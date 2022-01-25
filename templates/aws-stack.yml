@@ -3,14 +3,14 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Buildkite stack %v"
 
 # The Buildkite Elastic CI Stack for AWS gives you a private,
-# autoscaling Buildkite Agent cluster. Use it to parallelize  
-# large test suites across thousands of nodes, run tests and 
+# autoscaling Buildkite Agent cluster. Use it to parallelize
+# large test suites across thousands of nodes, run tests and
 # deployments for Linux or Windows based services and apps,
 # or run AWS ops tasks.
-# 
-# To gain a better understanding of how Elastic CI Stack works 
+#
+# To gain a better understanding of how Elastic CI Stack works
 # and how to use it most effectively and securely, check out
-# the following resources: 
+# the following resources:
 #
 # * Elastic CI Stack for AWS Overview: https://buildkite.com/docs/agent/v3/elastic_ci_aws
 # * Elastic CI Stack for AWS Tutorial: https://buildkite.com/docs/tutorials/elastic-ci-stack-aws
