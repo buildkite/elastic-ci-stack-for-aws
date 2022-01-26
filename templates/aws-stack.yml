@@ -3,14 +3,14 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Buildkite stack %v"
 
 # The Buildkite Elastic CI Stack for AWS gives you a private,
-# autoscaling Buildkite Agent cluster. Use it to parallelize  
-# large test suites across thousands of nodes, run tests and 
+# autoscaling Buildkite Agent cluster. Use it to parallelize
+# large test suites across thousands of nodes, run tests and
 # deployments for Linux or Windows based services and apps,
 # or run AWS ops tasks.
-# 
-# To gain a better understanding of how Elastic CI Stack works 
+#
+# To gain a better understanding of how Elastic CI Stack works
 # and how to use it most effectively and securely, check out
-# the following resources: 
+# the following resources:
 #
 # * Elastic CI Stack for AWS Overview: https://buildkite.com/docs/agent/v3/elastic_ci_aws
 # * Elastic CI Stack for AWS Tutorial: https://buildkite.com/docs/tutorials/elastic-ci-stack-aws
@@ -580,18 +580,30 @@ Conditions:
     UseLinuxAgents:
       !Equals [ !Ref InstanceOperatingSystem, "linux" ]
 
+    # Unfortunately, Cloudformation's !Or intrinsic function only accepts
+    # between 2 and 10 arguments.  To get around this, we're grouping the
+    # instance families in sub-conditionals.  At least this doesn't force us
+    # into using a Custom Resource.
     UsingArmInstances:
       !Or
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "a1" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
-        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6g" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "g5g" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "Im4gn" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "Is4gen" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
+        - !Or
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "x2gd" ]
 
 Mappings:
   ECRManagedPolicy:
