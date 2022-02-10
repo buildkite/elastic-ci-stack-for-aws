@@ -1,4 +1,4 @@
-<img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true">
+<h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
 ![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)
 
@@ -13,7 +13,7 @@ based services and apps, or run AWS ops tasks.
 
 ## Getting started
 
-See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci-aws), or the full [list of recommended resources](#recommended-reading) for detailed information. 
+See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci-aws), or the full [list of recommended resources](#recommended-reading) for detailed information.
 
 Or jump straight in:
 
