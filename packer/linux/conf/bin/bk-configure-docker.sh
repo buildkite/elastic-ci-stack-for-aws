@@ -22,3 +22,6 @@ fi
 if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]] ; then
   cat <<< "$(jq '."data-root"="/mnt/ephemeral/docker"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
 fi
+
+# Customise address pools
+cat <<<"$(jq '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' /etc/docker/daemon.json)" >/etc/docker/daemon.json
