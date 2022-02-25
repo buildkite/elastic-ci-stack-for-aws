@@ -81,6 +81,7 @@ Metadata:
         - InstanceRolePermissionsBoundaryARN
         - IMDSv2Tokens
         - EnableDetailedMonitoring
+        - EnableCloudWatchMetrics
 
       - Label:
           default: Auto-scaling Configuration
@@ -432,6 +433,14 @@ Parameters:
   EnableInstanceStorage:
     Type: String
     Description: Mount available NVMe Instance Storage at /mnt/ephemeral
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  EnableCloudWatchMetrics:
+    Type: String
+    Description: Enable CloudWatch agent metrics
     AllowedValues:
       - "true"
       - "false"
@@ -1049,6 +1058,11 @@ Resources:
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                     /usr/local/bin/bk-configure-docker.sh
+                  --==BOUNDARY==
+                  Content-Type: text/cloud-boothook; charset="us-ascii"
+                  CLOUDWATCH_ENABLE_METRICS="${EnableCloudWatchMetrics}" \
+                  BUILDKITE_QUEUE="${BuildkiteQueue}" \
+                    /usr/local/bin/bk-configure-cloudwatch-agent.sh
                   --==BOUNDARY==
                   Content-Type: text/x-shellscript; charset="us-ascii"
                   #!/bin/bash -v
