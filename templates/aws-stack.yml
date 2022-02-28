@@ -826,6 +826,7 @@ Resources:
             - !Ref AWS::NoValue
           - Effect: Allow
             Action:
+              - autoscaling:DescribeAutoScalingInstances
               - cloudwatch:PutMetricData
               - cloudformation:DescribeStackResource
               - ec2:DescribeTags
@@ -833,7 +834,6 @@ Resources:
           - Sid: TerminateInstance
             Effect: Allow
             Action:
-              - autoscaling:DescribeAutoScalingInstances
               - autoscaling:SetInstanceHealth
               - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
