@@ -1,5 +1,7 @@
 {
   "variables": {
+    "source_ami_name_filter": "Windows_Server-2019-English-Full-Containers*",
+    "source_ami_owner": "amazon",
     "region": "us-east-1"
   },
   "builders": [
@@ -8,10 +10,10 @@
       "region": "{{user `region`}}",
       "source_ami_filter": {
         "filters": {
-          "name": "Windows_Server-2019-English-Full-Containers*",
+          "name": "{{user `source_ami_name_filter`}}",
           "virtualization-type": "hvm"
         },
-        "owners": ["amazon"],
+        "owners": "{{user `source_ami_owner`}}",
         "most_recent": true
       },
       "instance_type": "m5.xlarge",

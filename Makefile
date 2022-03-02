@@ -82,6 +82,8 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
 		-e AWS_SESSION_TOKEN \
+		-e SOURCE_AMI_NAME_FILTER \
+		-e SOURCE_AMI_OWNER \
 		-e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \
 		-v "$(PWD):/src" \
@@ -89,6 +91,8 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
 			-var 'arch=x86_64' -var 'goarch=amd64' -var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
+			-var 'source_ami_name_filter=$(SOURCE_AMI_NAME_FILTER)' \
+			-var 'source_ami_owner=$(SOURCE_AMI_OWNER)' \
 			buildkite-ami.json | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -103,6 +107,8 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
 		-e AWS_SESSION_TOKEN \
+		-e SOURCE_AMI_NAME_FILTER \
+		-e SOURCE_AMI_OWNER \
 		-e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \
 		-v "$(PWD):/src" \
@@ -110,6 +116,8 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
 			-var 'arch=arm64' -var 'goarch=arm64' -var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
+			-var 'source_ami_name_filter=$(SOURCE_AMI_NAME_FILTER)' \
+			-var 'source_ami_owner=$(SOURCE_AMI_OWNER)' \
 			buildkite-ami.json | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
@@ -124,12 +132,16 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
 		-e AWS_SESSION_TOKEN \
+		-e SOURCE_AMI_NAME_FILTER \
+		-e SOURCE_AMI_OWNER \
 		-e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/windows \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
+			-var 'source_ami_name_filter=$(SOURCE_AMI_NAME_FILTER)' \
+			-var 'source_ami_owner=$(SOURCE_AMI_OWNER)' \
 			buildkite-ami.json | tee $@
 
 # -----------------------------------------

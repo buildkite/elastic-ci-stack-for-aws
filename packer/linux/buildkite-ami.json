@@ -1,5 +1,7 @@
 {
   "variables": {
+    "source_ami_name_filter": "amzn2-ami-hvm-2.0.*-gp2",
+    "source_ami_owner": "amazon",
     "region": "us-east-1",
     "arch": "x86_64",
     "goarch": "amd64",
@@ -12,11 +14,11 @@
       "region": "{{user `region`}}",
       "source_ami_filter": {
         "filters": {
-          "name": "amzn2-ami-hvm-2.0.*-gp2",
+          "name": "{{user `source_ami_name_filter`}}",
           "architecture": "{{user `arch`}}",
           "virtualization-type": "hvm"
         },
-        "owners": ["amazon"],
+        "owners": "{{user `source_ami_owner`}}",
         "most_recent": true
       },
       "instance_type": "{{user `instance_type`}}",
