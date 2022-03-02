@@ -127,13 +127,13 @@ Parameters:
     Default: "stable"
 
   BuildkiteAgentToken:
-    Description: Buildkite agent registration token. Deprecated, use BuildkiteAgentTokenParameterStorePath instead.
+    Description: Buildkite agent registration token. Or, preload it into SSM Parameter Store and use BuildkiteAgentTokenParameterStorePath for secure environments.
     Type: String
     NoEcho: true
     Default: ""
 
   BuildkiteAgentTokenParameterStorePath:
-    Description: AWS SSM path to the Buildkite agent registration token (this takes precedence over BuildkiteAgentToken). Expects a leading slash ('/').
+    Description: Existing SSM Parameter Store path to the Buildkite agent registration token (takes precedence over BuildkiteAgentToken). Expects a leading slash ('/').
     Type: String
     Default: ""
     AllowedPattern: "^$|^/[a-zA-Z0-9_.\\-/]+$"
