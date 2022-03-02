@@ -12,7 +12,7 @@
       "region": "{{user `region`}}",
       "source_ami_filter": {
         "filters": {
-          "name": "amzn2-ami-hvm-2.0.*-gp2",
+          "name": "amzn2-ami-hvm-2.0.20220207.1-{{user `arch`}}-gp2",
           "architecture": "{{user `arch`}}",
           "virtualization-type": "hvm"
         },
@@ -81,4 +81,3 @@
     }
   ]
 }
-
