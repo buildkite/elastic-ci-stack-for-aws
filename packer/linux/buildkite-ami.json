@@ -39,6 +39,10 @@
     },
     {
       "type": "shell",
+      "script": "scripts/clean-cloud-init.sh"
+    },
+    {
+      "type": "shell",
       "script": "scripts/install-utils.sh"
     },
     {
