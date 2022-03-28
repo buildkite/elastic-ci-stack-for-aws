@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.0) (2022-02-28)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.7.2...v5.8.0)
+
+### Added
+
+- Customise docker address pools to use more, slightly smaller networks rather than a few big ones  [#968](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/968) (@ouranos)
+- Add support for additional ARM/Graviton instance types: `c7g`, `g5g`, `lm4gn`, `lm4gen`, and `x2gd` [#981](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/981) [#979](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/979)  (@toothbrush + @yob)
+- Add SecretsBucketRegion parameter and update s3secrets-hooks [#962](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/962) (@keithduncan)
+- Add docs on updating the different components [#957](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/957) (@keithduncan)
+
+### Changed
+
+- `autoscaling:DescribeAutoScalingInstances` can now only be applied to all resources [#989](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/989) (@jeremiahsnapp)
+- Bump buildx from 0.5.1 to 0.7.1 [#975](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/975) (@orien)
+- Quieten Fixing permissions header log group [#965](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/965) (@keithduncan)
+- Update issue templates [#947](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/947) (@keithduncan)
+- Update agent version to v3.35.0 [#990](https://github.com/buildkite/pull/990) [#999](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/999) (@moskyb)
+
+### Security
+
+- Create SECURITY.md [#948](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/948) (@keithduncan)
+
+### Fixed
+
+- Overwrite /usr/bin/buildkite-agent symlink if it already exists [#970](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/970) (@chefsale)
+
 ## [v5.7.2](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.7.1...v5.7.2) (2021-10-29)
 
 ### Changed
