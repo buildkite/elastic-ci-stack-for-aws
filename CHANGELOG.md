@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Bump buildx from 0.5.1 to 0.7.1 [#975](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/975) (@orien)
 - Quieten Fixing permissions header log group [#965](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/965) (@keithduncan)
 - Update issue templates [#947](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/947) (@keithduncan)
-- Update agent version to v3.35.0 [#990](https://github.com/buildkite/pull/990) [#999](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/999) (@moskyb)
+- Update agent version from v3.33.3 to v3.35.0 [#990](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/990) [#999](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/999) (@moskyb)
 
 ### Security
 
