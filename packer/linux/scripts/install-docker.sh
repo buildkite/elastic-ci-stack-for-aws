@@ -4,7 +4,7 @@ set -eu -o pipefail
 DOCKER_VERSION=20.10.14
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.29.2
-DOCKER_BUILDX_VERSION="0.7.1"
+DOCKER_BUILDX_VERSION="0.8.2"
 MACHINE=$(uname -m)
 
 # This performs a manual install of Docker.
