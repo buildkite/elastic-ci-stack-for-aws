@@ -75,6 +75,7 @@ Metadata:
         - ManagedPolicyARN
         - InstanceRoleName
         - IMDSv2Tokens
+        - EnableDetailedMonitoring
 
       - Label:
           default: Auto-scaling Configuration
@@ -438,6 +439,14 @@ Parameters:
   EnableAgentGitMirrorsExperiment:
     Type: String
     Description: Enables the git-mirrors experiment in the agent
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+    
+  EnableDetailedMonitoring:
+    Type: String
+    Description: Enable detailed EC2 monitoring
     AllowedValues:
       - "true"
       - "false"
@@ -919,6 +928,8 @@ Resources:
             HttpTokens: !Ref IMDSv2Tokens
             # Allow containers using a Docker network on the host to receive IDMSv2 responses
             HttpPutResponseHopLimit: 2
+          Monitoring:
+            Enabled: !Ref EnableDetailedMonitoring
           ImageId: !If
             - HasImageId
             - !Ref ImageId
