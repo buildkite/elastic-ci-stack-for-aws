@@ -716,7 +716,7 @@ Resources:
       VpcResources: !If
         - CreateVpcResources
         - [ !Ref RouteDefault, !Ref Subnet0Routes, !Ref Subnet1Routes ]
-        - !Ref AWS::NoValue
+        - !Ref "AWS::NoValue"
 
   BuildkiteAgentTokenParameter:
     Type: AWS::SSM::Parameter
@@ -806,7 +806,7 @@ Resources:
                 - !Sub
                   - "arn:aws:s3:::${Bucket}"
                   - Bucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ]
-            - !Ref AWS::NoValue
+            - !Ref "AWS::NoValue"
           - !If
             - UseArtifactsBucket
             - Sid: ArtifactsBucket
@@ -823,7 +823,7 @@ Resources:
               Resource:
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}"
-            - !Ref AWS::NoValue
+            - !Ref "AWS::NoValue"
           - Effect: Allow
             Action:
               - autoscaling:DescribeAutoScalingInstances
@@ -998,7 +998,7 @@ Resources:
                   </powershell>
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
-                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref AWS::Region, !Ref SecretsBucketRegion ],
+                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref "AWS::Region", !Ref SecretsBucketRegion ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
                   }
               - !Sub
@@ -1047,7 +1047,7 @@ Resources:
                   --==BOUNDARY==--
                 - {
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
-                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref AWS::Region, !Ref SecretsBucketRegion ],
+                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref "AWS::Region", !Ref SecretsBucketRegion ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
                   }
 
