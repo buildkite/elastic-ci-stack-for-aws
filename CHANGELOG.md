@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [v5.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.0) (2022-02-28)
+## [v5.8.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.1) (2022-04-07)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.8.0...v5.8.1)
+
+## Changed
+
+- Update agent version from v3.35.0 to v3.35.2 [#1005](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1005) [#1009](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1009) (@moskyb)
+- Add quotes around AWS variables [#1008](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1008) (@ctgardner)
+
+## [v5.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.0) (2022-03-28)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.7.2...v5.8.0)
 
 ### Added
@@ -20,7 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Bump buildx from 0.5.1 to 0.7.1 [#975](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/975) (@orien)
 - Quieten Fixing permissions header log group [#965](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/965) (@keithduncan)
 - Update issue templates [#947](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/947) (@keithduncan)
-- Update agent version to v3.35.0 [#990](https://github.com/buildkite/pull/990) [#999](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/999) (@moskyb)
+- Update agent version from 3.33.3 to v3.35.0 [#990](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/990) [#999](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/999) (@moskyb)
 
 ### Security
 
