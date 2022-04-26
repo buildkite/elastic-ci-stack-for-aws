@@ -4,7 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [v5.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.0) (2022-02-28)
+## Unreleased
+
+- Add option to enable detailed EC2 monitoring [#1007](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1007) (@threesquared)
+
+## [v5.8.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.2) (2022-04-27)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.8.1...v5.8.2)
+
+### Changed
+
+- Update docker [#1011](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1011) (@moskyb)
+  - Linux v20.10.9 -> v20.10.14
+  - Windows v20.10.7 -> v20.10.9
+- Bump Docker Buildx from 0.7.1 to 0.8.2 [#1003](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1003) (@orien)
+
+## [v5.8.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.1) (2022-04-07)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.8.0...v5.8.1)
+
+## Changed
+
+- Update agent version from v3.35.0 to v3.35.2 [#1005](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1005) [#1009](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1009) (@moskyb)
+- Add quotes around AWS variables [#1008](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1008) (@ctgardner)
+
+## [v5.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.0) (2022-03-28)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.7.2...v5.8.0)
 
 ### Added
