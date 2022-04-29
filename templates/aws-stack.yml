@@ -928,6 +928,7 @@ Resources:
             HttpTokens: !Ref IMDSv2Tokens
             # Allow containers using a Docker network on the host to receive IDMSv2 responses
             HttpPutResponseHopLimit: 2
+            InstanceMetadataTags: enabled
           Monitoring:
             Enabled: !Ref EnableDetailedMonitoring
           ImageId: !If
