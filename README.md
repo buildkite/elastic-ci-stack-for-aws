@@ -175,13 +175,17 @@ Feel free to drop an email to support@buildkite.com with questions. It helps us 
 aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
   --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
 ```
-
+### Collect logs from CloudWatch
 Provide us with logs from CloudWatch Logs:
 
 ```
 /buildkite/elastic-stack/{instance-id}
 /buildkite/systemd/{instance-id}
 ```
+### Collect logs via script
+An alternative method to collect the logs is to use the `log-collector` script in the `utils` folder.
+The script will collect CloudWatch logs for the Instance, Lambda function, and AutoScaling activity and package them in a
+zip archive which you can send via email to support@buildkite.com.
 
 You can also drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
 
