@@ -54,7 +54,6 @@ now=$(date +"%F")
 outputFormat="${outputFormat:=text}"
 
 # Create a temporary directory to store our logs
-#pwd=$(pwd)
 dir=$(mktemp -d buildkite-logs-"$now")
 
 echo "Collecting logs for instance $instanceId"
