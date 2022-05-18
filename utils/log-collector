@@ -16,7 +16,7 @@ set -euo pipefail
 
 usage() {
 cat << EOF
-Usage: ./bk-log-collector -s <stack-name> -i <instance-id>
+Usage: ./log-collector -s <stack-name> -i <instance-id>
 Collect Buildkite Elastic CI stack logs from AWS CloudWatch
 -s      Auto Scaling Group Name, can be found at console.aws.amazon.com/ec2autoscaling/
 -i      Instance ID, the AWS instance ID for the instance you want to collect logs for
@@ -54,48 +54,55 @@ now=$(date +"%F")
 outputFormat="${outputFormat:=text}"
 
 # Create a temporary directory to store our logs
-pwd=$(pwd)
-dir=$(mktemp -d "$pwd"/buildkite-logs-"$now")
+#pwd=$(pwd)
+dir=$(mktemp -d buildkite-logs-"$now")
 
 echo "Collecting logs for instance $instanceId"
 
 # Collect the logs for the instance
-aws logs get-log-events --log-group-name /buildkite/buildkite-agent --log-stream-name "$instanceId" --output "$outputFormat" >> "$dir"/buildkite-agent-"$instanceId".log
-aws logs get-log-events --log-group-name /buildkite/system --log-stream-name "$instanceId" --output "$outputFormat" >> "$dir"/system-"$instanceId".log
-aws logs get-log-events --log-group-name /buildkite/lifecycled --log-stream-name "$instanceId" --output "$outputFormat" >> "$dir"/lifecycled-"$instanceId".log
-aws logs get-log-events --log-group-name /buildkite/docker-daemon --log-stream-name "$instanceId" --output "$outputFormat" >> "$dir"/docker-daemon-"$instanceId".log
+for name in buildkite-agent system lifecycled docker-daemon; do
+    aws logs get-log-events \
+        --log-group-name "/buildkite/$name" \
+        --log-stream-name "$instanceId" \
+        --output "$outputFormat" \
+        >> "$dir/$name-$instanceId.log"
+done
 
 # CloudWatch stores the creationTime as milliseconds since epoch UTC. 
 # Since macOS doesn't support calculating the time since epoch in milliseconds, we don't have perfect accuracy on this, but it should be as close to 24 hours as possible
+# while still being inclusive to all platforms that might run the script
+
 # Currently only collects the last 24h of logs, but it might be good to be able to specify a different value for this.
 logAge=$(date -v-1d "+%s000")
 
 # Collect some information about the Lambda function and associated log groups
-# Change the timeframe to be dynamically set with a default of 24h. Currently collects the last 24 hours of Lambda logs
 lambdaFunction=$(aws cloudformation describe-stack-resources --stack-name "$stackName" --logical-resource-id Autoscaling --query "StackResources[*].PhysicalResourceId" --output text | sed -nr 's/.*stack\/(.*)\/.*/\1/p')
 lambdaLogGroup=$(aws cloudformation describe-stack-resources --stack-name "$lambdaFunction" --logical-resource-id LogGroup --query "StackResources[*].PhysicalResourceId" --output text)
 logStreams=$(aws logs describe-log-streams --log-group-name "$lambdaLogGroup" --order-by LastEventTime --query "logStreams[?creationTime > \`$logAge\`] | [*].logStreamName" --output text | tr -s '[:space:]' '\n')
 
 # Iterate through all of the log streams we collected from the lambda log group
-
 echo "Collecting Lambda logs for $lambdaFunction"
 for i in $logStreams
 do
     fileName=$(echo "$i" | sed -r 's/\//-/g')
-    aws logs get-log-events --log-group-name "$lambdaLogGroup" --log-stream-name "$i" --output "$outputFormat" >> "$dir"/lambda-"$fileName".log
+    aws logs get-log-events --log-group-name "$lambdaLogGroup" \
+        --log-stream-name "$i" \
+        --output "$outputFormat" \
+        >> "${dir}/lambda-${fileName}.log"
 done
 
 # Collect ASG activity for the scaling group
 autoScalingGroup=$(aws cloudformation describe-stack-resources --stack-name "$stackName" --logical-resource-id AgentAutoScaleGroup --query "StackResources[*].PhysicalResourceId" --output text)
 echo "Collecting ASG activity for $autoScalingGroup"
-aws autoscaling describe-scaling-activities --auto-scaling-group-name "$autoScalingGroup" >> "$dir"/asg-activities-"$stackName".log
+aws autoscaling describe-scaling-activities --auto-scaling-group-name "$autoScalingGroup" >> "${dir}/asg-activities-${stackName}.log"
 
 # Make an archive with the logs
-zip -jq buildkite-logs-"$now".zip "$dir"/*.log
+## zip -jq buildkite-logs-"$now".zip "$dir"/*.log
+tar -czvf buildkite-logs-"$now".tar.gz "$dir"/*.log
 
 # Clean up the unneeded files
 rm -r "$dir"
 
-echo "Finished collecting logs, you can find them here: $pwd/buildkite-logs-$now.zip"
+echo "Finished collecting logs, you can find them here: ${dir}/buildkite-logs-${now}.tar.gz"
 
 exit 0
