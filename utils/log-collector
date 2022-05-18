@@ -96,12 +96,13 @@ echo "Collecting ASG activity for $autoScalingGroup"
 aws autoscaling describe-scaling-activities --auto-scaling-group-name "$autoScalingGroup" >> "${dir}/asg-activities-${stackName}.log"
 
 # Make an archive with the logs
-## zip -jq buildkite-logs-"$now".zip "$dir"/*.log
 tar -czvf buildkite-logs-"$now".tar.gz "$dir"/*.log
 
 # Clean up the unneeded files
 rm -r "$dir"
 
-echo "Finished collecting logs, you can find them here: ${dir}/buildkite-logs-${now}.tar.gz"
+pwd=$(pwd)
+
+echo "Finished collecting logs, you can find them here: ${pwd}/buildkite-logs-${now}.tar.gz"
 
 exit 0
