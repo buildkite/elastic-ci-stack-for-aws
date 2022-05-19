@@ -16,7 +16,7 @@ set -euo pipefail
 
 usage() {
 cat << EOF
-Usage: ./log-collector -s <stack-name> -i <instance-id>
+Usage: $0 -s <stack-name> -i <instance-id>
 Collect Buildkite Elastic CI stack logs from AWS CloudWatch
 -s      Stack name, can be found at https://console.aws.amazon.com/cloudformation/home
 -i      Instance ID, the AWS instance ID for the instance you want to collect logs for
