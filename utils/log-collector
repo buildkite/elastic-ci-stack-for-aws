@@ -103,6 +103,6 @@ rm -r "$dir"
 
 pwd=$(pwd)
 
-echo "Finished collecting logs, you can find them here: ${pwd}/buildkite-logs-${now}.tar.gz"
+echo "Finished collecting logs, you can find them here: $PWD/buildkite-logs-${now}.tar.gz"
 
 exit 0
