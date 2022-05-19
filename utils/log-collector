@@ -101,8 +101,6 @@ tar -czvf buildkite-logs-"$now".tar.gz "$dir"/*.log
 # Clean up the unneeded files
 rm -r "$dir"
 
-pwd=$(pwd)
-
 echo "Finished collecting logs, you can find them here: $PWD/buildkite-logs-${now}.tar.gz"
 
 exit 0
