@@ -18,9 +18,9 @@ usage() {
 cat << EOF
 Usage: ./log-collector -s <stack-name> -i <instance-id>
 Collect Buildkite Elastic CI stack logs from AWS CloudWatch
--s      Auto Scaling Group Name, can be found at console.aws.amazon.com/ec2autoscaling/
+-s      Stack name, can be found at https://console.aws.amazon.com/cloudformation/home
 -i      Instance ID, the AWS instance ID for the instance you want to collect logs for
--o      Output format for logs(optional flag), supported values are text (default value), json, table
+-o      Output format for logs (optional flag), supported values are text (default value), json, table
 EOF
 }
 
@@ -54,7 +54,7 @@ now=$(date +"%F")
 outputFormat="${outputFormat:=text}"
 
 # Create a temporary directory to store our logs
-dir=$(mktemp -d buildkite-logs-"$now")
+dir=$(mktemp -d buildkite-logs-"$now"-XXXX)
 
 echo "Collecting logs for instance $instanceId"
 
