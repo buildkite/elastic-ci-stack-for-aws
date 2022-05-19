@@ -55,7 +55,7 @@ outputFormat="${outputFormat:=text}"
 
 # Create a temporary directory to store our logs
 pwd=$(pwd)
-dir=$(mktemp -d "$pwd"/buildkite-logs-"$now")
+dir=$(mktemp -d "$pwd"/buildkite-logs-"$now"-XXXX)
 
 echo "Collecting logs for instance $instanceId"
 
