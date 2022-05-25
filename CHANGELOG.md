@@ -4,9 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v5.9.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.9.0) (2022-05-31)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.8.2...v5.9.0)
 
+### Added
+- Allow accessing tags via instance metadata [#1016](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1016) (@jchanam)
 - Add option to enable detailed EC2 monitoring [#1007](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1007) (@threesquared)
+- Log collector for support/debugging [#1017](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1017) + [#1020](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1020) (@jeremybumsted)
+
+### Changed
+- Update buildkite-agent v3.35.2 -> v3.36.1 [#1021](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1021) [#1025](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1025) (@moskyb)
+- Bump Linux Kernel from 4.14 to 5.10 [#994](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/994) (@orien)
 
 ## [v5.8.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.8.2) (2022-04-27)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.8.1...v5.8.2)
