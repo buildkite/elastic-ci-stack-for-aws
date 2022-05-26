@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GIT_LFS_RELEASE="2.10.0"
+GIT_LFS_RELEASE="3.1.2"
 
 MACHINE=$(uname -m)
 
