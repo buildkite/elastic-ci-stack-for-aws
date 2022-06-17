@@ -1198,10 +1198,11 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
-        SemanticVersion: '1.1.3'
+        SemanticVersion: '1.3.1'
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
+        RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
         BuildkiteQueue: !Ref BuildkiteQueue
         AgentsPerInstance: !Ref AgentsPerInstance
         MinSize: !Ref MinSize
