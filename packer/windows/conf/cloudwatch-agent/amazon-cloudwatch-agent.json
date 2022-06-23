@@ -6,26 +6,31 @@
           {
             "file_path": "C:\\cfn\\log\\cfn-init.log",
             "log_group_name": "/buildkite/cfn-init",
+            "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
           },
           {
             "file_path": "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Log\\UserdataExecution.log",
             "log_group_name": "/buildkite/EC2Launch/UserdataExecution",
+            "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
           },
           {
             "file_path": "C:\\buildkite-agent\\elastic-stack.log",
             "log_group_name": "/buildkite/elastic-stack",
+            "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
           },
           {
             "file_path": "C:\\buildkite-agent\\buildkite-agent.log",
             "log_group_name": "/buildkite/buildkite-agent",
+            "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
           },
           {
             "file_path": "C:\\lifecycled\\lifecycled.log",
             "log_group_name": "/buildkite/lifecycled",
+            "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
           }
         ]
