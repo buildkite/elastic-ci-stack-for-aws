@@ -161,7 +161,10 @@ then
 fi
 chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 
+set +x # Don't leak the agent token into logs
+echo "Setting \$BUILDKITE_AGENT_TOKEN to the value stored in the SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH"
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
+set -x
 
 cat << EOF > /etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
