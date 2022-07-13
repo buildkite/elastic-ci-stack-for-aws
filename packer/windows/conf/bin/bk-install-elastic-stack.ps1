@@ -138,6 +138,7 @@ no-color=true
 shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
+tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
 "@
 $OFS=" "
 

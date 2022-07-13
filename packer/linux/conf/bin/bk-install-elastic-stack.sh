@@ -182,6 +182,7 @@ spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
+tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
 EOF
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg

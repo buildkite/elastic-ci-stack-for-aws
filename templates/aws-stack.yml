@@ -41,6 +41,7 @@ Metadata:
         - BuildkiteAgentTags
         - BuildkiteAgentTimestampLines
         - BuildkiteAgentExperiments
+        - BuildkiteAgentTracingBackend
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
@@ -161,6 +162,15 @@ Parameters:
   BuildkiteAgentExperiments:
     Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/master/EXPERIMENTS.md.
     Type: String
+    Default: ""
+
+  BuildkiteAgentTracingBackend:
+    Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
+    Type: String
+    AllowedValues:
+      - ""
+      - "datadog"
+      - "opentelemetry"
     Default: ""
 
   BuildkiteTerminateInstanceAfterJob:
@@ -443,7 +453,7 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
-    
+
   EnableDetailedMonitoring:
     Type: String
     Description: Enable detailed EC2 monitoring
@@ -993,6 +1003,7 @@ Resources:
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
                   $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
+                  $Env:BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}"
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
                   $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}"
@@ -1041,6 +1052,7 @@ Resources:
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
                   BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
+                  BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}" \
