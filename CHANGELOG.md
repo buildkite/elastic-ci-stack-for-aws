@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.10.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.10.0) (2022-07-13)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.9.0...v5.10.0)
+
+### Security
+
+- Ensure `BUILDKITE_AGENT_TOKEN` is redacted from start-up logs to CloudWatch [#1032](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1032) (@moskyb)
+
+### Added
+
+- Permissions boundary for Autoscaling application [#984](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/984) (@kwong-chong-lfs)
+
+### Changed
+
+- Bump buildkite-agent to v3.37.0 [#1035](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1035) (@pda)
+- Update docker version 20.10.17 [#1033](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1033) (@hari2192)
+
+### Fixed
+
+- Fix IAM permissions for SSM session [#987](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/987) (@ouranos)
+
 ## [v5.9.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.9.0) (2022-05-31)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.8.2...v5.9.0)
 
