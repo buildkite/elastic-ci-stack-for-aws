@@ -138,6 +138,7 @@ no-color=true
 shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
+tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
 "@
 $OFS=" "
 
@@ -199,6 +200,10 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
   Remove-Item -Path C:\buildkite-agent\elastic_bootstrap.ps1
 }
 
+If (![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) {
+  C:\buildkite-agent\bin\bk-fetch.ps1 -From "$Env:BUILDKITE_ENV_FILE_URL" -To C:\buildkite-agent\env
+}
+
 Write-Output "Starting the Buildkite Agent"
 
 nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
@@ -210,6 +215,14 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
+
+If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Path C:\buildkite-agent\env -PathType leaf)) {
+  foreach ($var in Get-Content C:\buildkite-agent\env) {
+    nssm set buildkite-agent AppEnvironmentExtra $var
+    If ($lastexitcode -ne 0) { Exit $lastexitcode }
+  }
+}
+
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppExit Default Restart
 If ($lastexitcode -ne 0) { Exit $lastexitcode }

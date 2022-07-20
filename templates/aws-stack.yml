@@ -41,6 +41,7 @@ Metadata:
         - BuildkiteAgentTags
         - BuildkiteAgentTimestampLines
         - BuildkiteAgentExperiments
+        - BuildkiteAgentTracingBackend
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
@@ -69,6 +70,7 @@ Metadata:
         - ArtifactsBucket
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
+        - AgentEnvFileUrl
         - RootVolumeSize
         - RootVolumeName
         - RootVolumeType
@@ -163,6 +165,15 @@ Parameters:
     Type: String
     Default: ""
 
+  BuildkiteAgentTracingBackend:
+    Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
+    Type: String
+    AllowedValues:
+      - ""
+      - "datadog"
+      - "opentelemetry"
+    Default: ""
+
   BuildkiteTerminateInstanceAfterJob:
     Description: Set to "true" to terminate the instance after a job has completed.
     Type: String
@@ -212,7 +223,12 @@ Parameters:
     Default: ""
 
   BootstrapScriptUrl:
-    Description: Optional - HTTPS or S3 URL to run on each instance during boot
+    Description: Optional - HTTPS or S3 URL for a script to run on each instance during boot
+    Type: String
+    Default: ""
+
+  AgentEnvFileUrl:
+    Description: Optional - HTTPS or S3 URL for a list of environment variables to propagate into the agent's execution environment. Note that these environment variables **will not** be passed into builds running on the agent, only to the agent process itself.
     Type: String
     Default: ""
 
@@ -443,7 +459,7 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
-    
+
   EnableDetailedMonitoring:
     Type: String
     Description: Enable detailed EC2 monitoring
@@ -993,10 +1009,12 @@ Resources:
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
                   $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
+                  $Env:BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}"
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
                   $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}"
                   $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
+                  $Env:BUILDKITE_ENV_FILE_URL="${AgentEnvFileUrl}"
                   $Env:BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}"
                   $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
                   $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
@@ -1041,10 +1059,12 @@ Resources:
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
                   BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
+                  BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}" \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
+                  BUILDKITE_ENV_FILE_URL=${AgentEnvFileUrl} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
                   BUILDKITE_ECR_POLICY="${ECRAccessPolicy}" \

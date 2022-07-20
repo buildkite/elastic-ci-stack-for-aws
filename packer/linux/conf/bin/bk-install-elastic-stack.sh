@@ -182,7 +182,12 @@ spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
+tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
 EOF
+
+if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
+	/usr/local/bin/bk-fetch.sh "${BUILDKITE_ENV_FILE_URL}" /var/lib/buildkite-agent/env
+fi
 
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
