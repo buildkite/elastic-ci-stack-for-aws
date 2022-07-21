@@ -180,7 +180,8 @@ Resources:
                 "lambda:AddPermission",
                 "lambda:RemovePermission",
                 "lambda:DeleteFunction",
-                "lambda:InvokeFunction"
+                "lambda:InvokeFunction",
+                "lambda:TagResource"
               ],
               "Resource": "arn:aws:lambda:*:*:function:*"
             },
