@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.11.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/5.11.0) (2022-07-22)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.10.0...5.11.0)
+
+### Added
+- Add code of conduct [#1038](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1038) (@moskyb)
+- More advanced config options [#1030](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1030) (@moskyb)
+  - A way to specify arbitrary environment variables for the agent to consume
+  - The ability to specify a tracing backend for the agent to use
+
+### Changed
+- Bump buildkite-agent to v3.38.0 [#1040](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1040) (@moskyb)
+
+### Fixed
+- Add a missing permission in the service role, allowing the stack to tag lambdas [#1039](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1039) (@hcho3)
+
 ## [v5.10.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.10.0) (2022-07-13)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.9.0...v5.10.0)
 
