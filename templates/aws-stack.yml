@@ -41,6 +41,7 @@ Metadata:
         - BuildkiteAgentTags
         - BuildkiteAgentTimestampLines
         - BuildkiteAgentExperiments
+        - EnableAgentGitMirrorsExperiment
         - BuildkiteAgentTracingBackend
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
@@ -60,6 +61,7 @@ Metadata:
         Parameters:
         - ImageId
         - ImageIdParameter
+        - InstanceOperatingSystem
         - InstanceType
         - EnableInstanceStorage
         - AgentsPerInstance
@@ -76,6 +78,7 @@ Metadata:
         - RootVolumeType
         - ManagedPolicyARN
         - InstanceRoleName
+        - InstanceRolePermissionsBoundaryARN
         - IMDSv2Tokens
         - EnableDetailedMonitoring
 
