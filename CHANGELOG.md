@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.11.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.11.1) (2022-08-11)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.11.0...v5.11.1)
+
+### Fixed
+- Fix permissioning error on agent scaler [#1044](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1044) (@richardkeit)
+
+### Changed
+- Add groupless cloudformation params to groups [#1042](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1042) (@moskyb)
+
 ## [5.11.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/5.11.0) (2022-07-22)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.10.0...5.11.0)
 
