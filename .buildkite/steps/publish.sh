@@ -28,8 +28,10 @@ buildkite-agent artifact download build/mappings.yml build/
 echo "--- Fetching latest git tags"
 git fetch --tags
 
-echo "--- Building :cloudformation: templates"
+echo "--- Building :cloudformation: CloudFormation templates"
 make build/aws-stack.yml
+
+echo "--- Uploading :cloudformation: CloudFormation templates"
 
 # Publish the top-level mappings only on when we see the most recent tag on master
 if is_latest_tag ; then
@@ -40,8 +42,6 @@ if is_latest_tag ; then
 else
   echo "Skipping publishing latest, '$BUILDKITE_TAG' doesn't match '$(git describe origin/master --tags --match='v*')'"
 fi
-
-echo "--- Uploading :cloudformation: templates"
 
 # Publish the most recent commit from each branch
 s3_upload_templates "${BUILDKITE_BRANCH}/"
