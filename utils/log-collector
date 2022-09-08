@@ -73,14 +73,12 @@ done
 
 # Currently only collects the last 24h of logs, but it might be good to be able to specify a different value for this.
 
-logAge=$(date --date="1day" "+%s000")
-
-# check if we're running on a macOS based system
+# check if we're running on a macOS based system, otherwise use the GNU-based date syntax
 if [[ $OSTYPE == 'darwin'* ]]; then
     logAge=$(date -v-1d "+%s000")
+else
+    logAge=$(date --date="1day" "+%s000")
 fi
-
-
 
 # Collect some information about the Lambda function and associated log groups
 lambdaFunction=$(aws cloudformation describe-stack-resources --stack-name "$stackName" --logical-resource-id Autoscaling --query "StackResources[*].PhysicalResourceId" --output text | sed -nr 's/.*stack\/(.*)\/.*/\1/p')
@@ -89,6 +87,7 @@ logStreams=$(aws logs describe-log-streams --log-group-name "$lambdaLogGroup" --
 
 # Iterate through all of the log streams we collected from the lambda log group
 echo "Collecting Lambda logs for $lambdaFunction"
+
 for i in $logStreams
 do
     fileName=$(echo "$i" | sed -r 's/\//-/g')
