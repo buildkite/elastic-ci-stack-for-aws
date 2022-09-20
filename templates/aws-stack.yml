@@ -921,6 +921,25 @@ Resources:
             Value: !Ref CostAllocationTagValue
           - !Ref "AWS::NoValue"
 
+  ManagedSecretsLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ManagedSecretsLoggingBucket
+      PolicyDocument:
+        Id: ManagedSecretsLoggingBucketPolicy
+        Version: "2012-10-17"
+        Statement:
+        - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+          Effect: Deny
+          Principal: '*'
+          Action: 's3:*'
+          Resource:
+          - !GetAtt 'ManagedSecretsLoggingBucket.Arn'
+          - !Sub '${ManagedSecretsLoggingBucket.Arn}/*'
+          Condition:
+            Bool:
+              'aws:SecureTransport': false
+
   ManagedSecretsBucket:
     Type: AWS::S3::Bucket
     Condition: CreateSecretsBucket
@@ -940,6 +959,25 @@ Resources:
           - Key: !Ref CostAllocationTagName
             Value: !Ref CostAllocationTagValue
           - !Ref "AWS::NoValue"
+
+  ManagedSecretsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ManagedSecretsBucket
+      PolicyDocument:
+        Id: ManagedSecretsBucketPolicy
+        Version: "2012-10-17"
+        Statement:
+        - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+          Effect: Deny
+          Principal: '*'
+          Action: 's3:*'
+          Resource:
+          - !GetAtt 'ManagedSecretsBucket.Arn'
+          - !Sub '${ManagedSecretsBucket.Arn}/*'
+          Condition:
+            Bool:
+              'aws:SecureTransport': false
 
   ImageIdParameterStack:
     Type: AWS::CloudFormation::Stack
