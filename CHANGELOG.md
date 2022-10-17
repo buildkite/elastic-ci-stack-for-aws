@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.11.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.11.2) (2022-10-17)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.11.1...v5.11.2)
+
+### Fixed
+- Fix log collector date command [#1048](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1048) (@jeremybumsted)
+
+### Changed
+- Bump buildkite-agent to v3.39.1 [#1054](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1054) (@triarius)
+
+### Security
+- buildkite-agent v3.39.1 contains a security update. [buildkite/agent #1781](https://github.com/buildkite/agent/pull/1781)
+
+
 ## [v5.11.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.11.1) (2022-08-11)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.11.0...v5.11.1)
 
