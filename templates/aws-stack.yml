@@ -892,8 +892,22 @@ Resources:
               - ec2messages:GetMessages
               - ec2messages:SendRepl
             Resource: "*"
+          - Sid: LifecycleHook
+            Effect: Allow
+            Action:
+              - autoscaling:CompleteLifecycleAction
+            Resource: !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AutoScalingGroupName}
       Roles:
         - !Ref IAMRole
+
+  LifecycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      LifecycleHookName: buildkite-agent-start
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      DefaultResult: CONTINUE
+      HeartbeatTimeout: 900
+      LifecycleTransition: "autoscaling:EC2_INSTANCE_LAUNCHING"
 
   ManagedSecretsLoggingBucket:
     Type: AWS::S3::Bucket
