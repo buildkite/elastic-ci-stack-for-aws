@@ -896,7 +896,7 @@ Resources:
             Effect: Allow
             Action:
               - autoscaling:CompleteLifecycleAction
-            Resource: !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AutoScalingGroupName}
+            Resource: !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AgentAutoScaleGroup}
       Roles:
         - !Ref IAMRole
 
@@ -904,7 +904,7 @@ Resources:
     Type: AWS::AutoScaling::LifecycleHook
     Properties:
       LifecycleHookName: buildkite-agent-start
-      AutoScalingGroupName: !Ref AutoScalingGroup
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
       DefaultResult: CONTINUE
       HeartbeatTimeout: 900
       LifecycleTransition: "autoscaling:EC2_INSTANCE_LAUNCHING"
