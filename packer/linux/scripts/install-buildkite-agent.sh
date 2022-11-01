@@ -25,11 +25,10 @@ sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
-sudo mkdir /go
-chown -R "$(id -u):$(id -g)" /go
-export GOPATH=/go
+export GOPATH="$HOME/go"
+mkdir -p "$GOPATH"
 go install github.com/buildkite/agent/v3@bc0afe5966e3af002faa6ce47ef2f4490c1d8584
-sudo mv /go/bin/agent /usr/bin/buildkite-agent-stable
+sudo mv "$GOPATH/bin/agent" /usr/bin/buildkite-agent-stable
 sudo chmod 755 /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
