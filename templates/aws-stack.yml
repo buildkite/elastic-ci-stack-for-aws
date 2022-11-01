@@ -896,7 +896,7 @@ Resources:
             Effect: Allow
             Action:
               - autoscaling:CompleteLifecycleAction
-            Resource: !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AgentAutoScaleGroup}
+            Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
       Roles:
         - !Ref IAMRole
 
