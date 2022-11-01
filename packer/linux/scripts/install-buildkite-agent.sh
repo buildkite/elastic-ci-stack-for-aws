@@ -28,7 +28,7 @@ buildkite-agent-stable --version
 sudo mkdir /go
 chown -R "$(id -u):$(id -g)" /go
 export GOPATH=/go
-go install github.com/buildkite/agent/v3@7481d221de9f06e7254ff7a2b7d894683074678b
+go install github.com/buildkite/agent/v3@bc0afe5966e3af002faa6ce47ef2f4490c1d8584
 sudo mv /go/bin/agent /usr/bin/buildkite-agent-stable
 sudo chmod 755 /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
