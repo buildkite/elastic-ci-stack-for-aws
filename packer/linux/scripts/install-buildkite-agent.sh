@@ -14,6 +14,7 @@ esac
 echo "Installing dependencies..."
 sudo yum update -y -q
 sudo yum install -y -q git-core
+sudo yum install -y -q golang
 
 echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
@@ -24,6 +25,11 @@ sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
   "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
 sudo chmod +x /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
+
+sudo mkdir /go
+export GOPATH=/go
+sudo go install github.com/buildkite/agent/v3@7481d221de9f06e7254ff7a2b7d894683074678b
+sudo mv /go/bin/agent /usr/bin/buildkite-agent-stable
 
 echo "Downloading buildkite-agent beta..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
