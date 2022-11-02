@@ -27,7 +27,7 @@ buildkite-agent-stable --version
 
 export GOPATH="$HOME/go"
 mkdir -p "$GOPATH"
-go install github.com/buildkite/agent/v3@bc0afe5966e3af002faa6ce47ef2f4490c1d8584
+go install github.com/buildkite/agent/v3@eddf9315fe49b1031f289f003aae7ca03e207004
 sudo mv "$GOPATH/bin/agent" /usr/bin/buildkite-agent-stable
 sudo chmod 755 /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
