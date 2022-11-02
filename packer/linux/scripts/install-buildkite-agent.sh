@@ -32,6 +32,10 @@ sudo mv "$GOPATH/bin/agent" /usr/bin/buildkite-agent-stable
 sudo chmod 755 /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
+sudo rm -rf "$GOPATH"
+sudo yum remove -y golang
+sudo yum autoremove -y
+
 echo "Downloading buildkite-agent beta..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
   "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-${ARCH}"
