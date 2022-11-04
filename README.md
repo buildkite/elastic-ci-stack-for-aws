@@ -180,7 +180,7 @@ Provide us with logs from CloudWatch Logs:
 
 ```
 /buildkite/elastic-stack/{instance-id}
-/buildkite/systemd/{instance-id}
+/buildkite/system/{instance-id}
 ```
 ### Collect logs via script
 An alternative method to collect the logs is to use the `log-collector` script in the `utils` folder.
