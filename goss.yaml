@@ -119,9 +119,11 @@ command:
   # Checks that docker containers can run
   "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version":
     exit-status: 0
+    timeout: 30000 # it can take some time to download the image
 
   # Checks that permissions
   'sh -c "docker run --rm -v \"$PWD:/pwd\" alpine:latest touch /pwd/test && stat -c %U:%G test"':
     exit-status: 0
+    timeout: 30000 # it can take some time to download the image
     stdout:
     - buildkite-agent:docker
