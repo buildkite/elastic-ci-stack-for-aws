@@ -4,6 +4,7 @@ set -eu -o pipefail
 DOCKER_VERSION=20.10.17
 DOCKER_RELEASE="stable"
 DOCKER_COMPOSE_VERSION=1.29.2
+DOCKER_COMPOSE_V2_VERSION=2.12.2
 DOCKER_BUILDX_VERSION="0.8.2"
 MACHINE=$(uname -m)
 
@@ -70,6 +71,7 @@ echo "Installing docker buildx..."
 DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins
 sudo mkdir -p "${DOCKER_CLI_DIR}"
 
+DOCKER_COMPOSE_V2_ARCH="${MACHINE}"
 case "${MACHINE}" in
   x86_64)
     BUILDX_ARCH="amd64";
@@ -79,9 +81,14 @@ case "${MACHINE}" in
     ;;
 esac
 
+
 sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-buildx" "https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.linux-${BUILDX_ARCH}"
 sudo chmod +x "${DOCKER_CLI_DIR}/docker-buildx"
 docker buildx version
+
+sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-compose" "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_V2_VERSION}/docker-compose-linux-${DOCKER_COMPOSE_V2_ARCH}"
+sudo chmod +x "${DOCKER_CLI_DIR}/docker-compose"
+docker compose version
 
 echo "Installing qemu..."
 sudo yum install -y qemu qemu-user-static
