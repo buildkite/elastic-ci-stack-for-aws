@@ -1128,6 +1128,7 @@ Resources:
             - GroupInServiceInstances
             - GroupTerminatingInstances
             - GroupPendingInstances
+            - GroupDesiredCapacity
       TerminationPolicies:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
