@@ -115,6 +115,7 @@ command:
   # Checks that docker is running
   "docker info":
     exit-status: 0
+    timeout: 30000 # it can take some time for the daemon to start
 
   # Checks that docker containers can run
   "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version":
