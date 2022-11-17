@@ -202,7 +202,9 @@ Resources:
                 "s3:PutBucketAcl",
                 "s3:PutBucketLogging",
                 "s3:PutBucketTagging",
-                "s3:PutBucketVersioning"
+                "s3:PutBucketVersioning",
+                "s3:PutEncryptionConfiguration",
+                "s3:PutBucketPolicy"
               ],
               "Resource": "arn:aws:s3:::*"
             },
