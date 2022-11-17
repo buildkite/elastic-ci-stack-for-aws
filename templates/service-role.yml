@@ -204,7 +204,8 @@ Resources:
                 "s3:PutBucketTagging",
                 "s3:PutBucketVersioning",
                 "s3:PutEncryptionConfiguration",
-                "s3:PutBucketPolicy"
+                "s3:PutBucketPolicy",
+                "s3:DeleteBucketPolicy"
               ],
               "Resource": "arn:aws:s3:::*"
             },
