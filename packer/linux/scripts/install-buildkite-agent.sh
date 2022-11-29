@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-AGENT_VERSION=3.40.0
+AGENT_VERSION=3.41.0
 
 MACHINE="$(uname -m)"
 
