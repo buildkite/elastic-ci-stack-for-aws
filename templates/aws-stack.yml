@@ -76,6 +76,7 @@ Metadata:
         - RootVolumeSize
         - RootVolumeName
         - RootVolumeType
+        - RootVolumeEncrypted
         - ManagedPolicyARN
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
@@ -324,6 +325,14 @@ Parameters:
     Description: Type of root volume to use
     Type: String
     Default: "gp3"
+
+  RootVolumeEncrypted:
+    Description: Indicates whether the EBS volume is encrypted
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   SecurityGroupId:
     Type: String
@@ -975,7 +984,7 @@ Resources:
                     - 'linuxamd64'
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
-              Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType }
+              Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType, Encrypted: !Ref RootVolumeEncrypted }
           TagSpecifications:
             - ResourceType: instance
               Tags:
@@ -1128,6 +1137,7 @@ Resources:
             - GroupInServiceInstances
             - GroupTerminatingInstances
             - GroupPendingInstances
+            - GroupDesiredCapacity
       TerminationPolicies:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
