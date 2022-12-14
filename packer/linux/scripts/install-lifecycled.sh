@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-LIFECYCLED_VERSION=v3.2.0
+LIFECYCLED_VERSION=v3.3.0
 
 MACHINE=$(uname -m)
 
@@ -19,4 +19,3 @@ sudo curl -Lf -o /usr/bin/lifecycled \
 sudo chmod +x /usr/bin/lifecycled
 sudo curl -Lf -o /etc/systemd/system/lifecycled.service \
 	https://raw.githubusercontent.com/buildkite/lifecycled/${LIFECYCLED_VERSION}/init/systemd/lifecycled.unit
-
