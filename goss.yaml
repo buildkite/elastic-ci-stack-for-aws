@@ -36,7 +36,7 @@ port:
     - '::'
 
 service:
-  awslogsd:
+  amazon-cloudwatch-agent:
     enabled: true
     running: true
 
@@ -49,6 +49,10 @@ service:
     running: true
 
   sshd:
+    enabled: true
+    running: true
+
+  buildkite-agent:
     enabled: true
     running: true
 
@@ -111,13 +115,16 @@ command:
   # Checks that docker is running
   "docker info":
     exit-status: 0
+    timeout: 30000 # it can take some time for the daemon to start
 
   # Checks that docker containers can run
   "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version":
     exit-status: 0
+    timeout: 30000 # it can take some time to download the image
 
   # Checks that permissions
   'sh -c "docker run --rm -v \"$PWD:/pwd\" alpine:latest touch /pwd/test && stat -c %U:%G test"':
     exit-status: 0
+    timeout: 30000 # it can take some time to download the image
     stdout:
     - buildkite-agent:docker

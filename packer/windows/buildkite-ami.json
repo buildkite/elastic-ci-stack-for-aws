@@ -1,0 +1,79 @@
+{
+  "variables": {
+    "region": "us-east-1"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{user `region`}}",
+      "source_ami_filter": {
+        "filters": {
+          "name": "Windows_Server-2019-English-Full-Containers*",
+          "virtualization-type": "hvm"
+        },
+        "owners": ["amazon"],
+        "most_recent": true
+      },
+      "instance_type": "m5.xlarge",
+      "user_data_file":"scripts/ec2-userdata.ps1",
+      "communicator": "winrm",
+      "winrm_username": "Administrator",
+      "winrm_use_ssl": true,
+      "winrm_insecure": true,
+      "ami_name": "buildkite-stack-windows-{{isotime | clean_resource_name}}",
+      "ami_description": "Buildkite Elastic Stack (Windows Server 2019 w/ docker)",
+      "ami_groups": ["all"]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "conf",
+      "destination": "C:/packer-temp"
+    },
+    {
+      "type": "file",
+      "source": "../../plugins",
+      "destination": "C:/packer-temp"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-utils.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-cloudwatch-agent.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-lifecycled.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-docker.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-buildkite-agent.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-s3secrets-helper.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/install-session-manager-plugin.ps1"
+    },
+    {
+      "type": "powershell",
+      "inline": ["Remove-Item -Path C:/packer-temp -Recurse"]
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "C:/ProgramData/Amazon/EC2-Windows/Launch/Scripts/InitializeInstance.ps1 -Schedule",
+        "C:/ProgramData/Amazon/EC2-Windows/Launch/Scripts/SysprepInstance.ps1 -NoShutdown"
+      ]
+    }
+  ]
+}

@@ -1,271 +1,63 @@
-<h1><img alt="Elastic CI Stack for AWS" src="https://cdn.rawgit.com/buildkite/elastic-ci-stack-for-aws/master/images/banner.png"></h1>
+<h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
 ![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)
 
-The Buildkite Elastic CI Stack gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize legacy tests across hundreds of nodes, run tests and deployments for all your Linux-based services and apps, or run AWS ops tasks.
+## Buildkite Elastic CI Stack for AWS
 
-**For documentation on a [release](https://github.com/buildkite/elastic-ci-stack-for-aws/releases), such as [the latest stable release](https://github.com/buildkite/elastic-ci-stack-for-aws/releases/latest), please see its _Documentation_ section.**
+[Buildkite](https://buildkite.com/) is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
-Features:
+The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling
+[Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize
+large test suites across thousands of nodes, run tests and deployments for Linux or Windows
+based services and apps, or run AWS ops tasks.
 
-- All major AWS regions
-- Configurable instance size
-- Configurable number of buildkite agents per instance
-- Configurable spot instance bid price
-- Configurable auto-scaling based on build activity
-- Docker and Docker Compose support
-- Per-pipeline S3 secret storage (with SSE encryption support)
-- Docker Registry push/pull support
-- CloudWatch logs for system and buildkite agent events
-- CloudWatch metrics from the Buildkite API
-- Support for stable, beta or edge Buildkite Agent releases
-- Create as many instances of the stack as you need
-- Rolling updates to stack instances to reduce interruption
+## Getting started
 
-## Contents
+See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci-aws), or the full [list of recommended resources](#recommended-reading) for detailed information.
 
-<!-- toc -->
-
-- [Getting Started](#getting-started)
-- [Build Secrets](#build-secrets)
-- [What’s On Each Machine?](#whats-on-each-machine)
-- [What Type of Builds Does This Support?](#what-type-of-builds-does-this-support)
-- [Multiple Instances of the Stack](#multiple-instances-of-the-stack)
-- [Autoscaling](#autoscaling)
-- [Terminating the instance after job is complete](#terminating-the-instance-after-job-is-complete)
-- [Docker Registry Support](#docker-registry-support)
-- [Versions](#versions)
-- [Updating Your Stack](#updating-your-stack)
-- [CloudWatch Metrics](#cloudwatch-metrics)
-- [Reading Instance and Agent Logs](#reading-instance-and-agent-logs)
-- [Customizing Instances with a Bootstrap Script](#customizing-instances-with-a-bootstrap-script)
-- [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds)
-- [Security](#security)
-- [Development](#development)
-- [Questions and Support](#questions-and-support)
-- [Licence](#licence)
-
-<!-- tocstop -->
-
-## Getting Started
-
-See the [Elastic CI Stack for AWS guide](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, or jump straight in:
+Or jump straight in:
 
 [![Launch AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
 
-Current release is ![](https://img.shields.io/github/release/buildkite/elastic-ci-stack-for-aws.svg). See [Releases](https://github.com/buildkite/elastic-ci-stack-for-aws/releases) for older releases, or [Versions](#versions) for development version
+The current release is ![](https://img.shields.io/github/release/buildkite/elastic-ci-stack-for-aws.svg). See [Releases](https://github.com/buildkite/elastic-ci-stack-for-aws/releases) for older releases.
 
-> Although the stack will create it's own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing—see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
+> Although the stack creates its own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing — see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
-If you'd like to use the [AWS CLI](https://aws.amazon.com/cli/), download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
+If you want to use the [AWS CLI](https://aws.amazon.com/cli/), download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
 
 ```bash
 aws cloudformation create-stack \
   --output text \
   --stack-name buildkite \
   --template-url "https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml" \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameters $(cat config.json)
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
+  --parameters "$(cat config.json)"
 ```
 
-## Build Secrets
-
-The stack will have created an S3 bucket for you (or used the one you provided as the `SecretsBucket` parameter). This will be where the agent will fetch your SSH private keys for source control, and environment hooks to provide other secrets to your builds.
-
-The following s3 objects are downloaded and processed:
-
-* `/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks)
-* `/private_ssh_key` - A private key that is added to ssh-agent for your builds
-* `/git-credentials` - A [git-credentials](https://git-scm.com/docs/git-credential-store#_storage_format) file for git over https
-* `/{pipeline-slug}/env` - An [agent environment hook](https://buildkite.com/docs/agent/hooks), specific to a pipeline
-* `/{pipeline-slug}/private_ssh_key` - A private key that is added to ssh-agent for your builds, specific to the pipeline
-* `/{pipeline-slug}/git-credentials` - A [git-credentials](https://git-scm.com/docs/git-credential-store#_storage_format) file for git over https, specific to a pipeline
-
-These files are encrypted using [Amazon's KMS Service](https://aws.amazon.com/kms/). See the [Security](#security) section for more details.
-
-Here's an example that shows how to generate a private SSH key, and upload it with KMS encryption to an S3 bucket:
-
-```bash
-# generate a deploy key for your project
-ssh-keygen -t rsa -b 4096 -f id_rsa_buildkite
-pbcopy < id_rsa_buildkite.pub # paste this into your github deploy key
-
-aws s3 cp --acl private --sse aws:kms id_rsa_buildkite "s3://${SecretsBucket}/private_ssh_key"
-```
-
-If you want to set secrets that your build can access, create a file that sets environment variables and upload it:
-
-```bash
-echo "export MY_ENV_VAR=something secret" > myenv
-aws s3 cp --acl private --sse aws:kms myenv "s3://${SecretsBucket}/env"
-rm myenv
-```
-
-**Note: Currently only using the default KMS key for s3 can be used, follow [#235](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/235) for progress on using specific KMS keys**
-
-If you really want to store your secrets unencrypted, you can disable it entirely with `BUILDKITE_USE_KMS=false`.
-
-## What’s On Each Machine?
-
-* [Amazon Linux 2 LTS](https://aws.amazon.com/amazon-linux-2/)
-* [Buildkite Agent v3.8.2](https://buildkite.com/docs/agent)
-* [Docker 18.09.1](https://www.docker.com)
-* [Docker Compose 1.23.2](https://docs.docker.com/compose/)
-* [aws-cli](https://aws.amazon.com/cli/) - useful for performing any ops-related tasks
-* [jq](https://stedolan.github.io/jq/) - useful for manipulating JSON responses from cli tools such as aws-cli or the Buildkite API
-
-## What Type of Builds Does This Support?
-
-This stack is designed to run your builds in a share-nothing pattern similar to the [12 factor application principals](http://12factor.net):
-
-* Each project should encapsulate it's dependencies via Docker and Docker Compose
-* Build pipeline steps should assume no state on the machine (and instead rely on [build meta-data](https://buildkite.com/docs/guides/build-meta-data), [build artifacts](https://buildkite.com/docs/guides/artifacts) or S3)
-* Secrets are configured via environment variables exposed using the S3 secrets bucket
-
-By following these simple conventions you get a scaleable, repeatable and source-controlled CI environment that any team within your organization can use.
-
-## Multiple Instances of the Stack
-
-If you need to different instances sizes and scaling characteristics between pipelines, you can create multiple stack. Each can run on a different [Agent Queue](https://buildkite.com/docs/agent/queues), with it's own configuration, or even in a different AWS account.
-
-Examples:
-
-* A `docker-builders` stack that provides always-on workers with hot docker caches (see [Optimizing for Slow Docker Builds](#optimizing-for-slow-docker-builds))
-* A `pipeline-uploaders` stack with tiny, always-on instances for lightning fast `buildkite-agent pipeline upload` jobs.
-* A `deploy` stack with added credentials and permissions specifically for deployment.
-
-## Autoscaling
-
-If you have configured `MinSize` < `MaxSize`, the stack will automatically scale up and down based on the number of scheduled jobs.
-
-This means you can scale down to zero when idle, which means you can use larger instances for the same cost.
-
-Metrics are collected with a Lambda function, polling every minute.
-
-## Terminating the instance after job is complete
-
-You may set `BuildkiteTerminateInstanceAfterJob` to `true` to force the instance to terminate after it completes a job. Setting this value to `true` tells the stack to apply the following configurations:
-
-1. Sets `disconnect-after-job` and `disconnect-after-job-timeout` in the `buildkite-agent.cfg` file.
-2. Adds `ExecStopPost` steps to the agent's systemd service to mark the instance as unhealthy and to stop the instance.
-
-While not enforced, it is highly recommended you also set your `AgentsPerInstance` value to `1`.
-
-You may configure `BuildkiteTerminateInstanceAfterJobTimeout` to control how long an instance will wait for a job before terminating itself. You can use this setting to tune your ASG to optimize the queue for availability based on your tolerance for scaling events. The default value is 30 minutes (1800 seconds).
-
-Additionally you can set `BuildkiteTerminateInstanceAfterJobDecreaseDesiredCapacity` to `true` to decrease the desired capacity of the autoscaling group by 1 when terminating an instance after the job completes. Use this option if you don't wish the terminated instance to be replaced by another in the autoscaling group.
-
-We strongly encourage you to find an alternative to this setting if at all possible. The turn around time for replacing these instances is currently slow (5-10 minutes depending on other stack configuration settings). If you need single use jobs, we suggest looking at our container plugins like `docker`, `docker-compose`, and `ecs`, all which can be found [here](https://buildkite.com/plugins).
-
-## Docker Registry Support
-
-If you want to push or pull from registries such as [Docker Hub](https://hub.docker.com/) or [Quay](https://quay.io/) you can use the `environment` hook in your secrets bucket to export the following environment variables:
-
-* `DOCKER_LOGIN_USER="the-user-name"`
-* `DOCKER_LOGIN_PASSWORD="the-password"`
-* `DOCKER_LOGIN_SERVER=""` - optional. By default it will log into Docker Hub
-
-Setting these will perform a `docker login` before each pipeline step is run, allowing you to `docker push` to them from within your build scripts.
-
-If you are using [Amazon ECR](https://aws.amazon.com/ecr/) you can set the `ECRAccessPolicy` parameter to the stack to either `readonly`, `poweruser`, or `full` depending on [the access level you want](http://docs.aws.amazon.com/AmazonECR/latest/userguide/ecr_managed_policies.html) your builds to have
-
-You can disable this in individual pipelines by setting `AWS_ECR_LOGIN=false`.
-
-If you want to login to an ECR server on another AWS account, you can set `AWS_ECR_LOGIN_REGISTRY_IDS="id1,id2,id3"`.
-
-The AWS ECR options are powered by an embedded version of the [ECR plugin](https://github.com/buildkite-plugins/ecr-buildkite-plugin), so if you require options that aren't listed here, you can disable the embedded version as above and call the plugin directly. See [it's README](https://github.com/buildkite-plugins/ecr-buildkite-plugin) for more examples (requires Agent v3.x).
-
-## Versions
-
-We recommend running the latest release, which is available at `https://s3.amazonaws.com/buildkite-aws-stack/aws-stack.yml`, or on the [releases page](https://github.com/buildkite/elastic-ci-stack-for-aws/releases).
-
-The latest build of the stack is published to `https://s3.amazonaws.com/buildkite-aws-stack/master/aws-stack.yml`, along with a version for each commit in the form of `https://s3.amazonaws.com/buildkite-aws-stack/master/${COMMIT}.aws-stack.yml`.
-
-Branches are published in the form of `https://s3.amazonaws.com/buildkite-aws-stack/${BRANCH}/aws-stack.yml`.
-
-## Updating Your Stack
-
-To update your stack to the latest version use CloudFormation’s stack update tools with one of the urls in the [Versions](#versions) section.
-
-Prior to updating, it's a good idea to set the desired instance size on the AutoscalingGroup to 0 manually.
-
-## CloudWatch Metrics
-
-Metrics are calculated every minute from the Buildkite API using a lambda function.
-
-<img width="544" alt="cloudwatch" src="https://cloud.githubusercontent.com/assets/153/16836158/85abdbc6-49ff-11e6-814c-eaf2400e8333.png">
-
-You’ll find the stack’s metrics under "Custom Metrics > Buildkite" within CloudWatch.
-
-## Reading Instance and Agent Logs
-
-Each instance streams both system messages and Buildkite Agent logs to CloudWatch Logs under two log groups:
-
-* `/var/log/messages` - System logs
-* `/var/log/buildkite-agent.log` - Buildkite Agent logs
-* `/var/log/docker` - Docker daemon logs
-* `/var/log/elastic-stack.log` - Boot process logs
-
-Within each stream the logs are grouped by instance id.
-
-To debug an agent first find the instance id from the agent in Buildkite, head to your [CloudWatch Logs Dashboard](https://console.aws.amazon.com/cloudwatch/home?#logs:), choose either the system or Buildkite Agent log group, and then search for the instance id in the list of log streams.
-
-## Customizing Instances with a Bootstrap Script
-
-You can customize your stack’s instances by using the `BootstrapScriptUrl` stack parameter to run a bash script on instance boot. To set up a bootstrap script, create an S3 bucket with the script, and set the `BootstrapScriptUrl` parameter, for example `s3://my_bucket_name/my_bootstrap.sh`.
-
-If the file is private, you'll also need to create an IAM policy to allow the instances to read the file, for example:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-      ],
-      "Resource": ["arn:aws:s3:::my_bucket_name/my_bootstrap.sh"]
-    }
-  ]
-}
-```
-
-Once you’ve created the policy, you must specify the policy’s ARN in the `ManagedPolicyARN` stack parameter.
-
-## Optimizing for Slow Docker Builds
-
-For large legacy applications the Docker build process might take a long time on new instances. For these cases it’s recommended to create an optimized "builder" stack which doesn't scale down, keeps a warm docker cache and is responsible for building and pushing the application to Docker Hub before running the parallel build jobs across your normal CI stack.
-
-An example of how to set this up:
-
-1. Create a Docker Hub repository for pushing images to
-1. Update the pipeline’s `env` hook in your secrets bucket to perform a `docker login`
-1. Create a builder stack with its own queue (i.e. `elastic-builders`)
-
-Here is an example build pipeline based on a production Rails application:
-
-```yaml
-steps:
-  - name: ":docker: :package:"
-    plugins:
-      docker-compose:
-        build: app
-        image-repository: my-docker-org/my-repo
-    agents:
-      queue: elastic-builders
-  - wait
-  - name: ":hammer:"
-    command: ".buildkite/steps/tests"
-    plugins:
-      docker-compose:
-        run: app
-    agents:
-      queue: elastic
-    parallelism: 75
-```
-
-See [Issue 81](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/81) for ideas on other solutions (contributions welcome!).
+## Supported Features
+
+Most features are supported across both Linux and Windows. See below for details
+of per-operating system support:
+
+Feature | Linux | Windows
+--- | --- | ---
+Docker | ✅ | ✅ 
+Docker Compose | ✅ | ✅ 
+AWS CLI | ✅ | ✅ 
+S3 Secrets Bucket | ✅ | ✅ 
+ECR Login | ✅ | ✅ 
+Docker Login | ✅ | ✅ 
+CloudWatch Logs Agent | ✅ | ✅ 
+Per-Instance Bootstrap Script | ✅ | ✅ 
+🧑‍🔬 git-mirrors experiment | ✅ | ✅ 
+SSM Access | ✅ | ✅ 
+Instance Storage (NVMe) | ✅ | 
+SSH Access | ✅ | 
+Periodic authorized_keys Refresh | ✅ | 
+Periodic Instance Health Check | ✅ | 
+git lfs | ✅ | 
+Additional sudo Permissions | ✅ | 
+RDP Access | | ✅ 
 
 ## Security
 
@@ -275,15 +67,40 @@ Anyone with commit access to your codebase (including third-party pull-requests 
 
 Also keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
 
+### Limiting CloudFormation Permissions
+
+By default, CloudFormation will operate using the permissions granted to the
+identity of the credentials used to initiate a stack deployment or update.
+
+If you want to explicitly specify which actions CloudFormation can perform on
+your behalf, you can either create your stack using credentials for an IAM
+identity with limited permissions, or provide an [AWS CloudFormation service role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html).
+
+🧑‍🔬 [templates/service-role.yml](templates/service-role.yml) template contains an
+experimental service role and set of IAM Policies that list the IAM
+Actions necessary to create, update, and delete a CloudFormation Stack created
+with the Buildkite Elastic CI Stack template. The role created by this template
+is currently being tested, but it has not been tested enough to be depended on.
+There are likely to be missing permissions for some stack parameter
+permutations.
+
+```bash
+aws cloudformation deploy --template-file templates/service-role.yml --stack-name buildkite-elastic-ci-stack-service-role --region us-east-1 --capabilities CAPABILITY_IAM
+```
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
 
 ```bash
-# Build an AMI
+# Checkout all submodules
+git submodule update --init --recursive
+
+# Build all AMIs and render a cloud formation template - this requires AWS credentials (in the ENV)
+# to build an AMI with packer
 make build
 
-# Or, to set things up locally and create the stack on AWS
+# To create a new stack on AWS using the local template
 make create-stack
 
 # You can use any of the AWS* environment variables that the aws-cli supports
@@ -293,13 +110,63 @@ AWS_PROFILE="some-profile" make create-stack
 aws-vault exec some-profile -- make create-stack
 ```
 
-If you need to build your own AMI (because you've changed something in the `packer` directory), run:
+If you need to build your own AMI (because you've changed something in the
+`packer` directory), run packer with AWS credentials in your shell environment:
 
 ```bash
 make packer
 ```
 
-## Questions and Support
+This will boot and image three AWS EC2 instances in your account’s `us-east-1`
+default VPC:
+
+- Linux (64-bit x86)
+- Linux (64-bit Arm)
+- Windows (64-bit x86)
+
+## Support Policy
+
+We provide support for security and bug fixes on the current major release only.
+
+If there are any changes in the master branch since the last tagged release, we
+aim to publish a new tagged release of this template at the end of each month.
+
+### AWS Regions
+
+We support all AWS Regions, except China and US GovCloud.
+
+We aim to support new regions within one month of general availability.
+
+### Operating Systems
+
+We build and deploy the following AMIs to all our supported regions:
+
+- Amazon Linux 2 (64-bit x86)
+- Amazon Linux 2 (64-bit Arm)
+- Windows Server 2019 (64-bit x86)
+
+### Buildkite Agent
+
+The Elastic CI Stack template [published from the master branch](https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
+tracks the latest Buildkite Agent release.
+
+You may wish to preview any updates to your stack from this template
+[using a CloudFormation Stack Change Set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
+to decide whether to apply it.
+
+## Recommended reading  
+
+To gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
+
+* [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic_ci_aws)
+* [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/tutorials/elastic-ci-stack-aws)
+* [Running Buildkite Agent on AWS](https://buildkite.com/docs/agent/v3/aws)
+* [Template parameters for Elastic CI Stack for AWS](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
+* [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
+* [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
+* [CloudFormation Service Role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
+
+## Questions and support
 
 Feel free to drop an email to support@buildkite.com with questions. It helps us if you can provide the following details:
 
@@ -308,15 +175,19 @@ Feel free to drop an email to support@buildkite.com with questions. It helps us 
 aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
   --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
 ```
-
-Provide us with logs from Cloudwatch Logs:
+### Collect logs from CloudWatch
+Provide us with logs from CloudWatch Logs:
 
 ```
 /buildkite/elastic-stack/{instance-id}
-/buildkite/systemd/{instance-id}
+/buildkite/system/{instance-id}
 ```
+### Collect logs via script
+An alternative method to collect the logs is to use the `log-collector` script in the `utils` folder.
+The script will collect CloudWatch logs for the Instance, Lambda function, and AutoScaling activity and package them in a
+zip archive which you can send via email to support@buildkite.com.
 
-Alternately, drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
+You can also drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
 
 ## Licence
 

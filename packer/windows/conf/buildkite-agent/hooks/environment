@@ -1,0 +1,67 @@
+#!/bin/bash
+set -eu -o pipefail
+
+echo "~~~ :earth_asia: Setting up environment variables"
+# shellcheck source=/dev/null
+source ~/cfn-env
+
+# a clean docker config for each job, for improved isolation
+BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY=$(mktemp -d)
+export BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY
+export DOCKER_CONFIG="$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
+
+if [ "${BUILDKITE_DOCKER_EXPERIMENTAL:-false}" = "true" ]
+then
+  #shellcheck disable=SC2094 # Redirections to the same command are processed in order
+  cat <<< "$(jq '.experimental="enabled"' "${DOCKER_CONFIG}/config.json")" > "${DOCKER_CONFIG}/config.json"
+fi
+
+echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
+
+echo "Configuring built-in plugins"
+
+[[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}
+[[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/docker-login/}
+[[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ecr/}
+
+SECRETS_PLUGIN_ENABLED=0
+DOCKER_LOGIN_PLUGIN_ENABLED=0
+ECR_PLUGIN_ENABLED=0
+
+for plugin in $PLUGINS_ENABLED ; do
+  case "$plugin" in
+    secrets)
+      export SECRETS_PLUGIN_ENABLED=1
+      echo "Secrets plugin enabled"
+      ;;
+    docker-login)
+      export DOCKER_LOGIN_PLUGIN_ENABLED=1
+      echo "Docker-login plugin enabled"
+      ;;
+    ecr)
+      export ECR_PLUGIN_ENABLED=1
+      echo "ECR plugin enabled"
+      ;;
+  esac
+done
+
+if [[ -n "${BUILDKITE_SECRETS_BUCKET:-}" &&  "${SECRETS_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_S3_SECRETS_BUCKET="$BUILDKITE_SECRETS_BUCKET"
+  export BUILDKITE_PLUGIN_S3_SECRETS_REGION="$BUILDKITE_SECRETS_BUCKET_REGION"
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/secrets/hooks/environment
+fi
+
+if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" ]] ; then
+  export BUILDKITE_PLUGIN_ECR_LOGIN=1
+  export BUILDKITE_PLUGIN_ECR_RETRIES=3
+
+  # map AWS_ECR_LOGIN_REGISTRY_IDS into the plugin list format
+  if [[ -n "${AWS_ECR_LOGIN_REGISTRY_IDS:-}" ]] ; then
+    export BUILDKITE_PLUGIN_ECR_ACCOUNT_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
+  fi
+
+  # shellcheck source=/dev/null
+  source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/environment
+fi
