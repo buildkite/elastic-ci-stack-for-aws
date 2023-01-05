@@ -69,6 +69,7 @@ Metadata:
         - SpotPrice
         - SecretsBucket
         - SecretsBucketRegion
+        - SecretsBucketEncryption
         - ArtifactsBucket
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
@@ -220,6 +221,14 @@ Parameters:
     Description: Optional - Region for the SecretsBucket. If blank the bucket's region is dynamically discovered.
     Type: String
     Default: ""
+
+  SecretsBucketEncryption:
+    Description: Indicates whether the SecretsBucket should enforce encryption at rest and in transit
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   ArtifactsBucket:
     Description: Optional - Name of an existing S3 bucket for build artifact storage
@@ -538,6 +547,11 @@ Conditions:
       !And
          - !Equals [ !Ref EnableSecretsPlugin, "true"]
          - !Equals [ !Ref SecretsBucket, "" ]
+
+    EnforceSecretsBucketEncryption:
+      !And
+         - !Condition CreateSecretsBucket
+         - !Equals [ !Ref SecretsBucketEncryption, "true"]
 
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
@@ -911,9 +925,13 @@ Resources:
     Properties:
       AccessControl: LogDeliveryWrite
       BucketEncryption:
-        ServerSideEncryptionConfiguration:
+        !If
+        - EnforceSecretsBucketEncryption
+        -
+          ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: "AES256"
+        - !Ref "AWS::NoValue"
       Tags:
         - !If
           - UseCostAllocationTags
@@ -923,6 +941,7 @@ Resources:
 
   ManagedSecretsLoggingBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: EnforceSecretsBucketEncryption
     Properties:
       Bucket: !Ref ManagedSecretsLoggingBucket
       PolicyDocument:
@@ -946,9 +965,13 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketEncryption:
-        ServerSideEncryptionConfiguration:
+        !If
+        - EnforceSecretsBucketEncryption
+        -
+          ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: "AES256"
+        - !Ref "AWS::NoValue"
       LoggingConfiguration:
         DestinationBucketName: !Ref ManagedSecretsLoggingBucket
       VersioningConfiguration:
@@ -962,6 +985,7 @@ Resources:
 
   ManagedSecretsBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: EnforceSecretsBucketEncryption
     Properties:
       Bucket: !Ref ManagedSecretsBucket
       PolicyDocument:
