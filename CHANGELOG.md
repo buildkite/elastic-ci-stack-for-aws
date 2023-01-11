@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.15.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.15.0) (2023-01-06)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.14.0...v5.15.0)
+
+### Added
+- Enable default bucket encryption for s3 and enforce SSL [#1050](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1050) (@ckornacker)
+
+### Changed
+- Bump buildkite-agent to v3.42.0 [#1073](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1073) (@mitchbne)
+- Bump Docker buildx from 0.8.2 to 0.9.1 [#1071](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1071) (@orien)
+- Bump lifecycled to v3.3.0 [#1065](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1065) (@triarius)
+
+
 ## [v5.14.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.14.0) (2022-11-29)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.13.0...v5.14.0)
 
