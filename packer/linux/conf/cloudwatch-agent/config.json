@@ -47,6 +47,12 @@
 						"log_group_name": "/buildkite/system",
 						"log_stream_name": "{instance_id}",
 						"timestamp_format": "%b %d %H:%M:%S"
+					},
+					{
+						"file_path": "/var/log/secure",
+						"log_group_name": "/buildkite/auth",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
 					}
 				]
 			}
