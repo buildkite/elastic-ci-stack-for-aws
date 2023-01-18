@@ -1,18 +1,21 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
+# pinned because awscli v2 drops 'aws ecr get-login'
+# https://github.com/buildkite-plugins/ecr-buildkite-plugin/issues/37
+$AWS_CLI_VERSION = 1.18.11
+$GIT_VERSION = 2.39.1
+
 Write-Output "Installing chocolatey package manager"
 Set-ExecutionPolicy Bypass -Scope Process -Force
 Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 Write-Output "Installing awscli"
-# pinned because awscli v2 drops 'aws ecr get-login'
-# https://github.com/buildkite-plugins/ecr-buildkite-plugin/issues/37
-choco install -y awscli --version=1.18.11
+choco install -y awscli --version=$AWS_CLI_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Git for Windows"
-choco install -y git --version 2.39.1
+choco install -y git --version=$GIT_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing nssm"
