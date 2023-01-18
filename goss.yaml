@@ -106,6 +106,9 @@ command:
   "git --version":
     exit-status: 0
 
+  "git-lfs --version":
+    exit-status: 0
+
   "/etc/cron.hourly/docker-low-disk-gc":
     exit-status: 0
 
