@@ -2,7 +2,7 @@
 
 set -Eeufo pipefail
 
-GIT_LFS_RELEASE="3.3.0"
+GIT_LFS_VERSION=3.3.0
 
 MACHINE=$(uname -m)
 
@@ -12,10 +12,8 @@ case "${MACHINE}" in
 	*)         ARCH=unknown;;
 esac
 
-echo "Installing git lfs ${GIT_LFS_RELEASE}..."
-curl -Lsf -o git-lfs.tgz https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_RELEASE}/git-lfs-linux-${ARCH}-v${GIT_LFS_RELEASE}.tar.gz
-mkdir git-lfs
-tar -xvzf git-lfs.tgz -C git-lfs
-sudo chmod 755 git-lfs/git-lfs
-sudo ./git-lfs/install.sh
-rm -rf git-lfs.tgz git-lfs/
+echo "Installing git lfs ${GIT_LFS_VERSION}..."
+pushd "$(mktemp -d)"
+curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSION}/git-lfs-linux-${ARCH}-v${GIT_LFS_VERSION}.tar.gz | tar xz
+sudo git-lfs-${GIT_LFS_VERSION}/install.sh
+popd
