@@ -83,6 +83,7 @@ Metadata:
         - InstanceRolePermissionsBoundaryARN
         - IMDSv2Tokens
         - EnableDetailedMonitoring
+        - InstanceName
 
       - Label:
           default: Auto-scaling Configuration
@@ -488,6 +489,11 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  InstanceName:
+    Type: String
+    Description: Optional - Customise the EC2 instance Name tag
+    Default: "buildkite-agent"
 
 Rules:
   HasToken:
@@ -1061,7 +1067,7 @@ Resources:
                 - Key: Role
                   Value: buildkite-agent
                 - Key: Name
-                  Value: buildkite-agent
+                  Value: !Ref InstanceName
                 - Key: BuildkiteAgentRelease
                   Value: !Ref BuildkiteAgentRelease
                 - Key: BuildkiteQueue
