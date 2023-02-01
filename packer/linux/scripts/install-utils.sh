@@ -38,10 +38,17 @@ curl -sSLOJ "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERS
 popd
 
 pushd "$HOME/rpmbuild/SPECS"
-# we don't want to build with docs, it pulls in a lot of dependencies we do not want
+# We don't want to build with docs, it pulls in a lot of dependencies we do not want
+# While this can be achieved just by passing --without docs into `rpmbuild`, as we do below,
+# a similar flag does not exist on `yum-builddep`, so we will just remove the blocks entirely
 sed -i '/^%if %{with docs}$/,/^# endif with docs$/d' git.spec
+
 # bump the version
 sed -i 's/tarball_version 2.38.1/tarball_version '"${GIT_VERSION}"'/;s/Version:        2.38.1/Version:        '"${GIT_VERSION}/" git.spec
+
+# some systems will have openssl11-devel installed, but it conflicts with openssl-devel
+sed -i 's/BuildRequires:  openssl-devel/BuildRequires:  openssl11-devel/' git.spec
+
 sudo yum-builddep -y git.spec
 rpmbuild -ba --nocheck --nodeps --without docs --without tests git.spec
 popd
