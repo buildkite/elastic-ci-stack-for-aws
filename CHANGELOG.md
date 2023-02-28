@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.17.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.17.0) (2023-02-28)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.16.1...v5.17.0)
+
+### Added
+- Support for c7gn, m7g, and r7g instance type classes with the arm64 AMI [#1095](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1095) (@triarius)
+- Customise the Name tag on EC2 instances spawned by the ASG with the new InstanceName parameter [#1088](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1088) (@fd-jonathanlinn)
+
+### Changed
+- Buildkite Agent v3.44.0 [#1097](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1097) (@DrJosh9000)
+- Upgrades: Docker for Linux v20.10.23, Docker compose v2.16.0, buildx v0.10.3, Linux kernel v5.15 (@mumumumu, @orien, @triarius)
+- And other minor cleanups! (@moskyb, @triarius)
+
+### Fixed
+- Correct invalid SSM policy action [#1087](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1087) (@jsleeio)
+
 ## [v5.16.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.16.1) (2023-01-20)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.16.0...v5.16.1)
 
