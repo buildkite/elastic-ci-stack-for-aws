@@ -4,15 +4,14 @@ set -eu -o pipefail
 echo "Updating core packages"
 sudo yum update -y
 
-echo "Updating awscli..."
-sudo yum install -y python2-pip
+echo "Installing python..."
 sudo yum install -y python3-pip python3 python3-setuptools
-sudo pip install --upgrade awscli
-sudo pip install future
-sudo pip3 install future
 
 echo "Installing zip utils..."
 sudo yum install -y zip unzip git pigz
+
+echo "Installing aws utils..."
+sudo yum install -y awscli-2 aws-cfn-bootstrap
 
 echo "Installing bk elastic stack bin files..."
 sudo chmod +x /tmp/conf/bin/bk-*
