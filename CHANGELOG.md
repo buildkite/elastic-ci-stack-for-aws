@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.18.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.18.0) (2023-03-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.17.0...v5.18.0)
+
+### Changed
+- Bump buildkite-agent to v3.45.0 [#1101](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1101) (@triarius)
+- Bump Docker buildx from 0.10.3 to 0.10.4 [#1100](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1100) (@orien)
+- Explicitly disabled public access ACLs for managed secrets buckets [#1099](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1099) (@triarius)
+
 ## [v5.17.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.17.0) (2023-02-28)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.16.1...v5.17.0)
 
