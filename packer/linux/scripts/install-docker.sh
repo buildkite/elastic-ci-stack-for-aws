@@ -39,7 +39,7 @@ if [ "${MACHINE}" == "x86_64" ]; then
 	sudo chmod +x /usr/bin/docker-compose
 	docker-compose --version
 elif [[ "${MACHINE}" == "aarch64" ]]; then
-  sudo yum install -y gcc-c++ libffi-devel openssl11 openssl11-devel python3-devel
+  sudo yum install -y gcc-c++ libffi-devel openssl openssl-devel python3-devel
 
   # docker-compose depends on the cryptography package, v3.4 of which
   # introduces a build dependency on rust; let's avoid that for now.
