@@ -48,10 +48,12 @@ elif [[ "${MACHINE}" == "aarch64" ]]; then
   # download for arm64 at some point:
   # https://github.com/docker/compose/issues/7472
   CONSTRAINT_FILE="/tmp/docker-compose-pip-constraint"
-  echo 'cryptography<3.4' >"$CONSTRAINT_FILE"
+  echo 'cryptography<3.4'  >"$CONSTRAINT_FILE"
+  echo 'urllib3==1.25.10' >>"$CONSTRAINT_FILE"
+  echo 'requests==2.25.1' >>"$CONSTRAINT_FILE"
   sudo pip3 install --constraint "$CONSTRAINT_FILE" "docker-compose==${DOCKER_COMPOSE_VERSION}"
 
-	docker-compose version
+  docker-compose version
 else
   echo "No docker compose option configured for arch ${MACHINE}"
   exit 1
