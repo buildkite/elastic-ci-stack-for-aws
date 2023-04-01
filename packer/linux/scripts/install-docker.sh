@@ -58,6 +58,7 @@ else
 fi
 
 echo "Adding docker cron tasks..."
+sudo yum install -y -q cronie cronie-anacron
 sudo cp /tmp/conf/docker/cron.hourly/docker-gc /etc/cron.hourly/docker-gc
 sudo cp /tmp/conf/docker/cron.hourly/docker-low-disk-gc /etc/cron.hourly/docker-low-disk-gc
 sudo chmod +x /etc/cron.hourly/docker-*
