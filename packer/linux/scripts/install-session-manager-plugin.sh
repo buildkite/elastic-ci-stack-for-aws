@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-SESSION_MANAGER_PLUGIN_VERSION=1.2.30.0
+SESSION_MANAGER_PLUGIN_VERSION=1.2.463.0
 
 MACHINE="$(uname -m)"
 
