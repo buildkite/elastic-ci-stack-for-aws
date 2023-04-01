@@ -93,9 +93,10 @@ sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-compose"
 sudo chmod +x "${DOCKER_CLI_DIR}/docker-compose"
 docker compose version
 
-echo "Installing qemu..."
-sudo yum install -y qemu qemu-user-static
-
-curl --location --fail --silent --output /tmp/qemu-binfmt-conf.sh https://raw.githubusercontent.com/qemu/qemu/v6.1.0/scripts/qemu-binfmt-conf.sh
-chmod +x /tmp/qemu-binfmt-conf.sh
-sudo /tmp/qemu-binfmt-conf.sh --qemu-suffix "-static" --qemu-path /usr/bin
+# TODO uh oh, qemu unavailable on AL2023?
+# echo "Installing qemu..."
+# sudo yum install -y qemu qemu-user-static
+#
+# curl --location --fail --silent --output /tmp/qemu-binfmt-conf.sh https://raw.githubusercontent.com/qemu/qemu/v6.1.0/scripts/qemu-binfmt-conf.sh
+# chmod +x /tmp/qemu-binfmt-conf.sh
+# sudo /tmp/qemu-binfmt-conf.sh --qemu-suffix "-static" --qemu-path /usr/bin
