@@ -46,6 +46,8 @@ Metadata:
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
+        - BuildkiteAgentScalerServerlessARN
+        - BuildkiteAgentScalerVersion
 
       - Label:
           default: Network Configuration
@@ -170,6 +172,16 @@ Parameters:
     Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/master/EXPERIMENTS.md.
     Type: String
     Default: ""
+
+  BuildkiteAgentScalerServerlessARN:
+    Description: ARN of the Serverless Application Repository that hosts the version of buildkite-agent-scaler to run. This needs to be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
+    Type: String
+    Default: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
+
+  BuildkiteAgentScalerVersion:
+    Description: Version of the buildkite-agent-scaler to use
+    Type: String
+    Default: "1.3.2"
 
   BuildkiteAgentTracingBackend:
     Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
@@ -1320,8 +1332,8 @@ Resources:
     Condition: HasVariableSize
     Properties:
       Location:
-        ApplicationId: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
-        SemanticVersion: '1.3.2'
+        ApplicationId: !Ref BuildkiteAgentScalerServerlessARN
+        SemanticVersion: !Ref BuildkiteAgentScalerVersion
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
