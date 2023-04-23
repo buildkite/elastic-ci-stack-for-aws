@@ -970,7 +970,8 @@ Resources:
         Statement:
         - Sid: S3ServerAccessLogsPolicy # Grant permissions to the logging service principal using a bucket policy (https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html)
           Effect: Allow
-          Principal: 'logging.s3.amazonaws.com'
+          Principal:
+            Service: 'logging.s3.amazonaws.com'
           Action:
           - 's3:PutObject'
           Resource:
