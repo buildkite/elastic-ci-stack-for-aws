@@ -944,7 +944,6 @@ Resources:
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
-      AccessControl: LogDeliveryWrite
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -967,23 +966,40 @@ Resources:
 
   ManagedSecretsLoggingBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: EnforceSecretsBucketEncryption
+    Condition: CreateSecretsBucket
     Properties:
       Bucket: !Ref ManagedSecretsLoggingBucket
       PolicyDocument:
         Id: ManagedSecretsLoggingBucketPolicy
         Version: "2012-10-17"
         Statement:
-        - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
-          Effect: Deny
-          Principal: '*'
-          Action: 's3:*'
+        - Sid: S3ServerAccessLogsPolicy # Grant permissions to the logging service principal using a bucket policy (https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html)
+          Effect: Allow
+          Principal:
+            Service: 'logging.s3.amazonaws.com'
+          Action:
+          - 's3:PutObject'
           Resource:
           - !GetAtt 'ManagedSecretsLoggingBucket.Arn'
           - !Sub '${ManagedSecretsLoggingBucket.Arn}/*'
           Condition:
-            Bool:
-              'aws:SecureTransport': false
+            ArnLike:
+              'aws:SourceArn': !GetAtt 'ManagedSecretsBucket.Arn'
+            StringEquals:
+              'aws:SourceAccount': !Ref 'AWS::AccountId'
+        - !If
+          - EnforceSecretsBucketEncryption
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !GetAtt 'ManagedSecretsLoggingBucket.Arn'
+            - !Sub '${ManagedSecretsLoggingBucket.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+          - !Ref "AWS::NoValue"
 
   ManagedSecretsBucket:
     Type: AWS::S3::Bucket
