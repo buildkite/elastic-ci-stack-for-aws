@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.19.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.19.0) (2023-04-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.18.0...v5.19.0)
+
+### Added
+- A parameter for buildkite-agent-scaler edition and version [#1104](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1104) (@triarius)
+
+### Fixed
+- Stack failed to create because it tried to create an ACL on S3 [#1109](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1109) (@saviogl)
+
 ## [v5.18.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.18.0) (2023-03-23)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.17.0...v5.18.0)
 
