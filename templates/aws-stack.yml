@@ -944,6 +944,11 @@ Resources:
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       BucketEncryption:
         !If
         - EnforceSecretsBucketEncryption
@@ -1013,6 +1018,11 @@ Resources:
         DestinationBucketName: !Ref ManagedSecretsLoggingBucket
       VersioningConfiguration:
         Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       Tags:
         - !If
           - UseCostAllocationTags
