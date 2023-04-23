@@ -944,6 +944,11 @@ Resources:
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       BucketEncryption:
         !If
         - EnforceSecretsBucketEncryption
@@ -1001,6 +1006,11 @@ Resources:
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       BucketEncryption:
         !If
         - EnforceSecretsBucketEncryption
