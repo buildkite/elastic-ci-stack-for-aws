@@ -81,7 +81,6 @@ Metadata:
         - RootVolumeType
         - RootVolumeEncrypted
         - ManagedPolicyARN
-        - ManagedPolicyPermissionBoundryARN
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
         - IMDSv2Tokens
@@ -613,9 +612,6 @@ Conditions:
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
 
-    UseManagedPolicyPermissionBoundryARN:
-      !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyPermissionBoundryARN ], "" ] ]
-
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
 
@@ -806,7 +802,7 @@ Resources:
   IAMInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      Path: !Ref IAMRolePath
+      Path: /
       Roles: [ !Ref IAMRole ]
 
   IAMRole:
@@ -860,8 +856,7 @@ Resources:
             Principal:
               Service: [ autoscaling.amazonaws.com, ec2.amazonaws.com ]
             Action: sts:AssumeRole
-      Path: !Ref IAMRolePath
-      PermissionsBoundary: !If [ UseManagedPolicyPermissionBoundryARN, !Ref ManagedPolicyPermissionBoundryARN, !Ref "AWS::NoValue" ]
+      Path: /
 
   IAMPolicies:
     Type: AWS::IAM::Policy
@@ -915,9 +910,9 @@ Resources:
               - secretsmanager:GetSecretValue
               - secretsmanager:DescribeSecret
               - secretsmanager:ListSecretVersionIds
-            Resource: 
+            Resource:
               - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:github-token*
-              - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:infracost-api-key*          
+              - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:infracost-api-key*
           - Sid: TerminateInstance
             Effect: Allow
             Action:
