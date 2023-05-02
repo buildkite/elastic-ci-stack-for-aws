@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-AGENT_VERSION=3.41.0
+AGENT_VERSION=3.45.0
 
 MACHINE="$(uname -m)"
 
@@ -13,7 +13,6 @@ esac
 
 echo "Installing dependencies..."
 sudo yum update -y -q
-sudo yum install -y -q git-core
 
 echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent

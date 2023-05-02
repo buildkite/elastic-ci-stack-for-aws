@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.19.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.19.0) (2023-04-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.18.0...v5.19.0)
+
+### Added
+- A parameter for buildkite-agent-scaler edition and version [#1104](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1104) (@triarius)
+
+### Fixed
+- Stack failed to create because it tried to create an ACL on S3 [#1109](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1109) (@saviogl)
+
+## [v5.18.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.18.0) (2023-03-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.17.0...v5.18.0)
+
+### Changed
+- Bump buildkite-agent to v3.45.0 [#1101](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1101) (@triarius)
+- Bump Docker buildx from 0.10.3 to 0.10.4 [#1100](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1100) (@orien)
+- Explicitly disabled public access ACLs for managed secrets buckets [#1099](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1099) (@triarius)
+
+## [v5.17.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.17.0) (2023-02-28)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.16.1...v5.17.0)
+
+### Added
+- Support for c7gn, m7g, and r7g instance type classes with the arm64 AMI [#1095](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1095) (@triarius)
+- Customise the Name tag on EC2 instances spawned by the ASG with the new InstanceName parameter [#1088](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1088) (@fd-jonathanlinn)
+
+### Changed
+- Buildkite Agent v3.44.0 [#1097](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1097) (@DrJosh9000)
+- Upgrades: Docker for Linux v20.10.23, Docker compose v2.16.0, buildx v0.10.3, Linux kernel v5.15 (@mumumumu, @orien, @triarius)
+- And other minor cleanups! (@moskyb, @triarius)
+
+### Fixed
+- Correct invalid SSM policy action [#1087](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1087) (@jsleeio)
+
+## [v5.16.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.16.1) (2023-01-20)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.16.0...v5.16.1)
+
+### Changed
+- Bump buildkite-agent to v3.43.1 [#1083](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1083) (@moskyb)
+
+## [v5.16.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.16.0) (2023-01-19)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.15.0...v5.16.0)
+
+### Security
+- Git is updated to v2.39.1 to address [recent vulnerabilities](https://github.blog/2023-01-17-git-security-vulnerabilities-announced-2/) [#1077](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1077) (@triarius)
+
+### Added
+- Access logs are now pushed to Cloudwatch for Linux instances [#1075](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1075) (@moskyb)
+
+### Changed
+- Bump buildkite-agent to v3.43.0 [#1079](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1079) (@DrJosh9000)
+
+
+## [v5.15.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.15.0) (2023-01-06)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.14.0...v5.15.0)
+
+### Added
+- Enable default bucket encryption for s3 and enforce SSL [#1050](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1050) (@ckornacker)
+
+### Changed
+- Bump buildkite-agent to v3.42.0 [#1073](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1073) (@mitchbne)
+- Bump Docker buildx from 0.8.2 to 0.9.1 [#1071](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1071) (@orien)
+- Bump lifecycled to v3.3.0 [#1065](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1065) (@triarius)
+
+
 ## [v5.14.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.14.0) (2022-11-29)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.13.0...v5.14.0)
 

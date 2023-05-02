@@ -46,6 +46,8 @@ Metadata:
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
+        - BuildkiteAgentScalerServerlessARN
+        - BuildkiteAgentScalerVersion
 
       - Label:
           default: Network Configuration
@@ -69,6 +71,7 @@ Metadata:
         - SpotPrice
         - SecretsBucket
         - SecretsBucketRegion
+        - SecretsBucketEncryption
         - ArtifactsBucket
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
@@ -83,6 +86,7 @@ Metadata:
         - InstanceRolePermissionsBoundaryARN
         - IMDSv2Tokens
         - EnableDetailedMonitoring
+        - InstanceName
 
       - Label:
           default: Auto-scaling Configuration
@@ -170,6 +174,16 @@ Parameters:
     Type: String
     Default: ""
 
+  BuildkiteAgentScalerServerlessARN:
+    Description: ARN of the Serverless Application Repository that hosts the version of buildkite-agent-scaler to run. This needs to be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
+    Type: String
+    Default: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
+
+  BuildkiteAgentScalerVersion:
+    Description: Version of the buildkite-agent-scaler to use
+    Type: String
+    Default: "1.3.2"
+
   BuildkiteAgentTracingBackend:
     Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
     Type: String
@@ -221,6 +235,14 @@ Parameters:
     Description: Optional - Region for the SecretsBucket. If blank the bucket's region is dynamically discovered.
     Type: String
     Default: ""
+
+  SecretsBucketEncryption:
+    Description: Indicates whether the SecretsBucket should enforce encryption at rest and in transit
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   ArtifactsBucket:
     Description: Optional - Name of an existing S3 bucket for build artifact storage
@@ -481,6 +503,11 @@ Parameters:
       - "false"
     Default: "false"
 
+  InstanceName:
+    Type: String
+    Description: Optional - Customise the EC2 instance Name tag
+    Default: "buildkite-agent"
+
 Rules:
   HasToken:
     Assertions:
@@ -539,6 +566,11 @@ Conditions:
       !And
          - !Equals [ !Ref EnableSecretsPlugin, "true"]
          - !Equals [ !Ref SecretsBucket, "" ]
+
+    EnforceSecretsBucketEncryption:
+      !And
+         - !Condition CreateSecretsBucket
+         - !Equals [ !Ref SecretsBucketEncryption, "true"]
 
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
@@ -633,6 +665,7 @@ Conditions:
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gd" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c6gn" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7g" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "c7gn" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "g5g" ]
         - !Or
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "Im4gn" ]
@@ -640,9 +673,11 @@ Conditions:
         - !Or
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6g" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m6gd" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "m7g" ]
         - !Or
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6g" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r6gd" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r7g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "x2gd" ]
 
@@ -914,7 +949,7 @@ Resources:
               - ec2messages:FailMessage
               - ec2messages:GetEndpoint
               - ec2messages:GetMessages
-              - ec2messages:SendRepl
+              - ec2messages:SendReply
             Resource: "*"
       Roles:
         - !Ref IAMRole
@@ -924,7 +959,19 @@ Resources:
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
-      AccessControl: LogDeliveryWrite
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        !If
+        - EnforceSecretsBucketEncryption
+        -
+          ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+        - !Ref "AWS::NoValue"
       Tags:
         - !If
           - UseCostAllocationTags
@@ -932,21 +979,91 @@ Resources:
             Value: !Ref CostAllocationTagValue
           - !Ref "AWS::NoValue"
 
+  ManagedSecretsLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: CreateSecretsBucket
+    Properties:
+      Bucket: !Ref ManagedSecretsLoggingBucket
+      PolicyDocument:
+        Id: ManagedSecretsLoggingBucketPolicy
+        Version: "2012-10-17"
+        Statement:
+        - Sid: S3ServerAccessLogsPolicy # Grant permissions to the logging service principal using a bucket policy (https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html)
+          Effect: Allow
+          Principal:
+            Service: 'logging.s3.amazonaws.com'
+          Action:
+          - 's3:PutObject'
+          Resource:
+          - !GetAtt 'ManagedSecretsLoggingBucket.Arn'
+          - !Sub '${ManagedSecretsLoggingBucket.Arn}/*'
+          Condition:
+            ArnLike:
+              'aws:SourceArn': !GetAtt 'ManagedSecretsBucket.Arn'
+            StringEquals:
+              'aws:SourceAccount': !Ref 'AWS::AccountId'
+        - !If
+          - EnforceSecretsBucketEncryption
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !GetAtt 'ManagedSecretsLoggingBucket.Arn'
+            - !Sub '${ManagedSecretsLoggingBucket.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+          - !Ref "AWS::NoValue"
+
   ManagedSecretsBucket:
     Type: AWS::S3::Bucket
     Condition: CreateSecretsBucket
     DeletionPolicy: Retain
     Properties:
+      BucketEncryption:
+        !If
+        - EnforceSecretsBucketEncryption
+        -
+          ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+        - !Ref "AWS::NoValue"
       LoggingConfiguration:
         DestinationBucketName: !Ref ManagedSecretsLoggingBucket
       VersioningConfiguration:
         Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       Tags:
         - !If
           - UseCostAllocationTags
           - Key: !Ref CostAllocationTagName
             Value: !Ref CostAllocationTagValue
           - !Ref "AWS::NoValue"
+
+  ManagedSecretsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: EnforceSecretsBucketEncryption
+    Properties:
+      Bucket: !Ref ManagedSecretsBucket
+      PolicyDocument:
+        Id: ManagedSecretsBucketPolicy
+        Version: "2012-10-17"
+        Statement:
+        - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+          Effect: Deny
+          Principal: '*'
+          Action: 's3:*'
+          Resource:
+          - !GetAtt 'ManagedSecretsBucket.Arn'
+          - !Sub '${ManagedSecretsBucket.Arn}/*'
+          Condition:
+            Bool:
+              'aws:SecureTransport': false
 
   ImageIdParameterStack:
     Type: AWS::CloudFormation::Stack
@@ -1006,7 +1123,7 @@ Resources:
                 - Key: Role
                   Value: buildkite-agent
                 - Key: Name
-                  Value: buildkite-agent
+                  Value: !Ref InstanceName
                 - Key: BuildkiteAgentRelease
                   Value: !Ref BuildkiteAgentRelease
                 - Key: BuildkiteQueue
@@ -1245,8 +1362,8 @@ Resources:
     Condition: HasVariableSize
     Properties:
       Location:
-        ApplicationId: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
-        SemanticVersion: '1.3.2'
+        ApplicationId: !Ref BuildkiteAgentScalerServerlessARN
+        SemanticVersion: !Ref BuildkiteAgentScalerVersion
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]

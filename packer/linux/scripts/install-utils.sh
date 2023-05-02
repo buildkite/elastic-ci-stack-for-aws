@@ -12,7 +12,6 @@ sudo pip install future
 sudo pip3 install future
 
 echo "Installing zip utils..."
-sudo yum update -y -q
 sudo yum install -y zip unzip git pigz
 
 echo "Installing bk elastic stack bin files..."

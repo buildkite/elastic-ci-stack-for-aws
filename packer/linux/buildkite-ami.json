@@ -5,7 +5,6 @@
     "goarch": "amd64",
     "instance_type": "m5.xlarge"
   },
-
   "builders": [
     {
       "type": "amazon-ebs",
@@ -75,10 +74,13 @@
     },
     {
       "type": "shell",
+      "script": "scripts/upgrade-kernel.sh"
+    },
+    {
+      "type": "shell",
       "inline": [
         "rm /home/ec2-user/.ssh/authorized_keys"
       ]
     }
   ]
 }
-
