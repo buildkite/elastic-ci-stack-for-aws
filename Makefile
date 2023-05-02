@@ -108,7 +108,8 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 		-e AWS_SESSION_TOKEN \
 		-e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \
-		-v "$(PWD):/src" \
+		-v "$(PWD):/src:Z" \
+		--user $(CURRENT_UID):$(CURRENT_GID) \
 		--rm \
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
@@ -129,7 +130,8 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 		-e AWS_SESSION_TOKEN \
 		-e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \
-		-v "$(PWD):/src" \
+		-v "$(PWD):/src:Z" \
+		--user $(CURRENT_UID):$(CURRENT_GID) \
 		--rm \
 		-w /src/packer/windows \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
