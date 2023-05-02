@@ -1,6 +1,8 @@
 .PHONY: all clean build packer upload
 
 VERSION = $(shell git describe --tags --candidates=1)
+CURRENT_UID := $(shell id -u)
+CURRENT_GID := $(shell id -g)
 SHELL = /bin/bash -o pipefail
 
 PACKER_VERSION ?= 1.6.2
@@ -84,7 +86,8 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 		-e AWS_SESSION_TOKEN \
 		-e PACKER_LOG \
 		-v ${HOME}/.aws:/root/.aws \
-		-v "$(PWD):/src" \
+		-v "$(PWD):/src:Z" \
+		--user $(CURRENT_UID):$(CURRENT_GID) \
 		--rm \
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
