@@ -49,6 +49,7 @@ elif [[ "${MACHINE}" == "aarch64" ]]; then
   # https://github.com/docker/compose/issues/7472
   CONSTRAINT_FILE="/tmp/docker-compose-pip-constraint"
   echo 'cryptography<3.4' >"$CONSTRAINT_FILE"
+  echo 'urllib3<2' >"$CONSTRAINT_FILE"
   sudo pip3 install --constraint "$CONSTRAINT_FILE" "docker-compose==${DOCKER_COMPOSE_VERSION}"
 
 	docker-compose version
