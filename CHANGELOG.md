@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.20.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/5.20.0) (2023-05-05)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.19.0...5.20.0)
+
+### Changed
+- Bump buildkite-agent to v3.46.0 [#1114](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1114) (@moskyb)
+- Update description of BuildkiteAdditionalSudoPermissions parameter [#1113](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1113) (@triarius)
+
+### Fixed
+- Error with docker experimental CLI [#1106](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1106) (@moskyb)
+
 ## [v5.19.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.19.0) (2023-04-24)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.18.0...v5.19.0)
 
