@@ -201,7 +201,7 @@ Parameters:
     Default: "false"
 
   BuildkiteAdditionalSudoPermissions:
-    Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo.
+    Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo. Note that the commands should be fully qualified paths to executables.
     Type: String
     Default: ""
 
