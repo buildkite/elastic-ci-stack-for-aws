@@ -1314,7 +1314,7 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, {}, "CustomResourcePhysicalID")
       Handler: index.handler
       Role: !GetAtt AsgProcessSuspenderRole.Arn
-      Runtime: 'python3.7'
+      Runtime: 'python3.10'
 
   AzRebalancingSuspender:
     Type: AWS::CloudFormation::CustomResource
