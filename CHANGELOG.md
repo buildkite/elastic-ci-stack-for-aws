@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.21.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.21.0) (2023-05-25)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.20.0...v5.21.0)
+
+### Changed
+- Bump `buildkite-agent` to v3.47.0 [#1120](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1120) (@DrJosh9000)
+- Bumping python from 3.7 to 3.10 [#1117](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1117) (@123sarahj123)
+- Bump Docker buildx from 0.10.4 to 0.10.5 [#1119](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1119) (@orien)
+- Bump `buildkite-agent-scaler` to v1.4.0 [#1118](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1118) (@triarius)
+
 ## [5.20.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/5.20.0) (2023-05-05)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.19.0...5.20.0)
 
