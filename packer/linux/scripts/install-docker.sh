@@ -67,10 +67,3 @@ docker compose version
 
 sudo ln -s "${DOCKER_CLI_DIR}/docker-compose" /usr/bin/docker-compose
 docker-compose version
-
-echo "Installing qemu..."
-sudo yum install -y qemu qemu-user-static
-
-curl --location --fail --silent --output /tmp/qemu-binfmt-conf.sh https://raw.githubusercontent.com/qemu/qemu/v6.1.0/scripts/qemu-binfmt-conf.sh
-chmod +x /tmp/qemu-binfmt-conf.sh
-sudo /tmp/qemu-binfmt-conf.sh --qemu-suffix "-static" --qemu-path /usr/bin
