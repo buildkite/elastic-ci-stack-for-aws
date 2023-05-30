@@ -3,7 +3,6 @@ set -eu -o pipefail
 
 DOCKER_VERSION=20.10.23
 DOCKER_RELEASE="stable"
-DOCKER_COMPOSE_VERSION=1.29.2
 DOCKER_COMPOSE_V2_VERSION=2.16.0
 DOCKER_BUILDX_VERSION="0.10.5"
 MACHINE=$(uname -m)
@@ -33,31 +32,6 @@ sudo curl -Lfs -o /etc/systemd/system/docker.socket "https://raw.githubuserconte
 sudo systemctl daemon-reload
 sudo systemctl enable docker.service
 
-if [ "${MACHINE}" == "x86_64" ]; then
-	echo "Downloading docker-compose..."
-	sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
-	sudo chmod +x /usr/bin/docker-compose
-	docker-compose --version
-elif [[ "${MACHINE}" == "aarch64" ]]; then
-  sudo yum install -y gcc-c++ libffi-devel openssl11 openssl11-devel python3-devel
-
-  # docker-compose depends on the cryptography package, v3.4 of which
-  # introduces a build dependency on rust; let's avoid that for now.
-  # https://github.com/pyca/cryptography/blob/master/CHANGELOG.rst#34---2021-02-07
-  # This should be unpinned ASAP; hopefully docker-compose will offer binary
-  # download for arm64 at some point:
-  # https://github.com/docker/compose/issues/7472
-  CONSTRAINT_FILE="/tmp/docker-compose-pip-constraint"
-  echo 'cryptography<3.4' >"$CONSTRAINT_FILE"
-  echo 'urllib3<2' >"$CONSTRAINT_FILE"
-  sudo pip3 install --constraint "$CONSTRAINT_FILE" "docker-compose==${DOCKER_COMPOSE_VERSION}"
-
-	docker-compose version
-else
-  echo "No docker compose option configured for arch ${MACHINE}"
-  exit 1
-fi
-
 echo "Adding docker systemd timers..."
 sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
 sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
@@ -70,7 +44,6 @@ sudo yum install -y -q jq
 jq --version
 
 echo "Installing docker buildx..."
-
 DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins
 sudo mkdir -p "${DOCKER_CLI_DIR}"
 
@@ -84,7 +57,6 @@ case "${MACHINE}" in
     ;;
 esac
 
-
 sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-buildx" "https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.linux-${BUILDX_ARCH}"
 sudo chmod +x "${DOCKER_CLI_DIR}/docker-buildx"
 docker buildx version
@@ -92,6 +64,9 @@ docker buildx version
 sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-compose" "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_V2_VERSION}/docker-compose-linux-${DOCKER_COMPOSE_V2_ARCH}"
 sudo chmod +x "${DOCKER_CLI_DIR}/docker-compose"
 docker compose version
+
+sudo ln -s "${DOCKER_CLI_DIR}/docker-compose" /usr/bin/docker-compose
+docker-compose version
 
 echo "Installing qemu..."
 sudo yum install -y qemu qemu-user-static
