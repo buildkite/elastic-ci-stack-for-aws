@@ -1,0 +1,10 @@
+[Unit]
+Description=Clean files used by docker including the build cache when disk space is low
+Wants=docker-low-disk-gc.timer
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/docker-low-disk-gc
+
+[Install]
+WantedBy=multi-user.target

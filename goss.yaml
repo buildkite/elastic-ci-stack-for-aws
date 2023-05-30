@@ -109,10 +109,16 @@ command:
   "git-lfs --version":
     exit-status: 0
 
-  "/etc/cron.hourly/docker-low-disk-gc":
+  "systemctl is-enabled docker-gc.timer":
     exit-status: 0
 
-  "/etc/cron.hourly/docker-gc":
+  /usr/local/bin/docker-gc:
+    exit-status: 0
+
+  "systemctl is-enabled docker-low-disk-gc.timer":
+    exit-status: 0
+
+  /usr/local/bin/docker-low-disk-gc:
     exit-status: 0
 
   # Checks that docker is running

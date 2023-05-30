@@ -58,10 +58,12 @@ else
   exit 1
 fi
 
-echo "Adding docker cron tasks..."
-sudo cp /tmp/conf/docker/cron.hourly/docker-gc /etc/cron.hourly/docker-gc
-sudo cp /tmp/conf/docker/cron.hourly/docker-low-disk-gc /etc/cron.hourly/docker-low-disk-gc
-sudo chmod +x /etc/cron.hourly/docker-*
+echo "Adding docker systemd timers..."
+sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
+sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
+sudo chmod +x /usr/local/bin/docker-*
+sudo systemctl daemon-reload
+sudo systemctl enable docker-gc.timer docker-low-disk-gc.timer
 
 echo "Installing jq..."
 sudo yum install -y -q jq
