@@ -83,7 +83,7 @@ group:
 
   docker:
     exists: true
-    gid: 1001
+    gid: 993
 
   sshd:
     exists: true
