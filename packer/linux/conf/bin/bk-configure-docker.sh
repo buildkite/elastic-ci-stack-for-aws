@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2094
-set -euo pipefail
+set -euxo pipefail
 
 ## Configures docker before system starts
 
