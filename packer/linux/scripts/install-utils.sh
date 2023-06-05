@@ -18,4 +18,14 @@ sudo chmod +x /tmp/conf/bin/bk-*
 sudo mv /tmp/conf/bin/bk-* /usr/local/bin
 
 echo "Installing goss for system validation..."
-curl -fsSL https://goss.rocks/install | GOSS_VER=v0.3.20 sudo sh
+# See https://github.com/goss-org/goss/releases for release versions
+GOSS_VERSION=v0.3.23
+case $(uname -m) in
+  amd64|x86_64) GOSS_ARCH=amd64 ;;
+  armv8?|arm64|aarch64) GOSS_ARCH=arm64 ;;
+  armv7?|arm) GOSS_ARCH=arm ;;
+esac
+sudo curl -L "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/goss-linux-${GOSS_ARCH}" -o /usr/local/bin/goss
+sudo chmod +rx /usr/local/bin/goss
+sudo curl -L "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/dgoss" -o /usr/local/bin/dgoss
+sudo chmod +rx /usr/local/bin/dgoss
