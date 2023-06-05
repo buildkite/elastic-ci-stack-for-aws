@@ -73,7 +73,7 @@ user:
     gid: 74
     groups:
     - sshd
-    home: /var/empty/sshd
+    home: /usr/share/empty.sshd
     shell: /sbin/nologin
 
 group:
