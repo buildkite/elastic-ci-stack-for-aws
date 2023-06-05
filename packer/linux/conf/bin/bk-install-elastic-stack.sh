@@ -218,8 +218,7 @@ LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
 EOF
 
-systemctl enable lifecycled.service
-systemctl start lifecycled
+systemctl enable --now lifecycled.service
 
 # wait for docker to start
 next_wait_time=0
@@ -232,8 +231,7 @@ if ! docker ps; then
   exit 1
 fi
 
-systemctl enable "buildkite-agent"
-systemctl start "buildkite-agent"
+systemctl enable --now buildkite-agent
 
 # let the stack know that this host has been initialized successfully
 /opt/aws/bin/cfn-signal \
