@@ -192,15 +192,15 @@ fi
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
 if [[ -n "${BUILDKITE_AUTHORIZED_USERS_URL}" ]]; then
-  cat <<-EOF > /usr/local/bin/authorized_keys
+  cat <<-EOF > /usr/local/bin/refresh_authorized_keys
 		/usr/local/bin/bk-fetch.sh "${BUILDKITE_AUTHORIZED_USERS_URL}" /tmp/authorized_keys
 		mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
 		chmod 600 /home/ec2-user/.ssh/authorized_keys
 		chown ec2-user: /home/ec2-user/.ssh/authorized_keys
 	EOF
-
-  chmod +x /etc/cron.hourly/authorized_keys
-  /etc/cron.hourly/authorized_keys
+  chmod +x /usr/local/bin/refresh_authorized_keys
+  /usr/local/bin/refresh_authorized_keys
+  systemctl enable refresh_authorized_keys.timer
 fi
 
 # Finish git lfs install

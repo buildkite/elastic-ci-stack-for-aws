@@ -1,0 +1,10 @@
+[Unit]
+Description=Download ssh authorized_keys file from s3
+Requires=refresh_authorized_keys.service
+
+[Timer]
+Unit=refresh_authorized_keys.service
+OnCalendar=hourly
+
+[Install]
+WantedBy=timers.target
