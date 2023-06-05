@@ -24,10 +24,6 @@ sudo yum install -yq \
   unzip \
   zip
 
-SESSION_MANAGER_PLUGIN_VERSION=1.2.30.0
-echo "Installing session-manager-plugin $SESSION_MANAGER_PLUGIN_VERSION..."
-sudo yum install -yq "https://s3.amazonaws.com/session-manager-downloads/plugin/$SESSION_MANAGER_PLUGIN_VERSION/linux_$ARCH/session-manager-plugin.rpm"
-
 GIT_LFS_VERSION=3.3.0
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
 pushd "$(mktemp -d)"
