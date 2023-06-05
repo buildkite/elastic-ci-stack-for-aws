@@ -11,14 +11,8 @@ on_error() {
   local exitCode="$?"
   local errorLine="$1"
 
-  # If the curl fails, we're already in the error trap...
-  # shellcheck disable=SC2155
-  local token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
-
-    aws autoscaling set-instance-health \
-      --instance-id "$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")" \
-      --health-status Unhealthy || true
   if [[ $exitCode != 0 ]]; then
+    aws autoscaling set-instance-health --instance-id "$INSTANCE_ID" --health-status Unhealthy || true
   fi
 
   /opt/aws/bin/cfn-signal \
@@ -31,7 +25,11 @@ on_error() {
 
 trap 'on_error $LINENO' ERR
 
-INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
+# even though the token is only vaild for 60s, let's not leak it into the logs
+set +x
+token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
+INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
+set -x
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
 PLUGINS_ENABLED=()
