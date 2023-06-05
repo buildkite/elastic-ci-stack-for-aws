@@ -1,36 +1,22 @@
 #!/bin/bash
-set -eu -o pipefail
+set -euo pipefail
 
-DOCKER_VERSION=20.10.23
-DOCKER_RELEASE="stable"
-DOCKER_COMPOSE_V2_VERSION=2.16.0
+DOCKER_COMPOSE_V2_VERSION=2.18.1
 DOCKER_BUILDX_VERSION="0.10.5"
 MACHINE=$(uname -m)
 
-# This performs a manual install of Docker.
+echo Installing docker...
+sudo yum install -yq docker
+sudo systemctl enable docker
 
 # Add docker group
-sudo groupadd docker
 sudo usermod -a -G docker ec2-user
-
-# Manual install ala https://docs.docker.com/engine/installation/binaries/
-curl -Lsf -o docker.tgz "https://download.docker.com/linux/static/${DOCKER_RELEASE}/${MACHINE}/docker-${DOCKER_VERSION}.tgz"
-tar -xvzf docker.tgz
-sudo mv docker/* /usr/bin
-rm docker.tgz
 
 sudo mkdir -p /etc/docker
 sudo cp /tmp/conf/docker/daemon.json /etc/docker/daemon.json
 sudo cp /tmp/conf/docker/subuid /etc/subuid
 sudo cp /tmp/conf/docker/subgid /etc/subgid
 sudo chown -R ec2-user:docker /etc/docker
-
-# Install systemd services
-echo "Installing systemd services"
-sudo curl -Lfs -o /etc/systemd/system/docker.service "https://raw.githubusercontent.com/moby/moby/v${DOCKER_VERSION}/contrib/init/systemd/docker.service"
-sudo curl -Lfs -o /etc/systemd/system/docker.socket "https://raw.githubusercontent.com/moby/moby/v${DOCKER_VERSION}/contrib/init/systemd/docker.socket"
-sudo systemctl daemon-reload
-sudo systemctl enable docker.service
 
 echo "Adding docker systemd timers..."
 sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
@@ -40,7 +26,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable docker-gc.timer docker-low-disk-gc.timer
 
 echo "Installing jq..."
-sudo yum install -y -q jq
+sudo yum install -yq jq
 jq --version
 
 echo "Installing docker buildx..."
