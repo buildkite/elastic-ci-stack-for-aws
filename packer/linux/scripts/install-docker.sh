@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 DOCKER_COMPOSE_V2_VERSION=2.18.1
@@ -24,10 +24,6 @@ sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
 sudo chmod +x /usr/local/bin/docker-*
 sudo systemctl daemon-reload
 sudo systemctl enable docker-gc.timer docker-low-disk-gc.timer
-
-echo "Installing jq..."
-sudo yum install -yq jq
-jq --version
 
 echo "Installing docker buildx..."
 DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins

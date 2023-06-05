@@ -46,10 +46,6 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
-    },
-    {
-      "type": "shell",
       "script": "scripts/install-docker.sh"
     },
     {
@@ -58,19 +54,7 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-s3secrets-helper.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-git-lfs.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-session-manager-plugin.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-nvme-cli.sh"
+      "script": "scripts/install-buildkite-utils.sh"
     },
     {
       "type": "shell",
