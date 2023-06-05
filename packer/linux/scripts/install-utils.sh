@@ -17,8 +17,5 @@ echo "Installing bk elastic stack bin files..."
 sudo chmod +x /tmp/conf/bin/bk-*
 sudo mv /tmp/conf/bin/bk-* /usr/local/bin
 
-echo "Configuring awscli to use v4 signatures..."
-sudo aws configure set s3.signature_version s3v4
-
 echo "Installing goss for system validation..."
 curl -fsSL https://goss.rocks/install | GOSS_VER=v0.3.20 sudo sh
