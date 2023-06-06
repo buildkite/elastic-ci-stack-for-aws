@@ -40,6 +40,10 @@ service:
     enabled: true
     running: true
 
+  amazon-ssm-agent:
+    enabled: true
+    running: true
+
   docker:
     enabled: true
     running: true
