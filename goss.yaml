@@ -126,8 +126,22 @@ command:
     exit-status: 0
     timeout: 30000 # it can take some time for the daemon to start
 
-  # Checks that docker containers can run
-  "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version":
+  # check
+  docker info --format='{{range .SecurityOptions}}{{if eq . "name=userns"}}{{"success"}}{{end}}{{end}}':
+    exit-status: 0
+    stdout:
+    - success
+    timeout: 30000 # it can take some time for the daemon to start
+
+  docker info --format=$'{{range .ClientInfo.Plugins}}{{if eq .Name "buildx"}}success\n{{end}}{{if eq .Name "compose" }}success{{end}}{{end}}':
+    exit-status: 0
+    stdout:
+    - success
+    - success
+    timeout: 30000 # it can take some time for the daemon to start
+
+  # Check that docker containers can run
+  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version:
     exit-status: 0
     timeout: 30000 # it can take some time to download the image
 
