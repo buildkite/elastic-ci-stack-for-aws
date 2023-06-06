@@ -121,18 +121,14 @@ command:
   /usr/local/bin/docker-low-disk-gc:
     exit-status: 0
 
-  # Checks that docker is running
-  docker info:
-    exit-status: 0
-    timeout: 30000 # it can take some time for the daemon to start
-
-  # check
+  # Check docker userns is enabled
   docker info --format='{{range .SecurityOptions}}{{if eq . "name=userns"}}{{"success"}}{{end}}{{end}}':
     exit-status: 0
     stdout:
     - success
     timeout: 30000 # it can take some time for the daemon to start
 
+  # Check docker plugins are installed
   docker info --format=$'{{range .ClientInfo.Plugins}}{{if eq .Name "buildx"}}success\n{{end}}{{if eq .Name "compose" }}success{{end}}{{end}}':
     exit-status: 0
     stdout:
