@@ -9,9 +9,10 @@ echo Installing docker...
 sudo yum install -yq docker
 sudo systemctl enable docker
 
-# Add docker group
+echo Add docker group
 sudo usermod -a -G docker ec2-user
 
+echo Add docker config
 sudo mkdir -p /etc/docker
 sudo cp /tmp/conf/docker/daemon.json /etc/docker/daemon.json
 sudo cp /tmp/conf/docker/subuid /etc/subuid
