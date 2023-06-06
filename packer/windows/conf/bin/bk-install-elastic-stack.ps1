@@ -105,13 +105,7 @@ If (Test-Path Env:BUILDKITE_AGENT_TAGS) {
 }
 
 # Enable git-mirrors
-If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
-  If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_EXPERIMENTS)) {
-    $Env:BUILDKITE_AGENT_EXPERIMENTS = "git-mirrors"
-  }
-  Else {
-    $Env:BUILDKITE_AGENT_EXPERIMENTS += ",git-mirrors"
-  }
+If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS -eq "true") {
   $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
 }
 
