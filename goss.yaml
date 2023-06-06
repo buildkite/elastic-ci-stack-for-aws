@@ -100,29 +100,29 @@ process:
     running: true
 
 command:
-  "aws --version":
+  aws --version:
     exit-status: 0
 
-  "git --version":
+  git --version:
     exit-status: 0
 
-  "git-lfs --version":
+  git-lfs --version:
     exit-status: 0
 
-  "systemctl is-enabled docker-gc.timer":
+  systemctl is-enabled docker-gc.timer:
     exit-status: 0
 
   /usr/local/bin/docker-gc:
     exit-status: 0
 
-  "systemctl is-enabled docker-low-disk-gc.timer":
+  systemctl is-enabled docker-low-disk-gc.timer:
     exit-status: 0
 
   /usr/local/bin/docker-low-disk-gc:
     exit-status: 0
 
   # Checks that docker is running
-  "docker info":
+  docker info:
     exit-status: 0
     timeout: 30000 # it can take some time for the daemon to start
 
@@ -131,8 +131,8 @@ command:
     exit-status: 0
     timeout: 30000 # it can take some time to download the image
 
-  # Checks that userns is enabled
-  'sh -c "docker run --rm -v \"$PWD:/pwd\" alpine:latest touch /pwd/test && stat -c %U:%G test"':
+  # Check that userns allows writing as buildkite-agent
+  sh -c 'docker run --rm -v "$PWD:/pwd" alpine:latest touch /pwd/test && stat -c %U:%G test' && rm test:
     exit-status: 0
     timeout: 30000 # it can take some time to download the image
     stdout:
