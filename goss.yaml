@@ -131,7 +131,7 @@ command:
     exit-status: 0
     timeout: 30000 # it can take some time to download the image
 
-  # Checks that permissions
+  # Checks that userns is enabled
   'sh -c "docker run --rm -v \"$PWD:/pwd\" alpine:latest touch /pwd/test && stat -c %U:%G test"':
     exit-status: 0
     timeout: 30000 # it can take some time to download the image
