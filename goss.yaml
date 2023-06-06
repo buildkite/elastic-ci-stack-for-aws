@@ -147,3 +147,13 @@ command:
     exit-status: 0
     stdout:
     - buildkite-agent:docker
+
+  docker run --rm -t arm64v8/ubuntu uname -m:
+    exit-status: 0
+    stdout:
+    - aarch64
+
+  docker run --rm -t amd64/ubuntu uname -m:
+    exit-status: 0
+    stdout:
+    - x86_64
