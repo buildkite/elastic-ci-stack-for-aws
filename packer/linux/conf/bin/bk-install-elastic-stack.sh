@@ -229,6 +229,16 @@ if ! docker ps; then
   exit 1
 fi
 
+# See https://docs.docker.com/build/building/multi-platform/
+QEMU_BINFMT_VERSION=7.0.0-28
+echo Installing qemu binfmt for multiarch...
+docker run \
+  --privileged \
+  --userns=host \
+  --rm \
+  "tonistiigi/binfmt:qemu-v${QEMU_BINFMT_VERSION}" \
+    --install all
+
 systemctl enable --now buildkite-agent
 
 # let the stack know that this host has been initialized successfully

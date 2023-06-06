@@ -7,7 +7,7 @@ MACHINE=$(uname -m)
 
 echo Installing docker...
 sudo yum install -yq docker
-sudo systemctl enable docker
+sudo systemctl enable --now docker
 
 echo Add docker group
 sudo usermod -a -G docker ec2-user
