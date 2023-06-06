@@ -25,3 +25,5 @@ fi
 
 # Customise address pools
 cat <<<"$(jq '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' /etc/docker/daemon.json)" >/etc/docker/daemon.json
+
+systemctl restart docker
