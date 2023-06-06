@@ -12,6 +12,7 @@ sudo yum update -yq
 
 echo Installing utils...
 sudo yum install -yq \
+  amazon-ssm-agent \
   aws-cfn-bootstrap \
   awscli-2 \
   git \
@@ -23,6 +24,8 @@ sudo yum install -yq \
   python3-setuptools \
   unzip \
   zip
+
+sudo systemctl enable --now amazon-ssm-agent
 
 GIT_LFS_VERSION=3.3.0
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
