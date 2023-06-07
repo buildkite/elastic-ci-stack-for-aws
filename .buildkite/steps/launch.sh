@@ -89,7 +89,7 @@ cat << EOF > config.json
     "ParameterValue": "true"
   },
   {
-    "ParameterKey": "EnableAgentGitMirrorsExperiment",
+    "ParameterKey": "BuildkiteAgentEnableGitMirrors",
     "ParameterValue": "true"
   },
   {
