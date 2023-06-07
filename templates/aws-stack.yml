@@ -382,7 +382,7 @@ Parameters:
     AllowedValues:
       - optional
       - required
-    Default: optional
+    Default: required
 
   InstanceRoleName:
     Type: String
