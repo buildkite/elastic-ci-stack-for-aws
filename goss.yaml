@@ -165,3 +165,19 @@ command:
     timeout: 30000
     stdout:
     - x86_64
+
+  docker run --rm -t alpine:latest wget -q http://169.254.169.254/latest/meta-data/instance-id:
+    timeout: 30000
+    exit-status: 1
+    stdout:
+    - '/^wget: server returned error: HTTP/1.1 401 Unauthorized$/'
+
+  test-IMDSv2-from-docker:
+    timeout: 30000
+    exec: >-
+      docker run --rm --entrypoint ash curlimages/curl:8.1.1 -c
+      'TOKEN=$(curl -s -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds:10" http://169.254.169.254/latest/api/token)
+      && curl -sf -H "X-aws-ec2-metadata-token:$TOKEN" http://169.254.169.254/latest/meta-data/instance-id'
+    exit-status: 0
+    stdout:
+    - /^i-/
