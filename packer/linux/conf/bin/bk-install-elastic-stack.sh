@@ -128,11 +128,18 @@ fi
 
 # Enable git-mirrors
 BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
-if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS}" == "true" ]]; then
+if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT}" == "true" ]] ; then
+  if [[ -z "$BUILDKITE_AGENT_EXPERIMENTS" ]] ; then
+    BUILDKITE_AGENT_EXPERIMENTS="git-mirrors"
+  else
+    BUILDKITE_AGENT_EXPERIMENTS+=",git-mirrors"
+  fi
+
   BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
   mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 
-  if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
+  if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
+  then
     EPHEMERAL_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
     mkdir -p "${EPHEMERAL_GIT_MIRRORS_PATH}"
 
