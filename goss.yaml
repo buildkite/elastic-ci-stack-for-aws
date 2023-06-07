@@ -126,18 +126,21 @@ command:
     exit-status: 0
 
   # Check docker userns is enabled
-  docker info --format='{{range .SecurityOptions}}{{ if eq . "name=userns" }}{{.}}{{end}}{{end}}':
+  # Note that goss will evaluate the first layer of templating in the `--format` argument, and docker will evaluate the second
+  docker info --format='{{ `{{range .SecurityOptions}}{{.}}{{end}}` }}'`:
     exit-status: 0
     timeout: 30000
     stdout:
-    - name=userns
+    - /^name=userns$/
 
   # Check docker plugins are installed
-  docker info --format='{{range .ClientInfo.Plugins}}{{if or (eq .Name "buildx") (eq .Name "compose")}}{{ .Name }},{{end}}{{end}}':
+  # Note that goss will evaluate the first layer of templating in the `--format` argument, and docker will evaluate the second
+  docker info --format=$'{{ `{{range .ClientInfo.Plugins}}{{.Name}}\n{{end}}` }}':
     exit-status: 0
     timeout: 30000
     stdout:
-    - buildx,compose,
+    - /^buildx$/
+    - /^compose$/
 
   # Check that docker containers can run
   docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version:
