@@ -127,7 +127,7 @@ command:
 
   # Check docker userns is enabled
   # Note that goss will evaluate the first layer of templating in the `--format` argument, and docker will evaluate the second
-  docker info --format='{{ `{{range .SecurityOptions}}{{.}}{{end}}` }}'`:
+  docker info --format=$'{{ `{{range .SecurityOptions}}{{.}}\n{{end}}` }}'`:
     exit-status: 0
     timeout: 30000
     stdout:
