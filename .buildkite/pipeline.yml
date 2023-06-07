@@ -65,6 +65,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-windows-amd64"
+    allow_dependency_failure: true
 
   - id: "packer-linux-amd64"
     name: ":packer: :linux: AMD64"
@@ -106,6 +107,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-linux-amd64"
+    allow_dependency_failure: true
 
   - id: "packer-linux-arm64"
     name: ":packer: :linux: ARM64"
@@ -147,6 +149,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-linux-arm64"
+    allow_dependency_failure: true
 
   - id: "delete-service-role-stack"
     name: ":aws-iam: :cloudformation: Delete"
