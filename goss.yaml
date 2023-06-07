@@ -126,19 +126,18 @@ command:
     exit-status: 0
 
   # Check docker userns is enabled
-  docker info --format='{{ `{{range .SecurityOptions}}{{if eq . "name=userns"}}{{"success"}}{{end}}{{end}}` }}':
+  docker info --format='{{range .SecurityOptions}}{{ if eq . "name=userns" }}{{.}}{{end}}{{end}}':
     exit-status: 0
     timeout: 30000
     stdout:
-    - success
+    - name=userns
 
   # Check docker plugins are installed
-  docker info --format=$'{{ `{{range .ClientInfo.Plugins}}{{if eq .Name "buildx"}}success\n{{end}}{{if eq .Name "compose" }}success{{end}}{{end}}` }}':
+  docker info --format='{{range .ClientInfo.Plugins}}{{if or (eq .Name "buildx") (eq .Name "compose")}}{{ .Name }},{{end}}{{end}}':
     exit-status: 0
     timeout: 30000
     stdout:
-    - success
-    - success
+    - buildx,compose,
 
   # Check that docker containers can run
   docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version:
