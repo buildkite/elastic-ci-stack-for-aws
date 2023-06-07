@@ -25,6 +25,12 @@ on_error() {
 
 trap 'on_error $LINENO' ERR
 
+case $(uname -m) in
+  x86_64)    ARCH=amd64;;
+  aarch64)   ARCH=arm64;;
+  *)         ARCH=unknown;;
+esac
+
 # even though the token is only vaild for 60s, let's not leak it into the logs
 set +x
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
@@ -91,14 +97,9 @@ set_unless_present "AWS_REGION" "$AWS_REGION"
 EOF
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]]; then
-  if [[ "$(uname -m)" == "aarch64" ]]; then
-    AGENT_ARCH="arm64"
-  else
-    AGENT_ARCH="amd64"
-  fi
   echo "Downloading buildkite-agent edge..."
   curl -Lsf -o /usr/bin/buildkite-agent-edge \
-    "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${AGENT_ARCH}"
+    "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${ARCH}"
   chmod +x /usr/bin/buildkite-agent-edge
   buildkite-agent-edge --version
 fi
