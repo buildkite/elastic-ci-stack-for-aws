@@ -92,6 +92,7 @@ Metadata:
         - MinSize
         - MaxSize
         - OnDemandPercentage
+        - SpotAllocationStrategy
         - ScaleOutFactor
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
@@ -302,6 +303,16 @@ Parameters:
     Default: 100
     MinValue: 0
     MaxValue: 100
+
+  SpotAllocationStrategy:
+    Description: The strategy for allocating Spot Instances when launching or replacing instances. If choosing `capacity-optimized-prioritized`, the order you specify in InstanceType will be the priority.
+    Type: String
+    Default: price-capacity-optimized
+    AllowedValues:
+      - price-capacity-optimized
+      - capacity-optimized
+      - lowest-price
+      - capacity-optimized-prioritized
 
   ScaleOutFactor:
     Description: A decimal factor to apply to scale out changes to speed up or slow down scale-out
@@ -1214,7 +1225,7 @@ Resources:
       MixedInstancesPolicy:
         InstancesDistribution:
           OnDemandPercentageAboveBaseCapacity: !Ref OnDemandPercentage
-          SpotAllocationStrategy: capacity-optimized
+          SpotAllocationStrategy: !Ref SpotAllocationStrategy
         LaunchTemplate:
           LaunchTemplateSpecification:
             LaunchTemplateId: !Ref AgentLaunchTemplate
