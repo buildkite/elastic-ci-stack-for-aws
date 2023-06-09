@@ -23,6 +23,7 @@ sudo yum install -yq \
   python3-pip \
   python3-setuptools \
   unzip \
+  wget \
   zip
 
 sudo systemctl enable --now amazon-ssm-agent
