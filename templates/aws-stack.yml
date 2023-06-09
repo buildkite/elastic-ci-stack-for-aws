@@ -307,7 +307,7 @@ Parameters:
   SpotAllocationStrategy:
     Description: The strategy for allocating Spot Instances when launching or replacing instances. If choosing `capacity-optimized-prioritized`, the order you specify in InstanceType will be the priority.
     Type: String
-    Default: price-capacity-optimized
+    Default: capacity-optimized
     AllowedValues:
       - price-capacity-optimized
       - capacity-optimized
