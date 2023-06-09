@@ -107,10 +107,25 @@ command:
   aws --version:
     exit-status: 0
 
+  curl --version:
+    exit-status: 0
+
+  dig -h:
+    exit-status: 0
+
   git --version:
     exit-status: 0
 
   git-lfs --version:
+    exit-status: 0
+
+  command -v lsof:
+    exit-status: 0
+
+  make --version:
+    exit-status: 0
+
+  wget --version:
     exit-status: 0
 
   systemctl is-enabled docker-gc.timer:
