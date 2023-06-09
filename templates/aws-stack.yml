@@ -55,7 +55,7 @@ Metadata:
         - VpcId
         - Subnets
         - AvailabilityZones
-        - SecurityGroupId
+        - SecurityGroupIds
         - AssociatePublicIpAddress
 
       - Label:
@@ -356,7 +356,7 @@ Parameters:
       - "false"
     Default: "false"
 
-  SecurityGroupId:
+  SecurityGroupIds:
     Type: String
     Description: Optional - Comma separated list of security group ids to assign to instances
     Default: ""
@@ -559,7 +559,7 @@ Conditions:
       !Equals [ !Ref VpcId, "" ]
 
     CreateSecurityGroup:
-      !Equals [ !Ref SecurityGroupId, "" ]
+      !Equals [ !Ref SecurityGroupIds, "" ]
 
     CreateSecretsBucket:
       !And
@@ -1065,7 +1065,7 @@ Resources:
           NetworkInterfaces:
             - DeviceIndex: 0
               AssociatePublicIpAddress: { Ref: AssociatePublicIpAddress }
-              Groups: !Split [ ",", !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupId ] ]
+              Groups: !Split [ ",", !If [ "CreateSecurityGroup", !Ref SecurityGroup, !Ref SecurityGroupIds ] ]
           KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
