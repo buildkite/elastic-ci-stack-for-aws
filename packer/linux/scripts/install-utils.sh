@@ -26,6 +26,15 @@ sudo yum install -yq \
   wget \
   zip
 
+# These are some tools that are no longer installed on AL2023 by default
+# there may be more modern replacements for these, so they may dissapper
+# in a future version of Amazon Linux
+sudo yum install -yq \
+  bind-utils \
+  lsof
+
+sudo yum -yq groupinstall "Development Tools"
+
 sudo systemctl enable --now amazon-ssm-agent
 
 GIT_LFS_VERSION=3.3.0
