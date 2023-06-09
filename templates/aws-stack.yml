@@ -1166,11 +1166,13 @@ Resources:
                   Content-Type: multipart/mixed; boundary="==BOUNDARY=="
                   MIME-Version: 1.0
                   --==BOUNDARY==
-                  Content-Type: text/cloud-boothook; charset="us-ascii"
+                  Content-Type: text/x-shellscript; charset="us-ascii"
+                  #!/bin/bash -v
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                     /usr/local/bin/bk-mount-instance-storage.sh
                   --==BOUNDARY==
-                  Content-Type: text/cloud-boothook; charset="us-ascii"
+                  Content-Type: text/x-shellscript; charset="us-ascii"
+                  #!/bin/bash -v
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \

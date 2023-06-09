@@ -11,7 +11,7 @@
       "region": "{{user `region`}}",
       "source_ami_filter": {
         "filters": {
-          "name": "amzn2-ami-kernel-5.10-hvm-2.0.*-gp2",
+          "name": "al2023-ami-minimal-2023.0.*.*-kernel-*",
           "architecture": "{{user `arch`}}",
           "virtualization-type": "hvm"
         },
@@ -21,7 +21,7 @@
       "instance_type": "{{user `instance_type`}}",
       "ssh_username": "ec2-user",
       "ami_name": "buildkite-stack-linux-{{user `arch`}}-{{isotime | clean_resource_name}}",
-      "ami_description": "Buildkite Elastic Stack (Amazon Linux 2 LTS w/ docker)",
+      "ami_description": "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)",
       "ami_groups": ["all"]
     }
   ],
@@ -46,10 +46,6 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-lifecycled.sh"
-    },
-    {
-      "type": "shell",
       "script": "scripts/install-docker.sh"
     },
     {
@@ -58,29 +54,11 @@
     },
     {
       "type": "shell",
-      "script": "scripts/install-s3secrets-helper.sh"
+      "script": "scripts/install-buildkite-utils.sh"
     },
     {
       "type": "shell",
-      "script": "scripts/install-git-lfs.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-session-manager-plugin.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/install-nvme-cli.sh"
-    },
-    {
-      "type": "shell",
-      "script": "scripts/upgrade-kernel.sh"
-    },
-    {
-      "type": "shell",
-      "inline": [
-        "rm /home/ec2-user/.ssh/authorized_keys"
-      ]
+      "inline": ["rm /home/ec2-user/.ssh/authorized_keys"]
     }
   ]
 }

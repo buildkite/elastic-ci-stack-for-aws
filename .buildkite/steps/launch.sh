@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -euo pipefail
 
 os="${1:-linux}"
 arch="${2:-amd64}"
@@ -22,16 +22,16 @@ echo "Using AMI $image_id for $os/$arch"
 service_role="$(buildkite-agent meta-data get service-role-arn)"
 echo "Using service role ${service_role}"
 
-instance_type="t3.nano"
+instance_type="t3.small"
 instance_disk="10"
 
-if [[ "$os" == "windows" ]] ; then
+if [[ "$os" == "windows" ]]; then
   instance_type="m5.large"
   instance_disk="100"
 fi
 
-if [[ "$arch" == "arm64" ]] ; then
-  instance_type="m6g.large"
+if [[ "$arch" == "arm64" ]]; then
+  instance_type="t4g.small"
 fi
 
 cat << EOF > config.json

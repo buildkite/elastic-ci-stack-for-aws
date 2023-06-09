@@ -40,6 +40,10 @@ service:
     enabled: true
     running: true
 
+  amazon-ssm-agent:
+    enabled: true
+    running: true
+
   docker:
     enabled: true
     running: true
@@ -73,7 +77,7 @@ user:
     gid: 74
     groups:
     - sshd
-    home: /var/empty/sshd
+    home: /usr/share/empty.sshd
     shell: /sbin/nologin
 
 group:
@@ -83,7 +87,7 @@ group:
 
   docker:
     exists: true
-    gid: 1001
+    gid: 993
 
   sshd:
     exists: true
@@ -100,34 +104,66 @@ process:
     running: true
 
 command:
-  "aws --version":
+  aws --version:
     exit-status: 0
 
-  "git --version":
+  git --version:
     exit-status: 0
 
-  "git-lfs --version":
+  git-lfs --version:
     exit-status: 0
 
-  "/etc/cron.hourly/docker-low-disk-gc":
+  systemctl is-enabled docker-gc.timer:
     exit-status: 0
 
-  "/etc/cron.hourly/docker-gc":
+  /usr/local/bin/docker-gc:
     exit-status: 0
 
-  # Checks that docker is running
-  "docker info":
+  systemctl is-enabled docker-low-disk-gc.timer:
     exit-status: 0
-    timeout: 30000 # it can take some time for the daemon to start
 
-  # Checks that docker containers can run
-  "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version":
+  /usr/local/bin/docker-low-disk-gc:
     exit-status: 0
-    timeout: 30000 # it can take some time to download the image
 
-  # Checks that permissions
-  'sh -c "docker run --rm -v \"$PWD:/pwd\" alpine:latest touch /pwd/test && stat -c %U:%G test"':
+  # Check docker userns is enabled
+  # Note that goss will evaluate the outer layer of templating, and docker will evaluate the second
+  # Running `goss validate --format documentation` will print this with the first layer of templating evaluated
+  '{{ `docker info --format=",{{range .SecurityOptions}}{{.}},{{end}}"` }}':
     exit-status: 0
-    timeout: 30000 # it can take some time to download the image
+    timeout: 30000
+    stdout:
+    - /,name=userns,/
+
+  # Check docker plugins are installed
+  # Note that goss will evaluate the first layer of templating, and docker will evaluate the second
+  # Running `goss validate --format documentation` will print this with the first layer of templating evaluated
+  '{{ `docker info --format=",{{range .ClientInfo.Plugins}}{{.Name}},{{end}}"` }}':
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - /,buildx,/
+    - /,compose,/
+
+  # Check that docker containers can run
+  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version:
+    exit-status: 0
+    timeout: 30000
+
+  # Check that userns allows writing as buildkite-agent
+  sh -c 'docker run --rm -v "$PWD:/pwd" alpine:latest touch /pwd/test && stat -c %U:%G test' && rm test:
+    exit-status: 0
+    timeout: 30000
     stdout:
     - buildkite-agent:docker
+
+  docker run --rm -t arm64v8/ubuntu uname -m:
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - aarch64
+
+  docker run --rm -t amd64/ubuntu uname -m:
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - x86_64

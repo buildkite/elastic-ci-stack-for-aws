@@ -1,21 +1,21 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 # Write to system console and to our log file
 # See https://alestic.com/2010/12/ec2-user-data-output/
-exec > >(tee -a /var/log/elastic-stack.log|logger -t user-data -s 2>/dev/console) 2>&1
+exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/console) 2>&1
 
 # Mount instance storage if we can
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
 
 # Move docker root to the ephemeral device
-if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]] ; then
+if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]]; then
   echo "Skipping mounting instance storage"
   exit 0
 fi
 
 #shellcheck disable=SC2207
-devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage"| cut -f1 -d' '))
+devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -f1 -d' '))
 
 if [ -z "${devices[*]}" ]
 then
@@ -23,10 +23,10 @@ then
   exit 0
 fi
 
-if [[ "${#devices[@]}" -eq 1 ]] ; then
+if [[ "${#devices[@]}" -eq 1 ]]; then
   echo "Mounting instance storage device directly" >&2
   logicalname="${devices[0]}"
-elif [[ "${#devices[@]}" -gt 1 ]] ; then
+elif [[ "${#devices[@]}" -gt 1 ]]; then
   echo "Mounting instance storage devices using software RAID" >&2
   logicalname=/dev/md0
 
