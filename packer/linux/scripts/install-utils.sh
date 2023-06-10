@@ -19,9 +19,9 @@ sudo yum install -yq \
   jq \
   nvme-cli \
   pigz \
-  python3 \
-  python3-pip \
-  python3-setuptools \
+  python \
+  python-pip \
+  python-setuptools \
   unzip \
   wget \
   zip
