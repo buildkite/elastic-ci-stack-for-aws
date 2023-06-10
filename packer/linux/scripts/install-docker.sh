@@ -6,7 +6,7 @@ DOCKER_BUILDX_VERSION="0.10.5"
 MACHINE=$(uname -m)
 
 echo Installing docker...
-sudo yum install -yq docker
+sudo dnf install -yq docker
 sudo systemctl enable --now docker
 
 echo Add docker group

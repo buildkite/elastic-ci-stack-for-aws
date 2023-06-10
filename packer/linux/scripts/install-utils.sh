@@ -8,10 +8,10 @@ case $(uname -m) in
 esac
 
 echo Updating core packages
-sudo yum update -yq
+sudo dnf update -yq
 
 echo Installing utils...
-sudo yum install -yq \
+sudo dnf install -yq \
   amazon-ssm-agent \
   aws-cfn-bootstrap \
   awscli-2 \
@@ -29,11 +29,11 @@ sudo yum install -yq \
 # These are some tools that are no longer installed on AL2023 by default
 # there may be more modern replacements for these, so they may dissapper
 # in a future version of Amazon Linux
-sudo yum install -yq \
+sudo dnf install -yq \
   bind-utils \
   lsof
 
-sudo yum -yq groupinstall "Development Tools"
+sudo dnf -yq groupinstall "Development Tools"
 
 sudo systemctl enable --now amazon-ssm-agent
 
