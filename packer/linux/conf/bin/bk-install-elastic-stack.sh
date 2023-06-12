@@ -127,7 +127,7 @@ fi
 
 # Enable git-mirrors
 BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
-if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS}" == "true" ]]; then
+if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
   BUILDKITE_AGENT_GIT_MIRRORS_PATH="/var/lib/buildkite-agent/git-mirrors"
   mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 
