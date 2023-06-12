@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "Installing cloudwatch agent..."
-sudo yum install -yq amazon-cloudwatch-agent
+sudo dnf install -yq amazon-cloudwatch-agent
 
 echo "Adding amazon-cloudwatch-agent config..."
 sudo cp /tmp/conf/cloudwatch-agent/config.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
