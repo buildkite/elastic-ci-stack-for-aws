@@ -116,7 +116,7 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT -eq "true") {
 }
 
 # Either you can have timestamp-lines xor ansi-timestamps.
-# There's no technical reason you can't have both, its a pragmatic desicison to
+# There's no technical reason you can't have both, its a pragmatic decision to
 # simplify the avaliable parameters on the stack
 If ($Env:BUILDKITE_AGENT_TIMESTAMP_LINES -eq "true") {
   $Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS = "true"

@@ -162,7 +162,7 @@ fi
 chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 
 # Either you can have timestamp-lines xor ansi-timestamps.
-# There's no technical reason you can't have both, its a pragmatic desicison to
+# There's no technical reason you can't have both, its a pragmatic decision to
 # simplify the avaliable parameters on the stack
 if [[ "$BUILDKITE_AGENT_TIMESTAMP_LINES" == "true" ]]; then
   BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="true"
