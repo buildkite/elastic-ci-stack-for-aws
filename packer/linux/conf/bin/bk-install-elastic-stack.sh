@@ -161,6 +161,15 @@ then
 fi
 chown buildkite-agent: "${BUILDKITE_AGENT_BUILD_PATH}"
 
+# Either you can have timestamp-lines xor ansi-timestamps.
+# There's no technical reason you can't have both, its a pragmatic decision to
+# simplify the avaliable parameters on the stack
+if [[ "$BUILDKITE_AGENT_TIMESTAMP_LINES" == "true" ]]; then
+  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="true"
+else
+  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="false"
+fi
+
 set +x # Don't leak the agent token into logs
 echo "Setting \$BUILDKITE_AGENT_TOKEN to the value stored in the SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH"
 BUILDKITE_AGENT_TOKEN="$(aws ssm get-parameter --name "${BUILDKITE_AGENT_TOKEN_PATH}" --with-decryption --query Parameter.Value --output text)"
@@ -171,6 +180,7 @@ name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
 token="${BUILDKITE_AGENT_TOKEN}"
 tags=$(IFS=, ; echo "${agent_metadata[*]}")
 tags-from-ec2-meta-data=true
+no-ansi-timestamps=${BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
 timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=${BUILDKITE_AGENT_BUILD_PATH}
