@@ -109,6 +109,15 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS -eq "true") {
   $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
 }
 
+# Either you can have timestamp-lines xor ansi-timestamps.
+# There's no technical reason you can't have both, its a pragmatic decision to
+# simplify the avaliable parameters on the stack
+If ($Env:BUILDKITE_AGENT_TIMESTAMP_LINES -eq "true") {
+  $Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS = "true"
+} Else {
+  $Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS = "false"
+}
+
 # Get token from ssm param (if we have a path)
 If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PATH -ne "") {
   $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
@@ -120,6 +129,7 @@ name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true
+no-ansi-timestamps=${Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
 timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"

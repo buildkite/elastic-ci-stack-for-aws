@@ -488,7 +488,7 @@ Parameters:
 
   BuildkiteAgentEnableGitMirrors:
     Type: String
-    Description: Enables the git-mirrors in the agent
+    Description: Enables git-mirrors in the agent
     AllowedValues:
       - "true"
       - "false"
