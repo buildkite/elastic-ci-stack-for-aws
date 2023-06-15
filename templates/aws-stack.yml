@@ -68,7 +68,6 @@ Metadata:
         - EnableInstanceStorage
         - AgentsPerInstance
         - KeyName
-        - SpotPrice
         - SecretsBucket
         - SecretsBucketRegion
         - SecretsBucketEncryption
@@ -93,6 +92,7 @@ Metadata:
         - MinSize
         - MaxSize
         - OnDemandPercentage
+        - SpotAllocationStrategy
         - ScaleOutFactor
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
@@ -286,11 +286,6 @@ Parameters:
     AllowedPattern: "^[\\w\\.]+(,[\\w\\.]*){0,3}$"
     ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
 
-  SpotPrice:
-    Description: Maximum spot price to use for the instances, in instance cost per hour. Values >0 will result in 100% of instances being spot. 0 means only use normal (non-spot) instances. This parameter is deprecated - we recommend setting to 0 and using OnDemandPercentage to opt into spot instances.
-    Type: String
-    Default: 0
-
   MaxSize:
     Description: Maximum number of instances
     Type: Number
@@ -308,6 +303,16 @@ Parameters:
     Default: 100
     MinValue: 0
     MaxValue: 100
+
+  SpotAllocationStrategy:
+    Description: The strategy for allocating Spot Instances when launching or replacing instances. If choosing `capacity-optimized-prioritized`, the order you specify in InstanceType will be the priority.
+    Type: String
+    Default: capacity-optimized
+    AllowedValues:
+      - price-capacity-optimized
+      - capacity-optimized
+      - lowest-price
+      - capacity-optimized-prioritized
 
   ScaleOutFactor:
     Description: A decimal factor to apply to scale out changes to speed up or slow down scale-out
@@ -552,9 +557,6 @@ Outputs:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
 
 Conditions:
-    SpotPriceSet:
-      !Not [ !Equals [ !Ref SpotPrice, 0 ] ]
-
     CreateVpcResources:
       !Equals [ !Ref VpcId, "" ]
 
@@ -1224,9 +1226,8 @@ Resources:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       MixedInstancesPolicy:
         InstancesDistribution:
-          OnDemandPercentageAboveBaseCapacity: !If [ SpotPriceSet, 0, !Ref OnDemandPercentage ]
-          SpotAllocationStrategy: capacity-optimized
-          SpotMaxPrice: !If [SpotPriceSet, !Ref SpotPrice, !Ref "AWS::NoValue"]
+          OnDemandPercentageAboveBaseCapacity: !Ref OnDemandPercentage
+          SpotAllocationStrategy: !Ref SpotAllocationStrategy
         LaunchTemplate:
           LaunchTemplateSpecification:
             LaunchTemplateId: !Ref AgentLaunchTemplate
