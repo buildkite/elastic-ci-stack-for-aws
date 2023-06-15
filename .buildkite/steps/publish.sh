@@ -43,12 +43,28 @@ else
   echo "Skipping publishing latest, '$BUILDKITE_TAG' doesn't match '$(git describe origin/master --tags --match='v*')'"
 fi
 
-# Publish the most recent commit from each branch
-s3_upload_templates "${BUILDKITE_BRANCH}/"
+publish_for_branch() {
+  local branch="$1"
 
-# Publish each build to a unique URL, to let people roll back to old versions
-s3_upload_templates "${BUILDKITE_BRANCH}/${BUILDKITE_COMMIT}."
+  # Publish the most recent commit from each branch
+  s3_upload_templates "${branch}/"
 
-cat << EOF | buildkite-agent annotate --style "info"
-Published template <a href="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${BUILDKITE_BRANCH}/aws-stack.yml">${BUILDKITE_BRANCH}/aws-stack.yml</a>
+  # Publish each build to a unique URL, to let people roll back to old versions
+  s3_upload_templates "${branch}/${BUILDKITE_COMMIT}."
+
+  cat << EOF | buildkite-agent annotate --style "info"
+Published template <a href="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${branch}/aws-stack.yml">${branch}/aws-stack.yml</a>
 EOF
+}
+
+if [[ "$BUILDKITE_BRANCH" != "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]]; then
+  publish_for_branch "$BUILDKITE_BRANCH"
+
+  exit 0
+fi
+
+# TODO: remove "master" from this list
+default_branch_aliases=(master main)
+for branch in "${default_branch_aliases[@]}"; do
+  publish_for_branch "$branch"
+done
