@@ -510,7 +510,7 @@ Parameters:
   InstanceName:
     Type: String
     Description: Optional - Customise the EC2 instance Name tag
-    Default: "buildkite-agent"
+    Default: ""
 
 Rules:
   HasToken:
@@ -678,6 +678,9 @@ Conditions:
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "r7g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "t4g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ] ], "x2gd" ]
+
+    UseStackNameForInstanceName:
+      !Equals [ !Ref InstanceName, "" ]
 
 Mappings:
   ECRManagedPolicy:
@@ -1110,7 +1113,7 @@ Resources:
                 - Key: Role
                   Value: buildkite-agent
                 - Key: Name
-                  Value: !Ref InstanceName
+                  Value: !If [ UseStackNameForInstanceName, !Ref AWS::StackName, !Ref InstanceName ]
                 - Key: BuildkiteAgentRelease
                   Value: !Ref BuildkiteAgentRelease
                 - Key: BuildkiteQueue
