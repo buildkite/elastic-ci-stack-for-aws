@@ -79,7 +79,7 @@ Metadata:
         - RootVolumeName
         - RootVolumeType
         - RootVolumeEncrypted
-        - ManagedPolicyARN
+        - ManagedPolicyARNs
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
         - IMDSv2Tokens
@@ -376,7 +376,7 @@ Parameters:
     Description: Optional - Custom AMI SSM Parameter to use for instances (must be based on the stack's AMI)
     Default: ""
 
-  ManagedPolicyARN:
+  ManagedPolicyARNs:
     Type: CommaDelimitedList
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
     Default: ""
@@ -612,7 +612,7 @@ Conditions:
       !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceType, "", "", "" ] ] ] ], ""] ]
 
     UseManagedPolicyARN:
-      !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARN ], "" ] ]
+      !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARNs ], "" ] ]
 
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
@@ -830,7 +830,7 @@ Resources:
                # This may support multiple values of its own (separated by commas)
                - !If
                  - UseManagedPolicyARN
-                 - !Join [ ',', !Ref ManagedPolicyARN ]
+                 - !Join [ ',', !Ref ManagedPolicyARNs ]
                  - !Ref 'AWS::NoValue'
           - !Ref 'AWS::NoValue'
       Policies:
