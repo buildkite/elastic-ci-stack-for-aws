@@ -49,7 +49,7 @@ cat << EOF > config.json
     "ParameterValue": "${AWS_KEYPAIR:-aws-stack-test}"
   },
   {
-    "ParameterKey": "InstanceType",
+    "ParameterKey": "InstanceTypes",
     "ParameterValue": "${instance_type}"
   },
   {
