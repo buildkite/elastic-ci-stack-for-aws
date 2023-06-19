@@ -21,7 +21,9 @@ Description: "Buildkite stack %v"
 # * VPC Design: https://buildkite.com/docs/agent/v3/aws/vpc
 # * CloudFormation Service Role: https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role
 
-Transform: AWS::Serverless-2016-10-31
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -362,7 +364,7 @@ Parameters:
     Default: "false"
 
   SecurityGroupIds:
-    Type: String
+    Type: CommaDelimitedList
     Description: Optional - Comma separated list of security group ids to assign to instances
     Default: ""
 
@@ -622,7 +624,9 @@ Conditions:
     UseCustomerManagedKeyForParameterStore:
       !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ] ]
     CreateAgentTokenParameter:
-      !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ]
+      !And
+        - !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ]
+        - !Not [ !Equals [ !Ref BuildkiteAgentToken, "" ] ]
 
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
