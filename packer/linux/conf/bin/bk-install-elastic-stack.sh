@@ -242,7 +242,7 @@ docker run \
   --privileged \
   --userns=host \
   --rm \
-  "tonistiigi/binfmt:qemu-v${QEMU_BINFMT_VERSION}" \
+  "tonistiigi/binfmt:${QEMU_BINFMT_TAG}" \
     --install all
 
 systemctl enable --now buildkite-agent
