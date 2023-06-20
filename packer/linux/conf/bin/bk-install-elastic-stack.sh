@@ -31,6 +31,9 @@ case $(uname -m) in
   *)         ARCH=unknown;;
 esac
 
+# shellcheck disable=SC1091
+source /usr/local/lib/bk-install-elastic-stack.sh
+
 # even though the token is only vaild for 60s, let's not leak it into the logs
 set +x
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
@@ -234,7 +237,6 @@ if ! docker ps; then
 fi
 
 # See https://docs.docker.com/build/building/multi-platform/
-QEMU_BINFMT_VERSION=7.0.0-28
 echo Installing qemu binfmt for multiarch...
 docker run \
   --privileged \
