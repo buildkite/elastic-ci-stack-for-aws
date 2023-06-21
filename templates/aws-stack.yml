@@ -488,7 +488,7 @@ Parameters:
 
   EnableAgentGitMirrorsExperiment:
     Type: String
-    Description: Enables the git-mirrors experiment in the agent
+    Description: Enables git-mirrors in the agent
     AllowedValues:
       - "true"
       - "false"
@@ -1141,7 +1141,7 @@ Resources:
                   $Env:BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}"
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
-                  $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}"
+                  $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${EnableAgentGitMirrorsExperiment}"
                   $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
                   $Env:BUILDKITE_ENV_FILE_URL="${AgentEnvFileUrl}"
                   $Env:BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}"
@@ -1191,7 +1191,7 @@ Resources:
                   BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
-                  BUILDKITE_AGENT_ENABLE_GIT_MIRRORS_EXPERIMENT="${EnableAgentGitMirrorsExperiment}" \
+                  BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${EnableAgentGitMirrorsExperiment}" \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
                   BUILDKITE_ENV_FILE_URL=${AgentEnvFileUrl} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
