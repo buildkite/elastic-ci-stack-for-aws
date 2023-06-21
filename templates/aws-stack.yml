@@ -290,12 +290,13 @@ Parameters:
     Description: Maximum number of instances
     Type: Number
     Default: 10
-    MinValue: 1
+    MinValue: 0
 
   MinSize:
     Description: Minimum number of instances
     Type: Number
     Default: 0
+    MinValue: 0
 
   OnDemandPercentage:
     Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
