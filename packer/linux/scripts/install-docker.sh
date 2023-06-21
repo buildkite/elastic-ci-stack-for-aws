@@ -50,3 +50,12 @@ docker compose version
 
 sudo ln -s "${DOCKER_CLI_DIR}/docker-compose" /usr/bin/docker-compose
 docker-compose version
+
+# See https://docs.docker.com/build/building/multi-platform/
+QEMU_BINFMT_VERSION=7.0.0-28
+QEMU_BINFMT_DIGEST=sha256:66e11bea77a5ea9d6f0fe79b57cd2b189b5d15b93a2bdb925be22949232e4e55
+QEMU_BINFMT_TAG="qemu-v${QEMU_BINFMT_VERSION}@${QEMU_BINFMT_DIGEST}"
+sudo mkdir -p /usr/local/lib
+echo "QEMU_BINFMT_TAG=\"$QEMU_BINFMT_TAG\"" | sudo tee -a /usr/local/lib/bk-install-elastic-stack.sh
+echo Pulling qemu binfmt for multiarch...
+sudo docker pull "tonistiigi/binfmt:${QEMU_BINFMT_TAG}"
