@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.0.0-beta1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0-beta1) (2023-06-28)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.21.0...v6.0.0-beta1)
+
+### Changed
+- Upgrade base image to Amazon Linux 2023 [#1122](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1122) (@triarius)
+    - Many packages have been added, upgraded, or removed since Amazon Linux 2. We've explicitly called out what's been intentionally left out by us below. Refer to [docs.aws.amazon.com/linux/al2023/ug/compare-with-al2.html](https://docs.aws.amazon.com/linux/al2023/ug/compare-with-al2.html) for the changes Amazon have made.
+- Publish template to both `main` and `master` [#1129](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1129) (@triarius)
+- Increase job cancel grace period to 60s [#1144](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1144) (@triarius)
+- Allow the `MaxSize` to be 0 [#1140](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1140) (@triarius)
+- Default EC2 instance names to stack name [#1137](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1137) (@triarius)
+- Rename the parameter `InstanceType` to `InstanceTypes` [#1138](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1138) (@triarius)
+- Rename the parameter `ManagedPolicyARN` to `ManagedPolicyARNs` [#1138](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1138) (@triarius)
+- Rename the parameter `SecurityGroupId` to `SecurityGroupIds` [#1128](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1128) (@triarius)
+- Rename the parameter `EnableGitMirrorsExperiment` to `BuildkiteAgentEnableGitMirrors` [#1123](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1123) (@triarius)
+- Enable the `ansi-timestamps` setting if and only if `BuildkiteAgentTimestampLines` parameter is `"false"` [#1132](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1132) (@triarius)
+
+### Added
+- Support running and building multi-platform docker images [#1139](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1139) [#1122](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1122) (@triarius)
+- Support i4g instance types [#1138](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1138) (@triarius)
+- The parameter `SpotAllocationStrategy` [#1130](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1130) (@triarius)
+
+### Fixed
+- Guard against `BUILDKITE_AGENT_ENABLE_GIT_MIRRORS` not being set in startup script [#1135](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1135) (@triarius)
+
+### Removed
+- Remove deprecated `SpotPrice` parameter [#1130](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1130) (@triarius)
+- These packages are either not available on Amazon Linux 2023, or not installed by default on the base image we use. We have decided to not make them available as suitable replacements are available.
+  - Python 2
+  - OpenSSL v1.0
+  - AWS CLI v1
+  - Docker-Compose v1
+  - Cronie
+
 ## [v5.21.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.21.0) (2023-05-25)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.20.0...v5.21.0)
 
