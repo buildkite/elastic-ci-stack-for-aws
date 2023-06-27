@@ -15,7 +15,7 @@ on_error() {
     aws autoscaling set-instance-health --instance-id "$INSTANCE_ID" --health-status Unhealthy || true
   fi
 
-  /opt/aws/bin/cfn-signal \
+  cfn-signal \
     --region "$AWS_REGION" \
     --stack "$BUILDKITE_STACK_NAME" \
     --reason "Error on line $errorLine: $(tail -n 1 /var/log/elastic-stack.log)" \
@@ -248,7 +248,7 @@ docker run \
 systemctl enable --now buildkite-agent
 
 # let the stack know that this host has been initialized successfully
-/opt/aws/bin/cfn-signal \
+cfn-signal \
   --region "$AWS_REGION" \
   --stack "$BUILDKITE_STACK_NAME" \
   --resource "AgentAutoScaleGroup" \
