@@ -48,7 +48,10 @@ sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-compose"
 sudo chmod +x "${DOCKER_CLI_DIR}/docker-compose"
 docker compose version
 
+echo "Making docker compose v2 compatible w/ docker-compose v1..."
 sudo ln -s "${DOCKER_CLI_DIR}/docker-compose" /usr/bin/docker-compose
+sudo cp /tmp/conf/bin/docker-compose /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 docker-compose version
 
 # See https://docs.docker.com/build/building/multi-platform/
