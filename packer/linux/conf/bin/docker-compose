@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-# Prepends --compatibility flag to arguments to docker-compose if not present
+# Prepends the --compatibility flag to arguments to docker-compose if not present
+# Don't install this to /usr/bin/docker-compose or it will call itself recurively
+# an unbounded number of times
 
 set -Eeuo pipefail
 
