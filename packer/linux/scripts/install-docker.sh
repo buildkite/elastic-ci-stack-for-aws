@@ -15,8 +15,6 @@ sudo usermod -a -G docker ec2-user
 echo Add docker config
 sudo mkdir -p /etc/docker
 sudo cp /tmp/conf/docker/daemon.json /etc/docker/daemon.json
-sudo cp /tmp/conf/docker/subuid /etc/subuid
-sudo cp /tmp/conf/docker/subgid /etc/subgid
 
 echo "Adding docker systemd timers..."
 sudo cp /tmp/conf/docker/scripts/* /usr/local/bin

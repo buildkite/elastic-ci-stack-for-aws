@@ -11,6 +11,14 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 # Set user namespace remapping in config
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   cat <<< "$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+  cat <<EOF > /etc/subuid
+buildkite-agent:$(id -u buildkite-agent):1
+buildkite-agent:100000:65536
+EOF
+  cat <<EOF > /etc/subgid
+buildkite-agent:$(getent group docker | awk -F: '{print $3}'):1
+buildkite-agent:100000:65536
+EOF
 fi
 
 # Set experimental in config
