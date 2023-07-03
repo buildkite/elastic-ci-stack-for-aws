@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOCKER_COMPOSE_V2_VERSION=2.18.1
-DOCKER_BUILDX_VERSION="0.10.5"
+DOCKER_COMPOSE_V2_VERSION=2.19.1
+DOCKER_BUILDX_VERSION="0.11.0"
 MACHINE=$(uname -m)
 
 echo Installing docker...
@@ -48,7 +48,10 @@ sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-compose"
 sudo chmod +x "${DOCKER_CLI_DIR}/docker-compose"
 docker compose version
 
+echo "Making docker compose v2 compatible w/ docker-compose v1..."
 sudo ln -s "${DOCKER_CLI_DIR}/docker-compose" /usr/bin/docker-compose
+sudo cp /tmp/conf/bin/docker-compose /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 docker-compose version
 
 # See https://docs.docker.com/build/building/multi-platform/

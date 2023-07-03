@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Prepends the --compatibility flag to arguments to docker-compose if not present
+# Don't install this to /usr/bin/docker-compose or it will call itself recurively
+# an unbounded number of times
+
+set -Eeuo pipefail
+
+has_compatibility_flag=false
+
+for arg in "$@"; do
+  if [[ $arg == "--compatibility" ]]; then
+    has_compatibility_flag=true
+    break
+  fi
+done
+
+if ! $has_compatibility_flag; then
+  set -- "--compatibility" "$@"
+fi
+
+exec /usr/bin/docker-compose "$@"
