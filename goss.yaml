@@ -140,6 +140,10 @@ command:
   /usr/local/bin/docker-low-disk-gc:
     exit-status: 0
 
+  docker buildx build --progress=plain -t buildkite-postgres:latest .:
+    exit-status: 0
+    timeout: 30000
+
   # Check docker userns is enabled
   # Note that goss will evaluate the outer layer of templating, and docker will evaluate the second
   # Running `goss validate --format documentation` will print this with the first layer of templating evaluated
