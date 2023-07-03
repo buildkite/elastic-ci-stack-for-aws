@@ -147,8 +147,7 @@ fi
 
 BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
 mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
-if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
-then
+if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]; then
   EPHEMERAL_BUILD_PATH="/mnt/ephemeral/builds"
   mkdir -p "${EPHEMERAL_BUILD_PATH}"
   mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
