@@ -9,7 +9,7 @@ echo Installing docker...
 sudo dnf install -yq docker
 sudo systemctl enable --now docker
 
-echo Add docker group
+echo Add ec2-user to docker group.
 sudo usermod -a -G docker ec2-user
 
 echo Add docker config
