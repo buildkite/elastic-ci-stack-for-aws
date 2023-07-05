@@ -140,7 +140,7 @@ command:
   /usr/local/bin/docker-low-disk-gc:
     exit-status: 0
 
-  docker buildx build --progress=plain -t buildkite-postgres:latest .:
+  docker buildx build -f tests/Dockerfile --progress=plain -t buildkite-postgres:latest tests:
     exit-status: 0
     timeout: 30000
 
