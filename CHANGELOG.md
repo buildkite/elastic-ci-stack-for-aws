@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.0.0-beta2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0-beta2) (2023-07-17)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.0.0-beta1...v6.0.0-beta2)
+
+### Changed
+- Bump docker compose to v2.20.0 and buildx to v0.11.1 [#1150](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1150) (@triarius)
+- Reorganize build scripts to restart docker after installing qemu [#1149](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1149) (@triarius)
+
+### Fixed
+- Fix issues with docker-compose plugin by creating a script to prepend `--compatibility` flag to docker-compose [#1148](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1148) (@triarius)
+
 ## [v6.0.0-beta1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0-beta1) (2023-06-28)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.21.0...v6.0.0-beta1)
 
