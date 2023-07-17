@@ -31,9 +31,6 @@ case $(uname -m) in
   *)         ARCH=unknown;;
 esac
 
-# shellcheck disable=SC1091
-source /usr/local/lib/bk-install-elastic-stack.sh
-
 # even though the token is only vaild for 60s, let's not leak it into the logs
 set +x
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
@@ -147,8 +144,7 @@ fi
 
 BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
 mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
-if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]
-then
+if [ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]; then
   EPHEMERAL_BUILD_PATH="/mnt/ephemeral/builds"
   mkdir -p "${EPHEMERAL_BUILD_PATH}"
   mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
@@ -237,15 +233,7 @@ if ! docker ps; then
   exit 1
 fi
 
-# See https://docs.docker.com/build/building/multi-platform/
-echo Installing qemu binfmt for multiarch...
-docker run \
-  --privileged \
-  --userns=host \
-  --rm \
-  "tonistiigi/binfmt:${QEMU_BINFMT_TAG}" \
-    --install all
-
+# start buildkite-agent
 systemctl enable --now buildkite-agent
 
 # let the stack know that this host has been initialized successfully
