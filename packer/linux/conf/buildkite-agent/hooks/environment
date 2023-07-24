@@ -139,6 +139,6 @@ enviroment() {
 
 enviroment || {
   echo "^^^ +++"
-  echo ":alert: Failed to while running elastic stack environment hook" >&2
+  echo ":alert: Running elastic stack environment hook failed" >&2
   exit 2
 }
