@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v5.22.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.2) (2023-07-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.1...v5.22.2)
+
+### Changed
+- Bump buildkite-agent to v3.50.3 [#1164](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1164) (@DrJosh9000)
+
+### Internal
+- Set `allow_dependency_failure: true` on stack cleanup jobs [#1159](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1159) (@triarius)
 ## [v5.22.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.1) (2023-07-21)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.0...v5.22.1)
 
