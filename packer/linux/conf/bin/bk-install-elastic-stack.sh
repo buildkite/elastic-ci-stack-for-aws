@@ -25,6 +25,27 @@ on_error() {
 
 trap 'on_error $LINENO' ERR
 
+# This script is run on every boot so that we can gracefully recover from hard failures (eg. kernel panics) during
+# any previous attempts. If a previous run is detected as started but not complete then we will fail this run and mark
+# the instance as unhealthy.
+STATUS_FILE=/var/log/elastic-stack-bootstrap-status
+
+check_status() {
+  if [[ -f ${STATUS_FILE} ]] ; then
+    if [[ "$(< ${STATUS_FILE})" == "Completed" ]] ; then
+      echo "Bootstrap already completed successfully"
+      exit 0
+    else
+      echo "Bootstrap previously failed, will not continue from unknown state"
+      return 1
+    fi
+  fi
+
+  echo "Started" > ${STATUS_FILE}
+}
+
+check_status
+
 case $(uname -m) in
   x86_64)    ARCH=amd64;;
   aarch64)   ARCH=arm64;;
@@ -36,6 +57,7 @@ set +x
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
 set -x
+
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
 PLUGINS_ENABLED=()
@@ -228,10 +250,14 @@ until docker ps || [ $next_wait_time -eq 5 ]; do
   sleep $(( next_wait_time++ ))
 done
 
-if ! docker ps; then
-  echo "Failed to contact docker"
-  exit 1
-fi
+check_docker() {
+  if ! docker ps ; then
+    echo "Failed to contact docker"
+    return 1
+  fi
+}
+
+check_docker
 
 # start buildkite-agent
 systemctl enable --now buildkite-agent
@@ -246,3 +272,6 @@ cfn-signal \
     # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
     echo "Signal failed"
   )
+
+# Record bootstrap as complete (this should be the last step in this file)
+echo "Completed" > ${STATUS_FILE}
