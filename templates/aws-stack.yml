@@ -97,6 +97,7 @@ Metadata:
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
+        - EventScheduleRate
 
       - Label:
           default: Cost Allocation Configuration
@@ -301,6 +302,11 @@ Parameters:
     Description: Minimum number of instances
     Type: Number
     Default: 0
+
+  EventScheduleRate:
+    Description: How often the Event Schedule is triggered (in minutes)
+    Type: String
+    Default: "1"
 
   OnDemandPercentage:
     Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
@@ -1366,3 +1372,4 @@ Resources:
         AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
+        EventScheduleRate: !Ref EventScheduleRate
