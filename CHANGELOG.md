@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [v6.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0) (2023-07-24)
-[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.1...v6.0.0)
+## [v6.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0) (2023-07-25)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.2...v6.0.0)
 
 ### Changed
 - Upgrade base image to Amazon Linux 2023 [#1122](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1122) (@triarius)
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Rename the parameter `InstanceType` to `InstanceTypes` [#1138](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1138) (@triarius)
 - Rename the parameter `ManagedPolicyARN` to `ManagedPolicyARNs` [#1138](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1138) (@triarius)
 - Rename the parameter `SecurityGroupId` to `SecurityGroupIds` [#1128](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1128) (@triarius)
-- Rename the parameter `EnableGitMirrorsExperiment` to `BuildkiteAgentEnableGitMirrors` [#1123](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1123) (@triarius)
+- Rename the parameter `EnableAgentGitMirrorsExperiment` to `BuildkiteAgentEnableGitMirrors` [#1123](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1123) (@triarius)
 - Enable the `ansi-timestamps` setting if and only if `BuildkiteAgentTimestampLines` parameter is `"false"` [#1132](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1132) (@triarius)
 - Bump docker compose to v2.20.2 [#1150](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1150) (@triarius)
 - Bump buildx to v0.11.2 [#1150](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1150) (@triarius)
@@ -25,20 +25,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Support running and building multi-platform docker images [#1139](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1139) [#1122](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1122) [#1149](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1149) (@triarius)
 - Support i4g instance types [#1138](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1138) (@triarius)
-- The parameter `SpotAllocationStrategy` [#1130](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1130) (@triarius)
+- Added the parameter `SpotAllocationStrategy` [#1130](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1130) (@triarius)
 
 ### Fixed
 - Guard against `BUILDKITE_AGENT_ENABLE_GIT_MIRRORS` not being set in startup script [#1135](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1135) (@triarius)
 
 ### Removed
 - Remove deprecated `SpotPrice` parameter [#1130](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1130) (@triarius)
-- These packages are either not available on Amazon Linux 2023, or not installed by default on the base image we use. We have decided to not make them available as suitable replacements are available.
+- Removed packages. These packages are either not available on Amazon Linux 2023, or not installed by default on the base image we use. We have decided to not install them as suitable replacements may be found.
   - Python 2
   - OpenSSL v1.0
   - AWS CLI v1
   - Docker-Compose v1
     - The `docker-compose` executable will prepend the `--compatibility` flag to docker-compose v2 [#1148](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1148) (@triarius)
   - Cronie
+
+## [v5.22.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.2) (2023-07-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.1...v5.22.2)
+
+### Changed
+- Bump buildkite-agent to v3.50.3 [#1164](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1164) (@DrJosh9000)
+
+### Internal
+- Set `allow_dependency_failure: true` on stack cleanup jobs [#1159](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1159) (@triarius)
 
 ## [v5.22.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.1) (2023-07-21)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.0...v5.22.1)
