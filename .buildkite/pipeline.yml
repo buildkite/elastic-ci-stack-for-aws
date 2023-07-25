@@ -62,6 +62,7 @@ steps:
   - id: "delete-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Delete"
     command: .buildkite/steps/delete.sh windows amd64
+    allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
@@ -103,6 +104,7 @@ steps:
   - id: "delete-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Delete"
     command: .buildkite/steps/delete.sh linux amd64
+    allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
@@ -144,6 +146,7 @@ steps:
   - id: "delete-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Delete"
     command: .buildkite/steps/delete.sh linux arm64
+    allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:

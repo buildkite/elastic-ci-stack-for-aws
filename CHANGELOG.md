@@ -4,18 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [v6.0.0-beta2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0-beta2) (2023-07-17)
-[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.0.0-beta1...v6.0.0-beta2)
-
-### Changed
-- Bump docker compose to v2.20.0 and buildx to v0.11.1 [#1150](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1150) (@triarius)
-- Reorganize build scripts to restart docker after installing qemu [#1149](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1149) (@triarius)
-
-### Fixed
-- Fix issues with docker-compose plugin by creating a script to prepend `--compatibility` flag to docker-compose [#1148](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1148) (@triarius)
-
-## [v6.0.0-beta1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0-beta1) (2023-06-28)
-[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.21.0...v6.0.0-beta1)
+## [v6.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0) (2023-07-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.1...v6.0.0)
 
 ### Changed
 - Upgrade base image to Amazon Linux 2023 [#1122](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1122) (@triarius)
@@ -29,9 +19,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Rename the parameter `SecurityGroupId` to `SecurityGroupIds` [#1128](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1128) (@triarius)
 - Rename the parameter `EnableGitMirrorsExperiment` to `BuildkiteAgentEnableGitMirrors` [#1123](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1123) (@triarius)
 - Enable the `ansi-timestamps` setting if and only if `BuildkiteAgentTimestampLines` parameter is `"false"` [#1132](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1132) (@triarius)
+- Bump docker compose to v2.20.2 [#1150](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1150) (@triarius)
+- Bump buildx to v0.11.2 [#1150](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1150) (@triarius)
 
 ### Added
-- Support running and building multi-platform docker images [#1139](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1139) [#1122](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1122) (@triarius)
+- Support running and building multi-platform docker images [#1139](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1139) [#1122](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1122) [#1149](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1149) (@triarius)
 - Support i4g instance types [#1138](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1138) (@triarius)
 - The parameter `SpotAllocationStrategy` [#1130](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1130) (@triarius)
 
@@ -45,7 +37,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - OpenSSL v1.0
   - AWS CLI v1
   - Docker-Compose v1
+    - The `docker-compose` executable will prepend the `--compatibility` flag to docker-compose v2 [#1148](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1148) (@triarius)
   - Cronie
+
+## [v5.22.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.1) (2023-07-21)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.0...v5.22.1)
+
+### Changed
+- Bump buildkite-agent to v3.50.2 [#1161](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1161) (@triarius)
+
+## [v5.22.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.0) (2023-07-20)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.21.0...v5.22.0)
+
+### Changed
+- Bump buildkite-agent to v3.50.1 [#1157](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1157) (@DrJosh9000)
+- Handle hard failures (eg. kernel panic) during bootstrap [#1143](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1143) (@trvrnrth)
+- Backport de-experimentifying git-mirrors [#1141](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1141) (@triarius)
+- Enable ansi-timestamps iff BuildkiteAgentTimestampLines is false [#1132](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1132) (@triarius)
+- Don't (re)install docker (on Windows) [#1136](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1136) (@triarius)
 
 ## [v5.21.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.21.0) (2023-05-25)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.20.0...v5.21.0)
