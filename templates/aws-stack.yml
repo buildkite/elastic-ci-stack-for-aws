@@ -97,7 +97,7 @@ Metadata:
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
-        - EventScheduleRate
+        - ScalerEventScheduleRate
 
       - Label:
           default: Cost Allocation Configuration
@@ -299,8 +299,8 @@ Parameters:
     Default: 0
     MinValue: 0
 
-  EventScheduleRate:
-    Description: How often the Event Schedule is triggered (in minutes)
+  ScalerEventScheduleRate:
+    Description: How often the event schedule for buildkite-agent-scaler is triggered (in minutes)
     Type: String
     Default: "1"
 
@@ -1388,4 +1388,4 @@ Resources:
         AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
-        EventScheduleRate: !Ref EventScheduleRate
+        EventScheduleRate: !Ref ScalerEventScheduleRate
