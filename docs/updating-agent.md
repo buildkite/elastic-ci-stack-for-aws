@@ -1,9 +1,9 @@
 # Updating the Agent
 
-The `buildkite-agent` is built in to the AMIs by the Packer build. The agent 
+The `buildkite-agent` is built in to the AMIs by the Packer build. The agent
 binary is downloaded from download.buildkite.com.
 
-Once you have [released](https://github.com/buildkite/agent/blob/master/RELEASE.md) an updated
+Once you have [released](https://github.com/buildkite/agent/blob/-/RELEASE.md) an updated
 version of the agent, you can incorporate it into the Elastic CI Stack
 for AWS template.
 

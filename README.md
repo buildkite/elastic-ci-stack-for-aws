@@ -1,6 +1,6 @@
 <h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
-![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)
+![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=main)
 
 ## Buildkite Elastic CI Stack for AWS
 
@@ -127,7 +127,7 @@ default VPC:
 
 We provide support for security and bug fixes on the current major release only.
 
-If there are any changes in the master branch since the last tagged release, we
+If there are any changes in the main branch since the last tagged release, we
 aim to publish a new tagged release of this template at the end of each month.
 
 ### AWS Regions
@@ -146,7 +146,7 @@ We build and deploy the following AMIs to all our supported regions:
 
 ### Buildkite Agent
 
-The Elastic CI Stack template [published from the master branch](https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
+The Elastic CI Stack template [published from the main branch](https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
 tracks the latest Buildkite Agent release.
 
 You may wish to preview any updates to your stack from this template
