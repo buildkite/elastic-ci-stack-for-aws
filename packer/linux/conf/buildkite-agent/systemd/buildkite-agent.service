@@ -24,4 +24,3 @@ KillMode=process
 
 [Install]
 WantedBy=multi-user.target
-DefaultInstance=1
