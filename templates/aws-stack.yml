@@ -1131,6 +1131,14 @@ Resources:
                   - Key: !Ref CostAllocationTagName
                     Value: !Ref CostAllocationTagValue
                   - !Ref "AWS::NoValue"
+            - !If
+              - UseCostAllocationTags
+              - ResourceType: volume
+                Tags:
+                  - Key: !Ref CostAllocationTagName
+                    Value: !Ref CostAllocationTagValue
+              - !Ref "AWS::NoValue"
+
           UserData:
             Fn::Base64: !If
               - UseWindowsAgents
