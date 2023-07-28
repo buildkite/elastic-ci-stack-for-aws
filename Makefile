@@ -176,7 +176,7 @@ bump-agent-version:
 	git commit -m "Bump buildkite-agent to v$(AGENT_VERSION)"
 
 validate: build/aws-stack.yml
-	aws cloudformation validate-template \
+	aws --no-cli-pager cloudformation validate-template \
 		--output text \
 		--template-body "file://$(PWD)/build/aws-stack.yml"
 
