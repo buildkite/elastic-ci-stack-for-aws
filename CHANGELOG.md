@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.1.0) (2023-08-01)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.0.0...v6.1.0)
+
+### Changed
+- Bump buildkite-agent to v3.50.4 [#1177](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1177) (@DrJosh9000)
+- Disable client side pager for aws-cli v2 for the buildkite-agent user [#1174](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1174) (@triarius)
+- Add `ScalerMinPollInterval` param [#1173](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1173) (@amartani)
+
 ## [v6.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.0.0) (2023-07-26)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.2...v6.0.0)
 
