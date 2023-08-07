@@ -1,0 +1,10 @@
+[Unit]
+Description=Clean files used by docker except for the build cache
+Requires=docker-gc.service
+
+[Timer]
+Unit=docker-gc.service
+OnCalendar=hourly
+
+[Install]
+WantedBy=timers.target

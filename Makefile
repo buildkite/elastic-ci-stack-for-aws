@@ -3,7 +3,7 @@
 VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 
-PACKER_VERSION ?= 1.6.2
+PACKER_VERSION ?= 1.8.6
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
@@ -176,7 +176,7 @@ bump-agent-version:
 	git commit -m "Bump buildkite-agent to v$(AGENT_VERSION)"
 
 validate: build/aws-stack.yml
-	aws cloudformation validate-template \
+	aws --no-cli-pager cloudformation validate-template \
 		--output text \
 		--template-body "file://$(PWD)/build/aws-stack.yml"
 

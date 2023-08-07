@@ -1,6 +1,6 @@
 <h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
-![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=master)
+![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=main)
 
 ## Buildkite Elastic CI Stack for AWS
 
@@ -41,23 +41,22 @@ of per-operating system support:
 
 Feature | Linux | Windows
 --- | --- | ---
-Docker | ✅ | ✅ 
-Docker Compose | ✅ | ✅ 
-AWS CLI | ✅ | ✅ 
-S3 Secrets Bucket | ✅ | ✅ 
-ECR Login | ✅ | ✅ 
-Docker Login | ✅ | ✅ 
-CloudWatch Logs Agent | ✅ | ✅ 
-Per-Instance Bootstrap Script | ✅ | ✅ 
-🧑‍🔬 git-mirrors experiment | ✅ | ✅ 
-SSM Access | ✅ | ✅ 
-Instance Storage (NVMe) | ✅ | 
-SSH Access | ✅ | 
-Periodic authorized_keys Refresh | ✅ | 
-Periodic Instance Health Check | ✅ | 
-git lfs | ✅ | 
-Additional sudo Permissions | ✅ | 
-RDP Access | | ✅ 
+Docker | ✅ | ✅
+Docker Compose | ✅ | ✅
+AWS CLI | ✅ | ✅
+S3 Secrets Bucket | ✅ | ✅
+ECR Login | ✅ | ✅
+Docker Login | ✅ | ✅
+CloudWatch Logs Agent | ✅ | ✅
+Per-Instance Bootstrap Script | ✅ | ✅
+SSM Access | ✅ | ✅
+Instance Storage (NVMe) | ✅ |
+SSH Access | ✅ |
+Periodic authorized_keys Refresh | ✅ |
+Periodic Instance Health Check | ✅ |
+git lfs | ✅ |
+Additional sudo Permissions | ✅ |
+RDP Access | | ✅
 
 ## Security
 
@@ -128,7 +127,7 @@ default VPC:
 
 We provide support for security and bug fixes on the current major release only.
 
-If there are any changes in the master branch since the last tagged release, we
+If there are any changes in the main branch since the last tagged release, we
 aim to publish a new tagged release of this template at the end of each month.
 
 ### AWS Regions
@@ -147,14 +146,14 @@ We build and deploy the following AMIs to all our supported regions:
 
 ### Buildkite Agent
 
-The Elastic CI Stack template [published from the master branch](https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
+The Elastic CI Stack template [published from the main branch](https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
 tracks the latest Buildkite Agent release.
 
 You may wish to preview any updates to your stack from this template
 [using a CloudFormation Stack Change Set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
 to decide whether to apply it.
 
-## Recommended reading  
+## Recommended reading
 
 To gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
 

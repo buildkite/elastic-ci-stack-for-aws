@@ -1,23 +1,21 @@
-#!/bin/bash
-set -eu -o pipefail
+#!/usr/bin/env bash
+set -euo pipefail
 
-AGENT_VERSION=3.45.0
-
-MACHINE="$(uname -m)"
-
-case "${MACHINE}" in
-	x86_64)    ARCH=amd64;;
-	aarch64)   ARCH=arm64;;
-	*)         ARCH=unknown;;
+case $(uname -m) in
+  x86_64)    ARCH=amd64;;
+  aarch64)   ARCH=arm64;;
+  *)         ARCH=unknown;;
 esac
-
-echo "Installing dependencies..."
-sudo yum update -y -q
 
 echo "Creating buildkite-agent user and group..."
 sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
+sudo mkdir -p /var/lib/buildkite-agent/.aws
+sudo cp /tmp/conf/aws/config /var/lib/buildkite-agent/.aws/config
+sudo chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.aws
+
+AGENT_VERSION=3.50.4
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
   "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
