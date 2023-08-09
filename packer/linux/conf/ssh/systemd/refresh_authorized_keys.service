@@ -1,10 +1,6 @@
 [Unit]
 Description=Download ssh authorized_keys file from s3
-Wants=refresh_authorized_keys.service
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/refresh_authorized_keys
-
-[Install]
-WantedBy=multi-user.target

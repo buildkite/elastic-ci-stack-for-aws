@@ -8,6 +8,12 @@ file:
     owner: buildkite-agent
     group: buildkite-agent
 
+  /etc/systemd/system/refresh_authorized_keys.service:
+    exists: true
+
+  /etc/systemd/system/refresh_authorized_keys.timer:
+    exists: true
+
   /var/lib/buildkite-agent/builds:
     filetype: directory
     exists: true
@@ -127,6 +133,13 @@ command:
 
   wget --version:
     exit-status: 0
+
+  # Check refresh authorized keys gear is present, but disabled.
+  # disabled: The unit file is not enabled, but contains an [Install] section with installation instructions.
+  systemctl is-enabled refresh_authorized_keys.timer:
+    exit-status: 1
+    stdout:
+    - /disabled/
 
   systemctl is-enabled docker-gc.timer:
     exit-status: 0
