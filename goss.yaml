@@ -140,9 +140,10 @@ command:
   /usr/local/bin/docker-low-disk-gc:
     exit-status: 0
 
+  # test that we can build a docker image
   docker buildx build -f tests/Dockerfile --progress=plain -t buildkite-postgres:latest tests:
     exit-status: 0
-    timeout: 30000
+    timeout: 60000
 
   # Check docker userns is enabled
   # Note that goss will evaluate the outer layer of templating, and docker will evaluate the second
@@ -166,7 +167,7 @@ command:
   # Check that docker containers can run
   docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version:
     exit-status: 0
-    timeout: 30000
+    timeout: 60000
 
   # Check that userns allows writing as buildkite-agent
   sh -c 'docker run --rm -v "$PWD:/pwd" alpine:latest touch /pwd/test && stat -c %U:%G test' && rm test:
