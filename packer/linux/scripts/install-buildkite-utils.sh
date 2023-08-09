@@ -25,3 +25,6 @@ sudo curl -Lf -o /usr/bin/lifecycled \
 sudo chmod +x /usr/bin/lifecycled
 sudo curl -Lf -o /etc/systemd/system/lifecycled.service \
   https://raw.githubusercontent.com/buildkite/lifecycled/${LIFECYCLED_VERSION}/init/systemd/lifecycled.unit
+
+echo "Adding authorized keys systemd units..."
+sudo cp /tmp/conf/ssh/systemd/* /etc/systemd/system
