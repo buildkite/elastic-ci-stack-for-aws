@@ -31,7 +31,8 @@ if [[ "$os" == "windows" ]]; then
 fi
 
 if [[ "$arch" == "arm64" ]]; then
-  instance_type="t4g.small"
+  instance_type="m6gd.medium"
+  enable_instance_storage="true"
 fi
 
 cat << EOF > config.json
@@ -95,6 +96,10 @@ cat << EOF > config.json
   {
     "ParameterKey": "ScaleInIdlePeriod",
     "ParameterValue": "60"
+  },
+  {
+    "ParameterKey": "EnableInstanceStorage",
+    "ParameterValue": "${enable_instance_storage:-false}"
   }
 ]
 EOF

@@ -8,7 +8,6 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 # Mount instance storage if we can
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
 
-# Move docker root to the ephemeral device
 if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]]; then
   echo "Skipping mounting instance storage"
   exit 0
@@ -17,8 +16,7 @@ fi
 #shellcheck disable=SC2207
 devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -f1 -d' '))
 
-if [ -z "${devices[*]}" ]
-then
+if [ -z "${devices[*]}" ]; then
   echo "No Instance Storage NVMe drives to mount" >&2
   exit 0
 fi
