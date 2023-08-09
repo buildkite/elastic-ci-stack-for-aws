@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.2.0) (2023-08-09)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.1.0...v6.2.0)
+
+### Changed
+- Change base image to Windows Server 2019 w/o containers and install Docker CE (v24.0.5) [#1180](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1180) (@triarius)
+- Add cost allocation tags to EBS volumes [#1171](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1171) (@keatmin)
+
+### Fixed
+- Add missing authorized keys systemd units [#1184](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1184) (@sj26)
+- Fix instance storage docker dir not created [#1181](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1181) (@triarius)
+- Fix `set -e` fails from environment hooks [#1179](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1179) (@triarius)
+
 ## [v6.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.1.0) (2023-08-01)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.0.0...v6.1.0)
 
