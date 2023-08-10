@@ -62,6 +62,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     - The `docker-compose` executable will prepend the `--compatibility` flag to docker-compose v2 [#1148](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1148) (@triarius)
   - Cronie
 
+## [v5.22.3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.3) (2023-08-10)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.2...v5.22.3)
+
+### Changed
+- Bump buildkite-agent to v3.50.4 [#1186](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1186) (@triarius)
+- Use windows server 2019 base image and docker ce [#1187](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1187) (@triarius)
+
 ## [v5.22.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.2) (2023-07-24)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.1...v5.22.2)
 
