@@ -8,14 +8,14 @@
       "region": "{{user `region`}}",
       "source_ami_filter": {
         "filters": {
-          "name": "Windows_Server-2019-English-Full-Containers*",
+          "name": "Windows_Server-2019-English-Full-*",
           "virtualization-type": "hvm"
         },
         "owners": ["amazon"],
         "most_recent": true
       },
       "instance_type": "m5.xlarge",
-      "user_data_file":"scripts/ec2-userdata.ps1",
+      "user_data_file": "scripts/ec2-userdata.ps1",
       "communicator": "winrm",
       "winrm_username": "Administrator",
       "winrm_use_ssl": true,
