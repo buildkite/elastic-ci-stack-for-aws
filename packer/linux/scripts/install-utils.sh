@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 case $(uname -m) in
@@ -38,7 +39,7 @@ sudo dnf -yq groupinstall "Development Tools"
 
 sudo systemctl enable --now amazon-ssm-agent
 
-GIT_LFS_VERSION=3.3.0
+GIT_LFS_VERSION=3.4.0
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
 pushd "$(mktemp -d)"
 curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSION}/git-lfs-linux-${ARCH}-v${GIT_LFS_VERSION}.tar.gz | tar xz
