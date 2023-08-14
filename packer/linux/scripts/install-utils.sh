@@ -17,6 +17,7 @@ sudo dnf install -yq \
   awscli-2 \
   git \
   jq \
+  mdadm \
   nvme-cli \
   pigz \
   python \
