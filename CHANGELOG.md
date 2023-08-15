@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.3.0) (2023-08-16)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.2.0...v6.3.0)
+
+### Changed
+- Bump buildkite-agent to v3.51.0 [#1193](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1193) (@triarius)
+- Bump `git-lfs` to v3.4.0 [#1191](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1191) (@triarius)
+- Update CHANGELOG for v5.22.3 [#1189](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1189) (@triarius)
+
+### Fix
+- Fix `mdadm` is not installed, leading to broken instance storage when there is more than one volumes [#1190](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1190) (@triarius)
+
+### Internal
+- Incorporated CHANGELOG for v5.22.3 [#1189](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1189) (@triarius)
+
 ## [v6.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.2.0) (2023-08-09)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.1.0...v6.2.0)
 
