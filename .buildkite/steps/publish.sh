@@ -24,17 +24,17 @@ echo "--- Building :cloudformation: CloudFormation templates"
 make build/aws-stack.yml
 
 echo "--- Uploading :cloudformation: CloudFormation templates"
-trunk="origin/$BUILDKITE_PIPELINE_DEFAULT_BRANCH"
-latest_tag=$(git describe --tags --abbrev=0 --match='v*' "$trunk")
+trunk="origin/${BUILDKITE_PIPELINE_DEFAULT_BRANCH}"
+latest_tag="$(git describe --tags --abbrev=0 --match='v*' "$trunk")"
 # Pre-release tags are those that have a hyphen in them, e.g. v1.0.0-rc1
-latest_stable_tag=$(git describe --tags --abbrev=0 --match='v*' --exclude='*-*' "$trunk")
+latest_stable_tag="$(git describe --tags --abbrev=0 --match='v*' --exclude='*-*' "$trunk")"
 
 # Only publish to 'latest' (and the empty prefix) if this tag is the latest stable tag.
-if [[ $BUILDKITE_TAG == "$latest_stable_tag" ]]; then
+if [[ "${BUILDKITE_TAG}" == "${latest_stable_tag}" ]]; then
   s3_upload_templates "latest/"
   s3_upload_templates
-elif [[ $BUILDKITE_TAG == "$latest_tag" ]]; then
-  echo "Skipping publishing latest, although $BUILDKITE_TAG matchs $latest_tag it does not doesn't match $latest_stable_tag"
+elif [[ "${BUILDKITE_TAG}" == "${latest_tag}" ]]; then
+  echo "Skipping publishing latest, although ${BUILDKITE_TAG} matches ${latest_tag} it does not doesn't match ${latest_stable_tag}"
 else
   echo "Skipping publishing latest, $BUILDKITE_TAG doesn't match $latest_tag"
 fi
