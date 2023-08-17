@@ -4,7 +4,7 @@ The [buildkite-agent-scaler](https://github.com/buildkite/buildkite-agent-scaler
 is brought in to the Elastic CI Stack for AWS template using the AWS
 Serverless Application Repository.
 
-Once you have [released](https://github.com/buildkite/buildkite-agent-scaler/blob/master/RELEASE.md)
+Once you have [released](https://github.com/buildkite/buildkite-agent-scaler/blob/-/RELEASE.md)
 an updated version, you can incorporate it into the Elastic CI Stack for AWS
 template.
 
@@ -20,7 +20,7 @@ example of updating the buildkite-agent-scaler.
 	1. In the AWS Console, launch CloudFormation
 	1. Create a new stack, select new resources
 	1. Supply the template URL from the build annotation for the Amazon S3 URL field
-	1. Supply a Buildkite Agent token in the `BuildkiteAgentToken` 
+	1. Supply a Buildkite Agent token in the `BuildkiteAgentToken`
 	or `BuildkiteAgentTokenParameterStorePath` parameters
 	1. Supply a queue in the `BuildkiteQueue` parameter
 	1. Create the stack and wait for it to complete

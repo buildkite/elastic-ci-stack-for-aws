@@ -171,7 +171,7 @@ Parameters:
     Default: "false"
 
   BuildkiteAgentExperiments:
-    Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/master/EXPERIMENTS.md.
+    Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/-/EXPERIMENTS.md.
     Type: String
     Default: ""
 
@@ -304,7 +304,7 @@ Parameters:
     Description: How often the event schedule for buildkite-agent-scaler is triggered (in minutes)
     Type: String
     Default: "1"
-  
+
   ScalerMinPollInterval:
     Description: Minimum interval at which the auto scaler should poll the AWS API
     Type: String
