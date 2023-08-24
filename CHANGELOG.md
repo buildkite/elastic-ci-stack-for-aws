@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.4.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.4.0) (2023-08-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.3.0...v6.4.0)
+
+### Changed
+- Bump docker-compose to v2.20.3 [#1201](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1201) (@triarius)
+- Bump buildkite-agent to v3.52.1 [#1200](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1200) (@triarius)
+- Change the Community Slack links in documentation to Forum ones [#1199](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1199) (@mcncl)
+
+### Internal
+- Prevent tag builds from publishing a latest template when they are not "on the main branch" [#1197](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1197) (@triarius)
+
 ## [v6.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.3.0) (2023-08-16)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.2.0...v6.3.0)
 
