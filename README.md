@@ -186,7 +186,7 @@ An alternative method to collect the logs is to use the `log-collector` script i
 The script will collect CloudWatch logs for the Instance, Lambda function, and AutoScaling activity and package them in a
 zip archive which you can send via email to support@buildkite.com.
 
-You can also drop by `#aws-stack` and `#aws` channels in [Buildkite Community Slack](https://chat.buildkite.com/) and ask your question!
+You can also visit our [Forum](https://forum.buildkite.community) and post a question in the [Elastic CI Stack for AWS](https://forum.buildkite.community/c/elastic-ci-stack-for-aws/) section!
 
 ## Licence
 
