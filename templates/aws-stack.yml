@@ -480,7 +480,10 @@ Parameters:
 
   EnableInstanceStorage:
     Type: String
-    Description: Mount available NVMe Instance Storage at /mnt/ephemeral
+    Description: >
+      Mount available NVMe Instance Storage at /mnt/ephemeral, and use it to store docker images and
+      containers, and the build working directory. You must ensure that the instance types have
+      instance storage available for this to have any effect. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-store-volumes.html
     AllowedValues:
       - "true"
       - "false"
