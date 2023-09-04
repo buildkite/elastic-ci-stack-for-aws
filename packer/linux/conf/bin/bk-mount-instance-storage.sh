@@ -9,15 +9,16 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
 
 if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" != "true" ]]; then
-  echo "Skipping mounting instance storage"
+  echo Skipping mounting instance storage >&2
   exit 0
 fi
 
 #shellcheck disable=SC2207
-devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -f1 -d' '))
+devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -f1 -d' ' || true))
 
-if [ -z "${devices[*]}" ]; then
-  echo "No Instance Storage NVMe drives to mount" >&2
+if [[ -z "${devices[*]}" ]]; then
+  echo No NVMe drives to mount. >&2
+  echo Please check that your instance type supports instance storage >&2
   exit 0
 fi
 
