@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.6.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.6.0) (2023-09-07)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.5.0...v6.6.0)
+
+### Fixed
+- Fix instance storage mount script fails when instance storage not available [#1206](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1206) (@triarius)
+
+### Changed
+- Bump buildkite-agent to v3.54.0 [#1207](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1207) (@DrJosh9000)
+
 ## [v6.5.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.5.0) (2023-08-31)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.4.0...v6.5.0)
 
