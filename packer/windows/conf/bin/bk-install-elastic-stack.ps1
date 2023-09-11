@@ -35,6 +35,14 @@ If ($Env:SECRETS_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "secrets" }
 If ($Env:ECR_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "ecr" }
 If ($Env:DOCKER_LOGIN_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "docker-login" }
 
+# Check whether this instance is protected from scale-in.
+${SCALE_IN_PROTECTION} = (aws autoscaling describe-auto-scaling-instances --instance-id "${Env:INSTANCE_ID}" --query 'AutoScalingInstances[0].ProtectedFromScaleIn')
+
+# If so, disable the idle timeout for the agent.
+If (${SCALE_IN_PROTECTION} -eq 'true') {
+  ${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD} = 0
+}
+
 # cfn-env is sourced by the environment hook in builds
 
 # There's a confusing situation here, because this is PowerShell, writing out a script which will be

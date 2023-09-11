@@ -65,6 +65,14 @@ PLUGINS_ENABLED=()
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
 [[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker-login")
 
+# Check whether this instance is protected from scale-in
+SCALE_IN_PROTECTION="$(aws autoscaling describe-auto-scaling-instances --instance-id "${INSTANCE_ID}" --query 'AutoScalingInstances[0].ProtectedFromScaleIn')"
+
+# If so, disable the idle timeout for the agent.
+if [[ "${SCALE_IN_PROTECTION}" = 'true' ]]; then
+  export BUILDKITE_SCALE_IN_IDLE_PERIOD=0
+fi
+
 # cfn-env is sourced by the environment hook in builds
 
 # We will create it in two steps so that we don't need to go crazy with quoting and escaping. The
