@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # To run the unit tests for this file, run the following command in the root of
 # the project:
@@ -71,8 +71,6 @@ exit_if_blank "${AGENT_DIR}"
 exit_if_blank "${ORG_DIR}"
 exit_if_blank "${PIPELINE_DIR}"
 
-# If we make it here, we're safe to go!
-
 # We know the builds path:
 BUILDS_PATH="/var/lib/buildkite-agent/builds"
 
@@ -80,6 +78,23 @@ BUILDS_PATH="/var/lib/buildkite-agent/builds"
 PIPELINE_PATH="${BUILDS_PATH}/${AGENT_DIR}/${ORG_DIR}/${PIPELINE_DIR}"
 # => "/var/lib/buildkite-agent/builds/my-agent-1/my-org/my-pipeline"
 
-if [[ -e "${PIPELINE_PATH}" ]]; then
-	/bin/chown -R buildkite-agent:buildkite-agent "${PIPELINE_PATH}"
+# If it doesn't exist, then we won't do anything.
+if [[ ! -e "${PIPELINE_PATH}" ]]; then
+	exit 0
 fi
+
+
+# Check for symlink shenanigans
+if [[ "$(realpath "${PIPELINE_PATH}")" != "${PIPELINE_PATH}" ]]; then
+	exit 4
+fi
+
+# It should be a directory.
+if [[ ! -d "${PIPELINE_PATH}" ]]; then
+	exit 5
+fi
+
+# If we make it here, we're safe to go!
+
+/bin/chown -R buildkite-agent:buildkite-agent "${PIPELINE_PATH}"
+
