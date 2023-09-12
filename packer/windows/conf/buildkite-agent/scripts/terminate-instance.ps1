@@ -4,12 +4,18 @@ $InstanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
 
 Write-Output "terminate-instance: requesting instance termination..."
-aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
+aws autoscaling terminate-instance-in-auto-scaling-group `
+  --region "$Region" `
+  --instance-id "$InstanceId" `
+  --should-decrement-desired-capacity `
+  2> $null
 
 if ($lastexitcode -eq 0) { # If autoscaling request was successful, we will terminate
-  Write-Output "terminate-instance: disabling buildkite-agent service"
+  Write-Output "terminate-instance: Stopping buildkite-agent service"
   nssm stop buildkite-agent
 }
 else {
-  Write-Output "terminate-instance: ASG could not decrement (we're already at minSize)"
+  Write-Output "terminate-instance: ASG could not decrement (we're already at MinSize)"
+  Write-Output "terminate-instance: Restarting buildkite-agent service"
+  Restart-Service buildkite-agent
 }
