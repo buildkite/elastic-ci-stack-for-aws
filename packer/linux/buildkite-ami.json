@@ -11,7 +11,7 @@
       "region": "{{user `region`}}",
       "source_ami_filter": {
         "filters": {
-          "name": "al2023-ami-minimal-2023.0.*.*-kernel-*",
+          "name": "al2023-ami-minimal-*",
           "architecture": "{{user `arch`}}",
           "virtualization-type": "hvm"
         },
