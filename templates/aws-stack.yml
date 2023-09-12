@@ -44,6 +44,7 @@ Metadata:
         - BuildkiteAgentEnableGitMirrors
         - BuildkiteAgentTracingBackend
         - BuildkiteTerminateInstanceAfterJob
+        - BuildkiteFailureToTerminateInstanceBehavior
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
         - BuildkiteAgentScalerServerlessARN
@@ -201,6 +202,15 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  BuildkiteFailureToTerminateInstanceBehavior:
+    Description: Optional - what to do if the instance cannot self-terminate after the agent exits (e.g. because there are MinSize instances remaining). 'restart-agent' starts the agent service again. 'mark-unhealthy' marks the instance as unhealthy immediately.
+    Type: String
+    AllowedValues:
+      - ""
+      - "mark-unhealthy"
+      - "restart-agent"
+    Default: ""
 
   BuildkiteAdditionalSudoPermissions:
     Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo. Note that the commands should be fully qualified paths to executables.
@@ -1177,6 +1187,7 @@ Resources:
                   $Env:BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}"
                   $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
                   $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
+                  $Env:BUILDKITE_FAILURE_TO_TERMINATE_INSTANCE_BEHAVIOR="${BuildkiteFailureToTerminateInstanceBehavior}"
                   $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
                   $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
                   $Env:AWS_DEFAULT_REGION="${AWS::Region}"
@@ -1235,6 +1246,7 @@ Resources:
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
                   BUILDKITE_ECR_POLICY="${ECRAccessPolicy}" \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}" \
+                  BUILDKITE_FAILURE_TO_TERMINATE_INSTANCE_BEHAVIOR="${BuildkiteFailureToTerminateInstanceBehavior}" \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}" \
                   AWS_DEFAULT_REGION="${AWS::Region}" \
                   SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}" \

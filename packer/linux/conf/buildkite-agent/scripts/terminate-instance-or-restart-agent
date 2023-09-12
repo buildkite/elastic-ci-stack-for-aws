@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -euo pipefail
+
+terminate_failed() {
+  echo "terminate-instance: ASG could not decrement (we're already at MinSize)"
+  echo "terminate-instance: Restarting buildkite-agent service"
+  systemctl start buildkite-agent.service
+}
+
+/usr/local/bin/terminate-instance || terminate_failed

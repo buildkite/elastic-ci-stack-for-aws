@@ -2,17 +2,18 @@
 
 set -euo pipefail
 
-echo "sleeping for 10 seconds before terminating instance to allow agent logs to drain to cloudwatch..."
-
-sleep 10
-
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
 instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
 region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
 
-echo "requesting instance termination..."
+terminate_failed() {
+  echo "terminate-instance: ASG could not decrement (we're already at MinSize)"
+  echo "terminate-instance: Marking unhealthy"
+  aws autoscaling set-instance-health \
+    --instance-id "${instance_id}" \
+    --region "${region}" \
+    --health-status Unhealthy \
+    --no-should-respect-grace-period
+}
 
-aws autoscaling terminate-instance-in-auto-scaling-group \
-  --instance-id "${instance_id}" \
-  --region "${region}" \
-  --should-decrement-desired-capacity
+/usr/local/bin/terminate-instance || terminate_failed

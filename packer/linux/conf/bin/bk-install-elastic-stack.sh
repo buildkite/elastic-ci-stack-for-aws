@@ -131,6 +131,15 @@ if [[ "${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" != "" ]]; then
   chmod 440 /etc/sudoers.d/buildkite-agent-additional
 fi
 
+case "${BUILDKITE_FAILURE_TO_TERMINATE_INSTANCE_BEHAVIOR}" in
+  restart-agent)
+    ln -sf /usr/local/bin/terminate-instance-or-restart-agent /usr/local/bin/exec-stop-post
+    ;;
+  mark-unhealthy)
+    ln -sf /usr/local/bin/terminate-instance-or-mark-unhealthy /usr/local/bin/exec-stop-post
+    ;;
+esac
+
 # Choose the right agent binary
 ln -sf "/usr/bin/buildkite-agent-${BUILDKITE_AGENT_RELEASE}" /usr/bin/buildkite-agent
 

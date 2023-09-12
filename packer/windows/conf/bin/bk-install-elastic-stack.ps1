@@ -93,6 +93,24 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
 
 Copy-Item -Path C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe -Destination C:\buildkite-agent\bin\buildkite-agent.exe
 
+Switch (${Env:BUILDKITE_FAILURE_TO_TERMINATE_INSTANCE_BEHAVIOR}) {
+  "restart-agent" {
+    Copy-Item `
+      -Path C:\buildkite-agent\bin\terminate-instance-or-restart-agent.ps1 `
+      -Destination C:\buildkite-agent\bin\exit-post.ps1
+  }
+  "mark-unhealthy" {
+    Copy-Item `
+      -Path C:\buildkite-agent\bin\terminate-instance-or-mark-unhealthy.ps1 `
+      -Destination C:\buildkite-agent\bin\exit-post.ps1
+  }
+  default {
+    Copy-Item `
+      -Path C:\buildkite-agent\bin\terminate-instance.ps1 `
+      -Destination C:\buildkite-agent\bin\exit-post.ps1
+  }
+}
+
 $agent_metadata=@(
   "queue=${Env:BUILDKITE_QUEUE}"
   "docker=${DOCKER_VERSION}"
@@ -232,7 +250,7 @@ nssm set buildkite-agent AppExit Default Restart
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppRestartDelay 10000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
-nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
+nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\exit-post.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Restart-Service buildkite-agent

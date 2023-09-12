@@ -16,4 +16,6 @@ if ($lastexitcode -eq 0) { # If autoscaling request was successful, we will term
 }
 else {
   Write-Output "terminate-instance: ASG could not decrement (we're already at MinSize)"
+  Write-Output "terminate-instance: Restarting buildkite-agent service"
+  Restart-Service buildkite-agent
 }
