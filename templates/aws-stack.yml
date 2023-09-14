@@ -183,7 +183,7 @@ Parameters:
   BuildkiteAgentScalerVersion:
     Description: Version of the buildkite-agent-scaler to use
     Type: String
-    Default: "1.5.0"
+    Default: "1.6.0"
 
   BuildkiteAgentTracingBackend:
     Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
@@ -300,10 +300,10 @@ Parameters:
     Default: 0
     MinValue: 0
 
-  ScalerEventScheduleRate:
-    Description: How often the event schedule for buildkite-agent-scaler is triggered (in minutes)
+  ScalerEventSchedulePeriod:
+    Description: How often the Event Schedule for buildkite-agent-scaler is triggered. Should be an expression with units, e.g. "30 seconds", "1 minute", "5 minutes".
     Type: String
-    Default: "1"
+    Default: "1 minute"
 
   ScalerMinPollInterval:
     Description: Minimum interval at which the auto scaler should poll the AWS API
@@ -1397,5 +1397,5 @@ Resources:
         AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
-        EventScheduleRate: !Ref ScalerEventScheduleRate
+        EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
