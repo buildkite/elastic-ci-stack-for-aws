@@ -14,26 +14,30 @@ import (
 const resolveFlags = unix.RESOLVE_BENEATH | unix.RESOLVE_NO_SYMLINKS | unix.RESOLVE_NO_MAGICLINKS | unix.RESOLVE_NO_XDEV
 
 // FS uses a file descriptor for a directory as the base of a fs.FS.
-type FS uintptr
+type FS struct {
+	file *os.File
+}
 
 // DirFS opens the directory dir, and returns an FS rooted at that directory.
-// It uses open(2) with O_PATH+O_DIRECTORY+O_CLOEXEC.
-func DirFS(dir string) (FS, error) {
-	bd, err := os.OpenFile(dir, unix.O_PATH|unix.O_DIRECTORY|unix.O_CLOEXEC, 0)
+// It uses open(2) with O_RDONLY+O_DIRECTORY+O_CLOEXEC. Note that this will
+// resolve symlinks in the path, so only use this to open a trusted base path.
+func DirFS(dir string) (*FS, error) {
+	f, err := os.OpenFile(dir, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_CLOEXEC, 0)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return FS(bd.Fd()), nil
+	return &FS{file: f}, nil
 }
 
 // Close closes the file descriptor.
-func (s FS) Close() error {
-	return unix.Close(int(s))
+func (s *FS) Close() error {
+	return s.file.Close()
 }
 
-// Open wraps openat2(2) with O_RDONLY+O_NOFOLLOW+O_CLOEXEC.
-func (s FS) Open(path string) (fs.File, error) {
-	fd, err := unix.Openat2(int(s), path, &unix.OpenHow{
+// Open wraps openat2(2) with O_RDONLY+O_NOFOLLOW+O_CLOEXEC, and prohibits
+// symlinks etc within the path.
+func (s *FS) Open(path string) (fs.File, error) {
+	fd, err := unix.Openat2(int(s.file.Fd()), path, &unix.OpenHow{
 		Flags:   unix.O_RDONLY | unix.O_NOFOLLOW | unix.O_CLOEXEC,
 		Mode:    0,
 		Resolve: resolveFlags,
@@ -46,19 +50,69 @@ func (s FS) Open(path string) (fs.File, error) {
 }
 
 // Lchown wraps fchownat(2) (with AT_SYMLINK_NOFOLLOW).
-func (s FS) Lchown(path string, uid, gid int) error {
-	return unix.Fchownat(int(s), path, uid, gid, unix.AT_SYMLINK_NOFOLLOW)
+func (s *FS) Lchown(path string, uid, gid int) error {
+	return unix.Fchownat(int(s.file.Fd()), path, uid, gid, unix.AT_SYMLINK_NOFOLLOW)
 }
 
-// Sub wraps openat2(2) (with O_PATH+O_DIRECTORY+O_NOFOLLOW+O_CLOEXEC), and returns an FS.
-func (s FS) Sub(dir string) (FS, error) {
-	subFD, err := unix.Openat2(int(s), dir, &unix.OpenHow{
-		Flags:   unix.O_PATH | unix.O_DIRECTORY | unix.O_NOFOLLOW | unix.O_CLOEXEC,
+// Sub wraps openat2(2) (with O_RDONLY+O_DIRECTORY+O_NOFOLLOW+O_CLOEXEC), and
+// returns an FS.
+func (s *FS) Sub(dir string) (*FS, error) {
+	fd, err := unix.Openat2(int(s.file.Fd()), dir, &unix.OpenHow{
+		Flags:   unix.O_RDONLY | unix.O_DIRECTORY | unix.O_NOFOLLOW | unix.O_CLOEXEC,
 		Mode:    0,
 		Resolve: resolveFlags,
 	})
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return FS(subFD), nil
+	return &FS{os.NewFile(uintptr(fd), dir)}, nil
+}
+
+// RecursiveChown lchowns everything within the receiver.
+func (s *FS) RecursiveChown(uid, gid int) error {
+	// Q: Why not fs.WalkDir(... s.Lchown(path, uid, gid) ... ) ?
+	// A: fs.WalkDir gives the callback a subpath to each item. So although
+	//    fs.WalkDir doesn't traverse symlinks, there's a race between walking
+	//    each path (no intermediate symlinks), and passing that path to lchown
+	//    (has possibly changed).
+	//    Solution: More openat.
+
+	if err := s.Lchown(".", uid, gid); err != nil {
+		return err
+	}
+
+	// This closure exists so sd.Close happens before the next loop iteration,
+	// rather than at the end of RecursiveChown.
+	chownSubdir := func(name string) error {
+		sd, err := s.Sub(name)
+		if err != nil {
+			return err
+		}
+		defer sd.Close()
+		return sd.RecursiveChown(uid, gid)
+	}
+
+	// The "file" within an *FS should always be a directory.
+	ds, err := s.file.ReadDir(-1)
+	if err != nil {
+		return err
+	}
+	for _, d := range ds {
+		if !d.IsDir() {
+			if err := s.Lchown(d.Name(), uid, gid); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// Make sure we're not about to recurse on a symlink.
+		if d.Type()&fs.ModeSymlink != 0 {
+			continue
+		}
+
+		if err := chownSubdir(d.Name()); err != nil {
+			return err
+		}
+	}
+	return nil
 }
