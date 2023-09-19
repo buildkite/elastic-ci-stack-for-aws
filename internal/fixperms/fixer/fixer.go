@@ -66,15 +66,10 @@ func Main(argv []string, baseDir, uname string) (string, int) {
 		return exitf(4, "buildkite-agent gid %q not an integer: %v", agentUser.Gid, err)
 	}
 
-	// fs.WalkDir to find everything within the directory.
-	// fchownat(2) to change the owner of the item.
-	// We allow symlinks here, but operate on the symlinks themselves.
-	if err := fs.WalkDir(pd, ".", func(path string, d fs.DirEntry, err error) error {
-		return pd.Lchown(path, uid, gid)
-	}); err != nil {
+	// Do the recursive chown.
+	if err := pd.RecursiveChown(uid, gid); err != nil {
 		return exitf(5, "Couldn't recursively chown %s: %v", subpath, err)
 	}
-
 	return exit0()
 }
 
