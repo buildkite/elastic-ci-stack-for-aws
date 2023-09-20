@@ -16,6 +16,12 @@ fi
 
 mkdir -p "build/"
 
+if [[ "$os" == "linux" ]] ; then
+  buildkite-agent artifact download "build/fix-perms-linux-${arch}" ./build
+  mv "build/fix-perms-linux-${arch}" packer/linux/conf/buildkite-agent/scripts/fix-buildkite-agent-builds-permissions
+  chmod 755 packer/linux/conf/buildkite-agent/scripts/fix-buildkite-agent-builds-permissions
+fi
+
 # Build a hash of packer files and the agent versions
 packer_files_sha=$(find Makefile "packer/${os}" plugins/ -type f -print0 | xargs -0 sha1sum | awk '{print $1}' | sort | sha1sum | awk '{print $1}')
 stable_agent_sha=$(curl -Lfs "https://download.buildkite.com/agent/stable/latest/${agent_binary}.sha256")

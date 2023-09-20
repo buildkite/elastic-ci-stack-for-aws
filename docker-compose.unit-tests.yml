@@ -1,9 +1,0 @@
-version: '3'
-
-services:
-  unit-tests:
-    image: bats/bats
-    volumes:
-      - .:/code:ro
-      - ./unit-tests/fixtures:/var/lib/buildkite-agent/builds:ro
-    command: /code/unit-tests
