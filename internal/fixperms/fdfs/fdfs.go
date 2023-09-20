@@ -5,6 +5,7 @@
 package fdfs
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 
@@ -43,15 +44,17 @@ func (s *FS) Open(path string) (fs.File, error) {
 		Resolve: resolveFlags,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("openat2(%d, %q): %w", s.file.Fd(), path, err)
 	}
-	f := os.NewFile(uintptr(fd), path)
-	return f, nil
+	return os.NewFile(uintptr(fd), path), nil
 }
 
 // Lchown wraps fchownat(2) (with AT_SYMLINK_NOFOLLOW).
 func (s *FS) Lchown(path string, uid, gid int) error {
-	return unix.Fchownat(int(s.file.Fd()), path, uid, gid, unix.AT_SYMLINK_NOFOLLOW)
+	if err := unix.Fchownat(int(s.file.Fd()), path, uid, gid, unix.AT_SYMLINK_NOFOLLOW); err != nil {
+		return fmt.Errorf("fchownat(%d, %q, %d, %d): %w", s.file.Fd(), path, uid, gid, err)
+	}
+	return nil
 }
 
 // Sub wraps openat2(2) (with O_RDONLY+O_DIRECTORY+O_NOFOLLOW+O_CLOEXEC), and
@@ -63,7 +66,7 @@ func (s *FS) Sub(dir string) (*FS, error) {
 		Resolve: resolveFlags,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("openat2(%d, %q): %w", s.file.Fd(), dir, err)
 	}
 	return &FS{os.NewFile(uintptr(fd), dir)}, nil
 }
@@ -105,7 +108,8 @@ func (s *FS) RecursiveChown(uid, gid int) error {
 			continue
 		}
 
-		// Make sure we're not about to recurse on a symlink.
+		// Defensively check we're not about to recurse on a symlink.
+		// (The openat2 call in s.Sub will block it anyway.)
 		if d.Type()&fs.ModeSymlink != 0 {
 			continue
 		}
