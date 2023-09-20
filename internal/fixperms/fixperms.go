@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/buildkite/elastic-ci-stack-for-aws/v6/internal/fixperms/fixer"
+	"github.com/buildkite/elastic-ci-stack-for-aws/v5/internal/fixperms/fixer"
 )
 
 // Files that are created by Docker containers end up with strange user and

@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/buildkite/elastic-ci-stack-for-aws/v6/internal/fixperms/fdfs"
+	"github.com/buildkite/elastic-ci-stack-for-aws/v5/internal/fixperms/fdfs"
 )
 
 // Main contains the higher-level operations of the permissions fixer.

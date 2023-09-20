@@ -1,4 +1,4 @@
-module github.com/buildkite/elastic-ci-stack-for-aws/v6
+module github.com/buildkite/elastic-ci-stack-for-aws/v5
 
 go 1.20
 
