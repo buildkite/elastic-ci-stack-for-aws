@@ -4,6 +4,8 @@ services:
   fixperms-tests:
     image: golang:latest
     working_dir: /code
+    environment:
+      CGO_ENABLED: 0
     volumes:
       - ..:/code:ro
     command: go test -v ./...
@@ -11,6 +13,8 @@ services:
   fixperms-build:
     image: golang:latest
     working_dir: /code
+    environment:
+      CGO_ENABLED: 0
     volumes:
       - ..:/code
       - /var/lib/buildkite-agent/git-mirrors:/var/lib/buildkite-agent/git-mirrors
