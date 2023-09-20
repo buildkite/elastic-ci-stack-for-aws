@@ -4,20 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.7.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.7.1) (2023-09-20)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.7.0...v6.7.1)
+
+### Security
+⚠️ This release fixes a medium-severity security vulnerability. We recommend upgrading to v6.7.1 or v5.22.5.
+
+- Affected versions: All prior versions of Elastic CI Stack (except v5.22.5). v6.7.0 and v5.22.4 contained a partial fix.
+- Impact: Privilege escalation to root on Linux agent instances
+- Required privileges: Users that can run user-controlled commands on agents (e.g. by pushing a branch to a repo that triggers a build with those changes)
+- Attack vector: A specially crafted build can abuse the `fix-buildkite-agent-builds-permissions` script to run commands as root on subsequent builds
+- Fix: Improved input validation and file handling [#1219](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1219), [#1221](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1221) (@DrJosh9000)
+- Alternative workarounds: Deploy a [pre-bootstrap hook](https://buildkite.com/docs/agent/v3/securing#strict-checks-using-a-pre-bootstrap-hook) to prevent execution of `fix-buildkite-agent-builds-permissions` during a build
+
+## [v5.22.5](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v5.22.5) (2023-09-14)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.4...v5.22.5)
+
+### Security
+⚠️ This release fixes a medium-severity security vulnerability (same as described in v6.7.1).
+- Fix: Improved input validation and file handling [#1220](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1220) (@DrJosh9000)
+
 ## [v6.7.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.7.0) (2023-09-14)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.6.0...v6.7.0)
 
 ### Security
-This release fixes a medium-severity security vulnerability. We recommend upgrading to v6.7.0 or v5.22.4.
-
-- Affected versions: All prior versions of Elastic CI Stack (except v5.22.4)
-- Impact: Privilege escalation to root on Linux agent instances
-- Required privileges: Users that can run user-controlled commands on agents (e.g. by pushing a branch to a repo that triggers a build with those changes)
-- Attack vector: A specially crafted build can abuse the `fix-buildkite-agent-builds-permissions` script to run commands as root on subsequent builds
-- Fix: Improved input validation in `fix-buildkite-agent-builds-permissions` [#1212](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1212) (@DrJosh9000)
-- Alternative workarounds: Deploy a [pre-bootstrap hook](https://buildkite.com/docs/agent/v3/securing#strict-checks-using-a-pre-bootstrap-hook) to prevent execution of `fix-buildkite-agent-builds-permissions` during a build
+⚠️ This release **partially** fixes a medium-severity security vulnerability. We recommend upgrading to v6.7.1 or v5.22.5.
 
 ### Changed
+- Prevent permission script acting on symlinks [#1212](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1212) (@DrJosh9000)
 - Update to scaler v1.6.0 [#1213](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1213) (@DrJosh9000)
 - Bump buildkite-agent to v3.55.0 [#1214](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1214) (@DrJosh9000)
 
@@ -28,8 +42,10 @@ This release fixes a medium-severity security vulnerability. We recommend upgrad
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v5.22.3...v5.22.4)
 
 ### Security
-This release fixes a medium-severity security vulnerability (same as described in v6.7.0).
-- Fix: Improved input validation in `fix-buildkite-agent-builds-permissions` [#1215](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1215) (@DrJosh9000)
+⚠️ This release **partially** fixes a medium-severity security vulnerability (same as described in v6.7.1). We recommend upgrading to v6.7.1 or v5.22.5.
+
+### Changed
+- Prevent permission script acting on symlinks [#1215](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1215) (@DrJosh9000)
 
 ## [v6.6.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.6.0) (2023-09-07)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.5.0...v6.6.0)
