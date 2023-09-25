@@ -1,4 +1,4 @@
-param ([parameter(Mandatory=$true)][string]$From, [parameter(Mandatory=$true)][string]$To)
+param ([parameter(Mandatory = $true)][string]$From, [parameter(Mandatory = $true)][string]$To)
 
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"

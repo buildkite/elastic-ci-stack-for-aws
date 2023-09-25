@@ -6,11 +6,11 @@ Set-PSDebug -Trace 2
 $ErrorActionPreference = "Stop"
 
 function on_error {
-  $errorLine=$_.InvocationInfo.ScriptLineNumber
-  $errorMessage=$_.Exception
+  $errorLine = $_.InvocationInfo.ScriptLineNumber
+  $errorMessage = $_.Exception
 
-  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
-  $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
+  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60' } http://169.254.169.254/latest/api/token).content
+  $instance_id = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token } http://169.254.169.254/latest/meta-data/instance-id).content
 
   aws autoscaling set-instance-health `
     --instance-id "$instance_id" `
@@ -24,13 +24,13 @@ function on_error {
     --exit-code 1
 }
 
-trap {on_error}
+trap { on_error }
 
-$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
-$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
-$DOCKER_VERSION=(docker --version).split(" ")[2].Replace(",","")
+$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60' } http://169.254.169.254/latest/api/token).content
+$Env:INSTANCE_ID = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token } http://169.254.169.254/latest/meta-data/instance-id).content
+$DOCKER_VERSION = (docker --version).split(" ")[2].Replace(",", "")
 
-$PLUGINS_ENABLED=@()
+$PLUGINS_ENABLED = @()
 If ($Env:SECRETS_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "secrets" }
 If ($Env:ECR_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "ecr" }
 If ($Env:DOCKER_LOGIN_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "docker-login" }
@@ -93,7 +93,7 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
 
 Copy-Item -Path C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe -Destination C:\buildkite-agent\bin\buildkite-agent.exe
 
-$agent_metadata=@(
+$agent_metadata = @(
   "queue=${Env:BUILDKITE_QUEUE}"
   "docker=${DOCKER_VERSION}"
   "stack=${Env:BUILDKITE_STACK_NAME}"
@@ -114,7 +114,8 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS -eq "true") {
 # simplify the avaliable parameters on the stack
 If ($Env:BUILDKITE_AGENT_TIMESTAMP_LINES -eq "true") {
   $Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS = "true"
-} Else {
+}
+Else {
   $Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS = "false"
 }
 
@@ -123,7 +124,7 @@ If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PA
   $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
 }
 
-$OFS=","
+$OFS = ","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
@@ -144,14 +145,14 @@ disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
 "@
-$OFS=" "
+$OFS = " "
 
 nssm set lifecycled AppEnvironmentExtra :AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
 Restart-Service lifecycled
 
 # wait for docker to start
-$next_wait_time=0
+$next_wait_time = 0
 do {
   Write-Output "Sleeping $next_wait_time seconds"
   Start-Sleep -Seconds ($next_wait_time++)
@@ -246,9 +247,9 @@ cfn-signal `
   --stack "$Env:BUILDKITE_STACK_NAME" `
   --resource "AgentAutoScaleGroup" `
   --exit-code 0 ; if (-not $?) {
-    # This will fail if the stack has already completed, for instance if there is a min size
-    # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
-    Write-Output "Signal failed"
-  }
+  # This will fail if the stack has already completed, for instance if there is a min size
+  # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
+  Write-Output "Signal failed"
+}
 
 Set-PSDebug -Off
