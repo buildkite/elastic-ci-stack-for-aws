@@ -23,7 +23,7 @@ if [[ $BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB == "true" ]]; then
   #
   # We need to do this because if the call to terminate fails, the systemd unit will start up a new buildkite-agent process
   # on this machine, with state left over from the last agent, which is the opposite of what we want when $BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB is true.
-  terminate "$region" "$instance_id" || shutdown
+  terminate "$region" "$instance_id" || shutdown now
 else
   # If we're not in terminate-after-job mode, then it's fine for this to fail, as it'll be as if the instance never got shut down.
   terminate "$region" "$instance_id"

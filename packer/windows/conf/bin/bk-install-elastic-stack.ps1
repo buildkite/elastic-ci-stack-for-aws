@@ -212,13 +212,18 @@ Write-Output "Starting the Buildkite Agent"
 
 nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 nssm set buildkite-agent ObjectName .\$UserName $Password
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Path C:\buildkite-agent\env -PathType leaf)) {
   foreach ($var in Get-Content C:\buildkite-agent\env) {
@@ -227,14 +232,15 @@ If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Pat
   }
 }
 
-nssm set buildkite-agent AppEnvironmentExtra BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
+nssm set buildkite-agent AppEnvironmentExtra BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppExit Default Restart
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 nssm set buildkite-agent AppRestartDelay 10000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
