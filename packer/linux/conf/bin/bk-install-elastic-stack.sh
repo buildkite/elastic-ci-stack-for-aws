@@ -357,6 +357,7 @@ done
 echo "Waited $next_wait_time times for docker to start. We will exit if it still has not started."
 check_docker
 
+systemctl set-environment "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}"
 echo Starting buildkite-agent...
 systemctl enable --now buildkite-agent
 
