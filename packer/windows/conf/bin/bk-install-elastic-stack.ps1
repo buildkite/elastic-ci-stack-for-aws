@@ -227,6 +227,9 @@ If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Pat
   }
 }
 
+nssm set buildkite-agent AppEnvironmentExtra BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppExit Default Restart
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
