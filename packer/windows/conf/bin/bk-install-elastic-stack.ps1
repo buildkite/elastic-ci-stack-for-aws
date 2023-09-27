@@ -146,7 +146,7 @@ tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
 "@
 $OFS=" "
 
-nssm set lifecycled AppEnvironmentExtra :AWS_REGION=$Env:AWS_REGION
+nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
 Restart-Service lifecycled
 
@@ -222,16 +222,16 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
+nssm set buildkite-agent AppEnvironmentExtra +HOME=C:\buildkite-agent
 
 If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Path C:\buildkite-agent\env -PathType leaf)) {
   foreach ($var in Get-Content C:\buildkite-agent\env) {
-    nssm set buildkite-agent AppEnvironmentExtra $var
+    nssm set buildkite-agent AppEnvironmentExtra "+$var"
     If ($lastexitcode -ne 0) { Exit $lastexitcode }
   }
 }
 
-nssm set buildkite-agent AppEnvironmentExtra BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
+nssm set buildkite-agent AppEnvironmentExtra +BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 nssm set buildkite-agent AppExit Default Restart

@@ -9,8 +9,10 @@ aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --in
 if ($lastexitcode -eq 0) { # If autoscaling request was successful, we will terminate
   Write-Output "terminate-instance: disabling buildkite-agent service"
   nssm stop buildkite-agent
-}
-else {
+} else {
   Write-Output "terminate-instance: ASG could not decrement (we're already at minSize)"
-  Stop-Computer -ComputerName "localhost" -Force
+  if ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
+    Write-Output "terminate-instance: terminating instance anyway"
+    Stop-Computer -ComputerName "localhost" -Force
+  }
 }
