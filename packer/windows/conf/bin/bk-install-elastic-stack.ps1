@@ -223,7 +223,6 @@ nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 nssm set buildkite-agent AppEnvironmentExtra :HOME=C:\buildkite-agent
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Path C:\buildkite-agent\env -PathType leaf)) {
   foreach ($var in Get-Content C:\buildkite-agent\env) {
