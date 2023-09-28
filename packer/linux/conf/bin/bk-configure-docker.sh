@@ -39,14 +39,5 @@ fi
 # Customise address pools
 cat <<<"$(jq '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' /etc/docker/daemon.json)" >/etc/docker/daemon.json
 
-# See https://docs.docker.com/build/building/multi-platform/
-echo Installing qemu binfmt for multiarch...
-docker run \
-  --privileged \
-  --userns=host \
-  --rm \
-  "tonistiigi/binfmt:${QEMU_BINFMT_TAG}" \
-    --install all
-
 systemctl start docker-low-disk-gc.service
 systemctl restart docker
