@@ -78,6 +78,7 @@ docker run \
   --privileged \
   --userns=host \
   --rm \
+  --pull=never \
   "tonistiigi/binfmt:${QEMU_BINFMT_TAG}" \
     --install all
 
