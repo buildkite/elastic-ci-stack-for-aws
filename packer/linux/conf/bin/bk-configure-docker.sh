@@ -72,15 +72,18 @@ cat <<<"$(jq \
   /etc/docker/daemon.json \
 )" >/etc/docker/daemon.json
 
-# See https://docs.docker.com/build/building/multi-platform/
 echo Installing qemu binfmt for multiarch...
-docker run \
+if ! docker run \
   --privileged \
   --userns=host \
   --rm \
   --pull=never \
   "tonistiigi/binfmt:${QEMU_BINFMT_TAG}" \
-    --install all
+    --install all; then
+  echo Failed to install binfmt
+  docker image ls
+  exit 1
+fi
 
 echo Cleaning up docker images...
 systemctl start docker-low-disk-gc.service
