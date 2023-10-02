@@ -15,7 +15,7 @@ on_error() {
       --instance-id "$INSTANCE_ID" \
       --health-status Unhealthy
     then
-      echo Failed to set instance health to unhealthy >&2
+      echo Failed to set instance health to unhealthy.
     fi
   fi
 
@@ -32,7 +32,7 @@ on_error() {
 trap 'on_error $LINENO' ERR
 
 on_exit() {
-  echo "${BASH_SOURCE[0]} completed successfully." >&2
+  echo "${BASH_SOURCE[0]} completed successfully."
 }
 
 trap on_exit EXIT
@@ -44,7 +44,7 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 # This needs to happen first so that the error reporting works
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location http://169.254.169.254/latest/api/token)
 INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location http://169.254.169.254/latest/meta-data/instance-id)
-echo "Detected INSTANCE_ID=$INSTANCE_ID" >&2
+echo "Detected INSTANCE_ID=$INSTANCE_ID"
 
 # This script is run on every boot so that we can gracefully recover from hard failures (eg. kernel panics) during
 # any previous attempts. If a previous run is detected as started but not complete then we will fail this run and mark
@@ -52,7 +52,7 @@ echo "Detected INSTANCE_ID=$INSTANCE_ID" >&2
 STATUS_FILE=/var/log/elastic-stack-bootstrap-status
 
 check_status() {
-  echo "Checking status file $STATUS_FILE..." >&2
+  echo "Checking status file $STATUS_FILE..."
 
   if [[ -f "$STATUS_FILE" ]]; then
     if [[ "$(<"$STATUS_FILE")" == "Completed" ]]; then
@@ -74,16 +74,16 @@ case $(uname -m) in
   aarch64)   ARCH=arm64;;
   *)         ARCH=unknown;;
 esac
-echo "Detected ARCH=$ARCH" >&2
+echo "Detected ARCH=$ARCH"
 
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
-echo "Detected DOCKER_VERSION=$DOCKER_VERSION" >&2
+echo "Detected DOCKER_VERSION=$DOCKER_VERSION"
 
 PLUGINS_ENABLED=()
 [[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
 [[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
 [[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker-login")
-echo "The following plugins will be enabled: ${PLUGINS_ENABLED[*]-}" >&2
+echo "The following plugins will be enabled: ${PLUGINS_ENABLED[*]-}"
 
 # cfn-env is sourced by the environment hook in builds
 # DO NOT PUT SECRETES IN HERE, they will appear in both the cloudwatch and
@@ -95,7 +95,7 @@ echo "The following plugins will be enabled: ${PLUGINS_ENABLED[*]-}" >&2
 
 # Step 1: Helper function.  Note that we clobber the target file and DO NOT apply variable
 # substitution, this is controlled by the double-quoted "EOF".
-echo Writing Phase 1/2 for /var/lib/buildkite-agent/cfn-env helper function... >&2
+echo Writing Phase 1/2 for /var/lib/buildkite-agent/cfn-env helper function...
 cat <<-"EOF" >/var/lib/buildkite-agent/cfn-env
 	# The Buildkite agent sets a number of variables such as AWS_DEFAULT_REGION to fixed values which
 	# are determined at AMI-build-time.  However, sometimes a user might want to override such variables
@@ -126,7 +126,7 @@ EOF
 
 # Step 2: Populate the default variable values.  This time, we append to the file, and allow
 # variable substitution.
-echo Writing Phase 2/2 for /var/lib/buildkite-agent/cfn-env helper function... >&2
+echo Writing Phase 2/2 for /var/lib/buildkite-agent/cfn-env helper function...
 cat <<EOF >>/var/lib/buildkite-agent/cfn-env
 
 set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTANCE"
@@ -143,18 +143,18 @@ set_unless_present "AWS_REGION" "$AWS_REGION"
 EOF
 
 # We warned about not putting secrets in this file
-echo Wrote to /var/lib/buildkite-agent/cfn-env: >&2
-cat /var/lib/buildkite-agent/cfn-env >&2
+echo Wrote to /var/lib/buildkite-agent/cfn-env:
+cat /var/lib/buildkite-agent/cfn-env
 echo
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]]; then
-  echo Downloading buildkite-agent edge... >&2
+  echo Downloading buildkite-agent edge...
   curl -Lsf -o /usr/bin/buildkite-agent-edge \
     "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${ARCH}"
   chmod +x /usr/bin/buildkite-agent-edge
   buildkite-agent-edge --version
 else
-  echo Not using buildkite-agent edge. >&2
+  echo Not using buildkite-agent edge.
 fi
 
 if [[ "${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" != "" ]]; then
@@ -162,10 +162,10 @@ if [[ "${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" != "" ]]; then
     >/etc/sudoers.d/buildkite-agent-additional
   chmod 440 /etc/sudoers.d/buildkite-agent-additional
 
-  echo Wrote to /etc/sudoers.d/buildkite-agent-additional... >&2
-  cat /etc/sudoers.d/buildkite-agent-additional >&2
+  echo Wrote to /etc/sudoers.d/buildkite-agent-additional...
+  cat /etc/sudoers.d/buildkite-agent-additional
 else
-  echo No additional sudo permissions. >&2
+  echo No additional sudo permissions.
 fi
 
 # Choose the right agent binary
@@ -178,51 +178,51 @@ agent_metadata=(
   "buildkite-aws-stack=${BUILDKITE_STACK_VERSION}"
 )
 
-echo "Initial agent metadata: ${agent_metadata[*]-}" >&2
+echo "Initial agent metadata: ${agent_metadata[*]-}"
 if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]]; then
   IFS=',' read -r -a extra_agent_metadata <<<"${BUILDKITE_AGENT_TAGS:-}"
   agent_metadata=("${agent_metadata[@]}" "${extra_agent_metadata[@]}")
 fi
-echo "Agent metadata after splitting commas: ${agent_metadata[*]-}" >&2
+echo "Agent metadata after splitting commas: ${agent_metadata[*]-}"
 
 # Enable git-mirrors
 BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
   BUILDKITE_AGENT_GIT_MIRRORS_PATH=/var/lib/buildkite-agent/git-mirrors
-  echo "git-mirrors enabled at $BUILDKITE_AGENT_GIT_MIRRORS_PATH" >&2
+  echo "git-mirrors enabled at $BUILDKITE_AGENT_GIT_MIRRORS_PATH"
   mkdir -p "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 
   if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
-    echo Mounting git-mirrors to instance storage... >&2
+    echo Mounting git-mirrors to instance storage...
 
     EPHEMERAL_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
-    echo "Creating ephemeral git-mirrors direcotry at $EPHEMERAL_GIT_MIRRORS_PATH" >&2
+    echo "Creating ephemeral git-mirrors direcotry at $EPHEMERAL_GIT_MIRRORS_PATH"
     mkdir -p "${EPHEMERAL_GIT_MIRRORS_PATH}"
 
-    echo Bind mounting ephemeral git-mirror directory to git-mirrors path... >&2
+    echo Bind mounting ephemeral git-mirror directory to git-mirrors path...
     mount -o bind "${EPHEMERAL_GIT_MIRRORS_PATH}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 
-    echo Writing bind mount to fstab... >&2
+    echo Writing bind mount to fstab...
     echo "${EPHEMERAL_GIT_MIRRORS_PATH} ${BUILDKITE_AGENT_GIT_MIRRORS_PATH} none defaults,bind 0 0" >>/etc/fstab
 
-    echo fstab is now: >&2
-    cat /etc/fstab >&2
+    echo fstab is now:
+    cat /etc/fstab
     echo
   else
-    echo Not mounting git-mirrors to instance storage as instance storage is disabled. >&2
+    echo Not mounting git-mirrors to instance storage as instance storage is disabled.
   fi
 
-  echo Setting ownership of git-mirrors directory to buildkite-agent... >&2
+  echo Setting ownership of git-mirrors directory to buildkite-agent...
   chown buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
 else
-  echo git-mirrors disabled. >&2
+  echo git-mirrors disabled.
 fi
-echo "BUILDKITE_AGENT_GIT_MIRRORS_PATH is $BUILDKITE_AGENT_GIT_MIRRORS_PATH" >&2
+echo "BUILDKITE_AGENT_GIT_MIRRORS_PATH is $BUILDKITE_AGENT_GIT_MIRRORS_PATH"
 
 BUILDKITE_AGENT_BUILD_PATH="/var/lib/buildkite-agent/builds"
 mkdir -p "${BUILDKITE_AGENT_BUILD_PATH}"
 if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
-  echo Bind mounting build path to instance storage... >&2
+  echo Bind mounting build path to instance storage...
 
   EPHEMERAL_BUILD_PATH="/mnt/ephemeral/builds"
   mkdir -p "${EPHEMERAL_BUILD_PATH}"
@@ -230,13 +230,13 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
   mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
   echo "${EPHEMERAL_BUILD_PATH} ${BUILDKITE_AGENT_BUILD_PATH} none defaults,bind 0 0" >>/etc/fstab
 
-  echo fstab is now: >&2
-  cat /etc/fstab >&2
+  echo fstab is now:
+  cat /etc/fstab
 else
-  echo Not mounting build path to instance storage as instance storage is disabled. >&2
+  echo Not mounting build path to instance storage as instance storage is disabled.
 fi
 
-echo Setting ownership of build path to buildkite-agent. >&2
+echo Setting ownership of build path to buildkite-agent.
 chown buildkite-agent: "$BUILDKITE_AGENT_BUILD_PATH"
 
 # Either you can have timestamp-lines xor ansi-timestamps.
@@ -249,11 +249,11 @@ else
   BUILDKITE_AGENT_TIMESTAMPS_LINES="false"
   BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="false"
 fi
-echo Set \$BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS to \$BUILDKITE_AGENT_TIMESTAMP_LINES >&2
-echo "BUILDKITE_AGENT_TIMESTAMP_LINES is $BUILDKITE_AGENT_TIMESTAMPS_LINES" >&2
-echo "BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS is $BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS" >&2
+echo Setting \$BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS to \$BUILDKITE_AGENT_TIMESTAMP_LINES
+echo "BUILDKITE_AGENT_TIMESTAMP_LINES is $BUILDKITE_AGENT_TIMESTAMPS_LINES"
+echo "BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS is $BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS"
 
-echo "Setting \$BUILDKITE_AGENT_TOKEN from SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH" >&2
+echo "Setting \$BUILDKITE_AGENT_TOKEN from SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH"
 BUILDKITE_AGENT_TOKEN="$(
   aws ssm get-parameter \
     --name "$BUILDKITE_AGENT_TOKEN_PATH" \
@@ -285,17 +285,17 @@ cancel-grace-period=60
 EOF
 
 if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
-  echo "Fetching env file from ${BUILDKITE_ENV_FILE_URL}..." >&2
+  echo "Fetching env file from ${BUILDKITE_ENV_FILE_URL}..."
   /usr/local/bin/bk-fetch.sh "${BUILDKITE_ENV_FILE_URL}" /var/lib/buildkite-agent/env
 else
-  echo No env file to fetch. >&2
+  echo No env file to fetch.
 fi
 
-echo Setting ownership of /etc/buildkite-agent/buildkite-agent.cfg to buildkite-agent... >&2
+echo Setting ownership of /etc/buildkite-agent/buildkite-agent.cfg to buildkite-agent...
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
 if [[ -n "$BUILDKITE_AUTHORIZED_USERS_URL" ]]; then
-  echo Writing authorized user fetching script... >&2
+  echo Writing authorized user fetching script...
   cat <<-EOF | tee /usr/local/bin/refresh_authorized_keys
 		/usr/local/bin/bk-fetch.sh "$BUILDKITE_AUTHORIZED_USERS_URL" /tmp/authorized_keys
 		mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
@@ -303,44 +303,44 @@ if [[ -n "$BUILDKITE_AUTHORIZED_USERS_URL" ]]; then
 		chown ec2-user: /home/ec2-user/.ssh/authorized_keys
 	EOF
 
-  echo Setting ownership of /usr/local/bin/refresh_authorized_keys to root... >&2
+  echo Setting ownership of /usr/local/bin/refresh_authorized_keys to root...
   chmod +x /usr/local/bin/refresh_authorized_keys
 
-  echo Running authorized user fetching script... >&2
+  echo Running authorized user fetching script...
   /usr/local/bin/refresh_authorized_keys
 
-  echo Enabling authorized user fetching timer... >&2
+  echo Enabling authorized user fetching timer...
   systemctl enable refresh_authorized_keys.timer
 else
-  echo No authorized users to fetch >&2
+  echo No authorized users to fetch.
 fi
 
-echo Installing git-lfs for buildkite-agent user... >&2
+echo Installing git-lfs for buildkite-agent user...
 su buildkite-agent -l -c 'git lfs install'
 
 if [[ -n "$BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" ]]; then
-  echo "Running bootstrap script from $BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT..." >&2
+  echo "Running bootstrap script from $BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT..."
   /usr/local/bin/bk-fetch.sh "$BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" /tmp/elastic_bootstrap
   bash </tmp/elastic_bootstrap
   rm /tmp/elastic_bootstrap
 else
-  echo No bootstrap script to run. >&2
+  echo No bootstrap script to run.
 fi
 
-echo Writing lifecycled configuration... >&2
+echo Writing lifecycled configuration...
 cat <<EOF | tee /etc/lifecycled
 AWS_REGION=$AWS_REGION
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
 EOF
 
-echo Starting lifecycled... >&2
+echo Starting lifecycled...
 systemctl enable --now lifecycled.service
 
-echo Waiting for docker to start... >&2
+echo Waiting for docker to start...
 check_docker() {
   if ! docker ps >/dev/null; then
-    echo "Failed to contact docker."
+    echo Failed to contact docker.
     return 1
   fi
 }
@@ -350,14 +350,13 @@ until check_docker || [[ $next_wait_time -eq 5 ]]; do
   sleep $((next_wait_time++))
 done
 
-echo "Waited $next_wait_time times for docker to start." >&2
-echo We will exit if it still has not started. >&2
+echo "Waited $next_wait_time times for docker to start. We will exit if it still has not started."
 check_docker
 
-echo Starting buildkite-agent... >&2
+echo Starting buildkite-agent...
 systemctl enable --now buildkite-agent
 
-echo Signaling success to CloudFormation... >&2
+echo Signaling success to CloudFormation...
 # This will fail if the stack has already completed, for instance if there is a min size
 # of 1 and this is the 2nd instance. This is ok, so we just ignore the error
 cfn-signal \
