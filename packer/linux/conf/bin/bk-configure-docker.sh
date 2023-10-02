@@ -17,7 +17,7 @@ on_exit() {
   echo "${BASH_SOURCE[0]} completed successfully."
 }
 
-trap on_exit EXIT
+trap '[[ $? = 0 ]] && on_exit' EXIT
 
 ## Configure docker before system starts
 

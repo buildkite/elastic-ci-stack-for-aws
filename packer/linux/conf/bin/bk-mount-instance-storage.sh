@@ -16,7 +16,7 @@ on_exit() {
   echo "${BASH_SOURCE[0]} completed successfully."
 }
 
-trap on_exit EXIT
+trap '[[ $? = 0 ]] && on_exit' EXIT
 
 # Write to system console and to our log file
 # See https://alestic.com/2010/12/ec2-user-data-output/
