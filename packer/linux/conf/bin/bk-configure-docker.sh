@@ -30,8 +30,9 @@ echo Sourcing /usr/local/lib/bk-configure-docker.sh...
 echo This file is written by the scripts in packer/scripts.
 echo Note that the path is /usr/local/lib, not /usr/local/bin.
 echo Contents of /usr/local/lib/bk-configure-docker.sh:
+cat /usr/local/lib/bk-configure-docker.sh
 # shellcheck disable=SC1091
-tee /dev/stderr < /usr/local/lib/bk-configure-docker.sh | source /dev/stdin
+source /usr/local/lib/bk-configure-docker.sh
 
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
