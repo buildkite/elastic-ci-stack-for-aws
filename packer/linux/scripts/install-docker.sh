@@ -20,8 +20,6 @@ echo "Adding docker systemd timers..."
 sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
 sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
 sudo chmod +x /usr/local/bin/docker-*
-sudo systemctl daemon-reload
-sudo systemctl enable docker-gc.timer docker-low-disk-gc.timer
 
 echo "Installing docker buildx..."
 DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins
