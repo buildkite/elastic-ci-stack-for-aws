@@ -5,6 +5,3 @@ Wants=docker-low-disk-gc.timer
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/docker-low-disk-gc
-
-[Install]
-WantedBy=multi-user.target
