@@ -41,6 +41,8 @@ trap '[[ $? = 0 ]] && on_exit' EXIT
 # See https://alestic.com/2010/12/ec2-user-data-output/
 exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/console) 2>&1
 
+echo "Starting ${BASH_SOURCE[0]}..."
+
 # This needs to happen first so that the error reporting works
 token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location http://169.254.169.254/latest/api/token)
 INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location http://169.254.169.254/latest/meta-data/instance-id)

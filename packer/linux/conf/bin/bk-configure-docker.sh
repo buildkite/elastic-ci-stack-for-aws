@@ -25,6 +25,7 @@ trap '[[ $? = 0 ]] && on_exit' EXIT
 # See https://alestic.com/2010/12/ec2-user-data-output/
 exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/console) 2>&1
 
+echo "Starting ${BASH_SOURCE[0]}..."
 
 echo Sourcing /usr/local/lib/bk-configure-docker.sh...
 echo This file is written by the scripts in packer/scripts.
