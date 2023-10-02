@@ -26,9 +26,12 @@ trap '[[ $? = 0 ]] && on_exit' EXIT
 exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/console) 2>&1
 
 
-echo Reading variables from AMI creation...
+echo Sourcing /usr/local/lib/bk-configure-docker.sh...
+echo This file is written by the scripts in packer/scripts.
+echo Note that the path is /usr/local/lib, not /usr/local/bin.
+echo Contents of /usr/local/lib/bk-configure-docker.sh:
 # shellcheck disable=SC1091
-source /usr/local/lib/bk-configure-docker.sh
+tee /dev/stderr < /usr/local/lib/bk-configure-docker.sh | source /dev/stdin
 
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
