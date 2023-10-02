@@ -34,6 +34,21 @@ cat /usr/local/lib/bk-configure-docker.sh
 # shellcheck disable=SC1091
 source /usr/local/lib/bk-configure-docker.sh
 
+docker image ls
+
+echo Installing qemu binfmt for multiarch...
+if ! docker run \
+  --privileged \
+  --userns=host \
+  --rm \
+  --pull=never \
+  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
+    --install all; then
+  echo Failed to install binfmt
+  docker image ls
+  exit 1
+fi
+
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
 
@@ -75,19 +90,6 @@ cat <<<"$(jq \
   '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' \
   /etc/docker/daemon.json \
 )" >/etc/docker/daemon.json
-
-echo Installing qemu binfmt for multiarch...
-if ! docker run \
-  --privileged \
-  --userns=host \
-  --rm \
-  --pull=never \
-  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
-    --install all; then
-  echo Failed to install binfmt
-  docker image ls
-  exit 1
-fi
 
 echo Cleaning up docker images...
 systemctl start docker-low-disk-gc.service
