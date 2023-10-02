@@ -67,9 +67,9 @@ elif [[ "${#devices[@]}" -gt 1 ]]; then
   echo Setting readahead to 64k...
   blockdev --setra 65536 "$logicalname"
 else
-  echo Expected at least once nvme device, found: "${devices[*]}"
+  echo Expected at least one nvme device, found: "${devices[*]}"
   echo
-  echo This error is unexpected. Please contact support@buildkite.com
+  echo This error is unexpected. Please contact support@buildkite.com.
   exit 1
 fi
 

@@ -185,7 +185,7 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]]; then
 fi
 echo "Agent metadata after splitting commas: ${agent_metadata[*]-}"
 
-# Enable git-mirrors
+# Enable git-mirrors if a git mirrors path is provided
 BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
   BUILDKITE_AGENT_GIT_MIRRORS_PATH=/var/lib/buildkite-agent/git-mirrors
