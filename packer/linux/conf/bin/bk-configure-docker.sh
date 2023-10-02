@@ -81,7 +81,7 @@ if ! docker run \
   --userns=host \
   --rm \
   --pull=never \
-  "tonistiigi/binfmt:${QEMU_BINFMT_TAG}" \
+  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
     --install all; then
   echo Failed to install binfmt
   docker image ls
