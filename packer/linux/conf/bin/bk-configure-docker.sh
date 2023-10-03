@@ -35,17 +35,16 @@ cat /usr/local/lib/bk-configure-docker.sh
 # shellcheck disable=SC1091
 source /usr/local/lib/bk-configure-docker.sh
 
-docker image ls
-
 echo Installing qemu binfmt for multiarch...
 if ! docker run \
   --privileged \
   --userns=host \
-  --rm \
   --pull=never \
+  --rm \
   "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
     --install all; then
-  echo Failed to install binfmt
+  echo Failed to install binfmt.
+  echo Avaliable docker images:
   docker image ls
   exit 1
 fi
