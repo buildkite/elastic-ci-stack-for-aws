@@ -92,10 +92,10 @@ cat <<<"$(jq \
 )" >/etc/docker/daemon.json
 
 echo Cleaning up docker images...
-sudo systemctl start docker-low-disk-gc.service
+systemctl start docker-low-disk-gc.service
 
 echo Enabling docker-gc timers...
-sudo systemctl enable docker-gc.timer docker-low-disk-gc.timer
+systemctl enable docker-gc.timer docker-low-disk-gc.timer
 
 echo Restarting docker daemon...
 systemctl restart docker
