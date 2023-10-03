@@ -42,7 +42,8 @@ if ! docker run \
   --pull=never \
   --rm \
   "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
-    --install all; then
+    --install all
+then
   echo Failed to install binfmt.
   echo Avaliable docker images:
   docker image ls
