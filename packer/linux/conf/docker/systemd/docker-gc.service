@@ -5,6 +5,3 @@ Wants=docker-gc.timer
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/docker-gc
-
-[Install]
-WantedBy=multi-user.target

@@ -25,10 +25,30 @@ trap '[[ $? = 0 ]] && on_exit' EXIT
 # See https://alestic.com/2010/12/ec2-user-data-output/
 exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/console) 2>&1
 
+echo "Starting ${BASH_SOURCE[0]}..."
 
-echo Reading variables from AMI creation...
+echo Sourcing /usr/local/lib/bk-configure-docker.sh...
+echo This file is written by the scripts in packer/scripts.
+echo Note that the path is /usr/local/lib, not /usr/local/bin.
+echo Contents of /usr/local/lib/bk-configure-docker.sh:
+cat /usr/local/lib/bk-configure-docker.sh
 # shellcheck disable=SC1091
 source /usr/local/lib/bk-configure-docker.sh
+
+echo Installing qemu binfmt for multiarch...
+if ! docker run \
+  --privileged \
+  --userns=host \
+  --pull=never \
+  --rm \
+  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
+    --install all
+then
+  echo Failed to install binfmt.
+  echo Avaliable docker images:
+  docker image ls
+  exit 1
+fi
 
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
@@ -72,17 +92,11 @@ cat <<<"$(jq \
   /etc/docker/daemon.json \
 )" >/etc/docker/daemon.json
 
-# See https://docs.docker.com/build/building/multi-platform/
-echo Installing qemu binfmt for multiarch...
-docker run \
-  --privileged \
-  --userns=host \
-  --rm \
-  "tonistiigi/binfmt:${QEMU_BINFMT_TAG}" \
-    --install all
-
 echo Cleaning up docker images...
 systemctl start docker-low-disk-gc.service
+
+echo Enabling docker-gc timers...
+systemctl enable docker-gc.timer docker-low-disk-gc.timer
 
 echo Restarting docker daemon...
 systemctl restart docker
