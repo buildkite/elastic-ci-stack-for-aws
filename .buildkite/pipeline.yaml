@@ -7,6 +7,12 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
+  - label: ":bash: shfmt"
+    key: fmt
+    command: shfmt --binary-next-line --indent 2 --list .
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
   - id: "fixperms-tests"
     name: ":go: fixperms tests"
     agents:
@@ -36,6 +42,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     command: .buildkite/steps/deploy-service-role-stack.sh
     depends_on:
+      - "fmt"
       - "lint"
       - "fixperms-tests"
       - "fixperms-build"
@@ -48,6 +55,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
+      - "fmt"
       - "lint"
       - "fixperms-tests"
       - "fixperms-build"
@@ -92,6 +100,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
+      - "fmt"
       - "lint"
       - "fixperms-tests"
       - "fixperms-build"
@@ -135,6 +144,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
+      - "fmt"
       - "lint"
       - "fixperms-tests"
       - "fixperms-build"
