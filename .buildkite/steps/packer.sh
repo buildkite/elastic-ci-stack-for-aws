@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]] ; then
+if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]]; then
   echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_BUCKET for temporary files"
   exit 1
 fi
@@ -10,13 +10,13 @@ os="${1:-linux}"
 arch="${2:-amd64}"
 agent_binary="buildkite-agent-${os}-${arch}"
 
-if [[ "$os" == "windows" ]] ; then
+if [[ "$os" == "windows" ]]; then
   agent_binary+=".exe"
 fi
 
 mkdir -p "build/"
 
-if [[ "$os" == "linux" ]] ; then
+if [[ "$os" == "linux" ]]; then
   buildkite-agent artifact download "build/fix-perms-linux-${arch}" ./build
   mv "build/fix-perms-linux-${arch}" packer/linux/conf/buildkite-agent/scripts/fix-buildkite-agent-builds-permissions
   chmod 755 packer/linux/conf/buildkite-agent/scripts/fix-buildkite-agent-builds-permissions
@@ -32,7 +32,7 @@ echo "Packer image hash for ${os}/${arch} is ${packer_hash}"
 packer_file="packer-${packer_hash}-${os}-${arch}.output"
 
 # Only build packer image if one with the same hash doesn't exist, and we're not being forced
-if [[ -n "${PACKER_REBUILD:-}" ]] || ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" . ; then
+if [[ -n "${PACKER_REBUILD:-}" ]] || ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}" .; then
   make "packer-${os}-${arch}.output"
   aws s3 cp "packer-${os}-${arch}.output" "s3://${BUILDKITE_AWS_STACK_BUCKET}/${packer_file}"
   mv "packer-${os}-${arch}.output" "${packer_file}"

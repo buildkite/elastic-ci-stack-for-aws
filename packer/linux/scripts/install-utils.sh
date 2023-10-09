@@ -3,9 +3,9 @@
 set -euo pipefail
 
 case $(uname -m) in
-  x86_64)    ARCH=amd64;;
-  aarch64)   ARCH=arm64;;
-  *)         ARCH=unknown;;
+x86_64) ARCH=amd64 ;;
+aarch64) ARCH=arm64 ;;
+*) ARCH=unknown ;;
 esac
 
 echo Updating core packages

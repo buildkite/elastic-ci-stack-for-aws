@@ -58,11 +58,11 @@ elif [[ "${#devices[@]}" -gt 1 ]]; then
     --raid-devices="${#devices[@]}" "${devices[@]}"
   echo "Mounted ${devices[*]} to $logicalname."
 
-  echo "DEVICE ${devices[*]}" > /etc/mdadm.conf
+  echo "DEVICE ${devices[*]}" >/etc/mdadm.conf
   echo Created /etc/mdadm.conf:
   cat /etc/mdadm.conf
 
-  mdadm --detail --scan >> /etc/mdadm.conf
+  mdadm --detail --scan >>/etc/mdadm.conf
   echo Updated /etc/mdadm.conf:
   cat /etc/mdadm.conf
 
@@ -77,7 +77,7 @@ fi
 
 echo "Formatting $logicalname as ext4..."
 # Make an ext4 file system, [-F]orce creation, don’t TRIM at fs creation time (-E nodiscard)
-mkfs.ext4 -F -E nodiscard "$logicalname" > /dev/null
+mkfs.ext4 -F -E nodiscard "$logicalname" >/dev/null
 
 devicemount=/mnt/ephemeral
 echo "Mounting $logicalname to $devicemount..."
@@ -93,7 +93,7 @@ if [[ ! -f /etc/fstab.backup ]]; then
 
   fstab_line="$logicalname $devicemount    ${fs_type}  ${mount_options}  0 0"
   echo "Appending $fstab_line to /etc/fstab..."
-  echo "$fstab_line" >> /etc/fstab
+  echo "$fstab_line" >>/etc/fstab
 
   echo Appened to /etc/fstab:
   cat /etc/fstab

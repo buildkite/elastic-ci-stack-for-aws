@@ -27,8 +27,8 @@ sudo mkdir -p "${DOCKER_CLI_DIR}"
 
 DOCKER_COMPOSE_V2_ARCH="${MACHINE}"
 case "${MACHINE}" in
-  x86_64) BUILDX_ARCH="amd64";;
-  aarch64) BUILDX_ARCH="arm64";;
+x86_64) BUILDX_ARCH="amd64" ;;
+aarch64) BUILDX_ARCH="arm64" ;;
 esac
 
 sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-buildx" "https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.linux-${BUILDX_ARCH}"

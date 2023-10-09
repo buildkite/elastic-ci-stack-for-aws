@@ -13,8 +13,7 @@ on_error() {
   if [[ $exit_code != 0 ]]; then
     if ! aws autoscaling set-instance-health \
       --instance-id "$INSTANCE_ID" \
-      --health-status Unhealthy
-    then
+      --health-status Unhealthy; then
       echo Failed to set instance health to unhealthy.
     fi
   fi
@@ -72,9 +71,9 @@ check_status() {
 check_status
 
 case $(uname -m) in
-  x86_64)    ARCH=amd64;;
-  aarch64)   ARCH=arm64;;
-  *)         ARCH=unknown;;
+x86_64) ARCH=amd64 ;;
+aarch64) ARCH=arm64 ;;
+*) ARCH=unknown ;;
 esac
 echo "Detected ARCH=$ARCH"
 
@@ -268,7 +267,10 @@ BUILDKITE_AGENT_TOKEN="$(
 cat <<EOF >/etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
 token="${BUILDKITE_AGENT_TOKEN}"
-tags=$(IFS=, ; echo "${agent_metadata[*]}")
+tags=$(
+  IFS=,
+  echo "${agent_metadata[*]}"
+)
 tags-from-ec2-meta-data=true
 no-ansi-timestamps=${BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
 timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}

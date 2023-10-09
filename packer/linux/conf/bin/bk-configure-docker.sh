@@ -42,8 +42,7 @@ if ! docker run \
   --pull=never \
   --rm \
   "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
-    --install all
-then
+  --install all; then
   echo Failed to install binfmt.
   echo Avaliable docker images:
   docker image ls
@@ -53,7 +52,7 @@ fi
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
 
-  cat <<< "$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+  cat <<<"$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" >/etc/docker/daemon.json
 
   echo Writing subuid...
   cat <<EOF | tee /etc/subuid
@@ -72,7 +71,7 @@ fi
 
 if [[ "${DOCKER_EXPERIMENTAL:-false}" == "true" ]]; then
   echo Configuring experiment flag for docker daemon...
-  cat <<< "$(jq '.experimental=true' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+  cat <<<"$(jq '.experimental=true' /etc/docker/daemon.json)" >/etc/docker/daemon.json
 else
   echo Experiment flag for docker daemon not configured.
 fi
@@ -81,15 +80,16 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
   echo Creating docker root directory in instance storage...
   mkdir -p /mnt/ephemeral/docker
   echo Configuring docker root directory to be in instance storage...
-  cat <<< "$(jq '."data-root"="/mnt/ephemeral/docker"' /etc/docker/daemon.json)" > /etc/docker/daemon.json
+  cat <<<"$(jq '."data-root"="/mnt/ephemeral/docker"' /etc/docker/daemon.json)" >/etc/docker/daemon.json
 else
   echo Instance storage not configured.
 fi
 
 echo Customising docker IP address pools...
-cat <<<"$(jq \
-  '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' \
-  /etc/docker/daemon.json \
+cat <<<"$(
+  jq \
+    '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' \
+    /etc/docker/daemon.json
 )" >/etc/docker/daemon.json
 
 echo Cleaning up docker images...
