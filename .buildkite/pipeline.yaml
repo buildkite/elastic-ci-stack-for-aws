@@ -9,7 +9,7 @@ steps:
 
   - label: ":bash: shfmt"
     key: fmt
-    command: docker run --rm -u "$$(id -u):$$(id -g)" -v "$$PWD:/mnt" -w /mnt mvdan/shfmt:v3-alpine --diff --binary-next-line --indent 2 --list .
+    command: .buildkite/steps/shfmt.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
