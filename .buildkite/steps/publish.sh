@@ -8,7 +8,7 @@ s3_upload_templates() {
   aws s3 cp --content-type 'text/yaml' --acl public-read build/aws-stack.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}aws-stack.yml"
 }
 
-if [[ -z "${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}" ]] ; then
+if [[ -z "${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}" ]]; then
   echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_TEMPLATE_BUCKET for publishing templates to"
   exit 1
 fi
@@ -48,7 +48,7 @@ publish_for_branch() {
   # Publish each build to a unique URL, to let people roll back to old versions
   s3_upload_templates "${branch}/${BUILDKITE_COMMIT}."
 
-  cat << EOF | buildkite-agent annotate --style "info"
+  cat <<EOF | buildkite-agent annotate --style "info"
 Published template <a href="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${branch}/aws-stack.yml">${branch}/aws-stack.yml</a>
 EOF
 }

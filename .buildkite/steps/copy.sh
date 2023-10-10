@@ -25,7 +25,7 @@ wait_for_ami_to_be_available() {
   local image_state
 
   while true; do
-    image_state=$(aws ec2 describe-images --region "$region" --image-ids "$image_id" --output text --query 'Images[*].State');
+    image_state=$(aws ec2 describe-images --region "$region" --image-ids "$image_id" --output text --query 'Images[*].State')
     echo "$image_id ($region) is $image_state"
 
     if [[ "$image_state" == "available" ]]; then
@@ -43,10 +43,10 @@ get_image_name() {
   local region="$2"
 
   aws ec2 describe-images \
-  --image-ids "$image_id" \
-  --output text \
-  --region "$region" \
-  --query 'Images[*].Name'
+    --image-ids "$image_id" \
+    --output text \
+    --region "$region" \
+    --query 'Images[*].Name'
 }
 
 make_ami_public() {
@@ -59,7 +59,7 @@ make_ami_public() {
     --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
 }
 
-if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]] ; then
+if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]]; then
   echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_BUCKET for temporary files"
   exit 1
 fi
@@ -99,17 +99,17 @@ source_region="${AWS_REGION}"
 mapping_file="build/mappings.yml"
 
 # Read the source images from meta-data if no arguments are provided
-if [ $# -eq 0 ] ; then
-    linux_amd64_source_image_id=$(buildkite-agent meta-data get "linux_amd64_image_id")
-    linux_arm64_source_image_id=$(buildkite-agent meta-data get "linux_arm64_image_id")
-    windows_amd64_source_image_id=$(buildkite-agent meta-data get "windows_amd64_image_id")
+if [ $# -eq 0 ]; then
+  linux_amd64_source_image_id=$(buildkite-agent meta-data get "linux_amd64_image_id")
+  linux_arm64_source_image_id=$(buildkite-agent meta-data get "linux_arm64_image_id")
+  windows_amd64_source_image_id=$(buildkite-agent meta-data get "windows_amd64_image_id")
 fi
 
 # If we're not on the main branch or a tag build skip the copy
 if [[ $BUILDKITE_BRANCH != main ]] && [[ $BUILDKITE_TAG != "$BUILDKITE_BRANCH" ]] && [[ ${COPY_TO_ALL_REGIONS:-"false"} != "true" ]]; then
   echo "--- Skipping AMI copy on non-main/tag branch " >&2
   mkdir -p "$(dirname "$mapping_file")"
-  cat << EOF > "$mapping_file"
+  cat <<EOF >"$mapping_file"
 Mappings:
   AWSRegion2AMI:
     ${AWS_REGION} : { linuxamd64: $linux_amd64_source_image_id, linuxarm64: $linux_arm64_source_image_id, windows: $windows_amd64_source_image_id }
@@ -125,7 +125,7 @@ s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${BUILDKITE_BRANCH}")
 
 # Check if there is a previously copy in the cache bucket
-if aws s3 cp "${s3_mappings_cache}" "$mapping_file" ; then
+if aws s3 cp "${s3_mappings_cache}" "$mapping_file"; then
   echo "--- Skipping AMI copy, was previously copied"
   exit 0
 fi
@@ -138,7 +138,7 @@ windows_amd64_source_image_name=$(get_image_name "$windows_amd64_source_image_id
 # Copy to all other regions
 # shellcheck disable=SC2048
 for region in ${ALL_REGIONS[*]}; do
-  if [[ $region != "$source_region" ]] ; then
+  if [[ $region != "$source_region" ]]; then
     echo "--- :linux: Copying Linux AMD64 $linux_amd64_source_image_id to $region" >&2
     IMAGES+=("$(copy_ami_to_region "$linux_amd64_source_image_id" "$source_region" "$region" "${linux_amd64_source_image_name}-${region}")")
 
@@ -154,12 +154,12 @@ done
 
 # Write yaml preamble
 mkdir -p "$(dirname "$mapping_file")"
-cat << EOF > "$mapping_file"
+cat <<EOF >"$mapping_file"
 Mappings:
   AWSRegion2AMI:
 EOF
 
-echo "--- Waiting for AMIs to become available"  >&2
+echo "--- Waiting for AMIs to become available" >&2
 # shellcheck disable=SC2048
 for region in ${ALL_REGIONS[*]}; do
   linux_amd64_image_id="${IMAGES[0]}"
@@ -169,7 +169,7 @@ for region in ${ALL_REGIONS[*]}; do
   wait_for_ami_to_be_available "$linux_amd64_image_id" "$region" >&2
 
   # Make the linux AMI public if it's not the source image
-  if [[ $linux_amd64_image_id != "$linux_amd64_source_image_id" ]] ; then
+  if [[ $linux_amd64_image_id != "$linux_amd64_source_image_id" ]]; then
     echo ":linux: Making Linux AMD64 ${linux_amd64_image_id} public" >&2
     make_ami_public "$linux_amd64_image_id" "$region"
   fi
@@ -177,7 +177,7 @@ for region in ${ALL_REGIONS[*]}; do
   wait_for_ami_to_be_available "$linux_arm64_image_id" "$region" >&2
 
   # Make the linux ARM AMI public if it's not the source image
-  if [[ $linux_arm64_image_id != "$linux_arm64_source_image_id" ]] ; then
+  if [[ $linux_arm64_image_id != "$linux_arm64_source_image_id" ]]; then
     echo ":linux: Making Linux ARM64 ${linux_arm64_image_id} public" >&2
     make_ami_public "$linux_arm64_image_id" "$region"
   fi
@@ -185,13 +185,13 @@ for region in ${ALL_REGIONS[*]}; do
   wait_for_ami_to_be_available "$windows_amd64_image_id" "$region" >&2
 
   # Make the windows AMI public if it's not the source image
-  if [[ $windows_amd64_image_id != "$windows_amd64_source_image_id" ]] ; then
+  if [[ $windows_amd64_image_id != "$windows_amd64_source_image_id" ]]; then
     echo ":windows: Making Windows AMD64 ${windows_amd64_image_id} public" >&2
     make_ami_public "$windows_amd64_image_id" "$region"
   fi
 
   # Write yaml to file
-  echo "    $region : { linuxamd64: $linux_amd64_image_id, linuxarm64: $linux_arm64_image_id, windows: $windows_amd64_image_id }"  >> "$mapping_file"
+  echo "    $region : { linuxamd64: $linux_amd64_image_id, linuxarm64: $linux_arm64_image_id, windows: $windows_amd64_image_id }" >>"$mapping_file"
 
   # Shift off the processed images
   IMAGES=("${IMAGES[@]:3}")

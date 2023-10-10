@@ -13,7 +13,6 @@ if [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
   # to start a graceful shutdown
   systemctl kill --kill-who=main --signal=SIGTERM buildkite-agent
 
-
   # Spot termination time is provided as the third argument in RFC3339 format,
   # i.e. 2020-10-09T01:33:10Z
   SPOT_TERMINATION_TIME=$3
@@ -25,7 +24,7 @@ if [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
 
   echo "Waiting for agents to quit gracefully until 20 seconds before the spot termination time: ${SPOT_TERMINATION_TIME}"
   while [[ $(date '+%s') -lt $STOP_BY_TIME_UNIX ]]; do
-    if ! pgrep -u buildkite-agent buildkite-agent > /dev/null; then
+    if ! pgrep -u buildkite-agent buildkite-agent >/dev/null; then
       echo "All buildkite agents have stopped gracefully"
       exit 0
     fi
@@ -40,7 +39,7 @@ else
   systemctl stop "buildkite-agent"
 
   # Need to ensure it's the buildkite-agent user, so it doesn't match this lifecycled handler script
-  while pgrep -u buildkite-agent buildkite-agent > /dev/null; do
+  while pgrep -u buildkite-agent buildkite-agent >/dev/null; do
     echo "Waiting for all buildkite-agent processes to have stopped..."
     sleep 5
   done

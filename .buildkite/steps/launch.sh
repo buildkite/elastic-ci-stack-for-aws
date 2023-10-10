@@ -13,8 +13,8 @@ chmod +x ./parfait
 
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
-subnet_ids=$(awk '{print $1}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
-az_ids=$(awk '{print $2}' <<< "$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+subnet_ids=$(awk '{print $1}' <<<"$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
+az_ids=$(awk '{print $2}' <<<"$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 
 image_id=$(buildkite-agent meta-data get "${os}_${arch}_image_id")
 echo "Using AMI $image_id for $os/$arch"
@@ -35,7 +35,7 @@ if [[ "$arch" == "arm64" ]]; then
   enable_instance_storage="true"
 fi
 
-cat << EOF > config.json
+cat <<EOF >config.json
 [
   {
     "ParameterKey": "BuildkiteAgentToken",

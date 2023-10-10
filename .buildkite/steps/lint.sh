@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-grep -rl '^#!/.*sh' . | while read -r file ; do
+grep -rl '^#!/.*sh' . | while read -r file; do
   [[ $file =~ \.git ]] && continue
   [[ $file =~ init\.d ]] && continue
   [[ $file =~ vendor ]] && continue
