@@ -181,7 +181,8 @@ Resources:
                 "lambda:RemovePermission",
                 "lambda:DeleteFunction",
                 "lambda:InvokeFunction",
-                "lambda:TagResource"
+                "lambda:TagResource",
+                "lambda:UpdateFunctionConfiguration"
               ],
               "Resource": "arn:aws:lambda:*:*:function:*"
             },
@@ -276,6 +277,7 @@ Resources:
                 "autoscaling:DescribeScalingProcessTypes",
                 "autoscaling:DescribeScheduledActions",
                 "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeAutoScalingInstances",
                 "autoscaling:DescribeLifecycleHooks",
                 "autoscaling:SetDesiredCapacity",
                 "autoscaling:PutLifecycleHook",
@@ -283,6 +285,7 @@ Resources:
                 "autoscaling:SetInstanceProtection",
                 "autoscaling:CreateAutoScalingGroup",
                 "autoscaling:EnableMetricsCollection",
+                "autoscaling:DisableMetricsCollection",
                 "autoscaling:UpdateAutoScalingGroup",
                 "autoscaling:DeleteAutoScalingGroup",
                 "autoscaling:PutScalingPolicy",
