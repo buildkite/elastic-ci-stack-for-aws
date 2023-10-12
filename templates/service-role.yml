@@ -182,7 +182,8 @@ Resources:
                 "lambda:DeleteFunction",
                 "lambda:InvokeFunction",
                 "lambda:TagResource",
-                "lambda:UpdateFunctionConfiguration"
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:UpdateFunctionCode"
               ],
               "Resource": "arn:aws:lambda:*:*:function:*"
             },
