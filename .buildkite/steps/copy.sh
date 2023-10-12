@@ -87,8 +87,16 @@ ALL_REGIONS=(
   sa-east-1
 )
 
-IMAGES=(
-)
+# If we're not on the main branch or a tag build skip the copy
+if [[ $BUILDKITE_BRANCH != main || $BUILDKITE_TAG != "$BUILDKITE_BRANCH" || ${COPY_TO_ALL_REGIONS:-"false"} != "true" ]]; then
+  echo >&2 --- Reduced AMI copy on non-main/tag branch
+  ALL_REGIONS=(
+    us-east-1
+    ap-southeast-2
+  )
+fi
+
+IMAGES=()
 
 # Configuration
 linux_amd64_source_image_id="${1:-}"
@@ -103,18 +111,6 @@ if [ $# -eq 0 ]; then
   linux_amd64_source_image_id=$(buildkite-agent meta-data get "linux_amd64_image_id")
   linux_arm64_source_image_id=$(buildkite-agent meta-data get "linux_arm64_image_id")
   windows_amd64_source_image_id=$(buildkite-agent meta-data get "windows_amd64_image_id")
-fi
-
-# If we're not on the main branch or a tag build skip the copy
-if [[ $BUILDKITE_BRANCH != main ]] && [[ $BUILDKITE_TAG != "$BUILDKITE_BRANCH" ]] && [[ ${COPY_TO_ALL_REGIONS:-"false"} != "true" ]]; then
-  echo "--- Skipping AMI copy on non-main/tag branch " >&2
-  mkdir -p "$(dirname "$mapping_file")"
-  cat <<EOF >"$mapping_file"
-Mappings:
-  AWSRegion2AMI:
-    ${AWS_REGION} : { linuxamd64: $linux_amd64_source_image_id, linuxarm64: $linux_arm64_source_image_id, windows: $windows_amd64_source_image_id }
-EOF
-  exit 0
 fi
 
 s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
