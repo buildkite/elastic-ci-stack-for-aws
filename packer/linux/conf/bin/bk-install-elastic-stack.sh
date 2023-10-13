@@ -131,6 +131,10 @@ echo Writing Phase 2/2 for /var/lib/buildkite-agent/cfn-env helper function...
 cat <<EOF >>/var/lib/buildkite-agent/cfn-env
 
 set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTANCE"
+
+# also set via /etc/systemd/system/buildkite-agent.service.d/environment.conf
+set_always         "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB" "$BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB"
+
 set_always         "BUILDKITE_ECR_POLICY" "${BUILDKITE_ECR_POLICY:-none}"
 set_always         "BUILDKITE_SECRETS_BUCKET" "$BUILDKITE_SECRETS_BUCKET"
 set_always         "BUILDKITE_SECRETS_BUCKET_REGION" "$BUILDKITE_SECRETS_BUCKET_REGION"
@@ -357,6 +361,7 @@ done
 echo "Waited $next_wait_time times for docker to start. We will exit if it still has not started."
 check_docker
 
+# also set in /var/lib/buildkite-agent/cfn-env so that its shown in the job logs
 systemctl set-environment "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}"
 echo Starting buildkite-agent...
 systemctl enable --now buildkite-agent
