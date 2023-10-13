@@ -183,7 +183,7 @@ Parameters:
   BuildkiteAgentScalerVersion:
     Description: Version of the buildkite-agent-scaler to use
     Type: String
-    Default: "1.6.0"
+    Default: "1.7.0"
 
   BuildkiteAgentTracingBackend:
     Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
