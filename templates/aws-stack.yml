@@ -1130,7 +1130,7 @@ Resources:
                 - Key: Role
                   Value: buildkite-agent
                 - Key: Name
-                  Value: !If [ UseStackNameForInstanceName, !Ref AWS::StackName, !Ref InstanceName ]
+                  Value: !If [ UseStackNameForInstanceName, !Ref "AWS::StackName", !Ref InstanceName ]
                 - Key: BuildkiteAgentRelease
                   Value: !Ref BuildkiteAgentRelease
                 - Key: BuildkiteQueue
