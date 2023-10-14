@@ -72,6 +72,10 @@ function set_always() {
 Add-Content -Path C:\buildkite-agent\cfn-env -Value @"
 
 set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$Env:BUILDKITE_AGENTS_PER_INSTANCE"
+
+# also set via nssm
+set_always         "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB" "$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB"
+
 set_always         "BUILDKITE_ECR_POLICY" "$Env:BUILDKITE_ECR_POLICY"
 set_always         "BUILDKITE_SECRETS_BUCKET" "$Env:BUILDKITE_SECRETS_BUCKET"
 set_always         "BUILDKITE_SECRETS_BUCKET_REGION" "$Env:BUILDKITE_SECRETS_BUCKET_REGION"
@@ -231,6 +235,7 @@ If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Pat
   }
 }
 
+# also set in cfn so it's show in job logs
 nssm set buildkite-agent AppEnvironmentExtra +BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
