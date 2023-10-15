@@ -89,7 +89,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
 			-var 'arch=x86_64' -var 'goarch=amd64' -var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
-			buildkite-ami.json | tee $@
+			buildkite-ami.pkr.hcl | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 	mkdir -p build
@@ -110,7 +110,7 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
 			-var 'arch=arm64' -var 'goarch=arm64' -var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
-			buildkite-ami.json | tee $@
+			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 	mkdir -p build
@@ -130,7 +130,7 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 		--rm \
 		-w /src/packer/windows \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
-			buildkite-ami.json | tee $@
+			buildkite-ami.pkr.hcl | tee $@
 
 # -----------------------------------------
 # Cloudformation helpers
