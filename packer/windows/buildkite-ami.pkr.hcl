@@ -92,6 +92,13 @@ build {
     script = "scripts/install-docker.ps1"
   }
 
+  // docker requires a restart
+  provisioner "windows-restart" {}
+
+  provisioner "powershell" {
+    script = "scripts/install-docker-compose.ps1"
+  }
+
   provisioner "powershell" {
     script = "scripts/install-buildkite-agent.ps1"
   }
