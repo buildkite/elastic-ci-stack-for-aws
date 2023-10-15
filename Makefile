@@ -96,6 +96,18 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
+		hashicorp/packer:$(PACKER_VERSION) init buildkite-ami.pkr.hcl | tee $@
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui \
 			-var 'region=$(AWS_REGION)' \
 			-var 'arch=x86_64' \
@@ -121,6 +133,18 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
+		hashicorp/packer:$(PACKER_VERSION) init buildkite-ami.pkr.hcl | tee $@
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/linux \
 		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui \
 			-var 'region=$(AWS_REGION)' \
 			-var 'arch=arm64' \
@@ -135,6 +159,18 @@ build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 
 # Build windows packer image
 packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/windows \
+		hashicorp/packer:$(PACKER_VERSION) init buildkite-ami.pkr.hcl | tee $@
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
