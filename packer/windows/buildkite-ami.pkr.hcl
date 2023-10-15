@@ -45,7 +45,7 @@ data "amazon-ami" "windows-server-2019" {
 source "amazon-ebs" "elastic-ci-stack" {
   ami_description = "Buildkite Elastic Stack (Windows Server 2019 w/ docker)"
   ami_groups      = ["all"]
-  ami_name        = "buildkite-stack-windows-{{ clean_resource_name `${timestamp()}` }}"
+  ami_name        = "buildkite-stack-windows-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
   region          = var.region

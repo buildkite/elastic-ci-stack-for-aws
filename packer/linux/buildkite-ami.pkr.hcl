@@ -46,7 +46,7 @@ data "amazon-ami" "al2023" {
 source "amazon-ebs" "elastic-ci-stack-ami" {
   ami_description = "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
   ami_groups      = ["all"]
-  ami_name        = "buildkite-stack-linux-${var.arch}-{{ clean_resource_name `${timestamp()}` }}"
+  ami_name        = "buildkite-stack-linux-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type   = var.instance_type
   region          = var.region
   source_ami      = data.amazon-ami.al2023.id
