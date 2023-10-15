@@ -56,7 +56,8 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_username  = "Administrator"
 
   tags = {
-    OSVersion   = "Amazon Linux 2023"
+    Name        = "elastic-ci-stack-windows"
+    OSVersion   = "Windows Server 2019"
     BuildNumber = var.build_number
     IsReleased  = var.is_released
   }
