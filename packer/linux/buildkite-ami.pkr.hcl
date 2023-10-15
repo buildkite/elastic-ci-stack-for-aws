@@ -27,8 +27,8 @@ variable "build_number" {
   default = "none"
 }
 
-variable "released" {
-  type    = boolean
+variable "is_released" {
+  type    = bool
   default = false
 }
 
@@ -55,7 +55,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   tags = {
     OSVersion   = "Amazon Linux 2023"
     BuildNumber = var.build_number
-    Released    = var.released
+    IsReleased  = var.is_released
   }
 }
 

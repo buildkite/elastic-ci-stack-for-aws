@@ -12,6 +12,14 @@ AWS_REGION ?= us-east-1
 ARM64_INSTANCE_TYPE = m7g.xlarge
 AMD64_INSTANCE_TYPE = m7a.xlarge
 
+BUILDKITE_BUILD_NUMBER ?= none
+BUILDKITE_PIPELINE_DEFAULT_BRANCH ?= main
+
+ifeq ($(BUILDKITE_BRANCH),$(BUILDKITE_PIPELINE_DEFAULT_BRANCH))
+	IS_RELEASED ?= false
+else
+	IS_RELEASED ?= true
+endif
 
 all: packer build
 
@@ -88,8 +96,12 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
-		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
-			-var 'arch=x86_64' -var 'goarch=amd64' -var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=x86_64' \
+			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -109,8 +121,12 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/linux \
-		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
-			-var 'arch=arm64' -var 'goarch=arm64' -var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=arm64' \
+			-var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
@@ -130,7 +146,12 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 		-v "$(PWD):/src" \
 		--rm \
 		-w /src/packer/windows \
-		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui -var 'region=$(AWS_REGION)' \
+		hashicorp/packer:$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=arm64' \
+			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 # -----------------------------------------
