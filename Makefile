@@ -9,8 +9,9 @@ PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
 AWS_REGION ?= us-east-1
 
-ARM64_INSTANCE_TYPE = m6g.xlarge
-AMD64_INSTANCE_TYPE = c5.xlarge
+ARM64_INSTANCE_TYPE = m7g.xlarge
+AMD64_INSTANCE_TYPE = m7a.xlarge
+
 
 all: packer build
 
