@@ -11,6 +11,7 @@ AWS_REGION ?= us-east-1
 
 ARM64_INSTANCE_TYPE = m7g.xlarge
 AMD64_INSTANCE_TYPE = m7a.xlarge
+WIN64_INSTANCE_TYPE = m7i.xlarge
 
 BUILDKITE_BUILD_NUMBER ?= none
 BUILDKITE_PIPELINE_DEFAULT_BRANCH ?= main
@@ -148,8 +149,8 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 		-w /src/packer/windows \
 		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
 			-var 'region=$(AWS_REGION)' \
-			-var 'arch=arm64' \
-			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
+			-var 'arch=x86_64' \
+			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
 			buildkite-ami.pkr.hcl | tee $@
