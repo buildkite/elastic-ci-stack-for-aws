@@ -26,8 +26,6 @@ steps:
     name: ":go: fixperms build"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    depends_on:
-      - "fixperms-tests"
     artifact_paths: "build/fix-perms-*"
     plugins:
       - docker-compose#v2.1.0:
