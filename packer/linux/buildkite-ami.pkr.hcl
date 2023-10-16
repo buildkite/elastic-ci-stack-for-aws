@@ -53,10 +53,12 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   ssh_username    = "ec2-user"
 
   tags = {
-    Name        = "elastic-ci-stack-linux-${var.arch}"
-    OSVersion   = "Amazon Linux 2023"
-    BuildNumber = var.build_number
-    IsReleased  = var.is_released
+    Name          = "elastic-ci-stack-linux-${var.arch}"
+    OSVersion     = "Amazon Linux 2023"
+    BuildNumber   = var.build_number
+    IsReleased    = var.is_released
+    SourceAMIID   = data.amazon-ami.al2023.id
+    SourceAMIName = data.amazon-ami.al2023.name
   }
 }
 

@@ -56,10 +56,12 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_username  = "Administrator"
 
   tags = {
-    Name        = "elastic-ci-stack-windows"
-    OSVersion   = "Windows Server 2019"
-    BuildNumber = var.build_number
-    IsReleased  = var.is_released
+    Name          = "elastic-ci-stack-windows"
+    OSVersion     = "Windows Server 2019"
+    BuildNumber   = var.build_number
+    IsReleased    = var.is_released
+    SourceAMIID   = data.amazon-ami.windows-server-2019.id
+    SourceAMIName = data.amazon-ami.windows-server-2019.name
   }
 }
 
