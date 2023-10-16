@@ -34,7 +34,7 @@ variable "is_released" {
 
 data "amazon-ami" "windows-server-2019" {
   filters = {
-    name                = "Windows_Server-2019-English-Full-*"
+    name                = "Windows_Server-2019-English-Full-Base-*"
     virtualization-type = "hvm"
   }
   most_recent = true
