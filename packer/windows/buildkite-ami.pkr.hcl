@@ -95,7 +95,9 @@ build {
   }
 
   // need to restart after enabling containers
-  provisioner "windows-restart" {}
+  provisioner "windows-restart" {
+    pause_before = "1m"
+  }
 
   provisioner "powershell" {
     script = "scripts/install-docker.ps1"
