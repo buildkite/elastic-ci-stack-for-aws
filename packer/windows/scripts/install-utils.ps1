@@ -10,6 +10,10 @@ Write-Output "Installing chocolatey package manager"
 Set-ExecutionPolicy Bypass -Scope Process -Force
 Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
+Write-Output "Installing jq"
+choco install -y jq
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 Write-Output "Installing awscli"
 choco install -y awscli --version=$AWS_CLI_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
