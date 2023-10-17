@@ -95,8 +95,10 @@ build {
   }
 
   // need to restart after enabling containers
+  // for some reason the restart provisioner does not wait for the previous provisioner to finish
+  // so we pause for some amount of time
   provisioner "windows-restart" {
-    pause_before = "1m"
+    pause_before = "10s"
   }
 
   provisioner "powershell" {
