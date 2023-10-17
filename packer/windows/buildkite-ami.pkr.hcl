@@ -91,14 +91,14 @@ build {
   }
 
   provisioner "powershell" {
-    script = "scripts/install-docker.ps1"
+    script = "scripts/enable-containers.ps1"
   }
 
-  // docker requires a restart
+  // need to restart after enabling containers
   provisioner "windows-restart" {}
 
   provisioner "powershell" {
-    script = "scripts/install-docker-compose.ps1"
+    script = "scripts/install-docker.ps1"
   }
 
   provisioner "powershell" {
