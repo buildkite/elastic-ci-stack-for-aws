@@ -111,6 +111,9 @@ build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 	mkdir -p build
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
+CURRENT_AGENT_VERSION_LINUX ?= $(shell sed -En 's/^AGENT_VERSION="?(.+?)"?$/\1/p' packer/linux/scripts/install-buildkite-agent.sh)
+CURRENT_AGENT_VERSION_WINDOWS ?= $(shell sed -En 's/^\$AGENT_VERSION = "(.+?)"$/\1/p' packer/windows/scripts/install-buildkite-agent.ps1)
+
 # Build linuxarm64 packer image
 packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 	docker run \
@@ -130,6 +133,7 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 			-var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'agent_version=$(CURRENT_AGENT_VERSION_LINUX)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
@@ -155,6 +159,7 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'agent_version=$(CURRENT_AGENT_VERSION_WINDOWS)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 # -----------------------------------------
