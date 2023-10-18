@@ -118,6 +118,10 @@ EOF
   exit 0
 fi
 
+aws ec2 tag-images --region "$source_region" --image-ids "$linux_amd64_source_image_id" --tags Key=IsReleased,Value=true
+aws ec2 tag-images --region "$source_region" --image-ids "$linux_arm64_source_image_id" --tags Key=IsReleased,Value=true
+aws ec2 tag-images --region "$source_region" --image-ids "$windows_amd64_source_image_id" --tags Key=IsReleased,Value=true
+
 s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${BUILDKITE_AWS_STACK_BUCKET}" \
   "${linux_amd64_source_image_id}" \
