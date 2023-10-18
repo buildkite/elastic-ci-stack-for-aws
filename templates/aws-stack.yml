@@ -1095,10 +1095,6 @@ Resources:
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
           InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ]
-          InstanceInitiatedShutdownBehavior: !If
-            - TerminateInstanceAfterJob
-            - terminate
-            - stop
           MetadataOptions:
             HttpTokens: !Ref IMDSv2Tokens
             # Allow containers using a Docker network on the host to receive IDMSv2 responses

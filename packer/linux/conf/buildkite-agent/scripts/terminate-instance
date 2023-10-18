@@ -3,28 +3,50 @@
 set -euo pipefail
 
 terminate() {
-  aws autoscaling terminate-instance-in-auto-scaling-group --region "$1" --instance-id "$2" "--should-decrement-desired-capacity"
+  aws autoscaling terminate-instance-in-auto-scaling-group \
+    --region "$1" \
+    --instance-id "$2" \
+    --should-decrement-desired-capacity
+}
+
+mark_as_unhealthy() {
+  aws autoscaling set-instance-health \
+    --region "$1" \
+    --instance-id "$2" \
+    --health-status Unhealthy
 }
 
 echo "sleeping for 10 seconds before terminating instance to allow agent logs to drain to cloudwatch..."
-
 sleep 10
 
-token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
-instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
-region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
+token=$(
+  curl \
+    --fail --silent --show-error \
+    -X PUT \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+    --location "http://169.254.169.254/latest/api/token"
+)
+instance_id=$(
+  curl \
+    --fail --silent --show-error \
+    -H "X-aws-ec2-metadata-token: $token" \
+    --location "http://169.254.169.254/latest/meta-data/instance-id"
+)
+region=$(
+  curl \
+    --fail --silent --show-error \
+    -H "X-aws-ec2-metadata-token: $token" \
+    --location "http://169.254.169.254/latest/meta-data/placement/region"
+)
 
 echo "requesting instance termination..."
-
 if [[ $BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB == "true" ]]; then
-  # If we're the final before the ASG's min size, the call to terminate-instance-in-autoscaling-group will fail, as AWS
-  # won't allow the ASG to go below its min size. In this case, we need to call shutdown instead and force the issue -
-  # the ASG will then spin up a new instance to replace the one we're shutting down, leaving all well in the world.
-  #
-  # We need to do this because if the call to terminate fails, the systemd unit will start up a new buildkite-agent process
-  # on this machine, with state left over from the last agent, which is the opposite of what we want when $BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB is true.
-  terminate "$region" "$instance_id" || shutdown now
+  # If the ASG is at the min capacity, the call to terminate-instance-in-autoscaling-group
+  # In this case, we mark the instance as unhealthy, then the ASG will spin up a new instance
+  # to replace it.
+  terminate "$region" "$instance_id" || mark_as_unhealthy "$region" "$instance_id"
 else
-  # If we're not in terminate-after-job mode, then it's fine for this to fail, as it'll be as if the instance never got shut down.
+  # If we're not in terminate-after-job mode, then it's fine for this to fail. Systemd will restart
+  # the agent and it'll be as if the instance never got shut down.
   terminate "$region" "$instance_id"
 fi
