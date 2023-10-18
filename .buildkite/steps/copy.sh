@@ -11,11 +11,12 @@ copy_ami_to_region() {
   local destination_image_name="$4"
 
   aws ec2 copy-image \
+    --copy-image-tags \
     --source-image-id "$source_image_id" \
     --source-region "$source_region" \
     --name "$destination_image_name" \
     --region "$destination_image_region" \
-    --query "ImageId" \
+    --query ImageId \
     --output text
 }
 
