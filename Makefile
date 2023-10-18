@@ -197,8 +197,6 @@ bump-agent-version:
 	sed -i.bak -E "s/AGENT_VERSION=.+/AGENT_VERSION=$(AGENT_VERSION)/g" packer/linux/scripts/install-buildkite-agent.sh
 	sed -i.bak -E "s/\\\$$AGENT_VERSION = \".+\"/\$$AGENT_VERSION = \"$(AGENT_VERSION)\"/g" packer/windows/scripts/install-buildkite-agent.ps1
 	rm README.md.bak packer/linux/scripts/install-buildkite-agent.sh.bak packer/windows/scripts/install-buildkite-agent.ps1.bak
-	git add README.md packer/linux/scripts/install-buildkite-agent.sh packer/windows/scripts/install-buildkite-agent.ps1
-	git commit -m "Bump buildkite-agent to v$(AGENT_VERSION)"
 
 validate: build/aws-stack.yml
 	aws --no-cli-pager cloudformation validate-template \
