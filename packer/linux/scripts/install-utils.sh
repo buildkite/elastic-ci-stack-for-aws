@@ -33,11 +33,13 @@ sudo dnf install -yq \
 # in a future version of Amazon Linux
 sudo dnf install -yq \
   bind-utils \
-  lsof
+  lsof \
+  rsyslog
 
 sudo dnf -yq groupinstall "Development Tools"
 
 sudo systemctl enable --now amazon-ssm-agent
+sudo systemctl enable --now rsyslog
 
 GIT_LFS_VERSION=3.4.0
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
