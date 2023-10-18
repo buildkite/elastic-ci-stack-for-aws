@@ -107,7 +107,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # If we're not on the main branch or a tag build skip the copy
-if [[ $BUILDKITE_BRANCH != main ]] && [[ $BUILDKITE_TAG != "$BUILDKITE_BRANCH" ]] && [[ ${COPY_TO_ALL_REGIONS:-"false"} != "true" ]]; then
+if [[ $BUILDKITE_BRANCH != main && $BUILDKITE_TAG != "$BUILDKITE_BRANCH" && ${COPY_TO_ALL_REGIONS:-false} != true ]]; then
   echo "--- Skipping AMI copy on non-main/tag branch " >&2
   mkdir -p "$(dirname "$mapping_file")"
   cat <<EOF >"$mapping_file"
