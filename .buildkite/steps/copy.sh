@@ -138,7 +138,8 @@ if [[ $BUILDKITE_BRANCH == main || $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TA
 fi
 
 echo --- Tagging elastic ci stack release version
-echo Note: the same AMI may be used in multiple versions of the elastic stack, so we can\'t use the same tag key
+echo "Note: the same AMI may be used in multiple versions of the elastic stack,"
+echo "so we can't use the same tag key for each version."
 if [[ $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_VERSION:-false} == true ]]; then
   tag-ami "$linux_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
   tag-ami "$linux_arm64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
