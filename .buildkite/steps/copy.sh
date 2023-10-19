@@ -130,14 +130,14 @@ EOF
   exit 0
 fi
 
-echo --- Tagging AMIs as released
+echo "--- Tagging AMIs as released"
 if [[ $BUILDKITE_BRANCH == main || $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_IS_RELEASED:-false} == true ]]; then
   tag-ami "$linux_amd64_source_image_id" "$source_region" IsReleased true
   tag-ami "$linux_arm64_source_image_id" "$source_region" IsReleased true
   tag-ami "$windows_amd64_source_image_id" "$source_region" IsReleased true
 fi
 
-echo --- Tagging elastic ci stack release version
+echo "--- Tagging elastic ci stack release version"
 echo "Note: the same AMI may be used in multiple versions of the elastic stack,"
 echo "so we can't use the same tag key for each version."
 if [[ $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_VERSION:-false} == true ]]; then
@@ -146,7 +146,7 @@ if [[ $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_VERSION:-false} == true ]];
   tag-ami "$windows_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
 fi
 
-echo --- Checking if there is a previously copy in the cache bucket
+echo "--- Checking if there is a previously copy in the cache bucket"
 s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${BUILDKITE_AWS_STACK_BUCKET}" \
   "${linux_amd64_source_image_id}" \
@@ -159,7 +159,7 @@ if aws s3 cp "${s3_mappings_cache}" "$mapping_file"; then
   exit 0
 fi
 
-echo --- Copying images to other regions
+echo "--- Copying images to other regions"
 
 # Get the image names to copy to other regions
 linux_amd64_source_image_name=$(get_image_name "$linux_amd64_source_image_id" "$source_region")
