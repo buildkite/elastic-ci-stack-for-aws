@@ -119,9 +119,11 @@ EOF
 fi
 
 echo --- Tagging source images as released
-aws ec2 tag-images --region "$source_region" --image-ids "$linux_amd64_source_image_id" --tags Key=IsReleased,Value=true
-aws ec2 tag-images --region "$source_region" --image-ids "$linux_arm64_source_image_id" --tags Key=IsReleased,Value=true
-aws ec2 tag-images --region "$source_region" --image-ids "$windows_amd64_source_image_id" --tags Key=IsReleased,Value=true
+if [[ $BUILDKITE_BRANCH == main || $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_IS_RELEASED:-false} == true ]]; then
+  aws ec2 tag-images --region "$source_region" --image-ids "$linux_amd64_source_image_id" --tags Key=IsReleased,Value=true
+  aws ec2 tag-images --region "$source_region" --image-ids "$linux_arm64_source_image_id" --tags Key=IsReleased,Value=true
+  aws ec2 tag-images --region "$source_region" --image-ids "$windows_amd64_source_image_id" --tags Key=IsReleased,Value=true
+fi
 
 echo --- Checking if there is a previously copy in the cache bucket
 s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
