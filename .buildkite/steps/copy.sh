@@ -57,7 +57,7 @@ make_ami_public() {
   aws ec2 modify-image-attribute \
     --region "$region" \
     --image-id "$image_id" \
-    --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
+    --launch-permission '{"Add": [{"Group": "all"}]}'
 }
 
 tag-ami() {
