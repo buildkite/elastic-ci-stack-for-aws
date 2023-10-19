@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.8.0) (2023-10-19)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.7.1...v6.8.0)
+
+### Changed
+- Bump Agent Scaler version to v1.7.0. This updates the lambda runtime to `provided.al2` from the deprecated `go1.x` [#1236](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1236) (@HugeIRL)
+  Note: depending on how you upgrade existing stacks, you may not automatically be upgraded to v1.7.0 of Buildkite Agent Scaler. See [here](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/1172#issuecomment-1697304023) for a work around to this known issue.
+- Bump buildkite-agent to v3.56.0 [#1237](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1237) (@triarius)
+- Bump docker-compose to v2.22.0 [#1234](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1234) (@jkburges)
+- Improve logging for startup scripts on linux [#1230](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1230) (@triarius)
+- Wrap quotes around AWS::StackName [#1238](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1238) (@n-tucker)
+
+### Fixed
+- Fix rsyslog was missing from base AMI [#1240](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1240) (@peter-svensson)
+- Fix Service Role was missing some permissions [#1192](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1192) (@philnielsen) [#1233](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1233) (@triarius)
+- Fix hyphens were not allowed in InstanceTypes [#1228](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1228) (@nitrocode)
+- Fix qemu binfmt image is pulled during instance startup [#1231](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1231) (@triarius)
+
+### Internal
+- Fix Windows AMI build failed [#1239](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1239) (@triarius)
+- Add test stack remover script [#1226](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1226) (@moskyb)
+- Add a step to CI to check files have been formatted with shfmt [#1232](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1232) (@triarius)
+
 ## [v6.7.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.7.1) (2023-09-20)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.7.0...v6.7.1)
 
