@@ -121,6 +121,7 @@ print-agent-versions:
 
 # Build linuxarm64 packer image
 packer-linux-arm64.output: $(PACKER_LINUX_FILES)
+	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -147,6 +148,7 @@ build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 
 # Build windows packer image
 packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
+	@echo Agent Version: $(CURRENT_AGENT_VERSION_WINDOWS)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
