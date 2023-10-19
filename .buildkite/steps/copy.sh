@@ -118,10 +118,12 @@ EOF
   exit 0
 fi
 
+echo --- Tagging source images as released
 aws ec2 tag-images --region "$source_region" --image-ids "$linux_amd64_source_image_id" --tags Key=IsReleased,Value=true
 aws ec2 tag-images --region "$source_region" --image-ids "$linux_arm64_source_image_id" --tags Key=IsReleased,Value=true
 aws ec2 tag-images --region "$source_region" --image-ids "$windows_amd64_source_image_id" --tags Key=IsReleased,Value=true
 
+echo --- Checking if there is a previously copy in the cache bucket
 s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${BUILDKITE_AWS_STACK_BUCKET}" \
   "${linux_amd64_source_image_id}" \
@@ -129,11 +131,12 @@ s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${windows_amd64_source_image_id}" \
   "${BUILDKITE_BRANCH}")
 
-# Check if there is a previously copy in the cache bucket
 if aws s3 cp "${s3_mappings_cache}" "$mapping_file"; then
   echo "--- Skipping AMI copy, was previously copied"
   exit 0
 fi
+
+echo --- Copying images to other regions
 
 # Get the image names to copy to other regions
 linux_amd64_source_image_name=$(get_image_name "$linux_amd64_source_image_id" "$source_region")
