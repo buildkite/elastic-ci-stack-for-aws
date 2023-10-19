@@ -115,6 +115,10 @@ build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 CURRENT_AGENT_VERSION_LINUX ?= $(shell sed -En 's/^AGENT_VERSION="?(.+?)"?$$/\1/p' packer/linux/scripts/install-buildkite-agent.sh)
 CURRENT_AGENT_VERSION_WINDOWS ?= $(shell sed -En 's/^\$$AGENT_VERSION = "(.+?)"$$/\1/p' packer/windows/scripts/install-buildkite-agent.ps1)
 
+print-agent-versions:
+	@echo Linux: $(CURRENT_AGENT_VERSION_LINUX)
+	@echo Windows: $(CURRENT_AGENT_VERSION_WINDOWS)
+
 # Build linuxarm64 packer image
 packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 	docker run \
