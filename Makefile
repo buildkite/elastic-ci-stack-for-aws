@@ -111,8 +111,17 @@ build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 	mkdir -p build
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
+# NOTE: make removes the $ escapes, everything else is passed to the shell
+CURRENT_AGENT_VERSION_LINUX ?= $(shell sed -En 's/^AGENT_VERSION="?(.+?)"?$$/\1/p' packer/linux/scripts/install-buildkite-agent.sh)
+CURRENT_AGENT_VERSION_WINDOWS ?= $(shell sed -En 's/^\$$AGENT_VERSION = "(.+?)"$$/\1/p' packer/windows/scripts/install-buildkite-agent.ps1)
+
+print-agent-versions:
+	@echo Linux: $(CURRENT_AGENT_VERSION_LINUX)
+	@echo Windows: $(CURRENT_AGENT_VERSION_WINDOWS)
+
 # Build linuxarm64 packer image
 packer-linux-arm64.output: $(PACKER_LINUX_FILES)
+	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -130,6 +139,7 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES)
 			-var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'agent_version=$(CURRENT_AGENT_VERSION_LINUX)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
@@ -138,6 +148,7 @@ build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 
 # Build windows packer image
 packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
+	@echo Agent Version: $(CURRENT_AGENT_VERSION_WINDOWS)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -155,6 +166,7 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'agent_version=$(CURRENT_AGENT_VERSION_WINDOWS)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 # -----------------------------------------
@@ -193,12 +205,9 @@ update-stack: build/aws-stack.yml env-STACK_NAME
 AGENT_VERSION ?= $(shell curl -Lfs "https://buildkite.com/agent/releases/latest?platform=linux&arch=amd64" | grep version | cut -d= -f2)
 
 bump-agent-version:
-	sed -i.bak -E "s/\[Buildkite Agent v.*\]/[Buildkite Agent v$(AGENT_VERSION)]/g" README.md
-	sed -i.bak -E "s/AGENT_VERSION=.+/AGENT_VERSION=$(AGENT_VERSION)/g" packer/linux/scripts/install-buildkite-agent.sh
-	sed -i.bak -E "s/\\\$$AGENT_VERSION = \".+\"/\$$AGENT_VERSION = \"$(AGENT_VERSION)\"/g" packer/windows/scripts/install-buildkite-agent.ps1
-	rm README.md.bak packer/linux/scripts/install-buildkite-agent.sh.bak packer/windows/scripts/install-buildkite-agent.ps1.bak
-	git add README.md packer/linux/scripts/install-buildkite-agent.sh packer/windows/scripts/install-buildkite-agent.ps1
-	git commit -m "Bump buildkite-agent to v$(AGENT_VERSION)"
+	sed -Ei "s/\[Buildkite Agent v.*\]/[Buildkite Agent v$(AGENT_VERSION)]/g" README.md
+	sed -Ei "s/AGENT_VERSION=.+/AGENT_VERSION=$(AGENT_VERSION)/g" packer/linux/scripts/install-buildkite-agent.sh
+	sed -Ei "s/\\\$$AGENT_VERSION = \".+\"/\$$AGENT_VERSION = \"$(AGENT_VERSION)\"/g" packer/windows/scripts/install-buildkite-agent.ps1
 
 validate: build/aws-stack.yml
 	aws --no-cli-pager cloudformation validate-template \

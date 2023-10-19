@@ -11,11 +11,12 @@ copy_ami_to_region() {
   local destination_image_name="$4"
 
   aws ec2 copy-image \
+    --copy-image-tags \
     --source-image-id "$source_image_id" \
     --source-region "$source_region" \
     --name "$destination_image_name" \
     --region "$destination_image_region" \
-    --query "ImageId" \
+    --query ImageId \
     --output text
 }
 
@@ -56,7 +57,19 @@ make_ami_public() {
   aws ec2 modify-image-attribute \
     --region "$region" \
     --image-id "$image_id" \
-    --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
+    --launch-permission '{"Add": [{"Group": "all"}]}'
+}
+
+tag-ami() {
+  local image_id="$1"
+  local region="$2"
+  local tag_key="$3"
+  local tag_value="$4"
+
+  aws ec2 create-tags \
+    --region "$region" \
+    --resources "$image_id" \
+    --tags "Key=$tag_key,Value=$tag_value"
 }
 
 if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]]; then
@@ -106,7 +119,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # If we're not on the main branch or a tag build skip the copy
-if [[ $BUILDKITE_BRANCH != main ]] && [[ $BUILDKITE_TAG != "$BUILDKITE_BRANCH" ]] && [[ ${COPY_TO_ALL_REGIONS:-"false"} != "true" ]]; then
+if [[ $BUILDKITE_BRANCH != main && $BUILDKITE_TAG != "$BUILDKITE_BRANCH" && ${COPY_TO_ALL_REGIONS:-false} != true ]]; then
   echo "--- Skipping AMI copy on non-main/tag branch " >&2
   mkdir -p "$(dirname "$mapping_file")"
   cat <<EOF >"$mapping_file"
@@ -117,6 +130,23 @@ EOF
   exit 0
 fi
 
+echo "--- Tagging AMIs as released"
+if [[ $BUILDKITE_BRANCH == main || $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_IS_RELEASED:-false} == true ]]; then
+  tag-ami "$linux_amd64_source_image_id" "$source_region" IsReleased true
+  tag-ami "$linux_arm64_source_image_id" "$source_region" IsReleased true
+  tag-ami "$windows_amd64_source_image_id" "$source_region" IsReleased true
+fi
+
+echo "--- Tagging elastic ci stack release version"
+echo "Note: the same AMI may be used in multiple versions of the elastic stack,"
+echo "so we can't use the same tag key for each version."
+if [[ $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_VERSION:-false} == true ]]; then
+  tag-ami "$linux_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
+  tag-ami "$linux_arm64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
+  tag-ami "$windows_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
+fi
+
+echo "--- Checking if there is a previously copy in the cache bucket"
 s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${BUILDKITE_AWS_STACK_BUCKET}" \
   "${linux_amd64_source_image_id}" \
@@ -124,11 +154,12 @@ s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s.yml" \
   "${windows_amd64_source_image_id}" \
   "${BUILDKITE_BRANCH}")
 
-# Check if there is a previously copy in the cache bucket
 if aws s3 cp "${s3_mappings_cache}" "$mapping_file"; then
   echo "--- Skipping AMI copy, was previously copied"
   exit 0
 fi
+
+echo "--- Copying images to other regions"
 
 # Get the image names to copy to other regions
 linux_amd64_source_image_name=$(get_image_name "$linux_amd64_source_image_id" "$source_region")
@@ -136,8 +167,7 @@ linux_arm64_source_image_name=$(get_image_name "$linux_arm64_source_image_id" "$
 windows_amd64_source_image_name=$(get_image_name "$windows_amd64_source_image_id" "$source_region")
 
 # Copy to all other regions
-# shellcheck disable=SC2048
-for region in ${ALL_REGIONS[*]}; do
+for region in "${ALL_REGIONS[@]}"; do
   if [[ $region != "$source_region" ]]; then
     echo "--- :linux: Copying Linux AMD64 $linux_amd64_source_image_id to $region" >&2
     IMAGES+=("$(copy_ami_to_region "$linux_amd64_source_image_id" "$source_region" "$region" "${linux_amd64_source_image_name}-${region}")")
@@ -160,8 +190,7 @@ Mappings:
 EOF
 
 echo "--- Waiting for AMIs to become available" >&2
-# shellcheck disable=SC2048
-for region in ${ALL_REGIONS[*]}; do
+for region in "${ALL_REGIONS[@]}"; do
   linux_amd64_image_id="${IMAGES[0]}"
   linux_arm64_image_id="${IMAGES[1]}"
   windows_amd64_image_id="${IMAGES[2]}"

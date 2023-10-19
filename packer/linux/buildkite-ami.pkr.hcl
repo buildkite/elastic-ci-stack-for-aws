@@ -27,6 +27,11 @@ variable "build_number" {
   default = "none"
 }
 
+variable "agent_version" {
+  type    = string
+  default = "devel"
+}
+
 variable "is_released" {
   type    = bool
   default = false
@@ -56,6 +61,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
     Name          = "elastic-ci-stack-linux-${var.arch}"
     OSVersion     = "Amazon Linux 2023"
     BuildNumber   = var.build_number
+    AgentVersion  = var.agent_version
     IsReleased    = var.is_released
     SourceAMIID   = data.amazon-ami.al2023.id
     SourceAMIName = data.amazon-ami.al2023.name

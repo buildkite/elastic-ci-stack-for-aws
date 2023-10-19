@@ -27,6 +27,11 @@ variable "build_number" {
   default = "none"
 }
 
+variable "agent_version" {
+  type    = string
+  default = "devel"
+}
+
 variable "is_released" {
   type    = bool
   default = false
@@ -59,6 +64,7 @@ source "amazon-ebs" "elastic-ci-stack" {
     Name          = "elastic-ci-stack-windows"
     OSVersion     = "Windows Server 2019"
     BuildNumber   = var.build_number
+    AgentVersion  = var.agent_version
     IsReleased    = var.is_released
     SourceAMIID   = data.amazon-ami.windows-server-2019.id
     SourceAMIName = data.amazon-ami.windows-server-2019.name

@@ -212,8 +212,8 @@ steps:
     artifact_paths: "build/*.yml"
     depends_on: "copy-ami"
 
-  - id: "cleanup"
-    name: "Cleanup"
+  - id: cleanup
+    name: ":broom: Cleanup"
     command: .buildkite/steps/cleanup.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
