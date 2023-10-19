@@ -60,6 +60,18 @@ make_ami_public() {
     --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
 }
 
+tag-ami() {
+  local image_id="$1"
+  local region="$2"
+  local tag_key="$3"
+  local tag_value="$4"
+
+  aws ec2 create-tags \
+    --region "$region" \
+    --resources "$image_id" \
+    --tags "Key=$tag_key,Value=$tag_value"
+}
+
 if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]]; then
   echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_BUCKET for temporary files"
   exit 1
@@ -118,19 +130,19 @@ EOF
   exit 0
 fi
 
-echo --- Tagging source images as released
+echo --- Tagging AMIs as released
 if [[ $BUILDKITE_BRANCH == main || $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_IS_RELEASED:-false} == true ]]; then
-  aws ec2 tag-images --region "$source_region" --image-ids "$linux_amd64_source_image_id" --tags Key=IsReleased,Value=true
-  aws ec2 tag-images --region "$source_region" --image-ids "$linux_arm64_source_image_id" --tags Key=IsReleased,Value=true
-  aws ec2 tag-images --region "$source_region" --image-ids "$windows_amd64_source_image_id" --tags Key=IsReleased,Value=true
+  tag-ami "$linux_amd64_source_image_id" "$source_region" IsReleased true
+  tag-ami "$linux_arm64_source_image_id" "$source_region" IsReleased true
+  tag-ami "$windows_amd64_source_image_id" "$source_region" IsReleased true
 fi
 
 echo --- Tagging elastic ci stack release version
 echo Note: the same AMI may be used in multiple versions of the elastic stack, so we can\'t use the same tag key
 if [[ $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_VERSION:-false} == true ]]; then
-  aws ec2 tag-images --region "$source_region" --image-ids "$linux_amd64_source_image_id" --tags "Key=Version:${BUILDKITE_TAG},Value=true"
-  aws ec2 tag-images --region "$source_region" --image-ids "$linux_arm64_source_image_id" --tags "Key=Version:${BUILDKITE_TAG},Value=true"
-  aws ec2 tag-images --region "$source_region" --image-ids "$windows_amd64_source_image_id" --tags "Key=Version:${BUILDKITE_TAG},Value=true"
+  tag-ami "$linux_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
+  tag-ami "$linux_arm64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
+  tag-ami "$windows_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
 fi
 
 echo --- Checking if there is a previously copy in the cache bucket
