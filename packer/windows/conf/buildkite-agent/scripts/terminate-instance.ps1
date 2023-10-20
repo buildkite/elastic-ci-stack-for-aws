@@ -12,7 +12,11 @@ if ($lastexitcode -eq 0) { # If autoscaling request was successful, we will term
 } else {
   Write-Output "terminate-instance: ASG could not decrement (we're already at minSize)"
   if ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
-    Write-Output "terminate-instance: terminating instance anyway"
-    Stop-Computer -ComputerName "localhost" -Force
+    Write-Output "terminate-instance: marking instance as unhealthy"
+    aws autoscaling set-instance-health `
+      --instance-id "$InstanceId" `
+      --region "$Region" `
+      --health-status Unhealthy `
+      --no-should-respect-grace-period
   }
 }
