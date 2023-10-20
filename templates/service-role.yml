@@ -183,7 +183,8 @@ Resources:
                 "lambda:InvokeFunction",
                 "lambda:TagResource",
                 "lambda:UpdateFunctionConfiguration",
-                "lambda:UpdateFunctionCode"
+                "lambda:UpdateFunctionCode",
+                "lambda:ListTags"
               ],
               "Resource": "arn:aws:lambda:*:*:function:*"
             },
@@ -192,7 +193,8 @@ Resources:
               "Action": [
                 "logs:CreateLogGroup",
                 "logs:PutRetentionPolicy",
-                "logs:DeleteLogGroup"
+                "logs:DeleteLogGroup",
+                "logs:TagResource",
               ],
               "Resource": "arn:aws:logs:*:*:log-group:*"
             },
@@ -297,7 +299,8 @@ Resources:
                 "autoscaling:PutWarmPool",
                 "autoscaling:DeleteWarmPool",
                 "autoscaling:TerminateInstanceInAutoScalingGroup",
-                "autoscaling:AttachInstances"
+                "autoscaling:AttachInstances",
+                "autoscaling:DisableMetricsCollection"
               ],
               "Resource": "*"
             },
