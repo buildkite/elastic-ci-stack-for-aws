@@ -97,7 +97,7 @@ Metadata:
         - ScaleInIdlePeriod
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
-        - ScalerEventScheduleRate
+        - ScalerEventSchedulePeriod
         - ScalerMinPollInterval
 
       - Label:
