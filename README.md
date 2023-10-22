@@ -140,8 +140,8 @@ We aim to support new regions within one month of general availability.
 
 We build and deploy the following AMIs to all our supported regions:
 
-- Amazon Linux 2 (64-bit x86)
-- Amazon Linux 2 (64-bit Arm)
+- Amazon Linux 2023 (64-bit x86)
+- Amazon Linux 2023 (64-bit Arm)
 - Windows Server 2019 (64-bit x86)
 
 ### Buildkite Agent
