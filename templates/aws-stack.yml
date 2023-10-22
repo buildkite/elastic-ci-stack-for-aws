@@ -699,9 +699,6 @@ Conditions:
     UseStackNameForInstanceName:
       !Equals [ !Ref InstanceName, "" ]
 
-    TerminateInstanceAfterJob:
-      !Equals [ !Ref BuildkiteTerminateInstanceAfterJob, "true" ]
-
 Mappings:
   ECRManagedPolicy:
     none      : { Policy: '' }
