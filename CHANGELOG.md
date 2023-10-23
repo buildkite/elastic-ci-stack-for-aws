@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.9.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.9.0) (2023-10-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.8.0...v6.9.0)
+
+### Fixed
+- Instances in ASGs at their minimum capacity will now be correctly terminated when `BuildkiteTerminateInstanceAfterJob` is enabled [#1245](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1245)
+- Fix ScalerEventSchedulePeriod was missing from interface [#1243](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1243)
+
+### Changed
+- Update buildkite-agent to v3.57.0 [#1247](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1247) (@moskyb)
+- Add more missing service role IAM permissions [#1244](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1244) (@triarius)
+
+### Internal
+- Update README to show we are on Amazon Linux 2023 now [#1246](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1246) (@triarius)
+
 ## [v6.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.8.0) (2023-10-19)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.7.1...v6.8.0)
 
