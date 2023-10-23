@@ -22,8 +22,7 @@ if ($lastexitcode -eq 0) {
     aws autoscaling set-instance-health `
       --instance-id "$InstanceId" `
       --region "$Region" `
-      --health-status Unhealthy `
-      --no-should-respect-grace-period
+      --health-status Unhealthy
   } else {
     Write-Output "terminate-instance: restarting agent..."
     nssm start buildkite-agent
