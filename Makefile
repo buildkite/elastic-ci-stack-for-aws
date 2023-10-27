@@ -9,9 +9,9 @@ PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
 AWS_REGION ?= us-east-1
 
-ARM64_INSTANCE_TYPE = m7g.xlarge
-AMD64_INSTANCE_TYPE = m7a.xlarge
-WIN64_INSTANCE_TYPE = m7i.xlarge
+ARM64_INSTANCE_TYPE ?= m7g.xlarge
+AMD64_INSTANCE_TYPE ?= m7a.xlarge
+WIN64_INSTANCE_TYPE ?= m7i.xlarge
 
 BUILDKITE_BUILD_NUMBER ?= none
 BUILDKITE_PIPELINE_DEFAULT_BRANCH ?= main
