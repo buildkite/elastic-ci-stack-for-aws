@@ -81,6 +81,11 @@ build {
     source      = "../../plugins"
   }
 
+  provisioner "file" {
+    destination = "/tmp/build"
+    source      = "../../build"
+  }
+
   provisioner "shell" {
     script = "scripts/install-utils.sh"
   }

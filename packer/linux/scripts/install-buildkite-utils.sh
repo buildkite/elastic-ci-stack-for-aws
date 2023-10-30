@@ -11,6 +11,10 @@ echo "Installing bk elastic stack bin files..."
 sudo chmod +x /tmp/conf/bin/bk-*
 sudo mv /tmp/conf/bin/bk-* /usr/local/bin
 
+echo "Installing fix-buildkite-agent-builds-permissions..."
+sudo chmod +x "/tmp/build/fix-perms-linux-${ARCH}"
+sudo mv "/tmp/build/fix-perms-linux-${ARCH}" /usr/bin/fix-buildkite-agent-builds-permissions
+
 S3_SECRETS_HELPER_VERSION=2.1.6
 echo "Downloading s3-secrets-helper ${S3_SECRETS_HELPER_VERSION}..."
 sudo curl -Lsf -o /usr/local/bin/s3secrets-helper \

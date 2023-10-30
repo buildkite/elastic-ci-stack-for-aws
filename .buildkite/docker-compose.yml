@@ -2,20 +2,10 @@ version: '3'
 
 services:
   fixperms-tests:
-    image: golang:latest
+    image: golang:1.21
     working_dir: /code
     environment:
       CGO_ENABLED: 0
     volumes:
       - ..:/code:ro
     command: go test -v ./...
-
-  fixperms-build:
-    image: golang:latest
-    working_dir: /code
-    environment:
-      CGO_ENABLED: 0
-    volumes:
-      - ..:/code
-      - /var/lib/buildkite-agent/git-mirrors:/var/lib/buildkite-agent/git-mirrors
-    command: .buildkite/steps/build-fixperms.sh
