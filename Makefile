@@ -7,6 +7,10 @@ PACKER_VERSION ?= 1.9.4
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
+GO_VERSION ?= 1.21
+
+FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
+
 AWS_REGION ?= us-east-1
 
 ARM64_INSTANCE_TYPE ?= m7g.xlarge
@@ -87,7 +91,7 @@ build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
-packer-linux-amd64.output: $(PACKER_LINUX_FILES)
+packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-amd64
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -120,7 +124,7 @@ print-agent-versions:
 	@echo Windows: $(CURRENT_AGENT_VERSION_WINDOWS)
 
 # Build linuxarm64 packer image
-packer-linux-arm64.output: $(PACKER_LINUX_FILES)
+packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-arm64
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -168,6 +172,31 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_WINDOWS)' \
 			buildkite-ami.pkr.hcl | tee $@
+
+# -----------------------------------------
+# fixperms
+
+build/fix-perms-linux-amd64: $(FIXPERMS_FILES)
+	docker run \
+		-e CGO_ENABLED=0 \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-v "$(PWD):/src" \
+		-w /src \
+		--rm \
+		golang:$(GO_VERSION) \
+			go build -v -buildvcs=false -o "build/fix-perms-linux-amd64" ./internal/fixperms
+
+build/fix-perms-linux-arm64: $(FIXPERMS_FILES)
+	docker run \
+		-e CGO_ENABLED=0 \
+		-e GOOS=linux \
+		-e GOARCH=arm64 \
+		-v "$(PWD):/src" \
+		-w /src \
+		--rm \
+		golang:$(GO_VERSION) \
+			go build -v -buildvcs=false -o "build/fix-perms-linux-arm64" ./internal/fixperms
 
 # -----------------------------------------
 # Cloudformation helpers

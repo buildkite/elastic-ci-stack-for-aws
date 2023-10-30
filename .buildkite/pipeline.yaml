@@ -22,18 +22,6 @@ steps:
           run: fixperms-tests
           config: .buildkite/docker-compose.yml
 
-  - id: "fixperms-build"
-    name: ":go: fixperms build"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/fix-perms-*"
-    plugins:
-      - docker-compose#v2.1.0:
-          run: fixperms-build
-          config: .buildkite/docker-compose.yml
-      - artifacts#v1.9.0:
-          upload: "builds/fix-perms-*"
-
   - id: "deploy-service-role-stack"
     name: ":aws-iam: :cloudformation:"
     agents:
@@ -43,7 +31,6 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
-      - "fixperms-build"
 
   - id: "packer-windows-amd64"
     name: ":packer: :windows:"
@@ -56,7 +43,6 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
-      - "fixperms-build"
 
   - id: "launch-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Launch"
@@ -101,7 +87,6 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
-      - "fixperms-build"
 
   - id: "launch-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Launch"
@@ -145,7 +130,6 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
-      - "fixperms-build"
 
   - id: "launch-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Launch"
