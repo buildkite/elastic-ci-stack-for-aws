@@ -43,6 +43,7 @@ Metadata:
         - BuildkiteAgentExperiments
         - BuildkiteAgentEnableGitMirrors
         - BuildkiteAgentTracingBackend
+        - BuildkiteAgentCancelGracePeriod
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
@@ -193,6 +194,12 @@ Parameters:
       - "datadog"
       - "opentelemetry"
     Default: ""
+
+  BuildkiteAgentCancelGracePeriod:
+    Description: The number of seconds a canceled or timed out job is given to gracefully terminate and upload its artifacts.
+    Type: Number
+    Default: 60
+    MinValue: 1
 
   BuildkiteTerminateInstanceAfterJob:
     Description: Set to "true" to terminate the instance after a job has completed.
@@ -1230,6 +1237,7 @@ Resources:
                   BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
                   BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
+                  BUILDKITE_AGENT_CANCEL_GRACE_PERIOD="${BuildkiteAgentCancelGracePeriod}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}" \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \

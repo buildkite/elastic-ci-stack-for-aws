@@ -289,7 +289,7 @@ no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
-cancel-grace-period=60
+cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
 EOF
 
 if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
