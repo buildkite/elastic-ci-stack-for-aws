@@ -8,15 +8,6 @@ s3_upload_templates() {
   aws s3 cp --content-type 'text/yaml' --acl public-read build/aws-stack.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}aws-stack.yml"
 }
 
-if [[ -z "${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}" ]]; then
-  echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_TEMPLATE_BUCKET for publishing templates to"
-  exit 1
-fi
-
-echo "--- Downloading mappings.yml artifact"
-mkdir -p build/
-buildkite-agent artifact download build/mappings.yml build/
-
 echo "--- :git: Checking and fetching git tags"
 # if BUILDKITE_TAG is set, fetch the tags, and check that it's a valid tag
 if [[ -n "${BUILDKITE_TAG:-}" ]]; then
@@ -29,6 +20,17 @@ if [[ -n "${BUILDKITE_TAG:-}" ]]; then
 else
   echo "Not a tag build, skipping tag check"
 fi
+
+echo "--- :aws: Checking template bucket is set"
+if [[ -z "${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}" ]]; then
+  echo "^^^ +++"
+  echo "Must set an s3 bucket in BUILDKITE_AWS_STACK_TEMPLATE_BUCKET for publishing templates to"
+  exit 1
+fi
+
+echo "--- Downloading mappings.yml artifact"
+mkdir -p build/
+buildkite-agent artifact download build/mappings.yml build/
 
 echo "--- Building :cloudformation: CloudFormation templates"
 make build/aws-stack.yml
