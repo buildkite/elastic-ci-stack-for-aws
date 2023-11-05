@@ -17,8 +17,17 @@ echo "--- Downloading mappings.yml artifact"
 mkdir -p build/
 buildkite-agent artifact download build/mappings.yml build/
 
-echo "--- Fetching latest git tags"
-git fetch --tags
+echo "--- :git: Checking and fetching git tags"
+# if BUILDKITE_TAG is set, fetch the tags, and check that it's a valid tag
+if [[ -n "${BUILDKITE_TAG:-}" ]]; then
+  git fetch -v --tags
+  if ! git tag --list | grep -q "^${BUILDKITE_TAG}$"; then
+    echo "Tag ${BUILDKITE_TAG} does not exist"
+    exit 1
+  fi
+else
+  echo "Not a tag build, skipping tag check"
+fi
 
 echo "--- Building :cloudformation: CloudFormation templates"
 make build/aws-stack.yml

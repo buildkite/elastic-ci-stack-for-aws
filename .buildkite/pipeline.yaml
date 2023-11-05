@@ -188,8 +188,6 @@ steps:
     command: .buildkite/steps/publish.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    env:
-      BUILDKITE_GIT_FETCH_FLAGS: -v --prune --tags
     concurrency_group: "aws-stack-publish"
     concurrency: 1
     concurrency_method: eager
