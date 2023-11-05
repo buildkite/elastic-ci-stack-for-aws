@@ -22,6 +22,7 @@ echo "--- :git: Checking and fetching git tags"
 if [[ -n "${BUILDKITE_TAG:-}" ]]; then
   git fetch -v --tags
   if ! git tag --list | grep -q "^${BUILDKITE_TAG}$"; then
+    echo "^^^ +++"
     echo "Tag ${BUILDKITE_TAG} does not exist"
     exit 1
   fi
