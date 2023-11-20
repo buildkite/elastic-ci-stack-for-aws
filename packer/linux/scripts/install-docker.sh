@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOCKER_COMPOSE_V2_VERSION=2.22.0
-DOCKER_BUILDX_VERSION=0.11.2
+DOCKER_COMPOSE_V2_VERSION=2.23.1
+DOCKER_BUILDX_VERSION=0.12.0
 MACHINE=$(uname -m)
 
 echo Installing docker...
