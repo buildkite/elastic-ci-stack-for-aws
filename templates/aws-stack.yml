@@ -429,11 +429,13 @@ Parameters:
 
   ECRAccessPolicy:
     Type: String
-    Description: ECR access policy to give container instances
+    Description: ECR access policy to give instances. The +pullthrough variants add `ecr:BatchImportUpstreamImage` which allows ECR pull through cache to work transparently.
     AllowedValues:
       - none
       - readonly
+      - readonly+pullthrough
       - poweruser
+      - poweruser+pullthrough
       - full
     Default: "none"
 
@@ -639,6 +641,11 @@ Conditions:
 
     UseECR:
       !Not [ !Equals [ !Ref ECRAccessPolicy, "none" ] ]
+
+    AddECRPullThrough:
+      !Or
+        - !Equals [ !Ref ECRAccessPolicy, "readonly+pullthrough" ]
+        - !Equals [ !Ref ECRAccessPolicy, "poweruser+pullthrough" ]
 
     UseCustomerManagedParameterPath:
       !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ] ]
@@ -861,6 +868,16 @@ Resources:
                  - !Ref 'AWS::NoValue'
           - !Ref 'AWS::NoValue'
       Policies:
+        - !If
+          - AddECRPullThrough
+          - PolicyName: ECRPullThrough
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - ecr:BatchImportUpstreamImage
+          - !Ref 'AWS::NoValue'
         - !If
           - UseCustomerManagedKeyForParameterStore
           - PolicyName: DecryptAgentToken
