@@ -1,17 +1,26 @@
 dag: true
 
 steps:
-  - key: "lint-bash"
-    name: ":bash: Lint"
-    command: .buildkite/steps/lint.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+  - group: "🧹 Lint"
+    key: lint
+    steps:
+    - key: "lint-bash"
+      name: ":bash: Lint"
+      command: .buildkite/steps/lint.sh
+      agents:
+        queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
-  - label: ":bash: shfmt"
-    key: fmt
-    command: .buildkite/steps/shfmt.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    - label: ":bash: Formatting"
+      key: "fmt-bash"
+      command: .buildkite/steps/shfmt.sh
+      agents:
+        queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
+    - label: ":powershell: Formatting"
+      key: "fmt-powershell"
+      command: .buildkite/steps/psfmt.ps1
+      agents:
+        queue: agent-runners-windows-amd64
 
   - key: "fixperms-tests"
     name: ":go: fixperms tests"
@@ -28,8 +37,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     command: .buildkite/steps/deploy-service-role-stack.sh
     depends_on:
-      - "fmt"
-      - "lint-bash"
+      - "lint"
       - "fixperms-tests"
 
   - key: "packer-windows-amd64"
@@ -40,8 +48,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
-      - "fmt"
-      - "lint-bash"
+      - "lint"
       - "fixperms-tests"
 
   - key: "launch-windows-amd64"
@@ -84,8 +91,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
-      - "fmt"
-      - "lint-bash"
+      - "lint"
       - "fixperms-tests"
 
   - key: "launch-linux-amd64"
@@ -127,8 +133,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
-      - "fmt"
-      - "lint-bash"
+      - "lint"
       - "fixperms-tests"
 
   - key: "launch-linux-arm64"
