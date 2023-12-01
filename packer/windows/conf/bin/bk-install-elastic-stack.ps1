@@ -164,7 +164,7 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-file=$keyfile"
 }
 
-if (![string]::IsNullOrEmpty)($Env:BUILDKITE_AGENT_SIGNING_KEY_ID) {
+if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_ID)) {
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-key-id=$Env:BUILDKITE_AGENT_SIGNING_KEY_ID"
 }
 
