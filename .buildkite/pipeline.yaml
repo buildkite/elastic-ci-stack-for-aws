@@ -1,7 +1,7 @@
 dag: true
 
 steps:
-  - id: "lint"
+  - key: "lint-bash"
     name: ":bash: Lint"
     command: .buildkite/steps/lint.sh
     agents:
@@ -13,7 +13,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
-  - id: "fixperms-tests"
+  - key: "fixperms-tests"
     name: ":go: fixperms tests"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -22,17 +22,17 @@ steps:
           run: fixperms-tests
           config: .buildkite/docker-compose.yml
 
-  - id: "deploy-service-role-stack"
+  - key: "deploy-service-role-stack"
     name: ":aws-iam: :cloudformation:"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     command: .buildkite/steps/deploy-service-role-stack.sh
     depends_on:
       - "fmt"
-      - "lint"
+      - "lint-bash"
       - "fixperms-tests"
 
-  - id: "packer-windows-amd64"
+  - key: "packer-windows-amd64"
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
     timeout_in_minutes: 60
@@ -41,10 +41,10 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "fmt"
-      - "lint"
+      - "lint-bash"
       - "fixperms-tests"
 
-  - id: "launch-windows-amd64"
+  - key: "launch-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Launch"
     command: .buildkite/steps/launch.sh windows amd64
     agents:
@@ -54,7 +54,7 @@ steps:
       - "packer-windows-amd64"
       - "deploy-service-role-stack"
 
-  - id: "test-windows-amd64"
+  - key: "test-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Test"
     command:
       - git --version
@@ -67,7 +67,7 @@ steps:
     depends_on:
       - "launch-windows-amd64"
 
-  - id: "delete-windows-amd64"
+  - key: "delete-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Delete"
     command: .buildkite/steps/delete.sh windows amd64
     allow_dependency_failure: true
@@ -76,7 +76,7 @@ steps:
     depends_on:
       - "test-windows-amd64"
 
-  - id: "packer-linux-amd64"
+  - key: "packer-linux-amd64"
     name: ":packer: :linux: AMD64"
     command: .buildkite/steps/packer.sh linux
     timeout_in_minutes: 60
@@ -85,10 +85,10 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "fmt"
-      - "lint"
+      - "lint-bash"
       - "fixperms-tests"
 
-  - id: "launch-linux-amd64"
+  - key: "launch-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Launch"
     command: .buildkite/steps/launch.sh linux
     agents:
@@ -98,7 +98,7 @@ steps:
       - "packer-linux-amd64"
       - "deploy-service-role-stack"
 
-  - id: "test-linux-amd64"
+  - key: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
     command:
       - git --version
@@ -110,7 +110,7 @@ steps:
     depends_on:
       - "launch-linux-amd64"
 
-  - id: "delete-linux-amd64"
+  - key: "delete-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Delete"
     command: .buildkite/steps/delete.sh linux amd64
     allow_dependency_failure: true
@@ -119,7 +119,7 @@ steps:
     depends_on:
       - "test-linux-amd64"
 
-  - id: "packer-linux-arm64"
+  - key: "packer-linux-arm64"
     name: ":packer: :linux: ARM64"
     command: .buildkite/steps/packer.sh linux arm64
     timeout_in_minutes: 60
@@ -128,10 +128,10 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "fmt"
-      - "lint"
+      - "lint-bash"
       - "fixperms-tests"
 
-  - id: "launch-linux-arm64"
+  - key: "launch-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Launch"
     command: .buildkite/steps/launch.sh linux arm64
     agents:
@@ -141,7 +141,7 @@ steps:
       - "packer-linux-arm64"
       - "deploy-service-role-stack"
 
-  - id: "test-linux-arm64"
+  - key: "test-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Test"
     command:
       - git --version
@@ -153,7 +153,7 @@ steps:
     depends_on:
       - "launch-linux-arm64"
 
-  - id: "delete-linux-arm64"
+  - key: "delete-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Delete"
     command: .buildkite/steps/delete.sh linux arm64
     allow_dependency_failure: true
@@ -162,7 +162,7 @@ steps:
     depends_on:
       - "test-linux-arm64"
 
-  - id: "delete-service-role-stack"
+  - key: "delete-service-role-stack"
     name: ":aws-iam: :cloudformation: Delete"
     command: .buildkite/steps/delete-service-role-stack.sh
     agents:
@@ -172,7 +172,7 @@ steps:
       - "delete-linux-amd64"
       - "delete-linux-arm64"
 
-  - id: "copy-ami"
+  - key: "copy-ami"
     name: ":cloudformation: 🚚 🌎"
     command: .buildkite/steps/copy.sh
     agents:
@@ -183,7 +183,7 @@ steps:
       - "test-linux-arm64"
       - "test-windows-amd64"
 
-  - id: "publish"
+  - key: "publish"
     name: ":cloudformation: :rocket:"
     command: .buildkite/steps/publish.sh
     agents:
@@ -194,7 +194,7 @@ steps:
     artifact_paths: "build/*.yml"
     depends_on: "copy-ami"
 
-  - id: cleanup
+  - key: cleanup
     name: ":broom: Cleanup"
     command: .buildkite/steps/cleanup.sh
     agents:
