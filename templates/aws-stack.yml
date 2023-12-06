@@ -53,6 +53,7 @@ Metadata:
         - BuildkiteAgentSigningKeySSMParameter
         - BuildkiteAgentSigningKeyID
         - BuildkiteAgentVerificationKeySSMParameter
+        - BuildkiteAgentVerificationFailureBehavior
 
       - Label:
           default: Network Configuration
@@ -223,6 +224,15 @@ Parameters:
     Default: ""
     AllowedPattern: "^$|^/[a-zA-Z0-9_.\\-/]+$"
     ConstraintDescription: "Expects a leading forward slash"
+
+  BuildkiteAgentVerificationFailureBehavior:
+    Description: "How the agent should respond when a job signature fails verification"
+    Type: String
+    AllowedValues:
+      - "block"
+      - "warn"
+      - ""
+    Default: ""
 
   BuildkiteAgentCancelGracePeriod:
     Description: The number of seconds a canceled or timed out job is given to gracefully terminate and upload its artifacts.
@@ -1243,6 +1253,7 @@ Resources:
                   $Env:BUILDKITE_AGENT_SIGNING_KEY_PATH="${BuildkiteAgentSigningKeySSMParameter}"
                   $Env:BUILDKITE_AGENT_SIGNING_KEY_ID="${BuildkiteAgentSigningKeyID}"
                   $Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH="${BuildkiteAgentVerificationKeySSMParameter}"
+                  $Env:BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR="${BuildkiteAgentVerificationFailureBehavior}"
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
                   $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}"
@@ -1304,6 +1315,7 @@ Resources:
                   BUILDKITE_AGENT_SIGNING_KEY_PATH="${BuildkiteAgentSigningKeySSMParameter}" \
                   BUILDKITE_AGENT_SIGNING_KEY_ID="${BuildkiteAgentSigningKeyID}" \
                   BUILDKITE_AGENT_VERIFICATION_KEY_PATH="${BuildkiteAgentVerificationKeySSMParameter}" \
+                  BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR="${BuildkiteAgentVerificationFailureBehavior}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_AGENT_CANCEL_GRACE_PERIOD="${BuildkiteAgentCancelGracePeriod}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \

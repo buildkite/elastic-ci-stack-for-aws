@@ -168,6 +168,10 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_ID)) {
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-key-id=$Env:BUILDKITE_AGENT_SIGNING_KEY_ID"
 }
 
+if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR)) {
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "verification-failure-behavior=$Env:BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR"
+}
+
 if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
   Write-Output "Fetching verification key from ssm: $Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH..."
 

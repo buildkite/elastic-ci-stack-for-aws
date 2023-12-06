@@ -314,6 +314,10 @@ if [[ -n "$BUILDKITE_AGENT_SIGNING_KEY_ID" ]]; then
   echo "signing-jwks-key-id=$BUILDKITE_AGENT_SIGNING_KEY_ID" >>/etc/buildkite-agent/buildkite-agent.cfg
 fi
 
+if [[ -n "$BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR" ]]; then
+  echo "verification-failure-behavior=$BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR" >>/etc/buildkite-agent/buildkite-agent.cfg
+fi
+
 if [[ -n "$BUILDKITE_AGENT_VERIFICATION_KEY_PATH" ]]; then
   echo "Fetching signing key from ssm: $BUILDKITE_AGENT_VERIFICATION_KEY_PATH..."
 
