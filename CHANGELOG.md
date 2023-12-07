@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.11.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.11.0) (2023-12-07)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.10.0...v6.11.0)
+
+### Added
+- BuildkiteAgentCancelGracePeriod option to linux stack [#1258](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1258) (@njgrisafi)
+- RootVolumeIops parameter to allow io1 and io2 RootVolumeTypes [#1269](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1269) (@triarius)
+
+### Fixed
+- Allow hyphens in all `InstanceTypes` values [#1266](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1266) (@pH14)
+
+### Dependencies
+- Bump agent to v3.60.1 [#1260](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1260) (@DrJosh9000) [#1265](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1265) (@moskyb) [#1271](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1271) (@triarius)
+- Bump buildx to v0.12.0 [#1262](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1262) (@triarius)
+- Bump docker-compose to v2.23.3 [#1272](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1272) (@triarius)
+
+### Internal
+- Launch test elastic stacks using templates from S3 [#1267](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1267) (@moskyb)
+- Ensure tag builds have the tag [#1259](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1259) (@triarius)
+
 ## [v6.10.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.10.0) (2023-11-02)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.9.0...v6.10.0)
 
