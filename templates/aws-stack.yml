@@ -429,7 +429,7 @@ Parameters:
 
   ECRAccessPolicy:
     Type: String
-    Description: ECR access policy to give instances. The +pullthrough variants add `ecr:BatchImportUpstreamImage` which allows ECR pull through cache to work transparently.
+    Description: ECR access policy to give instances. The `+pullthrough` variants add `ecr:CreateRepository` and `ecr:BatchImportUpstreamImage` which allows ECR pull through cache to work transparently.
     AllowedValues:
       - none
       - readonly
@@ -876,6 +876,7 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action:
+                    - ecr:CreateRepository
                     - ecr:BatchImportUpstreamImage
           - !Ref 'AWS::NoValue'
         - !If
