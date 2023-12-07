@@ -373,6 +373,11 @@ Parameters:
     Type: String
     Default: "gp3"
 
+  RootVolumeIops:
+    Description: If the `RootVolumeType` is io1 or io2, the number of IOPS to provision for the root volume
+    Type: Number
+    Default: 1000
+
   RootVolumeEncrypted:
     Description: Indicates whether the EBS volume is encrypted
     Type: String
@@ -708,6 +713,11 @@ Conditions:
 
     UseStackNameForInstanceName:
       !Equals [ !Ref InstanceName, "" ]
+
+    IsRootVolumeIsIo1OrIo2:
+      !Or
+        - !Equals [ !Ref RootVolumeType, "io1" ]
+        - !Equals [ !Ref RootVolumeType, "io2" ]
 
 Mappings:
   ECRManagedPolicy:
@@ -1133,7 +1143,11 @@ Resources:
                     - 'linuxamd64'
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
-              Ebs: { VolumeSize: !Ref RootVolumeSize, VolumeType: !Ref RootVolumeType, Encrypted: !Ref RootVolumeEncrypted }
+              Ebs:
+                VolumeSize: !Ref RootVolumeSize
+                VolumeType: !Ref RootVolumeType
+                Encrypted: !Ref RootVolumeEncrypted
+                Iops: !If [ IsRootVolumeIsIo1OrIo2, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
           TagSpecifications:
             - ResourceType: instance
               Tags:
