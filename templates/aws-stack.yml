@@ -429,13 +429,13 @@ Parameters:
 
   ECRAccessPolicy:
     Type: String
-    Description: ECR access policy to give instances. The `+pullthrough` variants add `ecr:CreateRepository` and `ecr:BatchImportUpstreamImage` which allows ECR pull through cache to work transparently.
+    Description: ECR access policy to give instances. The `-pullthrough` variants add `ecr:CreateRepository` and `ecr:BatchImportUpstreamImage` which allows ECR pull through cache to work transparently.
     AllowedValues:
       - none
       - readonly
-      - readonly+pullthrough
+      - readonly-pullthrough
       - poweruser
-      - poweruser+pullthrough
+      - poweruser-pullthrough
       - full
     Default: "none"
 
@@ -644,8 +644,8 @@ Conditions:
 
     AddECRPullThrough:
       !Or
-        - !Equals [ !Ref ECRAccessPolicy, "readonly+pullthrough" ]
-        - !Equals [ !Ref ECRAccessPolicy, "poweruser+pullthrough" ]
+        - !Equals [ !Ref ECRAccessPolicy, "readonly-pullthrough" ]
+        - !Equals [ !Ref ECRAccessPolicy, "poweruser-pullthrough" ]
 
     UseCustomerManagedParameterPath:
       !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ] ]
@@ -720,9 +720,9 @@ Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
     readonly              : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
-    readonly+pullthrough  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
+    readonly-pullthrough  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly' }
     poweruser             : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
-    poweruser+pullthrough : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
+    poweruser-pullthrough : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full                  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
 
   # Generated from Makefile via build/mappings.yml
