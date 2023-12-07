@@ -243,11 +243,6 @@ bump-agent-version:
 	$(SED) -Ei "s/AGENT_VERSION=.+/AGENT_VERSION=$(AGENT_VERSION)/g" packer/linux/scripts/install-buildkite-agent.sh
 	$(SED) -Ei "s/\\\$$AGENT_VERSION = \".+\"/\$$AGENT_VERSION = \"$(AGENT_VERSION)\"/g" packer/windows/scripts/install-buildkite-agent.ps1
 
-validate: build/aws-stack.yml
-	aws --no-cli-pager cloudformation validate-template \
-		--output text \
-		--template-body "file://$(PWD)/build/aws-stack.yml"
-
 generate-toc:
 	docker run -it --rm -v "$(PWD):/app" node:slim bash \
 		-c "npm install -g markdown-toc && cd /app && markdown-toc -i README.md"

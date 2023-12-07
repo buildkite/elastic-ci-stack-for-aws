@@ -107,11 +107,30 @@ EOF
 echo "--- Building templates"
 make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 
+echo "--- Uploading test template to S3"
+s3_bucket="buildkite-agent-elastic-stack-test-templates"
+s3_key="templates/build-${BUILDKITE_BUILD_NUMBER}/${os}-${arch}/${BUILDKITE_COMMIT}.aws-stack.yml"
+
+# s3 cp requires old path style, cloudformation requires new http style. sigh.
+upload_location="s3://${s3_bucket}/${s3_key}"
+download_location="https://s3.amazonaws.com/${s3_bucket}/${s3_key}"
+
+aws s3 cp --content-type 'text/yaml' "build/aws-stack.yml" "$upload_location"
+
 echo "--- Validating templates"
-make validate
+aws --no-cli-pager cloudformation validate-template \
+  --output text \
+  --template-url "$download_location"
 
 echo "--- Creating stack ${stack_name}"
-make create-stack "STACK_NAME=$stack_name" "SERVICE_ROLE=$service_role"
+aws cloudformation create-stack \
+  --output text \
+  --stack-name "${stack_name}" \
+  --template-url "$download_location" \
+  --disable-rollback \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
+  --parameters "$(cat config.json)" \
+  --role-arn "$service_role"
 
 echo "+++ ⌛️ Waiting for update to complete"
 ./parfait watch-stack "${stack_name}"
