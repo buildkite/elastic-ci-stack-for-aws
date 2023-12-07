@@ -369,7 +369,7 @@ Parameters:
     Default: ""
 
   RootVolumeType:
-    Description: Type of root volume to use
+    Description: Type of root volume to use. If you are specifying `io1` or `io2`, you will most likely want to specify `RootVolumeIOPS` as well.
     Type: String
     Default: "gp3"
 
