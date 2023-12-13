@@ -67,6 +67,7 @@ Metadata:
         - InstanceOperatingSystem
         - InstanceTypes
         - EnableInstanceStorage
+        - MountTmpfsAtTmp
         - AgentsPerInstance
         - KeyName
         - SecretsBucket
@@ -500,6 +501,14 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  MountTmpfsAtTmp:
+    Type: String
+    Description: Controls the filesystem mounted at /tmp. By default, /tmp is a tmpfs (memory-backed filesystem). Disabling this causes /tmp to be stored in the root filesystem.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
 
   EnableCostAllocationTags:
     Type: String
@@ -1228,6 +1237,7 @@ Resources:
                   Content-Type: text/x-shellscript; charset="us-ascii"
                   #!/bin/bash -v
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
+                  BUILDKITE_MOUNT_TMPFS_AT_TMP="${MountTmpfsAtTmp}" \
                     /usr/local/bin/bk-mount-instance-storage.sh
                   --==BOUNDARY==
                   Content-Type: text/x-shellscript; charset="us-ascii"

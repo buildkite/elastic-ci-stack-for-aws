@@ -24,6 +24,15 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 
 echo "Starting ${BASH_SOURCE[0]}..."
 
+if [[ "${BUILDKITE_MOUNT_TMPFS_AT_TMP:-true}" != "true" ]]; then
+  echo "Disabling automatic mount of tmpfs at /tmp"
+
+  # "It is possible to disable the automatic mounting [...]
+  # You may disable them simply by masking them:"
+  # -- https://www.freedesktop.org/wiki/Software/systemd/APIFileSystems/
+  systemctl mask --now tmp.mount
+fi
+
 # Mount instance storage if we can
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
 
@@ -98,6 +107,6 @@ if [[ ! -f /etc/fstab.backup ]]; then
   echo Appened to /etc/fstab:
   cat /etc/fstab
 else
-  echo /etc/fstab.backup already exists. Not mofidying /etc/fstab:
+  echo /etc/fstab.backup already exists. Not modifying /etc/fstab:
   cat /etc/fstab
 fi
