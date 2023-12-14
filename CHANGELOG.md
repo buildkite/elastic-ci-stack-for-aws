@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.12.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.12.0) (2023-12-14)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.11.0...v6.12.0)
+
+### Added
+- Add MountTmpfsAtTmp parameter [#1274](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1274) (@DrJosh9000)
+
+### Dependencies
+- Bump buildkite-agent to v3.61.0 [#1275](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1275) (@DrJosh9000)
+
 ## [v6.11.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.11.0) (2023-12-07)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.10.0...v6.11.0)
 
