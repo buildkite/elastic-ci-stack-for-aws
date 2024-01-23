@@ -235,6 +235,8 @@ AGENT_VERSION ?= $(shell curl -Lfs "https://buildkite.com/agent/releases/latest?
 
 SED ?= sed
 ifeq ($(shell uname), Darwin)
+	# Use GNU sed, not MacOS sed
+	# Install with: brew install gsed
 	SED = gsed
 endif
 
