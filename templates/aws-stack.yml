@@ -374,6 +374,11 @@ Parameters:
     Type: String
     Default: "gp3"
 
+  RootVolumeThroughput:
+    Description: If the `RootVolumeType` is gp3, the throughput to provision for the root volume
+    Type: Number
+    Default: 125
+
   RootVolumeIops:
     Description: If the `RootVolumeType` is io1 or io2, the number of IOPS to provision for the root volume
     Type: Number
@@ -722,6 +727,9 @@ Conditions:
 
     UseStackNameForInstanceName:
       !Equals [ !Ref InstanceName, "" ]
+
+    IsRootVolumeIsGp3:
+      !Equals [ !Ref RootVolumeType, "gp3" ]
 
     IsRootVolumeIsIo1OrIo2:
       !Or
@@ -1156,6 +1164,7 @@ Resources:
                 VolumeSize: !Ref RootVolumeSize
                 VolumeType: !Ref RootVolumeType
                 Encrypted: !Ref RootVolumeEncrypted
+                Throughput: !If [ IsRootVolumeIsGp3, !Ref RootVolumeThroughput, !Ref "AWS::NoValue" ]
                 Iops: !If [ IsRootVolumeIsIo1OrIo2, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
           TagSpecifications:
             - ResourceType: instance
