@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.14.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.14.0) (2024-01-30)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.13.0...v6.14.0)
+
+### Added
+- A parameter, `RootVolumeThroughput`, to be set for gp3 root volumes [#1282](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1282) (@cmanou)
+
+### Changed
+- Allow specifying IOPS for gp3 [#1283](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1283) (@bradleyayers)
+
+### Dependencies
+- Bump buildx to v0.12.1 and docker-compose to v2.24.4 [#1284](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1284) (@triarius)
+
 ## [v6.13.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.13.0) (2024-01-23)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.12.0...v6.13.0)
 
