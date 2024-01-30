@@ -731,10 +731,11 @@ Conditions:
     IsRootVolumeIsGp3:
       !Equals [ !Ref RootVolumeType, "gp3" ]
 
-    IsRootVolumeIsIo1OrIo2:
+    IsRootVolumeIsIo1OrIo2OrGp3:
       !Or
         - !Equals [ !Ref RootVolumeType, "io1" ]
         - !Equals [ !Ref RootVolumeType, "io2" ]
+        - !Equals [ !Ref RootVolumeType, "gp3" ]
 
 Mappings:
   ECRManagedPolicy:
@@ -1165,7 +1166,7 @@ Resources:
                 VolumeType: !Ref RootVolumeType
                 Encrypted: !Ref RootVolumeEncrypted
                 Throughput: !If [ IsRootVolumeIsGp3, !Ref RootVolumeThroughput, !Ref "AWS::NoValue" ]
-                Iops: !If [ IsRootVolumeIsIo1OrIo2, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
+                Iops: !If [ IsRootVolumeIsIo1OrIo2OrGp3, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
           TagSpecifications:
             - ResourceType: instance
               Tags:
