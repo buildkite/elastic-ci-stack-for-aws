@@ -49,6 +49,7 @@ Metadata:
         - BuildkiteWindowsAdministrator
         - BuildkiteAgentScalerServerlessARN
         - BuildkiteAgentScalerVersion
+        - LogRetentionDays
 
       - Label:
           default: Network Configuration
@@ -186,6 +187,11 @@ Parameters:
     Description: Version of the buildkite-agent-scaler to use
     Type: String
     Default: "1.7.0"
+
+  LogRetentionDays:
+    Type: Number
+    Description: The number of days to retain the Cloudwatch Logs of the lambda.
+    Default: "1"
 
   BuildkiteAgentTracingBackend:
     Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
@@ -1444,3 +1450,4 @@ Resources:
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
+        LogRetentionDays: !Ref LogRetentionDays
