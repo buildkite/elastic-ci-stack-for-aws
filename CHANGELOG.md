@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.15.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.15.0) (2024-02-02)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.14.0...v6.15.0)
+
+### Security
+- For linux, the Base AMI has been updated to [Amazon Linux 2023.3.20240131](https://docs.aws.amazon.com/linux/al2023/release-notes/relnotes-2023.3.20240131.html) which fixes [CVE-2024-21626](https://nvd.nist.gov/vuln/detail/CVE-2024-21626).
+
+### Added
+- Support configurable log retention for scaler with the `LogRetentionDays` parameter. [#1278](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1278) (@grahamc)
+
+### Fixed
+- Fix path for cfn-env on windows elastic stack did not always work [#1286](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1286) (@triarius)
+
 ## [v6.14.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.14.0) (2024-01-30)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.13.0...v6.14.0)
 
