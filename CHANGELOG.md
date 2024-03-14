@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.17.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.17.0) (2024-03-14)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.16.0...v6.17.0)
+
+### Changed
+- Bump Docker to v25.0.3 from repositories configured for the [Base Amazon Linux 2023 AMI](https://docs.aws.amazon.com/linux/al2023/release-notes/relnotes-2023.3.20240304.html)
+- Update agent to 3.66 [#1301](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1301) (@moskyb) [#1295](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1295) (@matthewborden)
+- Bump Docker buildx to v0.13.0 and Docker Compose to v2.24.6 [#1299](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1299) (@orien)
+- Update ECR plugin to v2.8.0 [#1300](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1300) (@lucaswilric)
+
 ## [v6.16.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.16.0) (2024-02-15)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.15.0...v6.16.0)
 
