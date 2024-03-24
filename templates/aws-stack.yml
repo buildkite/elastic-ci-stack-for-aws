@@ -462,6 +462,14 @@ Parameters:
       - "false"
     Default: "true"
 
+  DockerNetworkingProtocol:
+    Type: String
+    Description: Which IP version to enable for docker containers and building docker images. Only applies to Linux instances, not Windows.
+    AllowedValues:
+      - "ipv4"
+      - "dualstack"
+    Default: "ipv4"
+
   EnableSecretsPlugin:
     Type: String
     Description: Enables s3-secrets plugin for all pipelines
@@ -1205,6 +1213,7 @@ Resources:
                   <powershell>
                   $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
                   $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
+                  $Env:DOCKER_NETWORKING_PROTOCOL="${DockerNetworkingProtocol}"
                   powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 
                   $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
@@ -1260,6 +1269,7 @@ Resources:
                   #!/bin/bash -v
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
+                  DOCKER_NETWORKING_PROTOCOL=${DockerNetworkingProtocol} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                     /usr/local/bin/bk-configure-docker.sh
                   --==BOUNDARY==
