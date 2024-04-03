@@ -57,6 +57,10 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   source_ami      = data.amazon-ami.al2023.id
   ssh_username    = "ec2-user"
 
+  run_tags = {
+    Name = "Packer Builder" // marks resources for deletion in cleanup.sh
+  }
+
   tags = {
     Name          = "elastic-ci-stack-linux-${var.arch}"
     OSVersion     = "Amazon Linux 2023"
