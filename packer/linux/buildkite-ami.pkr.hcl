@@ -56,6 +56,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   region                                    = var.region
   source_ami                                = data.amazon-ami.al2023.id
   ssh_username                              = "ec2-user"
+  ssh_clear_authorized_keys                 = true
   temporary_security_group_source_public_ip = true
 
   run_tags = {
@@ -109,9 +110,5 @@ build {
 
   provisioner "shell" {
     script = "scripts/install-buildkite-utils.sh"
-  }
-
-  provisioner "shell" {
-    inline = ["rm /home/ec2-user/.ssh/authorized_keys"]
   }
 }
