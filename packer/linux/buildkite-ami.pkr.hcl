@@ -111,8 +111,4 @@ build {
   provisioner "shell" {
     script = "scripts/install-buildkite-utils.sh"
   }
-
-  provisioner "shell" {
-    inline = ["rm /home/ec2-user/.ssh/authorized_keys"]
-  }
 }
