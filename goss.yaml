@@ -14,6 +14,14 @@ file:
   /etc/systemd/system/refresh_authorized_keys.timer:
     exists: true
 
+  /home/ec2-user/.ssh/authorized_keys:
+    exists: true
+    contains: ["!packer"]
+
+  /root/.ssh/authorized_keys:
+    exists: true
+    contains: ["!packer"]
+
   /var/lib/buildkite-agent/builds:
     filetype: directory
     exists: true
