@@ -102,7 +102,7 @@ steps:
     name: ":cloudformation: :linux: AMD64 Test"
     command:
       - git --version
-      - goss validate --format documentation
+      - sudo goss validate --format documentation
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
@@ -145,7 +145,7 @@ steps:
     name: ":cloudformation: :linux: ARM64 Test"
     command:
       - git --version
-      - goss validate --format documentation
+      - sudo goss validate --format documentation
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
