@@ -5,7 +5,7 @@ $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-m
 $InstanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
 
-Write-Output "terminate-instance: requesting instance termination..."
+Write-Output "$(Get-Date) terminate-instance: requesting instance termination..."
 aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
 
 # If autoscaling request was successful, we will terminate the instance, otherwise, if
@@ -13,17 +13,17 @@ aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --in
 # so that the ASG will terminate it despite scale-in protection. Otherwise, we should not
 # terminate the instance, so we need to retart the agent.
 if ($lastexitcode -eq 0) {
-  Write-Output "terminate-instance: terminating instance..."
+  Write-Output "$(Get-Date) terminate-instance: terminating instance..."
 } else {
-  Write-Output "terminate-instance: ASG could not decrement (we're already at minSize)"
+  Write-Output "$(Get-Date) terminate-instance: ASG could not decrement (we're already at minSize)"
   if ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
-    Write-Output "terminate-instance: marking instance as unhealthy"
+    Write-Output "$(Get-Date) terminate-instance: marking instance as unhealthy"
     aws autoscaling set-instance-health `
       --instance-id "$InstanceId" `
       --region "$Region" `
       --health-status Unhealthy
   } else {
-    Write-Output "terminate-instance: restarting agent..."
+    Write-Output "$(Get-Date) terminate-instance: restarting agent..."
     nssm start buildkite-agent
   }
 }
