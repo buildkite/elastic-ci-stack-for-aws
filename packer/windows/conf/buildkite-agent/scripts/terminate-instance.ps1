@@ -1,3 +1,5 @@
+Start-Transcript -path C:\buildkite-agent\terminate-instance.log -append
+
 $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
 
 $InstanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
@@ -28,3 +30,5 @@ if ($lastexitcode -eq 0) {
     nssm start buildkite-agent
   }
 }
+
+Stop-Transcript
