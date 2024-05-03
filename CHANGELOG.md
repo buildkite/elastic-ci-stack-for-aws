@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.20.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.20.0) (2024-05-03)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.19.0...v6.20.0)
+
+### Fixed
+- Fix windows agent not restarting [#1318](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1318) (@patrobinson)
+- Fix SSH key clearance in buildkite-ami.pkr.hcl [#1316](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1316) (@Gezi-lzq @123sarahj123)
+
+### Dependencies
+- Bump Docker buildx to v0.14.0 and Docker Compose to v2.27.0 [#1317](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1317) (@orien)
+
 ## [v6.19.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.19.0) (2024-04-30)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.18.0...v6.19.0)
 
