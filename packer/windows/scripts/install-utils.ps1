@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 # pinned because awscli v2 drops 'aws ecr get-login'
 # https://github.com/buildkite-plugins/ecr-buildkite-plugin/issues/37
 $AWS_CLI_VERSION = 1.18.11
-$GIT_VERSION = 2.39.1
+$GIT_VERSION = 2.45.1
 
 Write-Output "Installing chocolatey package manager"
 Set-ExecutionPolicy Bypass -Scope Process -Force
