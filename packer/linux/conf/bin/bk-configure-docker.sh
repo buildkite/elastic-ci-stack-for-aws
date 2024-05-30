@@ -71,7 +71,7 @@ fi
 
 # One day we can auto-detect whether the instance is v4-only, dualstack or v6-only. To avoid a
 # breaking change though, we'll default to ipv4 only and users can opt into v6 support. The elastic
-# stack has always defaulted to v4-only so this ensuring no breaking behaviour.
+# stack has always defaulted to v4-only so this ensures no breaking behaviour.
 # v6-only is currently not an option because docker doesn't support it, but maybe one day....
 echo Customising docker network configuration...
 
@@ -86,12 +86,9 @@ elif [[ "${DOCKER_NETWORKING_PROTOCOL}" == "dualstack" ]]; then
   # Using v6 inside containers requires DOCKER_EXPERIMENTAL. This is configured
   # further down
   DOCKER_EXPERIMENTAL=true
-  cat <<<"$(jq '.ipv6=true' /etc/docker/daemon.json)" >/etc/docker/daemon.json
-  cat <<<"$(jq '."fixed-cidr-v6"="2001:db8:1::/64"' /etc/docker/daemon.json)" >/etc/docker/daemon.json
-  cat <<<"$(jq '.ip6tables=true' /etc/docker/daemon.json)" >/etc/docker/daemon.json
   cat <<<"$(
     jq \
-      '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24},{"base":"2001:db8:2::/104","size":112}]' \
+      '.ipv6=true | ."fixed-cidr-v6"="2001:db8:1::/64" | .ip6tables=true | ."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24},{"base":"2001:db8:2::/104","size":112}]' \
       /etc/docker/daemon.json
   )" >/etc/docker/daemon.json
 else
