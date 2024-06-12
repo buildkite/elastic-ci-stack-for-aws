@@ -30,6 +30,16 @@ if [[ "${BUILDKITE_MOUNT_TMPFS_AT_TMP:-true}" != "true" ]]; then
   # "It is possible to disable the automatic mounting [...]
   # You may disable them simply by masking them:"
   # -- https://www.freedesktop.org/wiki/Software/systemd/APIFileSystems/
+  #
+  # However, we received a report that sometimes this will fail (#1326)
+  # "systemctl mask --now tmp.mount" disables tmp.mount, then stops tmp.mount
+  # which tries to unmount /tmp. That can fail if /tmp is in use.
+  # "systemctl status tmp.mount" will show "umount: /tmp: target is busy."
+  #
+  # As a workaround, lazy-unmount it first. Whatever process has files open
+  # in /tmp will continue running, but Buildkite jobs shouldn't be able to
+  # touch it - they'll get /tmp on disk instead.
+  umount --lazy /tmp
   systemctl mask --now tmp.mount
 fi
 
