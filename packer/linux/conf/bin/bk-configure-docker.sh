@@ -69,6 +69,33 @@ else
   echo User namespace remapping not configured.
 fi
 
+# One day we can auto-detect whether the instance is v4-only, dualstack or v6-only. To avoid a
+# breaking change though, we'll default to ipv4 only and users can opt into v6 support. The elastic
+# stack has always defaulted to v4-only so this ensures no breaking behaviour.
+# v6-only is currently not an option because docker doesn't support it, but maybe one day....
+echo Customising docker network configuration...
+
+if [[ "${DOCKER_NETWORKING_PROTOCOL}" == "ipv4" ]]; then
+  # This is the default
+  cat <<<"$(
+    jq \
+      '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' \
+      /etc/docker/daemon.json
+  )" >/etc/docker/daemon.json
+elif [[ "${DOCKER_NETWORKING_PROTOCOL}" == "dualstack" ]]; then
+  # Using v6 inside containers requires DOCKER_EXPERIMENTAL. This is configured
+  # further down
+  DOCKER_EXPERIMENTAL=true
+  cat <<<"$(
+    jq \
+      '.ipv6=true | ."fixed-cidr-v6"="2001:db8:1::/64" | .ip6tables=true | ."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24},{"base":"2001:db8:2::/104","size":112}]' \
+      /etc/docker/daemon.json
+  )" >/etc/docker/daemon.json
+else
+  # docker 25.0 doesn't support ipv6 only, so we don't support it either
+  true
+fi
+
 if [[ "${DOCKER_EXPERIMENTAL:-false}" == "true" ]]; then
   echo Configuring experiment flag for docker daemon...
   cat <<<"$(jq '.experimental=true' /etc/docker/daemon.json)" >/etc/docker/daemon.json
@@ -84,13 +111,6 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
 else
   echo Instance storage not configured.
 fi
-
-echo Customising docker IP address pools...
-cat <<<"$(
-  jq \
-    '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' \
-    /etc/docker/daemon.json
-)" >/etc/docker/daemon.json
 
 echo Cleaning up docker images...
 systemctl start docker-low-disk-gc.service
