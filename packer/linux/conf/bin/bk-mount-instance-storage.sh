@@ -39,7 +39,9 @@ if [[ "${BUILDKITE_MOUNT_TMPFS_AT_TMP:-true}" != "true" ]]; then
   # As a workaround, lazy-unmount it first. Whatever process has files open
   # in /tmp will continue running, but Buildkite jobs shouldn't be able to
   # touch it - they'll get /tmp on disk instead.
-  umount --lazy /tmp
+  if mount | grep -q -E '^tmpfs on /tmp type tmpfs'; then
+    umount --lazy /tmp
+  fi
   systemctl mask --now tmp.mount
 fi
 
