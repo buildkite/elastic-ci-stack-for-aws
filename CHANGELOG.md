@@ -13,31 +13,43 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 * Upgrade agent to 3.74.0 [#1328](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1328) (@zhming0)
 
-#### Agent Upgrade Details
 
-[Full Changelog](https://github.com/buildkite/agent/compare/v3.73.1...v3.74.0)
+<details>
+<summary>Agent Changelog </summary>
+<p><a href="https://github.com/buildkite/agent/compare/v3.73.1...v3.74.0">Full Changelog</a></p>
+<h5 id="security">Security</h5>
+<ul>
+<li>⚠️ When using <code>artifact download</code>, artifacts that were uploaded with paths containing <code>..</code> will no longer be able to traverse up from the destination path. This change is unlikely to break the vast majority of pipelines, however if you are relying on <code>..</code> for path traversal and cannot fix your pipeline, you can enable the new experiment <code>allow-artifact-path-traversal</code> <a href="https://github.com/buildkite/agent/pull/2815">#2815</a> (@DrJosh9000)</li>
+<li>Redact Job API token like other env vars <a href="https://github.com/buildkite/agent/pull/2834">#2834</a> (@DrJosh9000)</li>
+</ul>
+<h5 id="added">Added</h5>
+<ul>
+<li>Add logs to allowed-[repositories|plugins] <a href="https://github.com/buildkite/agent/pull/2810">#2810</a> (@jakubm-canva)</li>
+</ul>
+<h5 id="fixed">Fixed</h5>
+<ul>
+<li>Fix error in k8s after job completes <a href="https://github.com/buildkite/agent/pull/2804">#2804</a> (@DrJosh9000)</li>
+</ul>
+<h5 id="changed">Changed</h5>
+<ul>
+<li>PTY rows/cols increased <a href="https://github.com/buildkite/agent/pull/2806">#2806</a> (@pda)</li>
+<li>Dont sign initial steps with interpolations <a href="https://github.com/buildkite/agent/pull/2813">#2813</a> (@moskyb)</li>
+</ul>
+<h5 id="internal">Internal</h5>
+<ul>
+<li>kubernetes-exec is now a flag <a href="https://github.com/buildkite/agent/pull/2814">#2814</a> (@DrJosh9000)</li>
+<li>shell logger: Use fmt functions once <a href="https://github.com/buildkite/agent/pull/2805">#2805</a> (@DrJosh9000)</li>
+<li>Update deprecated import <a href="https://github.com/buildkite/agent/pull/2811">#2811</a> (@DrJosh9000)</li>
+<li>Use Rand per-test in agent/plugin/error_test.go <a href="https://github.com/buildkite/agent/pull/2795">#2795</a> (@moskyb)</li>
+<li>Publish debian and rpm packages to Buildkite Packages <a href="https://github.com/buildkite/agent/pull/2824">#2824</a> <a href="https://github.com/buildkite/agent/pull/2826">#2826</a> <a href="https://github.com/buildkite/agent/pull/2831">#2831</a> <a href="https://github.com/buildkite/agent/pull/2830">#2830</a> <a href="https://github.com/buildkite/agent/pull/2833">#2833</a> (@sj26)</li>
+<li>Dependabot updates: <a href="https://github.com/buildkite/agent/pull/2809">#2809</a>, <a href="https://github.com/buildkite/agent/pull/2816">#2816</a>, <a href="https://github.com/buildkite/agent/pull/2800">#2800</a>, <a href="https://github.com/buildkite/agent/pull/2801">#2801</a>, <a href="https://github.com/buildkite/agent/pull/2802">#2802</a>, <a href="https://github.com/buildkite/agent/pull/2803">#2803</a>, <a href="https://github.com/buildkite/agent/pull/2787">#2787</a>, <a href="https://github.com/buildkite/agent/pull/2798">#2798</a>, <a href="https://github.com/buildkite/agent/pull/2808">#2808</a>, <a href="https://github.com/buildkite/agent/pull/2827">#2827</a> <a href="https://github.com/buildkite/agent/pull/2817">#2817</a>, <a href="https://github.com/buildkite/agent/pull/2818">#2818</a>, <a href="https://github.com/buildkite/agent/pull/2819">#2819</a>, <a href="https://github.com/buildkite/agent/pull/2822">#2822</a>, <a href="https://github.com/buildkite/agent/pull/2829">#2829</a>, <a href="https://github.com/buildkite/agent/pull/2832">#2832</a>, <a href="https://github.com/buildkite/agent/pull/2835">#2835</a> (@dependabot[bot])</li>
+</ul>
+</details>
 
-##### Security
-- ⚠️ When using `artifact download`, artifacts that were uploaded with paths containing `..` will no longer be able to traverse up from the destination path. This change is unlikely to break the vast majority of pipelines, however if you are relying on `..` for path traversal and cannot fix your pipeline, you can enable the new experiment `allow-artifact-path-traversal` [#2815](https://github.com/buildkite/agent/pull/2815) (@DrJosh9000)
-- Redact Job API token like other env vars [#2834](https://github.com/buildkite/agent/pull/2834) (@DrJosh9000)
+> [!IMPORTANT]
+> When using `artifact download`, artifacts that were uploaded with paths containing `..` will no longer be able to traverse up from the destination path. This change is unlikely to break the vast majority of pipelines, however if you are relying on `..` for path traversal and cannot fix your pipeline, you can enable the new experiment `allow-artifact-path-traversal`
 
-##### Added
-- Add logs to allowed-[repositories|plugins] [#2810](https://github.com/buildkite/agent/pull/2810) (@jakubm-canva)
 
-##### Fixed
-- Fix error in k8s after job completes [#2804](https://github.com/buildkite/agent/pull/2804) (@DrJosh9000)
-
-##### Changed
-- PTY rows/cols increased [#2806](https://github.com/buildkite/agent/pull/2806) (@pda)
-- Dont sign initial steps with interpolations [#2813](https://github.com/buildkite/agent/pull/2813) (@moskyb)
-
-##### Internal
-- kubernetes-exec is now a flag [#2814](https://github.com/buildkite/agent/pull/2814) (@DrJosh9000)
-- shell logger: Use fmt functions once [#2805](https://github.com/buildkite/agent/pull/2805) (@DrJosh9000)
-- Update deprecated import [#2811](https://github.com/buildkite/agent/pull/2811) (@DrJosh9000)
-- Use Rand per-test in agent/plugin/error_test.go [#2795](https://github.com/buildkite/agent/pull/2795) (@moskyb)
-- Publish debian and rpm packages to Buildkite Packages [#2824](https://github.com/buildkite/agent/pull/2824) [#2826](https://github.com/buildkite/agent/pull/2826) [#2831](https://github.com/buildkite/agent/pull/2831) [#2830](https://github.com/buildkite/agent/pull/2830) [#2833](https://github.com/buildkite/agent/pull/2833) (@sj26)
-- Dependabot updates: [#2809](https://github.com/buildkite/agent/pull/2809), [#2816](https://github.com/buildkite/agent/pull/2816), [#2800](https://github.com/buildkite/agent/pull/2800), [#2801](https://github.com/buildkite/agent/pull/2801), [#2802](https://github.com/buildkite/agent/pull/2802), [#2803](https://github.com/buildkite/agent/pull/2803), [#2787](https://github.com/buildkite/agent/pull/2787), [#2798](https://github.com/buildkite/agent/pull/2798), [#2808](https://github.com/buildkite/agent/pull/2808), [#2827](https://github.com/buildkite/agent/pull/2827) [#2817](https://github.com/buildkite/agent/pull/2817), [#2818](https://github.com/buildkite/agent/pull/2818), [#2819](https://github.com/buildkite/agent/pull/2819), [#2822](https://github.com/buildkite/agent/pull/2822), [#2829](https://github.com/buildkite/agent/pull/2829), [#2832](https://github.com/buildkite/agent/pull/2832), [#2835](https://github.com/buildkite/agent/pull/2835) (@dependabot[bot])
 
 ### Fixed
 * Lazy-unmount /tmp before masking [#1327](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1327) (@DrJosh9000)
