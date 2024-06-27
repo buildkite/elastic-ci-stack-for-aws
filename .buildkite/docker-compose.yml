@@ -2,7 +2,7 @@ version: '3'
 
 services:
   fixperms-tests:
-    image: golang:1.21
+    image: golang:1.22
     working_dir: /code
     environment:
       CGO_ENABLED: 0
