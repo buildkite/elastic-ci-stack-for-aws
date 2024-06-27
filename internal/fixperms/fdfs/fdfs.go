@@ -57,6 +57,16 @@ func (s *FS) Lchown(path string, uid, gid int) error {
 	return nil
 }
 
+// Stat wraps fstatat(2) (with AT_SYMLINK_NOFOLLOW).
+func (s *FS) Stat(path string) (*unix.Stat_t, error) {
+	var stat unix.Stat_t
+	if err := unix.Fstatat(int(s.file.Fd()), path, &stat, unix.AT_SYMLINK_NOFOLLOW); err != nil {
+		return nil, fmt.Errorf("fstatat(%d, %q): %w", s.file.Fd(), path, err)
+	}
+
+	return &stat, nil
+}
+
 // Sub wraps openat2(2) (with O_RDONLY+O_DIRECTORY+O_NOFOLLOW+O_CLOEXEC), and
 // returns an FS.
 func (s *FS) Sub(dir string) (*FS, error) {
@@ -102,6 +112,16 @@ func (s *FS) RecursiveChown(uid, gid int) error {
 	}
 	for _, d := range ds {
 		if !d.IsDir() {
+			// Skip lchown if the uid and gid already match. This avoids updating
+			// the ctime of files unnecessarily.
+			stat, err := s.Stat(d.Name())
+			if err != nil {
+				return err
+			}
+			if int(stat.Uid) == uid && int(stat.Gid) == gid {
+				continue
+			}
+
 			if err := s.Lchown(d.Name(), uid, gid); err != nil {
 				return err
 			}
