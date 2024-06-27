@@ -7,7 +7,7 @@ PACKER_VERSION ?= 1.9.4
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
-GO_VERSION ?= 1.21
+GO_VERSION ?= 1.22
 
 FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
 
