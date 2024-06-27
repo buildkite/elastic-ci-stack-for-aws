@@ -114,8 +114,8 @@ func (s *FS) RecursiveChown(uid, gid int) error {
 		if !d.IsDir() {
 			// Skip lchown if the uid and gid already match. This avoids updating
 			// the ctime of files unnecessarily.
-			var stat *unix.Stat_t
-			if stat, err = s.Stat(d.Name()); err != nil {
+			stat, err := s.Stat(d.Name())
+			if err != nil {
 				return err
 			}
 			if int(stat.Uid) == uid && int(stat.Gid) == gid {
