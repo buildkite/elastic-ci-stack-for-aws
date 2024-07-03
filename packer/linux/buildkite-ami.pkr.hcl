@@ -109,6 +109,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "scripts/install-buildkite-test-splitter.sh"
+  }
+
+  provisioner "shell" {
     script = "scripts/install-buildkite-utils.sh"
   }
 }
