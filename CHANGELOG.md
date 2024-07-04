@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.22.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.1) (2024-07-04)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.22.0...v6.22.1)
+
+### Changed
+- bump the agent version to v3.74.1 [#1338](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1338) (@wolfeidau)
+
+### Internal
+- Create dependabot.yml, update some Go things [#1332](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1332) (@DrJosh9000)
+
+<details>
+<summary>Agent Changelog </summary>
+<p><a href="https://github.com/buildkite/agent/compare/v3.74.0...v3.74.1">Full Changelog</a></p>
+<h5 id="added">Added</h5>
+<ul>
+<li>Log public signing key thumbprint and signed step payload <a href="https://github.com/buildkite/agent/pull/2853">#2853</a> (@jordandcarter)</li>
+</ul>
+<h5 id="fixed">Fixed</h5>
+<ul>
+<li>Don&#39;t try to early-set env vars <a href="https://github.com/buildkite/agent/pull/2852">#2852</a> (@DrJosh9000)</li>
+<li>Convey env vars between k8s containers <a href="https://github.com/buildkite/agent/pull/2851">#2851</a> (@DrJosh9000)</li>
+<li>Fix typo in &quot;kuberentes&quot; <a href="https://github.com/buildkite/agent/pull/2836">#2836</a> (@moskyb)</li>
+</ul>
+<h5 id="internal">Internal</h5>
+<ul>
+<li>Make the graphql endpoint for <code>buildkite-agent tool sign</code> configurable <a href="https://github.com/buildkite/agent/pull/2841">#2841</a> (@moskyb)</li>
+<li>Dependabot updates: <a href="https://github.com/buildkite/agent/pull/2863">#2863</a>, <a href="https://github.com/buildkite/agent/pull/2862">#2862</a>, <a href="https://github.com/buildkite/agent/pull/2857">#2857</a>, <a href="https://github.com/buildkite/agent/pull/2860">#2860</a>, <a href="https://github.com/buildkite/agent/pull/2864">#2864</a>, <a href="https://github.com/buildkite/agent/pull/2856">#2856</a>, <a href="https://github.com/buildkite/agent/pull/2867">#2867</a>, <a href="https://github.com/buildkite/agent/pull/2846">#2846</a>, <a href="https://github.com/buildkite/agent/pull/2848">#2848</a>, <a href="https://github.com/buildkite/agent/pull/2847">#2847</a>, <a href="https://github.com/buildkite/agent/pull/2845">#2845</a>, <a href="https://github.com/buildkite/agent/pull/2840">#2840</a>, <a href="https://github.com/buildkite/agent/pull/2844">#2844</a>, <a href="https://github.com/buildkite/agent/pull/2842">#2842</a>, <a href="https://github.com/buildkite/agent/pull/2843">#2843</a>, <a href="https://github.com/buildkite/agent/pull/2849">#2849</a> (@dependabot[bot])</li>
+</ul>
+</details>
+
 ## [v6.22.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.0) (2024-06-19)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.21.0...v6.22.0)
 
