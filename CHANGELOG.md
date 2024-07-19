@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.22.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.2) (2024-07-18)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.22.1...v6.22.2)
+
+### Changed
+- Bump agent version to v3.75.0 [#1342](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1342) (@wolfeidau)
+
+### Added
+- First pass at adding test-splitter to the elastic-ci linux stack. [#1337](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1337) (@wooly)
+
+### Dependencies
+- Bump golang.org/x/sys from 0.21.0 to 0.22.0 [#1340](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1340) (@dependabot[bot])
+
+<details>
+<summary>Agent Changelog </summary>
+<p><a href="https://github.com/buildkite/agent/compare/v3.74.1...v3.75.0">Full Changelog</a></p>
+<h5 id="added">Added</h5>
+<ul>
+<li>Introduce <code>riscv64</code> architecture <a href="https://github.com/buildkite/agent/pull/2877">#2877</a> (@TimePrinciple)</li>
+<li>Add a SHA256SUMS file <a href="https://github.com/buildkite/agent/pull/2890">#2890</a> (@DrJosh9000)</li>
+</ul>
+<h5 id="changed">Changed</h5>
+<ul>
+<li>Reject more secrets <a href="https://github.com/buildkite/agent/pull/2884">#2884</a> (@DrJosh9000)</li>
+<li>Include repo name in Packages image path <a href="https://github.com/buildkite/agent/pull/2871">#2871</a> (@swebb)</li>
+</ul>
+<h5 id="fixed">Fixed</h5>
+<ul>
+<li>Fix some common artifact download bugs <a href="https://github.com/buildkite/agent/pull/2878">#2878</a> (@DrJosh9000)</li>
+<li>SUP-2343: remove &quot;retry&quot; example from &quot;buildkite-agent step get&quot; as not valid <a href="https://github.com/buildkite/agent/pull/2879">#2879</a> (@tomowatt)</li>
+</ul>
+<h5 id="internal">Internal</h5>
+<ul>
+<li>Log in to buildkite packages right before pushing images <a href="https://github.com/buildkite/agent/pull/2892">#2892</a> (@moskyb)</li>
+<li>Update LICENSE.txt <a href="https://github.com/buildkite/agent/pull/2885">#2885</a> (@wooly)</li>
+<li>Remove Packagecloud agent publish steps from agent pipeline <a href="https://github.com/buildkite/agent/pull/2873">#2873</a> (@tommeier)</li>
+<li>Release Docker images on Buildkite Packages <a href="https://github.com/buildkite/agent/pull/2837">#2837</a> (@swebb)</li>
+<li>Fix the OIDC login for Packages <a href="https://github.com/buildkite/agent/pull/2875">#2875</a> (@swebb)</li>
+<li>Fix the Packages registry name <a href="https://github.com/buildkite/agent/pull/2874">#2874</a> (@swebb)</li>
+<li>Fix image name when pushing to Buildkite packages <a href="https://github.com/buildkite/agent/pull/2870">#2870</a> (@swebb)</li>
+<li>Dependabot updates: <a href="https://github.com/buildkite/agent/pull/2888">#2888</a>, <a href="https://github.com/buildkite/agent/pull/2887">#2887</a>, <a href="https://github.com/buildkite/agent/pull/2882">#2882</a>, <a href="https://github.com/buildkite/agent/pull/2883">#2883</a>, <a href="https://github.com/buildkite/agent/pull/2880">#2880</a> (@dependabot[bot])</li>
+</ul>
+</details>
+
 ## [v6.22.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.1) (2024-07-04)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.22.0...v6.22.1)
 
