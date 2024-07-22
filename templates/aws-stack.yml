@@ -186,7 +186,7 @@ Parameters:
   BuildkiteAgentScalerVersion:
     Description: Version of the buildkite-agent-scaler to use
     Type: String
-    Default: "1.7.0"
+    Default: "1.8.0"
 
   LogRetentionDays:
     Type: Number
