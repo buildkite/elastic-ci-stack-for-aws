@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.22.3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.3) (2024-07-22)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.22.2...v6.22.3)
+
+### Changed
+- Bump Agent to v3.75.1 and Scaler to v1.8.0 [#1345](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1345) (@DrJosh9000)
+
+> [!NOTE]
+> Depending on how you upgrade existing stacks, you may not automatically be upgraded to v1.8.0 of Buildkite Agent Scaler. [A work around](https://github.com/buildkite/elastic-ci-stack-for-aws/issues/1172#issuecomment-1697304023) exists for this known issue.
+
+<details>
+<summary>Agent Changelog </summary>
+
+## [v3.75.1](https://github.com/buildkite/agent/tree/v3.75.1) (2024-07-22)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.75.0...v3.75.1)
+
+### Fixed
+- Fix downloaded artifact permissions [#2894](https://github.com/buildkite/agent/pull/2894) (@DrJosh9000)
+
+</details>
+
 ## [v6.22.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.2) (2024-07-18)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.22.1...v6.22.2)
 
