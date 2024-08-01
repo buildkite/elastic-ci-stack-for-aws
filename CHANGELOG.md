@@ -4,6 +4,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.22.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.4) (2024-07-31)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.22.3...v6.22.4)
+
+### Changed
+- Bump agent to v3.76.2 [#1353](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1353), [#1351](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1351) (@DrJosh9000)
+- Bump Test Splitter version to v0.8.0 [#1349](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1349) (@nprizal)
+- Upgrade test-splitter-client to v0.7.3 [#1344](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1344) (@wooly)
+
+<details>
+<summary>Agent Changelog </summary>
+
+## [v3.76.2](https://github.com/buildkite/agent/tree/v3.76.2) (2024-08-01)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.76.1...v3.76.2)
+
+> [!NOTE]
+> v3.76.0 fixed an issue which caused the HTTP client in the agent to fall back to HTTP/1.1, see [#2908](https://github.com/buildkite/agent/pull/2908). If you need to disable HTTP/2.0 in your environment you can do this using the `--no-http2` flag or matching configuration option.
+
+### Fixed
+- Only override TLSClientConfig if set [#2913](https://github.com/buildkite/agent/pull/2913) (@DrJosh9000)
+
+
+## [v3.76.1](https://github.com/buildkite/agent/tree/v3.76.1) (2024-07-31)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.76.0...v3.76.1)
+
+> [!NOTE]
+> v3.76.0 fixed an issue which caused the HTTP client in the agent to fall back to HTTP/1.1, see [#2908](https://github.com/buildkite/agent/pull/2908). If you need to disable HTTP/2.0 in your environment you can do this using the `--no-http2` flag or matching configuration option.
+
+### Changed
+- Pass cancel grace period to bootstrap [#2910](https://github.com/buildkite/agent/pull/2910) (@DrJosh9000)
+
+## [v3.76.0](https://github.com/buildkite/agent/tree/v3.76.0) (2024-07-31)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.75.1...v3.76.0)
+
+> [!NOTE]
+> This release fixed an issue which caused the HTTP client in the agent to fall back to HTTP/1.1, see [#2908](https://github.com/buildkite/agent/pull/2908). If you need to disable HTTP/2.0 in your environment you can do this using the `--no-http2` flag or matching configuration option.
+
+### Changed
+- fix enable http/2 by default as intended by flags [#2908](https://github.com/buildkite/agent/pull/2908) (@wolfeidau)
+
+### Fixed
+- Let artifact phase and post-command run in grace period [#2899](https://github.com/buildkite/agent/pull/2899) (@DrJosh9000)
+
+### Internal
+- Dependabot updates: [#2902](https://github.com/buildkite/agent/pull/2902), [#2907](https://github.com/buildkite/agent/pull/2907), [#2903](https://github.com/buildkite/agent/pull/2903), [#2904](https://github.com/buildkite/agent/pull/2904), [#2901](https://github.com/buildkite/agent/pull/2901), [#2905](https://github.com/buildkite/agent/pull/2905), [#2896](https://github.com/buildkite/agent/pull/2896), [#2897](https://github.com/buildkite/agent/pull/2897) (@dependabot[bot])
+
+</details>
+
 ## [v6.22.3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.22.3) (2024-07-22)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.22.2...v6.22.3)
 
