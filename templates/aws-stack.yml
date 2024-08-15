@@ -386,7 +386,7 @@ Parameters:
     Default: 125
 
   RootVolumeIops:
-    Description: If the `RootVolumeType` is io1 or io2, the number of IOPS to provision for the root volume
+    Description: If the `RootVolumeType` is gp3, io1, or io2, the number of IOPS to provision for the root volume
     Type: Number
     Default: 1000
 
