@@ -291,6 +291,7 @@ disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
 cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
+signing-jwks-key-id=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 EOF
 
 if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
