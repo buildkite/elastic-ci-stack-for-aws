@@ -926,6 +926,19 @@ Resources:
           - !Ref 'AWS::NoValue'
       Policies:
         - !If
+          - CreatePipelineSigningKMSKey
+          - PolicyName: PipelineSigningKMSKeyAccess
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - kms:GetPublicKey
+                    - kms:Sign
+                    - kms:Verify
+                  Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
+          - !Ref 'AWS::NoValue'
+        - !If
           - UseCustomerManagedKeyForParameterStore
           - PolicyName: DecryptAgentToken
             PolicyDocument:
