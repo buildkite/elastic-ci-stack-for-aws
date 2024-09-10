@@ -568,6 +568,11 @@ Parameters:
     Description: Optional - Customise the EC2 instance Name tag
     Default: ""
 
+  PipelineSigningKMSKeyId:
+    Type: String
+    Description: Optional - Identifier of the KMS key used to sign and verify pipelines (Created if left blank and PipelineSigningKMSKeySpec is selected)
+    Default: ""
+
   PipelineSigningKMSKeySpec:
     Type: String
     Description: The key spec for the KMS key used to sign and verify pipelines
@@ -590,6 +595,17 @@ Rules:
                 - !Ref BuildkiteAgentTokenParameterStorePath
                 - ""
         AssertDescription: "You must provide BuildkiteAgentToken or BuildkiteAgentTokenParameterStorePath"
+  HasPipelineSigningKMSKey:
+    Assertions:
+      - Assert:
+          !Or
+            - !Equals
+              - !Ref PipelineSigningKMSKeyId
+              - ""            
+            - !Equals
+              - !Ref PipelineSigningKMSKeySpec
+              - "none"
+        AssertDescription: "You must provide either provide a PipelineSigningKMSKeyId or select a PipelineSigningKMSKeySpec but not both"
 
 Outputs:
   VpcId:
@@ -609,6 +625,12 @@ Outputs:
       !If [ CreateSecretsBucket, !Ref ManagedSecretsLoggingBucket, "Undefined" ]
     Export:
       Name: !Sub '${AWS::StackName}-ManagedSecretsLoggingBucket'
+
+  PipelineSigningKMSKey:
+    Value:
+      !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, "none" ]
+    Export:
+      Name: !Sub '${AWS::StackName}-PipelineSigningKMSKey'
 
   AutoScalingGroupName:
     Value: !Ref AgentAutoScaleGroup
@@ -694,8 +716,16 @@ Conditions:
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
     
+    UsePipelineSigningKMSKey:
+      !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
+
     CreatePipelineSigningKMSKey:
-      !Not [ !Equals [ !Ref PipelineSigningKMSKeySpec, "none" ] ]
+      !And
+      - !Equals [ !Ref PipelineSigningKMSKeyId, "" ]
+      - !Not [ !Equals [ !Ref PipelineSigningKMSKeySpec, "none" ] ]
+
+    HasPipelineSigningKMSKey:
+      !Or [ !Condition CreatePipelineSigningKMSKey, !Condition UsePipelineSigningKMSKey ]
 
     HasKeyName:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
@@ -886,6 +916,7 @@ Resources:
   PipelineSigningKMSKey:
     Type: AWS::KMS::Key
     Condition: CreatePipelineSigningKMSKey
+    DeletionPolicy: Retain
     Properties:
       Description: Key used to sign and verify pipelines
       KeySpec: !Ref PipelineSigningKMSKeySpec
@@ -926,7 +957,7 @@ Resources:
           - !Ref 'AWS::NoValue'
       Policies:
         - !If
-          - CreatePipelineSigningKMSKey
+          - HasPipelineSigningKMSKey
           - PolicyName: PipelineSigningKMSKeyAccess
             PolicyDocument:
               Version: '2012-10-17'
@@ -936,7 +967,10 @@ Resources:
                     - kms:GetPublicKey
                     - kms:Sign
                     - kms:Verify
-                  Resource: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
+                  Resource: !If
+                              - HasPipelineSigningKMSKey
+                              - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
+                              - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
           - !Ref 'AWS::NoValue'
         - !If
           - UseCustomerManagedKeyForParameterStore
@@ -1284,7 +1318,7 @@ Resources:
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
                     LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref "AWS::Region", !Ref SecretsBucketRegion ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
-                    PipelineSigningKMSKey: !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, "" ],
+                    PipelineSigningKMSKey: !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, !Ref PipelineSigningKMSKeyId ],
                   }
               - !Sub
                 - |
@@ -1348,7 +1382,7 @@ Resources:
                     LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
                     LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref "AWS::Region", !Ref SecretsBucketRegion ],
                     AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
-                    PipelineSigningKMSKey: !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, "" ],
+                    PipelineSigningKMSKey: !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, !Ref PipelineSigningKMSKeyId ],
                   }
 
   AgentAutoScaleGroup:
