@@ -147,6 +147,7 @@ shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
+signing-jwks-key-id=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
 "@
 $OFS=" "
 
