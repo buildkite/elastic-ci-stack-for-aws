@@ -42,7 +42,7 @@ Metadata:
         - PipelineSigningKMSAccess
 
       - Label:
-          default: Advanced Buildkite Configuration
+          default: Advanced Configuration
         Parameters:
         - BuildkiteAgentRelease
         - BuildkiteAgentTags
