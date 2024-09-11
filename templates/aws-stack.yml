@@ -27,12 +27,19 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: Buildkite Configuration
+          default: Base Configuration
         Parameters:
+        - BuildkiteAgentToken
         - BuildkiteAgentTokenParameterStorePath
         - BuildkiteAgentTokenParameterStoreKMSKey
-        - BuildkiteAgentToken
         - BuildkiteQueue
+
+      - Label:
+          default: Signed Pipelines Configuration
+        Parameters:
+        - PipelineSigningKMSKeyId
+        - PipelineSigningKMSKeySpec
+        - PipelineSigningKMSAccess
 
       - Label:
           default: Advanced Buildkite Configuration
@@ -581,6 +588,14 @@ Parameters:
       - "none"
     Default: "none"
 
+  PipelineSigningKMSAccess:
+    Type: String
+    Description: The access level for the KMS key used to sign and verify pipelines
+    AllowedValues:
+      - "sign-and-verify"
+      - "verify"
+    Default: "sign-and-verify"
+
 Rules:
   HasToken:
     Assertions:
@@ -726,6 +741,9 @@ Conditions:
 
     HasPipelineSigningKMSKey:
       !Or [ !Condition CreatePipelineSigningKMSKey, !Condition UsePipelineSigningKMSKey ]
+
+    HasSigningKMSAccessSignAndVerify:
+      !Equals [ !Ref PipelineSigningKMSAccess, "sign-and-verify" ]
 
     HasKeyName:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
@@ -964,13 +982,17 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action:
-                    - kms:GetPublicKey
-                    - kms:Sign
-                    - kms:Verify
+                    !If
+                      - HasSigningKMSAccessSignAndVerify
+                      - - kms:Sign
+                        - kms:Verify
+                        - kms:GetPublicKey
+                      - - kms:Verify
+                        - kms:GetPublicKey
                   Resource: !If
-                              - HasPipelineSigningKMSKey
-                              - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
+                              - CreatePipelineSigningKMSKey
                               - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
+                              - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
           - !Ref 'AWS::NoValue'
         - !If
           - UseCustomerManagedKeyForParameterStore
