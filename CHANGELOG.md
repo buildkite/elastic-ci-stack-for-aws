@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.26.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.26.0) (2024-09-11)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.25.0...v6.26.0)
+
+### Added
+- Add the option to create a KMS key for signing of pipelines [#1366](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1366) (@wolfeidau)
+
+### Changed
+- Bump agent to v3.81.0 [#1368](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1368) (@wolfeidau)
+- Bump agent to v3.80.0 [#1365](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1365) (@wolfeidau)
+
+<details>
+<summary>Agent Changelog</summary>
+
+## [v3.81.0](https://github.com/buildkite/agent/tree/v3.81.0) (2024-09-10)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.80.0...v3.81.0)
+
+### Fixed
+- Fix for region discovery issue with aws sdkv2 when running in ec2 [#2977](https://github.com/buildkite/agent/pull/2977) (@wolfeidau)
+- Explain verification-failure-behavior in more detail [#2984](https://github.com/buildkite/agent/pull/2984) (@DrJosh9000)
+
+### Added
+- Add sha256 checksum output to the formatting options [#2974](https://github.com/buildkite/agent/pull/2974) (@patrobinson)
+
+### Internal
+- Dependabot churn: [#2978](https://github.com/buildkite/agent/pull/2978), [#2980](https://github.com/buildkite/agent/pull/2980) (@dependabot[bot])
+
+## [v3.80.0](https://github.com/buildkite/agent/tree/v3.80.0) (2024-09-06)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.79.0...v3.80.0)
+
+### Added
+- Support AWS KMS for signing and verifying pipelines [#2960](https://github.com/buildkite/agent/pull/2960) (@wolfeidau)
+
+### Changed
+- Allow `buildkite-agent` to run a job when JWK is unavailable but failure behaviour is set to `warn` [#2945](https://github.com/buildkite/agent/pull/2945) (@CheeseStick)
+
+### Fixed
+- coda-content-type pass content-type to the server when specified [#2967](https://github.com/buildkite/agent/pull/2967) (@SorchaAbel)
+- Updated to support only ECC_NIST_P256 keyspec for initial release [#2973](https://github.com/buildkite/agent/pull/2973) (@wolfeidau)
+
+### Internal
+- Dependabot churn: [#2964](https://github.com/buildkite/agent/pull/2964), [#2965](https://github.com/buildkite/agent/pull/2965), [#2952](https://github.com/buildkite/agent/pull/2952), [#2972](https://github.com/buildkite/agent/pull/2972), [#2963](https://github.com/buildkite/agent/pull/2963) (@dependabot[bot])
+
+</details>
+
+### Internal
+- Bump golang.org/x/sys from 0.24.0 to 0.25.0 [#1367](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1367) (@dependabot[bot])
+
+
 ## [v6.25.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.25.0) (2024-08-30)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.24.0...v6.25.0)
 
