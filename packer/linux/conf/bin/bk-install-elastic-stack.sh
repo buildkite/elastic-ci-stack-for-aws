@@ -292,6 +292,7 @@ disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
 cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
+verification-failure-behavior=${BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
 EOF
 
 if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
