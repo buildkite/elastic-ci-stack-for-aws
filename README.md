@@ -57,6 +57,7 @@ Periodic Instance Health Check | ✅ |
 git lfs | ✅ |
 Additional sudo Permissions | ✅ |
 RDP Access | | ✅
+Pipeline Signing | ✅ | ✅
 
 ## Security
 

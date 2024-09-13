@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.27.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.27.0) (2024-09-13)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.26.0...v6.27.0)
+
+### Added
+- Add signing verification behaviour and fix windows config option [#1370](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1370) (@wolfeidau)
+
 ## [v6.26.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.26.0) (2024-09-11)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.25.0...v6.26.0)
 
