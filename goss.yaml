@@ -139,9 +139,6 @@ command:
   make --version:
     exit-status: 0
 
-  test-splitter --version:
-    exit-status: 0
-
   wget --version:
     exit-status: 0
 
