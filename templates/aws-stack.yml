@@ -804,6 +804,7 @@ Conditions:
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "r6gd" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "r7g" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "r7gd" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "r8g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t4g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "x2gd" ]
 
