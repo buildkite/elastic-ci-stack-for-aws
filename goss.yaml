@@ -42,12 +42,12 @@ port:
   tcp:22:
     listening: true
     ip:
-    - 0.0.0.0
+      - 0.0.0.0
 
   tcp6:22:
     listening: true
     ip:
-    - '::'
+      - "::"
 
 service:
   amazon-cloudwatch-agent:
@@ -80,8 +80,8 @@ user:
     uid: 2000
     gid: 2000
     groups:
-    - buildkite-agent
-    - docker
+      - buildkite-agent
+      - docker
     home: /var/lib/buildkite-agent
     shell: /bin/bash
 
@@ -90,7 +90,7 @@ user:
     uid: 74
     gid: 74
     groups:
-    - sshd
+      - sshd
     home: /usr/share/empty.sshd
     shell: /sbin/nologin
 
@@ -147,7 +147,7 @@ command:
   systemctl is-enabled refresh_authorized_keys.timer:
     exit-status: 1
     stdout:
-    - /disabled/
+      - /disabled/
 
   systemctl is-enabled docker-gc.timer:
     exit-status: 0
@@ -173,7 +173,7 @@ command:
     exit-status: 0
     timeout: 30000
     stdout:
-    - /,name=userns,/
+      - /,name=userns,/
 
   # Check docker plugins are installed
   # Note that goss will evaluate the first layer of templating, and docker will evaluate the second
@@ -182,8 +182,8 @@ command:
     exit-status: 0
     timeout: 30000
     stdout:
-    - /,buildx,/
-    - /,compose,/
+      - /,buildx,/
+      - /,compose,/
 
   # Check that docker containers can run
   docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version:
@@ -195,16 +195,16 @@ command:
     exit-status: 0
     timeout: 30000
     stdout:
-    - buildkite-agent:docker
+      - buildkite-agent:docker
 
-  docker run --rm -t arm64v8/ubuntu uname -m:
+  docker run --rm -t --platform linux/arm64/v8 arm64v8/ubuntu uname -m:
     exit-status: 0
     timeout: 30000
     stdout:
-    - aarch64
+      - aarch64
 
-  docker run --rm -t amd64/ubuntu uname -m:
+  docker run --rm -t --platform linux/amd64 amd64/ubuntu uname -m:
     exit-status: 0
     timeout: 30000
     stdout:
-    - x86_64
+      - x86_64
