@@ -40,7 +40,7 @@ variable "is_released" {
 data "amazon-ami" "al2023" {
   filters = {
     architecture        = var.arch
-    name                = "al2023-ami-minimal-*"
+    name                = "al2023-ami-minimal-2023.5.20240903.0-*"
     virtualization-type = "hvm"
   }
   most_recent = true
