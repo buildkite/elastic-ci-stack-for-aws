@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.28.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.28.0) (2024-09-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.27.0...v6.28.0)
+
+### Fixed
+- fix: Add `r8g` to the `UsingArmInstances` logic [#1373](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1373) (@ParkMyCar)
+- Bump agent to v3.82.1 [#1376](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1376) (@patrobinson)
+
+### Changed
+- Pin amazon linux ami [#1377](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1377) (@patrobinson)
+- Remove Test Splitter [#1372](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1372) (@nprizal)
+
+<details>
+<summary>Agent Changelog</summary>
+
+## [v3.82.1](https://github.com/buildkite/agent/tree/v3.82.1) (2024-09-23)
+
+### Fixed
+- Work around issue with http2 connections on linux not cleanly closing, causing agents to be marked as lost [#3005](https://github.com/buildkite/agent/pull/3005) (@patrobinson)
+
+</details>
+
+
 ## [v6.27.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.27.0) (2024-09-13)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.26.0...v6.27.0)
 
