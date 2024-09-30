@@ -240,7 +240,7 @@ Parameters:
   BuildkiteQueue:
     Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}"
     Type: String
-    Default: default
+    Default: default-queue
     MinLength: 1
 
   AgentsPerInstance:
@@ -625,7 +625,7 @@ Rules:
           !Or
             - !Equals
               - !Ref PipelineSigningKMSKeyId
-              - ""            
+              - ""
             - !Equals
               - !Ref PipelineSigningKMSKeySpec
               - "none"
@@ -739,7 +739,7 @@ Conditions:
 
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
-    
+
     UsePipelineSigningKMSKey:
       !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
 
@@ -940,7 +940,7 @@ Resources:
       Name: !Sub "/${AWS::StackName}/buildkite/agent-token"
       Type: String
       Value: !Ref BuildkiteAgentToken
-  
+
   PipelineSigningKMSKey:
     Type: AWS::KMS::Key
     Condition: CreatePipelineSigningKMSKey
