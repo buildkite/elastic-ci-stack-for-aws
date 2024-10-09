@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.29.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.29.0) (2024-10-09)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.28.0...v6.29.0)
+
+### Fixed
+- Add m8g instances to UsingArmInstances [#1381](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1381) (@wgrrrr)
+
+### Changed
+- Bump agent to v3.83.0 [#1383](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1383) (@DrJosh9000)
+- Bump golang.org/x/sys from 0.25.0 to 0.26.0 [#1382](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1382) (@dependabot[bot])
+
+<details>
+<summary><h3>Agent Changelog</h3></summary>
+
+## [v3.83.0](https://github.com/buildkite/agent/tree/v3.83.0) (2024-10-08)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.82.1...v3.83.0)
+
+### Added
+- Exit with code 94 if a mirror lock times out [#3023](https://github.com/buildkite/agent/pull/3023) (@DrJosh9000)
+- Add support for oidc aws session tags [#3015](https://github.com/buildkite/agent/pull/3015) (@sj26)
+- Support for future multipart artifact uploads [#2991](https://github.com/buildkite/agent/pull/2991) (@DrJosh9000)
+
+### Fixed
+- Tweak BUILDKITE_IGNORED_ENV handling [#3029](https://github.com/buildkite/agent/pull/3029) (@DrJosh9000)
+- BUG FIX: Ensure Build Title Is Correct When Checkout Is Skipped [#3024](https://github.com/buildkite/agent/pull/3024) (@123sarahj123)
+- Ensure all string slice args have whitespace cleaned off of each element [#3021](https://github.com/buildkite/agent/pull/3021) (@moskyb)
+- Fix data race on worker stop [#3016](https://github.com/buildkite/agent/pull/3016) (@DrJosh9000)
+
+### Internal
+- Migrate Agent Pipeline to Agent Cluster [#3018](https://github.com/buildkite/agent/pull/3018) (@matthewborden)
+- Refactor the various agent HTTP clients [#3017](https://github.com/buildkite/agent/pull/3017) (@DrJosh9000)
+- Dependabot bumps to busybox [#3025](https://github.com/buildkite/agent/pull/3025), golang.org/x packages [#3027](https://github.com/buildkite/agent/pull/3027), cloud provider packages [#3028](https://github.com/buildkite/agent/pull/3028), [#3019](https://github.com/buildkite/agent/pull/3019), [#3013](https://github.com/buildkite/agent/pull/3013), [#3009](https://github.com/buildkite/agent/pull/3009), DataDog packages [#3010](https://github.com/buildkite/agent/pull/3010) Ubuntu [#3012](https://github.com/buildkite/agent/pull/3012), [#3008](https://github.com/buildkite/agent/pull/3008), and go-pipeline [#3014](https://github.com/buildkite/agent/pull/3014) (@dependabot[bot])
+
+</details>
+
 ## [v6.28.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.28.0) (2024-09-24)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.27.0...v6.28.0)
 
