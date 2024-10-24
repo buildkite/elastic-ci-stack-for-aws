@@ -105,6 +105,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "scripts/install-session-manager-plugin.sh"
+  }
+
+  provisioner "shell" {
     script = "scripts/install-buildkite-agent.sh"
   }
 
