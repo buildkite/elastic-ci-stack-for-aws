@@ -197,13 +197,13 @@ command:
     stdout:
     - buildkite-agent:docker
 
-  docker run --rm -t arm64v8/ubuntu uname -m:
+  docker run --rm --platform linux/arm64 -t arm64v8/ubuntu uname -m:
     exit-status: 0
     timeout: 30000
     stdout:
     - aarch64
 
-  docker run --rm -t amd64/ubuntu uname -m:
+  docker run --rm --platform linux/amd64 -t amd64/ubuntu uname -m:
     exit-status: 0
     timeout: 30000
     stdout:
