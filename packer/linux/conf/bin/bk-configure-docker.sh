@@ -35,6 +35,8 @@ cat /usr/local/lib/bk-configure-docker.sh
 # shellcheck disable=SC1091
 source /usr/local/lib/bk-configure-docker.sh
 
+systemctl start proc-sys-fs-binfmt_misc.automount
+
 echo Installing qemu binfmt for multiarch...
 if ! docker run \
   --privileged \
