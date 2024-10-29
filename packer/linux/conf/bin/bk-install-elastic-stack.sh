@@ -378,6 +378,9 @@ systemctl daemon-reload
 echo Starting buildkite-agent...
 systemctl enable --now buildkite-agent
 
+echo Starting buildx-docker-binfmt...
+systemctl enable --now buildx-docker-binfmt
+
 echo Signaling success to CloudFormation...
 # This will fail if the stack has already completed, for instance if there is a min size
 # of 1 and this is the 2nd instance. This is ok, so we just ignore the error
