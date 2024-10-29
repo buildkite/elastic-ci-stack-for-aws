@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.30.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.30.0) (2024-10-30)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.29.1...v6.30.0)
+
+### Added
+- Add support for c8g instances. [#1392](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1392) (@toothbrush)
+- Restore SSM Session Manager Plugin [#1389](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1389) (@ellsclytn)
+
+### Changed
+- Bump agent to v3.84.0 [#1393](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1393) (@DrJosh9000)
+
+### Internal
+- fix: update goss to be more explicit with platform in docker tests [#1390](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1390) (@wolfeidau)
+
+<details>
+<summary><h3>Agent Changelog</h3></summary>
+
+## [v3.84.0](https://github.com/buildkite/agent/tree/v3.84.0) (2024-10-28)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.83.1...v3.84.0)
+
+### Added
+- Add command for canceling a running a build [#2958](https://github.com/buildkite/agent/pull/2958) (@dannymidnight)
+- Add tini-static to alpine images [#3054](https://github.com/buildkite/agent/pull/3054) (@DrJosh9000)
+
+### Fixed
+- Implement several documentation improvements to the Agent (for the Buildkite Docs). [#3043](https://github.com/buildkite/agent/pull/3043) (@gilesgas)
+- Allow token to be empty if graphql-token is provided [#3051](https://github.com/buildkite/agent/pull/3051) (@jordandcarter)
+- Fix multiline secret redaction when output with \r\n [#3050](https://github.com/buildkite/agent/pull/3050) (@DrJosh9000)
+- k8s exec: Perform liveness check of clients [#3045](https://github.com/buildkite/agent/pull/3045) (@DrJosh9000)
+- Fix request headers for multipart [#3042](https://github.com/buildkite/agent/pull/3042) (@DrJosh9000)
+
+### Internal
+- install.sh tidyups [#3032](https://github.com/buildkite/agent/pull/3032) (@DrJosh9000)
+- Parallel container image uploads [#3035](https://github.com/buildkite/agent/pull/3035) (@DrJosh9000)
+- Various dependency bumps: [#3058](https://github.com/buildkite/agent/pull/3058), [#3026](https://github.com/buildkite/agent/pull/3026), [#3055](https://github.com/buildkite/agent/pull/3055), [#3056](https://github.com/buildkite/agent/pull/3056), [#3048](https://github.com/buildkite/agent/pull/3048), [#3047](https://github.com/buildkite/agent/pull/3047), [#3049](https://github.com/buildkite/agent/pull/3049), [#3036](https://github.com/buildkite/agent/pull/3036), [#3041](https://github.com/buildkite/agent/pull/3041), [#3040](https://github.com/buildkite/agent/pull/3040), [#3037](https://github.com/buildkite/agent/pull/3037), [#3039](https://github.com/buildkite/agent/pull/3039) (@dependabot[bot])
+
+</details>
+
 ## [v6.29.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.29.1) (2024-10-10)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.29.0...v6.29.1)
 
