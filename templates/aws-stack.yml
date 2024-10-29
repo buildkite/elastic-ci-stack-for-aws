@@ -625,7 +625,7 @@ Rules:
           !Or
             - !Equals
               - !Ref PipelineSigningKMSKeyId
-              - ""            
+              - ""
             - !Equals
               - !Ref PipelineSigningKMSKeySpec
               - "none"
@@ -739,7 +739,7 @@ Conditions:
 
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
-    
+
     UsePipelineSigningKMSKey:
       !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
 
@@ -789,6 +789,7 @@ Conditions:
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c7g" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c7gd" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c7gn" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c8g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "g5g" ]
         - !Or
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "i4g" ]
@@ -941,7 +942,7 @@ Resources:
       Name: !Sub "/${AWS::StackName}/buildkite/agent-token"
       Type: String
       Value: !Ref BuildkiteAgentToken
-  
+
   PipelineSigningKMSKey:
     Type: AWS::KMS::Key
     Condition: CreatePipelineSigningKMSKey
