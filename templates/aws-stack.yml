@@ -789,6 +789,7 @@ Conditions:
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c7g" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c7gd" ]
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c7gn" ]
+          - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "c8g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "g5g" ]
         - !Or
           - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "i4g" ]
