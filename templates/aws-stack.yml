@@ -303,12 +303,12 @@ Parameters:
     Default: ""
 
   InstanceTypes:
-    Description: Comma-separated list with 1-4 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
+    Description: Comma-separated list with 1-10 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
     Type: String
     Default: t3.large
     MinLength: 1
-    AllowedPattern: "^[\\w-\\.]+(,[\\w-\\.]*){0,3}$"
-    ConstraintDescription: "must contain 1-4 instance types separated by commas. No space before/after the comma."
+    AllowedPattern: "^[\\w-\\.]+(,[\\w-\\.]*){0,9}$"
+    ConstraintDescription: "must contain 1-10 instance types separated by commas. No space before/after the comma."
 
   MaxSize:
     Description: Maximum number of instances
@@ -713,13 +713,31 @@ Conditions:
       !Equals [ !Ref RootVolumeName, "" ]
 
     UseInstanceType2:
-      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
 
     UseInstanceType3:
-      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
 
     UseInstanceType4:
-      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType5:
+      !Not [ !Equals [ !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType6:
+      !Not [ !Equals [ !Select [ "5", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType7:
+      !Not [ !Equals [ !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType8:
+      !Not [ !Equals [ !Select [ "7", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType9:
+      !Not [ !Equals [ !Select [ "8", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+
+    UseInstanceType10:
+      !Not [ !Equals [ !Select [ "9", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARNs ], "" ] ]
@@ -1246,7 +1264,7 @@ Resources:
           KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
-          InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ]
+          InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", ""] ] ] ]
           MetadataOptions:
             HttpTokens: !Ref IMDSv2Tokens
             # Allow containers using a Docker network on the host to receive IDMSv2 responses
@@ -1437,19 +1455,44 @@ Resources:
             LaunchTemplateId: !Ref AgentLaunchTemplate
             Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
           Overrides:
-          - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ]
+          - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
           - !If
             - UseInstanceType2
-            - InstanceType: !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType3
-            - InstanceType: !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType4
-            - InstanceType: !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType5
+            - InstanceType: !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType6
+            - InstanceType: !Select [ "5", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType7
+            - InstanceType: !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType8
+            - InstanceType: !Select [ "7", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType9
+            - InstanceType: !Select [ "8", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType10
+            - InstanceType: !Select [ "9", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       Cooldown: 60
