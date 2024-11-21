@@ -35,20 +35,6 @@ cat /usr/local/lib/bk-configure-docker.sh
 # shellcheck disable=SC1091
 source /usr/local/lib/bk-configure-docker.sh
 
-echo Installing qemu binfmt for multiarch...
-if ! docker run \
-  --privileged \
-  --userns=host \
-  --pull=never \
-  --rm \
-  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
-  --install all; then
-  echo Failed to install binfmt.
-  echo Avaliable docker images:
-  docker image ls
-  exit 1
-fi
-
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
 
@@ -120,3 +106,17 @@ systemctl enable docker-gc.timer docker-low-disk-gc.timer
 
 echo Restarting docker daemon...
 systemctl restart docker
+
+echo Installing qemu binfmt for multiarch...
+if ! docker run \
+  --privileged \
+  --userns=host \
+  --pull=never \
+  --rm \
+  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
+  --install all; then
+  echo Failed to install binfmt.
+  echo Avaliable docker images:
+  docker image ls
+  exit 1
+fi

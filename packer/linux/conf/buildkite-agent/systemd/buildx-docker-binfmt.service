@@ -1,0 +1,12 @@
+[Unit]
+Description=Container to run after binfmt proc fs
+Requires=docker.service
+Requires=proc-sys-fs-binfmt_misc.mount
+After=proc-sys-fs-binfmt_misc.mount
+After=docker.service
+
+[Service]
+ExecStart=docker run --privileged --userns=host --pull=never --rm "tonistiigi/binfmt" --install all
+
+[Install]
+WantedBy=proc-sys-fs-binfmt_misc.mount
