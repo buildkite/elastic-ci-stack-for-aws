@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DOCKER_COMPOSE_V2_VERSION=2.30.3
-DOCKER_BUILDX_VERSION=0.18.0
+DOCKER_BUILDX_VERSION=0.19.2
 MACHINE=$(uname -m)
 
 echo Installing docker...
