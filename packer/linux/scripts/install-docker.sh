@@ -47,6 +47,9 @@ docker-compose version
 
 sudo mkdir -p /usr/local/lib
 
+echo "enable binfmt_misc..."
+sudo systemctl enable proc-sys-fs-binfmt_misc.mount
+
 echo Enabling docker-binfmt...
 sudo systemctl enable docker-binfmt.service
 
