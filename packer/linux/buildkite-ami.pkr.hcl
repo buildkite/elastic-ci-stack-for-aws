@@ -60,9 +60,9 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   temporary_security_group_source_public_ip = true
 
   launch_block_device_mappings {
-    volume_type           = "gp3"    
-    device_name = "/dev/xvda"
-    volume_size = 10
+    volume_type           = "gp3"
+    device_name           = "/dev/xvda"
+    volume_size           = 10
     delete_on_termination = true
   }
 

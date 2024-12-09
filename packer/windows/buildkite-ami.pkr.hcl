@@ -60,6 +60,13 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_use_ssl   = true
   winrm_username  = "Administrator"
 
+  launch_block_device_mappings {
+    volume_type           = "gp3"
+    device_name           = "/dev/sda1"
+    volume_size           = 30
+    delete_on_termination = true
+  }
+
   tags = {
     Name          = "elastic-ci-stack-windows"
     OSVersion     = "Windows Server 2019"
