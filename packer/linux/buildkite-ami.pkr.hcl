@@ -40,7 +40,7 @@ variable "is_released" {
 data "amazon-ami" "al2023" {
   filters = {
     architecture        = var.arch
-    name                = "al2023-ami-minimal-2023.5.20240903.0-*"
+    name                = "al2023-ami-minimal-*"
     virtualization-type = "hvm"
   }
   most_recent = true
@@ -58,6 +58,13 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   ssh_username                              = "ec2-user"
   ssh_clear_authorized_keys = true
   temporary_security_group_source_public_ip = true
+
+  launch_block_device_mappings {
+    volume_type           = "gp3"    
+    device_name = "/dev/xvda"
+    volume_size = 10
+    delete_on_termination = true
+  }
 
   run_tags = {
     Name = "Packer Builder" // marks resources for deletion in cleanup.sh
@@ -114,5 +121,9 @@ build {
 
   provisioner "shell" {
     script = "scripts/install-buildkite-utils.sh"
+  }
+
+  provisioner "shell" {
+    script = "scripts/cleanup.sh"
   }
 }

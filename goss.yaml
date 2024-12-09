@@ -149,6 +149,12 @@ command:
     stdout:
     - /disabled/
 
+  systemctl is-enabled proc-sys-fs-binfmt_misc.mount:
+    exit-status: 0
+
+  systemctl is-enabled docker-binfmt.service:
+    exit-status: 0
+
   systemctl is-enabled docker-gc.timer:
     exit-status: 0
 

@@ -27,28 +27,6 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 
 echo "Starting ${BASH_SOURCE[0]}..."
 
-echo Sourcing /usr/local/lib/bk-configure-docker.sh...
-echo This file is written by the scripts in packer/scripts.
-echo Note that the path is /usr/local/lib, not /usr/local/bin.
-echo Contents of /usr/local/lib/bk-configure-docker.sh:
-cat /usr/local/lib/bk-configure-docker.sh
-# shellcheck disable=SC1091
-source /usr/local/lib/bk-configure-docker.sh
-
-echo Installing qemu binfmt for multiarch...
-if ! docker run \
-  --privileged \
-  --userns=host \
-  --pull=never \
-  --rm \
-  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
-  --install all; then
-  echo Failed to install binfmt.
-  echo Avaliable docker images:
-  docker image ls
-  exit 1
-fi
-
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
 

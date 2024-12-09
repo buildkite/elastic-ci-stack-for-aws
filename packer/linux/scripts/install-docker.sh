@@ -45,22 +45,16 @@ sudo cp /tmp/conf/bin/docker-compose /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 docker-compose version
 
-# Writing QEMU container version info to /usr/local/lib/bk-configure-docker.sh.
-# We only pull this image when we build the AMI. It will be run in
-# /usr/local/bin/bk-configure-docker.sh, but it needs to know the image digest
-# to make sure it does not pull in another image instead.
-# NOTE: the executable file is in /usr/local/bin and it sources as file of the
-# same name in /usr/local/lib. These are not the same file.
-# See https://docs.docker.com/build/building/multi-platform/
-
-echo Contents of /usr/local/lib/bk-configure-docker.sh:
-cat <<'EOF' | sudo tee -a /usr/local/lib/bk-configure-docker.sh
-QEMU_BINFMT_VERSION=7.0.0-28
-QEMU_BINFMT_DIGEST=sha256:66e11bea77a5ea9d6f0fe79b57cd2b189b5d15b93a2bdb925be22949232e4e55
-QEMU_BINFMT_TAG="qemu-v${QEMU_BINFMT_VERSION}@${QEMU_BINFMT_DIGEST}"
-EOF
-# shellcheck disable=SC1091
-source /usr/local/lib/bk-configure-docker.sh
 sudo mkdir -p /usr/local/lib
-echo Pulling qemu binfmt for multiarch...
-sudo docker pull "tonistiigi/binfmt:${QEMU_BINFMT_TAG}"
+
+echo "enable binfmt_misc..."
+sudo systemctl enable proc-sys-fs-binfmt_misc.mount
+
+echo Enabling docker-binfmt...
+sudo systemctl enable docker-binfmt.service
+
+echo Start docker-binfmt...
+sudo systemctl start docker-binfmt.service
+
+echo "show docker-binfmt status..."
+systemctl status docker-binfmt.service
