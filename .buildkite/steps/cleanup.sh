@@ -2,6 +2,15 @@
 # shellcheck disable=SC2016
 set -uxo pipefail
 
+########################################################
+# We make an attempt to clean up the specific resources created during this pipeline elsewhere. However
+# sometimes that fails, are various CloudFormation Stacks, S3 Buckets and CloudWatch Log Groups can be
+# left around.
+#
+# This is a safety net at the end of the build that attempts to delete any resources created by this
+# pipeline more than a day ago, regardless of if they were created in the current build or not.
+########################################################
+
 if [[ $OSTYPE =~ ^darwin ]]; then
   cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
   cutoff_date_milli=$(gdate --date='-1 days' +%s%3N)
@@ -18,6 +27,14 @@ aws s3api list-buckets \
   --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date")" \
   | xargs -n1 \
   | grep -E 'buildkite-aws-stack-test-.*-managedsecretsbucket' \
+  | xargs -n1 -t -I% aws s3 rb s3://% --force
+
+echo "--- Deleting test managed secrets logging buckets created"
+aws s3api list-buckets \
+  --output text \
+  --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date")" \
+  | xargs -n1 \
+  | grep -E 'buildkite-aws-stack-test--managedsecretsloggingbuc' \
   | xargs -n1 -t -I% aws s3 rb s3://% --force
 
 # Do this before deleting the stacks so we don't race with stack-managed log
