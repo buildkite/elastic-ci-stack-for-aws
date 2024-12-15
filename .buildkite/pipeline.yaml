@@ -31,6 +31,9 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "packer-windows-amd64"
     name: ":packer: :windows:"
@@ -43,6 +46,9 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "launch-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Launch"
@@ -53,6 +59,9 @@ steps:
     depends_on:
       - "packer-windows-amd64"
       - "deploy-service-role-stack"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "test-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Test"
@@ -75,6 +84,9 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-windows-amd64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "packer-linux-amd64"
     name: ":packer: :linux: AMD64"
@@ -87,6 +99,9 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "launch-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Launch"
@@ -97,6 +112,9 @@ steps:
     depends_on:
       - "packer-linux-amd64"
       - "deploy-service-role-stack"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
@@ -118,6 +136,9 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-linux-amd64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "packer-linux-arm64"
     name: ":packer: :linux: ARM64"
@@ -130,6 +151,9 @@ steps:
       - "fmt"
       - "lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "launch-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Launch"
@@ -140,6 +164,9 @@ steps:
     depends_on:
       - "packer-linux-arm64"
       - "deploy-service-role-stack"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "test-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Test"
@@ -161,6 +188,9 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-linux-arm64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "delete-service-role-stack"
     name: ":aws-iam: :cloudformation: Delete"
@@ -171,6 +201,9 @@ steps:
       - "delete-windows-amd64"
       - "delete-linux-amd64"
       - "delete-linux-arm64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "copy-ami"
     name: ":cloudformation: 🚚 🌎"
@@ -182,6 +215,9 @@ steps:
       - "test-linux-amd64"
       - "test-linux-arm64"
       - "test-windows-amd64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "publish"
     name: ":cloudformation: :rocket:"
@@ -193,6 +229,9 @@ steps:
     concurrency_method: eager
     artifact_paths: "build/*.yml"
     depends_on: "copy-ami"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: cleanup
     name: ":broom: Cleanup"
@@ -200,3 +239,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on: "publish"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
