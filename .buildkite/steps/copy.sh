@@ -77,6 +77,8 @@ if [[ -z "${BUILDKITE_AWS_STACK_BUCKET}" ]]; then
   exit 1
 fi
 
+# to ensure old images are garbage collected, the list of regions should
+# match .buildkite/pipeline.cleanamis.yaml
 ALL_REGIONS=(
   us-east-1
   us-east-2
