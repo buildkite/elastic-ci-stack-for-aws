@@ -85,10 +85,6 @@ deleted_counter = 0
 # Loop over each elastic stack AMI, skip over any that we want to keep, and anything else we can deregister
 # and save some money
 
-puts "Found #{all_images.size} images"
-puts
-puts
-
 all_images.each do |image|
   puts "ID: #{image.image_id}, Name: #{image.name}, Created: #{image.creation_date}, Last Launched: #{image.last_launched_time}, Public: #{image.public}, Version Tag; #{get_stack_version_from_tags(image)}"
 
@@ -108,3 +104,5 @@ all_images.each do |image|
   puts
 
 end
+
+puts "COMPLETE: #{all_images.size} AMIs checked, #{deleted_counter} deregistered"
