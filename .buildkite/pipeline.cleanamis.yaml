@@ -1,0 +1,19 @@
+steps:
+  - name: ":broom: Delete AMIs ({{matrix}})"
+    command: .buildkite/steps/clean-old-amis
+    agents:
+      queue: "oss-deploy"
+    env:
+      DRY_RUN: true
+      AWS_REGION: "{{matrix}}"
+    matrix:
+      - "us-east-1"
+      - "us-west-2"
+      - "ap-southeast-2"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.1.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-elastic-stack-for-aws-ami-cleaner
+      - docker-compose#v5.4.1:
+          run: ruby
+          config: .buildkite/docker-compose.yml
+          propagate-aws-auth-tokens: true
