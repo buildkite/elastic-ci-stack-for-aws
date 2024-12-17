@@ -4,7 +4,7 @@ steps:
     agents:
       queue: "oss-deploy"
     env:
-      DRY_RUN: true
+      # DRY_RUN: true
       AWS_REGION: "{{matrix}}"
     # list of regions should match .buildkite/steps/copy.sh
     matrix:
