@@ -18,15 +18,12 @@ def die(msg)
   exit 1
 end
 
-def log(msg)
-  puts "#{DateTime.now.iso8601} #{msg}"
-end
+MAX_DELETIONS = 10
 
 region = ARGV[0] || ENV["AWS_REGION"]
 dry_run = ENV["DRY_RUN"]
 
 die("region not found") if region.nil? || region == ""
-
 
 client = Aws::EC2::Client.new(region: region)
 
@@ -81,6 +78,7 @@ def deregister_image(client, image, dry_run)
 end
 
 one_year_ago = Time.now - (60 * 60 * 24 * 365)
+deleted_counter = 0
   
 # Time to get down to business.
 #
@@ -100,8 +98,11 @@ all_images.each do |image|
     puts "- keep (created recently)"
   elsif image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
     puts "- keep (launched recently)"
+  elsif deleted_counter >= MAX_DELETIONS
+    puts "- deletion candidate, but we've reached MAX_DELETIONS (#{MAX_DELETIONS})"
   else
     deregister_image(client, image, dry_run)
+    deleted_counter += 1
   end
   puts
   puts
