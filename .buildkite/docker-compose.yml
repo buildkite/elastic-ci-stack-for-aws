@@ -9,3 +9,12 @@ services:
     volumes:
       - ..:/code:ro
     command: go test -v ./...
+
+  ruby:
+    image: ruby:3.3
+    working_dir: /work
+    environment:
+      - DRY_RUN
+      - AWS_REGION
+    volumes:
+      - ..:/work:ro
