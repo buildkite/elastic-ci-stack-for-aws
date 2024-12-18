@@ -18,7 +18,7 @@ def die(msg)
   exit 1
 end
 
-MAX_DELETIONS = 10
+MAX_DELETIONS = 100
 
 region = ARGV[0] || ENV["AWS_REGION"]
 dry_run = ENV["DRY_RUN"]
