@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.32.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.32.0) (2024-12-19)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.31.0...v6.32.0)
+
+### Changed
+- Bump agent to v3.88.0 [#1418](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1418) (@DrJosh9000)
+
+### Release process changes
+- Increase AMI garbage collection to 100 images per run [#1417](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1417) (@yob)
+- remove DRY_RUN flag from AMI cleaning script [#1416](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1416) (@yob)
+- Expand the AMI cleaning pipeline to all regions [#1415](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1415) (@yob)
+- New pipeline: deregister old AMIs [#1414](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1414) (@yob)
+- Assume an IAM role via OIDC when running integration tests [#1413](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1413) (@yob)
+- stop setting ACLs when publishing templates to S3 [#1412](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1412) (@yob)
+- Update bk/elastic-ci-stack-s3-secrets-hooks to v2.2.0 [#1411](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1411) (@yob)
+- Try harder to delete test S3 logging buckets created during CI [#1410](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1410) (@yob)
+
+### Dependency bumps
+- Bump golang.org/x/sys from 0.27.0 to 0.28.0 [#1409](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1409) (@dependabot[bot])
+
+<details>
+<summary><h3>Agent Changelog</h3></summary>
+
+## [v3.88.0](https://github.com/buildkite/agent/tree/v3.88.0) (2024-12-18)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.87.1...v3.88.0)
+
+### Changed
+- Prefix fatal error message with 'buildkite-agent:' [#3135](https://github.com/buildkite/agent/pull/3135) (@jordandcarter)
+- Notify when host and bootstrap agent paths mismatch [#3123](https://github.com/buildkite/agent/pull/3123) (@jordandcarter)
+
+### Fixed
+- Enable process debug logging [#3134](https://github.com/buildkite/agent/pull/3134) (@patrobinson)
+- Ignore empty submodule clone configs [#3122](https://github.com/buildkite/agent/pull/3122) (@DrJosh9000)
+- fix: allow for empty files on hook check [#3117](https://github.com/buildkite/agent/pull/3117) (@nzspambot)
+- Parse more standalone `$` cases as literal `$`s and not variable expansions:
+  - Bump github.com/buildkite/go-pipeline from 0.13.2 to 0.13.3 [#3137](https://github.com/buildkite/agent/pull/3137) (@dependabot[bot])
+  - Bump github.com/buildkite/interpolate from 0.1.4 to 0.1.5 [#3138](https://github.com/buildkite/agent/pull/3138) (@dependabot[bot])
+
+### Dependabot
+- [#3136](https://github.com/buildkite/agent/pull/3136), [#3127](https://github.com/buildkite/agent/pull/3127), [#3129](https://github.com/buildkite/agent/pull/3129), [#3128](https://github.com/buildkite/agent/pull/3128), [#3130](https://github.com/buildkite/agent/pull/3130), [#3132](https://github.com/buildkite/agent/pull/3132), [#3131](https://github.com/buildkite/agent/pull/3131), [#3133](https://github.com/buildkite/agent/pull/3133), [#3125](https://github.com/buildkite/agent/pull/3125), [#3119](https://github.com/buildkite/agent/pull/3119), [#3120](https://github.com/buildkite/agent/pull/3120), [#3121](https://github.com/buildkite/agent/pull/3121), [#3116](https://github.com/buildkite/agent/pull/3116), [#3115](https://github.com/buildkite/agent/pull/3115) (@dependabot[bot])
+
+</details>
+
 ## [v6.31.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.31.0) (2024-12-09)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.30.0...v6.31.0)
 
