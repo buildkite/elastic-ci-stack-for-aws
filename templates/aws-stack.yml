@@ -1324,6 +1324,8 @@ Resources:
                 Tags:
                   - Key: !Ref CostAllocationTagName
                     Value: !Ref CostAllocationTagValue
+                  - Key: BuildkiteQueue
+                    Value: !Ref BuildkiteQueue
               - !Ref "AWS::NoValue"
 
           UserData:
