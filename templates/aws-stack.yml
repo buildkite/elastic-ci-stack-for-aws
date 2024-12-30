@@ -1324,6 +1324,8 @@ Resources:
                 Tags:
                   - Key: !Ref CostAllocationTagName
                     Value: !Ref CostAllocationTagValue
+                  - Key: BuildkiteQueue
+                    Value: !Ref BuildkiteQueue
               - !Ref "AWS::NoValue"
 
           UserData:
@@ -1350,6 +1352,7 @@ Resources:
                   $Env:BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}"
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
+                  $Env:BUILDKITE_EBS_QUEUE_TAG="${BuildkiteQueue}"
                   $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}"
                   $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
                   $Env:BUILDKITE_AGENT_SIGNING_KMS_KEY="${PipelineSigningKMSKey}"
@@ -1415,6 +1418,7 @@ Resources:
                   BUILDKITE_AGENT_SIGNING_KMS_KEY="${PipelineSigningKMSKey}" \
                   BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR="${PipelineSigningVerificationFailureBehavior}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
+                  BUILDKITE_EBS_QUEUE_TAG="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}" \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
                   BUILDKITE_ENV_FILE_URL=${AgentEnvFileUrl} \
