@@ -772,11 +772,13 @@ Conditions:
         - !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
         - !Not [ !Equals [ !Ref PipelineSigningKMSKeyARN, "" ] ]
 
+    HasPipelineSigningKMSKeyARN:
+      !Not [!Equals [!Ref PipelineSigningKMSKeyARN, ""]]
+
     CreatePipelineSigningKMSKey:
       !And
-      - !Or
-        - !Equals [ !Ref PipelineSigningKMSKeyId, "" ]
-        - !Equals [ !Ref PipelineSigningKMSKeyARN, "" ]
+      - !Equals [ !Ref PipelineSigningKMSKeyId, "" ]
+      - !Equals [ !Ref PipelineSigningKMSKeyARN, "" ]
       - !Not [ !Equals [ !Ref PipelineSigningKMSKeySpec, "none" ] ]
 
     HasPipelineSigningKMSKey:
@@ -1037,9 +1039,7 @@ Resources:
                       - CreatePipelineSigningKMSKey
                       - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                       - !If
-                        - !Equals
-                          - !Ref PipelineSigningKMSKeyId
-                          - ""
+                        - HasPipelineSigningKMSKeyARN
                         - !Ref PipelineSigningKMSKeyARN
                         - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
           - !Ref 'AWS::NoValue'
@@ -1402,9 +1402,7 @@ Resources:
                     - CreatePipelineSigningKMSKey
                     - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                     - !If
-                      - !Equals
-                        - !Ref PipelineSigningKMSKeyId
-                        - ""
+                      - HasPipelineSigningKMSKeyARN
                       - !Ref PipelineSigningKMSKeyARN
                       - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
               - !Sub
@@ -1482,9 +1480,7 @@ Resources:
                     - CreatePipelineSigningKMSKey
                     - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                     - !If
-                      - !Equals
-                        - !Ref PipelineSigningKMSKeyId
-                        - ""
+                      - HasPipelineSigningKMSKeyARN
                       - !Ref PipelineSigningKMSKeyARN
                       - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
 
