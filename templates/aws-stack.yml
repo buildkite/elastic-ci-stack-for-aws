@@ -1302,6 +1302,9 @@ Resources:
                 Encrypted: !Ref RootVolumeEncrypted
                 Throughput: !If [ IsRootVolumeIsGp3, !Ref RootVolumeThroughput, !Ref "AWS::NoValue" ]
                 Iops: !If [ IsRootVolumeIsIo1OrIo2OrGp3, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
+                Tags:
+                  - Key: BuildkiteQueue
+                    Value: !Ref BuildkiteQueue
           TagSpecifications:
             - ResourceType: instance
               Tags:
@@ -1324,8 +1327,6 @@ Resources:
                 Tags:
                   - Key: !Ref CostAllocationTagName
                     Value: !Ref CostAllocationTagValue
-                  - Key: BuildkiteQueue
-                    Value: !Ref BuildkiteQueue
               - !Ref "AWS::NoValue"
 
           UserData:
