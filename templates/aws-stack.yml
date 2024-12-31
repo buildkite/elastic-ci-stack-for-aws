@@ -579,12 +579,12 @@ Parameters:
 
   PipelineSigningKMSKeyId:
     Type: String
-    Description: Optional - Identifier of the KMS key used to sign and verify pipelines (created if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank and PipelineSigningKMSKeySpec is selected)
+    Description: Optional - Identifier of the KMS key to use for pipeline signatures & verification (if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank, and PipelineSigningKMSKeySpec is selected, a fresh signing key will automatically be created)
     Default: ""
 
   PipelineSigningKMSKeyARN:
     Type: String
-    Description: Optional - ARN of the KMS key used to sign and verify pipelines (created if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank and PipelineSigningKMSKeySpec is selected)
+    Description: Optional - ARN of the KMS key to use for pipeline signatures & verification (if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyArn are left blank, and PipelineSigningKMSKeySpec is selected, a fresh signing key will automatically be created)
     Default: ""
 
   PipelineSigningKMSKeySpec:
