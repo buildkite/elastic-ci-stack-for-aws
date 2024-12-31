@@ -628,16 +628,48 @@ Rules:
   HasPipelineSigningKMSKey:
     Assertions:
       - Assert:
-          !Or
+        - !Or
+          - !Not
             - !Equals
               - !Ref PipelineSigningKMSKeyId
               - ""
+          - !Not
             - !Equals
               - !Ref PipelineSigningKMSKeyARN
               - ""
+          - !Not
             - !Equals
               - !Ref PipelineSigningKMSKeySpec
               - "none"
+        AssertDescription: "You must provide one of: PipelineSigningKMSKeyId, PipelineSigningKMSKeyARN, or select a PipelineSigningKMSKeySpec"
+      - Assert:
+        - !Not
+          - !And
+            - !Not
+              - !Equals
+                - !Ref PipelineSigningKMSKeyId
+                - ""
+            - !Not
+              - !Equals
+                - !Ref PipelineSigningKMSKeyARN
+                - ""
+        AssertDescription: "You must not provide both a PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN"
+      - Assert:
+        - !Not
+          - !And
+            - !Or
+              - !Not
+                - !Equals
+                  - !Ref PipelineSigningKMSKeyId
+                  - ""
+              - !Not
+                - !Equals
+                  - !Ref PipelineSigningKMSKeyARN
+                  - ""
+            - !Not
+              - !Equals
+                - !Ref PipelineSigningKMSKeySpec
+                - "none"
         AssertDescription: "You must provide either a PipelineSigningKMSKeyId or PipelineSigningKMSKeyARN, or select a PipelineSigningKMSKeySpec, but not both"
 
 Outputs:
