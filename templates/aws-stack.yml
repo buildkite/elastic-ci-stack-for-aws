@@ -638,7 +638,7 @@ Rules:
             - !Equals
               - !Ref PipelineSigningKMSKeySpec
               - "none"
-        AssertDescription: "You must provide either provide a PipelineSigningKMSKeyId, PipelineSigningKMSKeyARN, or select a PipelineSigningKMSKeySpec but not both"
+        AssertDescription: "You must provide either a PipelineSigningKMSKeyId or PipelineSigningKMSKeyARN, or select a PipelineSigningKMSKeySpec, but not both"
 
 Outputs:
   VpcId:
