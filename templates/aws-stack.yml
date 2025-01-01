@@ -627,12 +627,9 @@ Rules:
               - !Ref PipelineSigningKMSKeyId
               - ""
             - !Equals
-              - !Ref PipelineSigningKMSKeyARN
-              - ""
-            - !Equals
               - !Ref PipelineSigningKMSKeySpec
               - "none"
-        AssertDescription: "You must provide either a PipelineSigningKMSKeyId or PipelineSigningKMSKeyARN, or select a PipelineSigningKMSKeySpec, but not both"
+        AssertDescription: "You must provide either a PipelineSigningKMSKeyId, or select a PipelineSigningKMSKeySpec, but not both"
 
 Outputs:
   VpcId:
@@ -762,15 +759,11 @@ Conditions:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
     UsePipelineSigningKMSKey:
-      !Or
-        - !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
-        - !Not [ !Equals [ !Ref PipelineSigningKMSKeyARN, "" ] ]
+      !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
 
     CreatePipelineSigningKMSKey:
       !And
-      - !Or
-        - !Equals [ !Ref PipelineSigningKMSKeyId, "" ]
-        - !Equals [ !Ref PipelineSigningKMSKeyARN, "" ]
+      - !Equals [ !Ref PipelineSigningKMSKeyId, "" ]
       - !Not [ !Equals [ !Ref PipelineSigningKMSKeySpec, "none" ] ]
 
     HasPipelineSigningKMSKey:
