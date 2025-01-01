@@ -38,7 +38,6 @@ Metadata:
           default: Signed Pipelines Configuration
         Parameters:
         - PipelineSigningKMSKeyId
-        - PipelineSigningKMSKeyARN
         - PipelineSigningKMSKeySpec
         - PipelineSigningKMSAccess
         - PipelineSigningVerificationFailureBehavior
@@ -579,12 +578,7 @@ Parameters:
 
   PipelineSigningKMSKeyId:
     Type: String
-    Description: Optional - Identifier of the KMS key used to sign and verify pipelines (created if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank and PipelineSigningKMSKeySpec is selected)
-    Default: ""
-
-  PipelineSigningKMSKeyARN:
-    Type: String
-    Description: Optional - ARN of the KMS key used to sign and verify pipelines (created if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank and PipelineSigningKMSKeySpec is selected)
+    Description: Optional - Identifier or ARN of the KMS key used to sign and verify pipelines (created if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank and PipelineSigningKMSKeySpec is selected)
     Default: ""
 
   PipelineSigningKMSKeySpec:
