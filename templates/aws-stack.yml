@@ -1027,10 +1027,8 @@ Resources:
                       - CreatePipelineSigningKMSKey
                       - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                       - !If
-                        - !Equals
-                          - !Ref PipelineSigningKMSKeyId
-                          - ""
-                        - !Ref PipelineSigningKMSKeyARN
+                        - PipelineSigningKeyIsARN
+                        - !Ref PipelineSigningKMSKeyId
                         - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
           - !Ref 'AWS::NoValue'
         - !If
@@ -1392,10 +1390,8 @@ Resources:
                     - CreatePipelineSigningKMSKey
                     - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                     - !If
-                      - !Equals
-                        - !Ref PipelineSigningKMSKeyId
-                        - ""
-                      - !Ref PipelineSigningKMSKeyARN
+                      - PipelineSigningKeyIsARN
+                      - !Ref PipelineSigningKMSKeyId
                       - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
               - !Sub
                 - |
@@ -1472,10 +1468,8 @@ Resources:
                     - CreatePipelineSigningKMSKey
                     - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                     - !If
-                      - !Equals
-                        - !Ref PipelineSigningKMSKeyId
-                        - ""
-                      - !Ref PipelineSigningKMSKeyARN
+                      - PipelineSigningKeyIsARN
+                      - !Ref PipelineSigningKMSKeyId
                       - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
 
   AgentAutoScaleGroup:
