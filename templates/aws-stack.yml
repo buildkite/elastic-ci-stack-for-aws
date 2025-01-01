@@ -772,6 +772,9 @@ Conditions:
     HasSigningKMSAccessSignAndVerify:
       !Equals [ !Ref PipelineSigningKMSAccess, "sign-and-verify" ]
 
+    PipelineSigningKeyIsARN:
+      !Equals [!Select [0, !Split [":", !Ref PipelineSigningKMSKeyId]], "arn"]
+
     HasKeyName:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
 
