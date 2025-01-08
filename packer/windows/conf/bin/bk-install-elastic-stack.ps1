@@ -86,6 +86,7 @@ set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
 set_always         "PLUGINS_ENABLED" "$PLUGINS_ENABLED"
 set_unless_present "AWS_DEFAULT_REGION" "$Env:AWS_REGION"
 set_unless_present "AWS_REGION" "$Env:AWS_REGION"
+set_unless_present "BUILDKITE_AGENT_ENDPOINT" "https://agent.buildkite.com/v3"
 "@
 
 If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
