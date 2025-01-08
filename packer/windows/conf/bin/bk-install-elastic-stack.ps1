@@ -131,6 +131,7 @@ $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
+endpoint="${Env:BUILDKITE_AGENT_ENDPOINT}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true
 no-ansi-timestamps=${Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
