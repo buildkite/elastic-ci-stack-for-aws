@@ -1324,13 +1324,17 @@ Resources:
                   - Key: !Ref CostAllocationTagName
                     Value: !Ref CostAllocationTagValue
                   - !Ref "AWS::NoValue"
-            - !If
-              - UseCostAllocationTags
-              - ResourceType: volume
-                Tags:
+            - ResourceType: volume
+              Tags:
+                - Key: Name
+                  Value: !If [ UseStackNameForInstanceName, !Ref "AWS::StackName", !Ref InstanceName ]
+                - Key: BuildkiteQueue
+                  Value: !Ref BuildkiteQueue
+                - !If
+                  - UseCostAllocationTags
                   - Key: !Ref CostAllocationTagName
                     Value: !Ref CostAllocationTagValue
-              - !Ref "AWS::NoValue"
+                  - !Ref "AWS::NoValue"
 
           UserData:
             Fn::Base64: !If
