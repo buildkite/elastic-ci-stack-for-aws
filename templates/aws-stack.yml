@@ -33,6 +33,7 @@ Metadata:
         - BuildkiteAgentTokenParameterStorePath
         - BuildkiteAgentTokenParameterStoreKMSKey
         - BuildkiteQueue
+        - AgentEndpoint
 
       - Label:
           default: Signed Pipelines Configuration
@@ -167,6 +168,11 @@ Parameters:
     Description: AWS KMS key ID used to encrypt the SSM parameter (if encrypted)
     Type: String
     Default: ""
+
+  AgentEndpoint:
+    Description: Override API endpoint the Buildkite Agent connects to.
+    Type: String
+    Default: "https://agent.buildkite.com/v3"
 
   BuildkiteAgentTags:
     Description: Additional tags separated by commas to provide to the agent. E.g os=linux,llamas=always
@@ -1344,6 +1350,7 @@ Resources:
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
                   $Env:BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
+                  $Env:BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
                   $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
@@ -1406,6 +1413,7 @@ Resources:
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
                   BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+                  BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
                   BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \

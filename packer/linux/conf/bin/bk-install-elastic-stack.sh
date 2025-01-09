@@ -276,6 +276,7 @@ tags=$(
   IFS=,
   echo "${agent_metadata[*]}"
 )
+endpoint=${BUILDKITE_AGENT_ENDPOINT:-"https://agent.buildkite.com/v3"}
 tags-from-ec2-meta-data=true
 no-ansi-timestamps=${BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
 timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
