@@ -103,6 +103,7 @@ Metadata:
         Parameters:
         - MinSize
         - MaxSize
+        - InstanceBuffer
         - OnDemandPercentage
         - SpotAllocationStrategy
         - ScaleOutFactor
@@ -327,6 +328,11 @@ Parameters:
     Type: Number
     Default: 0
     MinValue: 0
+
+  InstanceBuffer:
+    Description: How many free instances to maintain
+    Type: Number
+    Default: "0"
 
   ScalerEventSchedulePeriod:
     Description: How often the Event Schedule for buildkite-agent-scaler is triggered. Should be an expression with units, e.g. "30 seconds", "1 minute", "5 minutes".
@@ -1620,6 +1626,7 @@ Resources:
         AgentsPerInstance: !Ref AgentsPerInstance
         MinSize: !Ref MinSize
         MaxSize: !Ref MaxSize
+        InstanceBuffer: !Ref InstanceBuffer
         AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
