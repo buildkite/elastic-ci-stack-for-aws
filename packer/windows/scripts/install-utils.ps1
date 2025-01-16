@@ -18,6 +18,10 @@ Write-Output "Installing awscli"
 choco install -y awscli --version=$AWS_CLI_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
+Write-Output "Installing ec2-instance-connect"
+choco install -y ec2-instance-connect
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 Write-Output "Installing Git for Windows"
 choco install -y git --version=$GIT_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
