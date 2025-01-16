@@ -30,7 +30,7 @@ jobs:
             const url = isIssue ? event.issue.html_url : event.pull_request.html_url;
 
             const query = `
-              mutation CreateIssue($input: CreateIssueInput!) {
+              mutation CreateIssue($input: IssueCreateInput!) {
                 issueCreate(input: $input) {
                   success
                   issue {
