@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+## Ensure the `docker` group gets GID 993
+## Our GOSS testing seems to be reliant on this being the group used
+## so we should ensure that if we aren't willing to be more leniant
+sudo groupadd -g 993 docker || true
+
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
 aarch64) ARCH=arm64 ;;
