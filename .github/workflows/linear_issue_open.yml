@@ -47,7 +47,6 @@ jobs:
                 title: title,
                 description: `${body}\n\nOriginal ${isIssue ? 'Issue' : 'PR'}: ${url}`,
                 teamId: `${process.env.LINEAR_TEAM_ID}`,
-                labelIds: `${process.env.LINEAR_LABEL_IDS?.split(',')}`
               }
             };
 
