@@ -47,7 +47,7 @@ port:
   tcp6:22:
     listening: true
     ip:
-    - '::'
+    - "::"
 
 service:
   amazon-cloudwatch-agent:
@@ -101,7 +101,6 @@ group:
 
   docker:
     exists: true
-    gid: 993
 
   sshd:
     exists: true
@@ -214,3 +213,7 @@ command:
     timeout: 30000
     stdout:
     - x86_64
+
+  ## This allows us to support a range of group ids for the docker group, 990-995
+  'getent group docker | cut -d: -f3 | grep -E "^99[0-5]$"':
+    exit-status: 0
