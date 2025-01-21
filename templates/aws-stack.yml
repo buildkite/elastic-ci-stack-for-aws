@@ -200,7 +200,7 @@ Parameters:
   BuildkiteAgentScalerVersion:
     Description: Version of the buildkite-agent-scaler to use
     Type: String
-    AllowedPattern: '^(?:([2-9]|[1-9][0-9]+)\.(?:\d+)\.(?:\d+)|1\.(?:([1-9][0-9]+|9[0-9]+)\.(?:\d+)|9\.(?:[1-9]|[1-9][0-9]+)))$'
+    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.[1-9]\d*))$'
     ConstraintDescription: "The agent scaler release must be greater than 1.9.0 as a new parameter was introduced in 1.9.1"
     Default: "1.9.1"
 
