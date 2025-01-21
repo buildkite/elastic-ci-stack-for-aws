@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.33.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.33.0) (2025-01-09)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.32.0...v6.33.0)
+
+### Added
+- This adds an optional override for agent API endpoint [#1428](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1428) (@wolfeidau)
+
+### Internal
+- Bump agent to v3.89.0 [#1427](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1427) (@CerealBoy)
+- Bump golang.org/x/sys from 0.28.0 to 0.29.0 [#1426](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1426) (@dependabot[bot])
+
+<details>
+<summary><h3>Agent Changelog</h3></summary>
+
+## [v3.89.0](https://github.com/buildkite/agent/tree/v3.89.0) (2025-01-06)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.88.0...v3.89.0)
+
+### Added
+- Adding support for Additional Hooks Paths [#3124](https://github.com/buildkite/agent/pull/3124) (@CerealBoy)
+
+### Internal
+- Bump the container-images group across 5 directories with 2 updates [#3143](https://github.com/buildkite/agent/pull/3143) (@dependabot[bot])
+- Update golang.org/x/net [#3140](https://github.com/buildkite/agent/pull/3140) (@yob)
+
+</details>
+
 ## [v6.32.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.32.0) (2024-12-19)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.31.0...v6.32.0)
 
