@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.34.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.34.0) (2025-01-21)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.33.0...v6.34.0)
+
+### Changed
+- Upgrade the agent scaler which introduces a new agent endpoint param [#1437](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1437) (@wolfeidau)
+- ➖ Docker can be a range of GIDs [#1436](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1436) (@mcncl)
+- Ec2 instance connect [#1432](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1432) (@blackliner)
+
+### Fixed
+- Fix PATH used by jobs [#1420](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1420) (@jonhiggs)
+
+### Internal
+- 🔨 Add GitHub action for Linear sync [#1433](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1433) (@mcncl)
+- Add EBS volume tag for BK queue, keep optional cost allocation tags [#1430](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1430) (@petetomasik)
+
+> [!WARNING]  
+> This release will force an upgrade of the agent scaler by checking the version is 1.9.1 or higher. This is required so we can introduce a new parameter to the agent scaler to pass through agent endpoint.
+
 ## [v6.33.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.33.0) (2025-01-09)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.32.0...v6.33.0)
 
