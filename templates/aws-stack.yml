@@ -1389,10 +1389,7 @@ Resources:
                   PipelineSigningKMSKey: !If
                     - CreatePipelineSigningKMSKey
                     - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
-                    - !If
-                      - PipelineSigningKeyIsARN
-                      - !Ref PipelineSigningKMSKeyId
-                      - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
+                    - !Ref PipelineSigningKMSKeyId
               - !Sub
                 - |
                   Content-Type: multipart/mixed; boundary="==BOUNDARY=="
@@ -1467,10 +1464,7 @@ Resources:
                   PipelineSigningKMSKey: !If
                     - CreatePipelineSigningKMSKey
                     - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
-                    - !If
-                      - PipelineSigningKeyIsARN
-                      - !Ref PipelineSigningKMSKeyId
-                      - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
+                    - !Ref PipelineSigningKMSKeyId
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
