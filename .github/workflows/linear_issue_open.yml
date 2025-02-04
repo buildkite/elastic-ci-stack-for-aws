@@ -1,0 +1,96 @@
+name: Sync GitHub Issues to Linear
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  sync-to-linear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Create Linear Issue
+        uses: actions/github-script@v7
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        with:
+          script: |
+            const event = context.payload;
+            const isIssue = !!event.issue;
+            const title = isIssue ? event.issue.title : event.pull_request.title;
+            const body = isIssue ? event.issue.body : event.pull_request.body;
+            const url = isIssue ? event.issue.html_url : event.pull_request.html_url;
+
+            const query = `
+              mutation CreateIssue($input: IssueCreateInput!) {
+                issueCreate(input: $input) {
+                  success
+                  issue {
+                    id
+                    identifier
+                    url
+                  }
+                }
+              }
+            `;
+
+            const variables = {
+              input: {
+                title: title,
+                description: `${body}\n\nOriginal ${isIssue ? 'Issue' : 'PR'}: ${url}`,
+                teamId: process.env.LINEAR_TEAM_ID,
+                labelIds: process.env.LINEAR_LABEL_IDS?.split(',')
+              }
+            };
+
+            try {
+              const response = await fetch('https://api.linear.app/graphql', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': process.env.LINEAR_API_KEY
+                },
+                body: JSON.stringify({
+                  query,
+                  variables
+                })
+              });
+
+              const data = await response.json();
+
+              if (data.errors) {
+                core.setFailed(`Failed to create Linear issue: ${JSON.stringify(data.errors)}`);
+                return;
+              }
+
+              // Comment on the GitHub issue/PR with the Linear link
+              const linearIssue = data.data.issueCreate.issue;
+              const comment = `Created Linear issue: ${linearIssue.identifier} (${linearIssue.url})`;
+
+              if (isIssue) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: event.issue.number,
+                  body: comment
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: event.pull_request.number,
+                  body: comment
+                });
+              }
+
+            } catch (error) {
+              core.setFailed(`Error: ${error.message}`);
+            }
