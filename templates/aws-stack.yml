@@ -772,7 +772,7 @@ Conditions:
     HasSigningKMSAccessSignAndVerify:
       !Equals [ !Ref PipelineSigningKMSAccess, "sign-and-verify" ]
 
-    PipelineSigningKeyIsARN:
+    PipelineSigningKMSKeyIsARN:
       !Equals [!Select [0, !Split [":", !Ref PipelineSigningKMSKeyId]], "arn"]
 
     HasKeyName:
@@ -1027,7 +1027,7 @@ Resources:
                       - CreatePipelineSigningKMSKey
                       - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                       - !If
-                        - PipelineSigningKeyIsARN
+                        - PipelineSigningKMSKeyIsARN
                         - !Ref PipelineSigningKMSKeyId
                         - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
           - !Ref 'AWS::NoValue'
