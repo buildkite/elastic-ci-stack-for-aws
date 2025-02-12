@@ -16,6 +16,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * bump agent version to v3.91.0 [#1443](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1443) ([jeremybumsted](https://github.com/jeremybumsted))
 * Create CODEOWNERS [#1442](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1442) ([karensawrey](https://github.com/karensawrey))
 
+<details>
+<summary><h3>Agent Changelog</h3></summary>
+
+## [v3.91.0](https://github.com/buildkite/agent/tree/v3.91.0) (2025-01-28)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.90.0...v3.91.0)
+
+### Changed
+- Jitter within ping, status, log loops [#3164](https://github.com/buildkite/agent/pull/3164) (@DrJosh9000)
+
+### Fixed
+- Roko v1.3.1 [#3157](https://github.com/buildkite/agent/pull/3157) (@moskyb)
+- Better plugin checkout logging [#3166](https://github.com/buildkite/agent/pull/3166) (@DrJosh9000)
+
+### Internal
+- Add /.buildkite dir for Dockerfile updates [#3162](https://github.com/buildkite/agent/pull/3162) (@DrJosh9000)
+
+</details>
+
 ## [v6.34.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.34.0) (2025-01-21)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.33.0...v6.34.0)
 
