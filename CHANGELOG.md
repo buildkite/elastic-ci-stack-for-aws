@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Additional permissions are required when upgrading the scaler version [#1440](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1440) ([wolfeidau](https://github.com/wolfeidau))
 
 ### Internal
+* Bump golang.org/x/sys from 0.29.0 to 0.30.0 [#1446](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1446) ([dependabot[bot]](https://github.com/apps/dependabot))
 * bump agent version to v3.91.0 [#1443](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1443) ([jeremybumsted](https://github.com/jeremybumsted))
 * Create CODEOWNERS [#1442](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1442) ([karensawrey](https://github.com/karensawrey))
-
 
 ## [v6.34.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.34.0) (2025-01-21)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.33.0...v6.34.0)
