@@ -15,7 +15,7 @@ sudo mkdir -p /var/lib/buildkite-agent/.aws
 sudo cp /tmp/conf/aws/config /var/lib/buildkite-agent/.aws/config
 sudo chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.aws
 
-AGENT_VERSION=3.91.0
+AGENT_VERSION=3.93.1
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
   "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
