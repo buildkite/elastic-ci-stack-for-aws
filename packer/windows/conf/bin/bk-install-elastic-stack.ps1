@@ -154,6 +154,42 @@ verification-failure-behavior=${Env:BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
 "@
 $OFS=" "
 
+If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
+  Write-Output "Fetching signing key from ssm: $Env:BUILDKITE_AGENT_SIGNING_KEY_PATH..."
+
+  $keyfile=C:\buildkite-agent\signing-key.json
+
+  aws ssm get-parameter `
+    --name "$Env:BUILDKITE_AGENT_SIGNING_KEY_PATH" `
+    --with-decryption `
+    --query Parameter.Value `
+    --output text >"$keyfile"
+
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-file=$keyfile"
+}
+
+if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_ID)) {
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-key-id=$Env:BUILDKITE_AGENT_SIGNING_KEY_ID"
+}
+
+if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR)) {
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "verification-failure-behavior=$Env:BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR"
+}
+
+if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
+  Write-Output "Fetching verification key from ssm: $Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH..."
+
+  $keyfile=C:\buildkite-agent\verification-key.json
+
+  aws ssm get-parameter `
+    --name "$Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH" `
+    --with-decryption `
+    --query Parameter.Value `
+    --output text >"$keyfile"
+
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "verification-jwks-file=$keyfile"
+}
+
 nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
 Restart-Service lifecycled
