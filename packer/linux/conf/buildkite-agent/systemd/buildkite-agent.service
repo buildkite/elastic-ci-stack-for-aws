@@ -21,6 +21,10 @@ RestartForceExitStatus=SIGPIPE
 TimeoutStartSec=10
 TimeoutStopSec=0
 KillMode=process
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#OOMScoreAdjust=
+# Set to -1000 to disable OOM killing of processes of buildkite-agent service
+# managing EC2 instance lifecycle
+OOMScoreAdjust=-1000
 
 [Install]
 WantedBy=multi-user.target
