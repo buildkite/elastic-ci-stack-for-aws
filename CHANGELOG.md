@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <details>
 <summary><h3>Agent Changelog</h3></summary>
+
 ## [v3.93.1](https://github.com/buildkite/agent/tree/v3.93.1) (2025-02-27)
 [Full Changelog](https://github.com/buildkite/agent/compare/v3.93.0...v3.93.1)
 
