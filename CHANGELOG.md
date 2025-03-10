@@ -7,17 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [v6.36.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.35.0...v6.36.0) (2025-03-10)
 
 ### Changed
-* Bump buildkite-agent to v3.93.1 [#1449](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1449) ([DrJosh9000](https://github.com/DrJosh9000))
-* Tidy up hcl whitespace and upgrade windows to use gp3 for more iops [#1407](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1407) ([wolfeidau](https://github.com/wolfeidau))
+- Bump buildkite-agent to v3.93.1 [#1449](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1449) ([DrJosh9000](https://github.com/DrJosh9000))
+- Tidy up hcl whitespace and upgrade windows to use gp3 for more iops [#1407](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1407) ([wolfeidau](https://github.com/wolfeidau))
 
 ### Fixed
-* fix: make sure buildkite-agent.service is not terminated by OOM [#1450](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1450) ([scadu](https://github.com/scadu))
+- fix: make sure buildkite-agent.service is not terminated by OOM [#1450](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1450) ([scadu](https://github.com/scadu))
 
 ### Internal
-* Update CODEOWNERS [#1447](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1447) ([karensawrey](https://github.com/karensawrey))
+- Update CODEOWNERS [#1447](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1447) ([karensawrey](https://github.com/karensawrey))
 
 ### Dependencies
-* Bump github.com/google/go-cmp from 0.6.0 to 0.7.0 [#1448](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1448) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/google/go-cmp from 0.6.0 to 0.7.0 [#1448](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1448) ([dependabot[bot]](https://github.com/apps/dependabot))
 
 <details>
 <summary><h3>Agent Changelog</h3></summary>
