@@ -37,9 +37,9 @@ variable "is_released" {
   default = false
 }
 
-data "amazon-ami" "windows-server-2019" {
+data "amazon-ami" "windows-server-2022" {
   filters = {
-    name                = "Windows_Server-2019-English-Full-Base-*"
+    name                = "Windows_Server-2022-English-Full-Base-*"
     virtualization-type = "hvm"
   }
   most_recent = true
@@ -48,13 +48,13 @@ data "amazon-ami" "windows-server-2019" {
 }
 
 source "amazon-ebs" "elastic-ci-stack" {
-  ami_description = "Buildkite Elastic Stack (Windows Server 2019 w/ docker)"
+  ami_description = "Buildkite Elastic Stack (Windows Server 2022 w/ docker)"
   ami_groups      = ["all"]
   ami_name        = "buildkite-stack-windows-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
   region          = var.region
-  source_ami      = data.amazon-ami.windows-server-2019.id
+  source_ami      = data.amazon-ami.windows-server-2022.id
   user_data_file  = "scripts/ec2-userdata.ps1"
   winrm_insecure  = true
   winrm_use_ssl   = true
@@ -69,12 +69,12 @@ source "amazon-ebs" "elastic-ci-stack" {
 
   tags = {
     Name          = "elastic-ci-stack-windows"
-    OSVersion     = "Windows Server 2019"
+    OSVersion     = "Windows Server 2022"
     BuildNumber   = var.build_number
     AgentVersion  = var.agent_version
     IsReleased    = var.is_released
-    SourceAMIID   = data.amazon-ami.windows-server-2019.id
-    SourceAMIName = data.amazon-ami.windows-server-2019.name
+    SourceAMIID   = data.amazon-ami.windows-server-2022.id
+    SourceAMIName = data.amazon-ami.windows-server-2022.name
   }
 }
 
