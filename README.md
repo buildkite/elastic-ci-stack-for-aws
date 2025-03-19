@@ -143,7 +143,7 @@ We build and deploy the following AMIs to all our supported regions:
 
 - Amazon Linux 2023 (64-bit x86)
 - Amazon Linux 2023 (64-bit Arm)
-- Windows Server 2019 (64-bit x86)
+- Windows Server 2022 (64-bit x86)
 
 ### Buildkite Agent
 
