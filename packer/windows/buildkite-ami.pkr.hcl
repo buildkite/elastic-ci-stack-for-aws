@@ -135,6 +135,9 @@ build {
   }
 
   provisioner "powershell" {
-    inline = ["C:/ProgramData/Amazon/EC2-Windows/Launch/Scripts/InitializeInstance.ps1 -Schedule", "C:/ProgramData/Amazon/EC2-Windows/Launch/Scripts/SysprepInstance.ps1 -NoShutdown"]
+    inline = [
+      "C:\Program Files\Amazon\EC2Launch\EC2Launch.exe run",
+      "C:\Program Files\Amazon\EC2Launch\EC2Launch.exe sysprep --shutdown=false"
+    ]
   }
 }
