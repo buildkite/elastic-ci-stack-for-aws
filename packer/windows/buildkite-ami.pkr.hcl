@@ -138,7 +138,7 @@ build {
      inline = [
         # Configure EC2Launch for persistence
         # https://repost.aws/knowledge-center/ec2-windows-run-command-existing
-        "$config = & $env:ProgramFiles\\Amazon\\EC2Launch\\EC2Launch.exe get-agent-config --format json | ConvertFrom-Json",
+        "$config = & \"$($env:ProgramFiles)\\Amazon\\EC2Launch\\EC2Launch.exe\" get-agent-config --format json | ConvertFrom-Json",
         "$config | ConvertTo-Json -Depth 6 | Out-File -encoding UTF8 $env:ProgramData/Amazon/EC2Launch/config/agent-config.yml",
 
         # Add UserData execution on every boot
