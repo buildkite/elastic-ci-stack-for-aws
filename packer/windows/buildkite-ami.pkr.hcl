@@ -135,9 +135,19 @@ build {
   }
 
   provisioner "powershell" {
-    inline = [
-      "C:\\Program Files\\Amazon\\EC2Launch\\EC2Launch.exe run",
-      "C:\\Program Files\\Amazon\\EC2Launch\\EC2Launch.exe sysprep --shutdown=false"
-    ]
+     inline = [
+        # Configure EC2Launch for persistence
+        # https://repost.aws/knowledge-center/ec2-windows-run-command-existing
+        "$config = & $env:ProgramFiles\\Amazon\\EC2Launch\\EC2Launch.exe get-agent-config --format json | ConvertFrom-Json",
+        "$config | ConvertTo-Json -Depth 6 | Out-File -encoding UTF8 $env:ProgramData/Amazon/EC2Launch/config/agent-config.yml",
+
+        # Add UserData execution on every boot
+        "$userDataTask = '{\"task\": \"executeScript\", \"inputs\": {\"frequency\": \"always\", \"type\": \"userData\"}}'",
+        "$config.config | ForEach-Object {if($_.stage -eq 'postReady'){$_.tasks += (ConvertFrom-Json -InputObject $userDataTask)}}",
+        "$config | ConvertTo-Json -Depth 6 | Out-File -encoding UTF8 $env:ProgramData/Amazon/EC2Launch/config/agent-config.yml",
+
+        "$env:ProgramFiles\\Amazon\\EC2Launch\\EC2Launch.exe run",
+        "$env:ProgramFiles\\Amazon\\EC2Launch\\EC2Launch.exe sysprep --shutdown=false"
+     ]
   }
 }

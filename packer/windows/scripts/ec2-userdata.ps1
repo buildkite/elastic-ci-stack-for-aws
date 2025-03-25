@@ -1,3 +1,4 @@
+<persist>true</persist>
 <powershell>
 Start-Transcript
 
