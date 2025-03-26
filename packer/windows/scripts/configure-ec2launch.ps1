@@ -1,47 +1,29 @@
-$ErrorActionPreference = "Stop"
+try {
+    # Delete the default agent-config.yml and replace it with our empty version
+    # EC2Launch v2 expects a specific format for this file which is different from v1
+    # The error indicates it's expecting a task list rather than a map
+    $configPath = "C:\ProgramData\Amazon\EC2Launch\config\agent-config.yml"
 
-# Configure EC2Launch for persistence
-$programFiles = $env:ProgramFiles
-$ec2LaunchExe = Join-Path -Path $programFiles -ChildPath 'Amazon\EC2Launch\EC2Launch.exe'
-
-Write-Output "Getting current EC2Launch configuration"
-$config = & "$ec2LaunchExe" get-agent-config --format json | ConvertFrom-Json
-
-$config | ConvertTo-Json -Depth 6 | Out-File -encoding UTF8 "$env:ProgramData\Amazon\EC2Launch\config\agent-config.yml"
-
-# Add UserData execution on every boot
-Write-Output "Adding UserData persistence settings"
-$userDataTask = @{
-    task = "executeScript"
-    inputs = @{
-        frequency = "always"
-        type = "userData"
+    if (Test-Path $configPath) {
+        Write-Host "Backing up original agent-config.yml"
+        Copy-Item -Path $configPath -Destination "$configPath.bak" -Force
     }
+
+    # Create a properly formatted empty configuration file
+    # Format: a list of tasks with ExecuteScript type
+    @"
+- task: executeScript
+  inputs:
+  - frequency: always
+    type: powershell
+    runAs: localSystem
+    content: |
+      # Placeholder script
+      Write-Host "EC2Launch v2 script executed"
+"@ | Out-File -FilePath $configPath -Encoding utf8 -Force
+
+    Write-Host "Created new EC2Launch v2 configuration file at $configPath"
+} catch {
+    Write-Host "Error configuring EC2Launch v2: $_"
+    exit 1
 }
-
-$found = $false
-$config.config | ForEach-Object {
-    if ($_.stage -eq 'postReady') {
-        foreach ($task in $_.tasks) {
-            if ($task.task -eq "executeScript" -and $task.inputs.type -eq "userData") {
-                $found = $true
-                Write-Output "UserData task already exists, ensuring frequency is set to 'always'..."
-                $task.inputs.frequency = "always"
-            }
-        }
-
-        if (-not $found) {
-            Write-Output "Adding UserData execution task..."
-            $_.tasks += $userDataTask
-        }
-    }
-}
-
-Write-Output "Saving updated configuration"
-$config | ConvertTo-Json -Depth 6 | Out-File -encoding UTF8 "$env:ProgramData\Amazon\EC2Launch\config\agent-config.yml"
-
-Write-Output "Running EC2Launch"
-& "$ec2LaunchExe" run
-
-Write-Output "Running EC2Launch sysprep"
-& "$ec2LaunchExe" sysprep --shutdown=false
