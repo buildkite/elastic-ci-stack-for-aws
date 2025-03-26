@@ -3,7 +3,6 @@ try {
     # EC2Launch v2 expects a specific format for this file which is different from v1
     # The error indicates it's expecting a task list rather than a map
     $configPath = "C:\ProgramData\Amazon\EC2Launch\config\agent-config.yml"
-
     if (Test-Path $configPath) {
         Write-Host "Backing up original agent-config.yml"
         Copy-Item -Path $configPath -Destination "$configPath.bak" -Force
