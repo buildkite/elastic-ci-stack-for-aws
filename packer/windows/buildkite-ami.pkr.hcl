@@ -131,6 +131,10 @@ build {
   }
 
   provisioner "powershell" {
+    script = "scripts/configure-ec2launch.ps1"
+  }
+
+  provisioner "powershell" {
     inline = ["Remove-Item -Path C:/packer-temp -Recurse"]
   }
 
