@@ -158,19 +158,43 @@ nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
 Restart-Service lifecycled
 
-# wait for docker to start
+# wait for docker service and API to be ready
 $next_wait_time=0
 $max_wait_time=30 # Increased wait time
+$docker_ready = $false
 do {
   Write-Output "Waiting for Docker... ($next_wait_time/$max_wait_time seconds)"
   Start-Sleep -Seconds 1 # Sleep 1 second each iteration
   $next_wait_time++
-  docker ps
-} until ($? -OR ($next_wait_time -ge $max_wait_time)) # Check against max_wait_time
 
-docker ps
-if (! $?) {
-  Write-Output "Failed to contact docker after $max_wait_time seconds"
+  # Check Docker service status
+  $dockerService = Get-Service docker -ErrorAction SilentlyContinue
+  if ($dockerService -ne $null -and $dockerService.Status -eq [System.ServiceProcess.ServiceControllerStatus]::Running) {
+    Write-Output "Docker service is running. Checking API..."
+    # Try docker ps, suppress command output, check success status
+    docker ps > $null 2>&1
+    if ($?) {
+      Write-Output "Docker API is responsive."
+      $docker_ready = $true
+    } else {
+      Write-Output "Docker service running, but API not responsive yet."
+    }
+  } else {
+    Write-Output "Docker service is not running or not found."
+  }
+
+} until ($docker_ready -OR ($next_wait_time -ge $max_wait_time))
+
+# Final check after the loop
+if ($docker_ready) {
+  Write-Output "Docker is ready."
+  # Optionally run docker ps again to show output if needed, but the check already passed
+  # docker ps
+} else {
+  Write-Output "Failed to confirm Docker readiness after $max_wait_time seconds."
+  # Add more diagnostics if possible
+  $dockerService = Get-Service docker -ErrorAction SilentlyContinue
+  Write-Output "Final Docker Service Status: $($dockerService.Status)"
   # Consider explicitly calling the error handler or ensuring exit code triggers trap
   exit 1 # Ensure script exits on failure
 }
