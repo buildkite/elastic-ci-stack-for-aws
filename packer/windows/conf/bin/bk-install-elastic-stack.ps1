@@ -160,16 +160,19 @@ Restart-Service lifecycled
 
 # wait for docker to start
 $next_wait_time=0
+$max_wait_time=30 # Increased wait time
 do {
-  Write-Output "Sleeping $next_wait_time seconds"
-  Start-Sleep -Seconds ($next_wait_time++)
+  Write-Output "Waiting for Docker... ($next_wait_time/$max_wait_time seconds)"
+  Start-Sleep -Seconds 1 # Sleep 1 second each iteration
+  $next_wait_time++
   docker ps
-} until ($? -OR ($next_wait_time -eq 5))
+} until ($? -OR ($next_wait_time -ge $max_wait_time)) # Check against max_wait_time
 
 docker ps
 if (! $?) {
-  Write-Output "Failed to contact docker"
-  exit 1
+  Write-Output "Failed to contact docker after $max_wait_time seconds"
+  # Consider explicitly calling the error handler or ensuring exit code triggers trap
+  exit 1 # Ensure script exits on failure
 }
 
 # prevent password from being revealed by debug tracing
