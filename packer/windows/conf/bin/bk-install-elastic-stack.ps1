@@ -96,7 +96,14 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   If ($lastexitcode -ne 0) { Exit $lastexitcode }
 }
 
-Copy-Item -Path C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe -Destination C:\buildkite-agent\bin\buildkite-agent.exe
+# Check if the source agent executable exists before copying
+$sourceAgentPath = "C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe"
+if (-not (Test-Path -Path $sourceAgentPath -PathType Leaf)) {
+  Write-Error "Source agent executable not found: $sourceAgentPath. Check AMI build logs or agent release parameter."
+  # The trap should handle signaling failure, but we explicitly exit just in case.
+  exit 1
+}
+Copy-Item -Path $sourceAgentPath -Destination C:\buildkite-agent\bin\buildkite-agent.exe
 
 $agent_metadata=@(
   "queue=${Env:BUILDKITE_QUEUE}"
