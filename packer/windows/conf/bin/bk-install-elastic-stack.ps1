@@ -178,13 +178,30 @@ do {
   $dockerService = Get-Service docker -ErrorAction SilentlyContinue
   if ($dockerService -ne $null -and $dockerService.Status -eq [System.ServiceProcess.ServiceControllerStatus]::Running) {
     Write-Output "Docker service is running. Checking API..."
-    # Try docker ps, suppress command output, check success status
-    docker ps > $null 2>&1
-    if ($?) {
-      Write-Output "Docker API is responsive."
-      $docker_ready = $true
-    } else {
-      Write-Output "Docker service running, but API not responsive yet."
+    # Try docker ps, capture errors, check success status
+    try {
+        # Run docker ps, redirect stdout to null, keep stderr for potential capture
+        docker ps *> $null
+        # If the command succeeded ($? is true)
+        if ($?) {
+            Write-Output "Docker API is responsive."
+            $docker_ready = $true
+        } else {
+            # Command failed without throwing terminating exception, $? is false
+            Write-Warning "Docker service running, but API not responsive yet (docker ps failed)."
+            # Try to capture the error output directly for more context
+            $ErrorActionPreference = "SilentlyContinue" # Prevent non-terminating errors below from stopping script
+            $dockerErrorOutput = docker ps 2>&1 | Out-String
+            $ErrorActionPreference = "Stop" # Restore error preference
+            if ($dockerErrorOutput) {
+                Write-Warning "Docker ps error output: $dockerErrorOutput"
+            }
+        }
+    } catch {
+        # Command failed with a terminating exception
+        Write-Warning "Docker service running, but API not responsive yet (docker ps threw an exception)."
+        Write-Warning "Docker ps exception details: $($_.Exception.Message)"
+        # Optionally log the full error record: Write-Warning $_
     }
   } else {
     Write-Output "Docker service is not running or not found."
