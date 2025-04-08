@@ -68,7 +68,7 @@ steps:
     command:
       - git --version
       - docker info
-      - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2019 cmd.exe /c echo hello
+      - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
