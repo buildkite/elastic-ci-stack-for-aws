@@ -116,8 +116,8 @@ build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # NOTE: make removes the $ escapes, everything else is passed to the shell
-CURRENT_AGENT_VERSION_LINUX ?= $(shell sed -En 's/^AGENT_VERSION="?(.+?)"?$$/\1/p' packer/linux/scripts/install-buildkite-agent.sh)
-CURRENT_AGENT_VERSION_WINDOWS ?= $(shell sed -En 's/^\$$AGENT_VERSION = "(.+?)"$$/\1/p' packer/windows/scripts/install-buildkite-agent.ps1)
+CURRENT_AGENT_VERSION_LINUX ?= $(shell $(SED) -En 's/^AGENT_VERSION="?(.+?)"?$$/\1/p' packer/linux/scripts/install-buildkite-agent.sh)
+CURRENT_AGENT_VERSION_WINDOWS ?= $(shell $(SED) -En 's/^\$$AGENT_VERSION = "(.+?)"$$/\1/p' packer/windows/scripts/install-buildkite-agent.ps1)
 
 print-agent-versions:
 	@echo Linux: $(CURRENT_AGENT_VERSION_LINUX)
