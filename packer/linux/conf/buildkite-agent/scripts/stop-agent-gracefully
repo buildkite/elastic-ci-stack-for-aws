@@ -4,9 +4,21 @@ set -eu -o pipefail
 # Import BUILDKITE_AGENTS_PER_INSTANCE
 eval "$(cat /var/lib/buildkite-agent/cfn-env)"
 
+# Set variables for ASG lifecycle hook
+# These should be populated by the lifecycle hook script or from CloudFormation
+AUTO_SCALING_GROUP_NAME="${AUTO_SCALING_GROUP_NAME:-}"
+LIFECYCLE_HOOK_NAME="${LIFECYCLE_HOOK_NAME:-}"
+export AUTO_SCALING_GROUP_NAME
+export LIFECYCLE_HOOK_NAME
+
+# Get the lifecycle transition (passed as first arg)
 LIFECYCLE_TRANSITION=${1:-}
 
 echo "Stopping buildkite-agent gracefully due to the lifecycle transition: ${LIFECYCLE_TRANSITION}"
+
+# Pass termination flag so terminate-instance script will run correctly
+# when the agent service fully stops
+echo 'BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=true' >>/var/lib/buildkite-agent/env
 
 if [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
   # Send SIGTERM to the main buildkite-agent process in a non-blocking manner
@@ -35,6 +47,34 @@ if [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
   # this script exit as spot will hard terminate in a matter of seconds.
   echo "Agents are still running. Sending SIGQUIT ahead of forced spot termination at ${SPOT_TERMINATION_TIME}"
   systemctl kill --kill-who=main --signal=SIGQUIT buildkite-agent
+elif [[ $LIFECYCLE_TRANSITION = "autoscaling:EC2_INSTANCE_TERMINATING" ]]; then
+  echo "ASG lifecycle hook terminating instance. Sending SIGTERM to gracefully stop jobs."
+
+  systemctl kill --kill-who=main --signal=SIGTERM buildkite-agent
+
+  # Calculate timeout based on heartbeat timeout (default 1 hour)
+  # Subtract 5 minutes for safety margin
+  MAX_WAIT_TIME=${LIFECYCLE_HEARTBEAT_TIMEOUT:-3300} # Default ~55 min (1h - 5min)
+  WAIT_INTERVAL=30                                   # Check every 30 seconds
+  elapsed=0
+
+  echo "Waiting for all buildkite-agent processes to stop (max wait: $MAX_WAIT_TIME seconds)..."
+
+  while pgrep -u buildkite-agent buildkite-agent >/dev/null; do
+    if [[ $elapsed -ge $MAX_WAIT_TIME ]]; then
+      echo "Timeout reached. Force stopping agents."
+      systemctl kill --kill-who=main --signal=SIGQUIT buildkite-agent
+      break
+    fi
+
+    echo "Waiting for buildkite-agent to finish jobs ($elapsed seconds elapsed)..."
+    sleep $WAIT_INTERVAL
+    elapsed=$((elapsed + WAIT_INTERVAL))
+  done
+
+  echo "All buildkite-agent processes have stopped or timeout reached"
+  # terminate-instance will be called by ExecStopPost in the systemd service
+  # and will complete the lifecycle hook action
 else
   systemctl stop "buildkite-agent"
 

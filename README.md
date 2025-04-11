@@ -154,6 +154,15 @@ You may wish to preview any updates to your stack from this template
 [using a CloudFormation Stack Change Set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
 to decide whether to apply it.
 
+## Graceful Termination
+
+The Elastic CI Stack supports graceful termination of instances during scale-in, allowing running jobs to complete before instances are terminated. This is implemented using AWS Auto Scaling Group (ASG) lifecycle hooks.
+
+When an instance is selected for termination:
+- A lifecycle hook pauses the termination process for up to 1 hour (configurable)
+- Running jobs are allowed to complete before the instance is terminated
+- No jobs are interrupted, improving build reliability
+
 ## Recommended reading
 
 To gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:

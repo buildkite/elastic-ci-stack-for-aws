@@ -340,11 +340,24 @@ else
 fi
 
 echo Writing lifecycled configuration...
-cat <<EOF | tee /etc/lifecycled
+
+# Check if we're using lifecycle hooks with a SNS topic
+if [[ -n "$BUILDKITE_LIFECYCLED_SNS_TOPIC" ]]; then
+  echo "Configuring lifecycled with SNS topic: $BUILDKITE_LIFECYCLED_SNS_TOPIC"
+  cat <<EOF | tee /etc/lifecycled
+AWS_REGION=$AWS_REGION
+LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
+LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
+LIFECYCLED_SNS_TOPIC=$BUILDKITE_LIFECYCLED_SNS_TOPIC
+EOF
+else
+  echo "No SNS topic provided for lifecycled, graceful termination may not work properly"
+  cat <<EOF | tee /etc/lifecycled
 AWS_REGION=$AWS_REGION
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
 EOF
+fi
 
 echo Starting lifecycled...
 systemctl enable --now lifecycled.service
