@@ -53,6 +53,7 @@ Metadata:
         - BuildkiteAgentEnableGitMirrors
         - BuildkiteAgentTracingBackend
         - BuildkiteAgentCancelGracePeriod
+        - BuildkiteAgentSignalGracePeriod
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
@@ -223,6 +224,12 @@ Parameters:
     Type: Number
     Default: 60
     MinValue: 1
+
+  BuildkiteAgentSignalGracePeriod:
+    Description: The number of seconds given to a subprocess to handle being sent `cancel-signal`. After this period has elapsed, SIGKILL will be sent.
+    Type: Number
+    Default: 60
+    MinValue: -1
 
   BuildkiteTerminateInstanceAfterJob:
     Description: Set to "true" to terminate the instance after a job has completed.
@@ -1488,6 +1495,7 @@ Resources:
                   BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_AGENT_CANCEL_GRACE_PERIOD="${BuildkiteAgentCancelGracePeriod}" \
+                  BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS="${BuildkiteAgentSignalGracePeriod}" \
                   BUILDKITE_AGENT_SIGNING_KMS_KEY="${PipelineSigningKMSKey}" \
                   BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR="${PipelineSigningVerificationFailureBehavior}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
