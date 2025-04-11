@@ -1,0 +1,52 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Termination lifecycle hook to Buildkite Elastic Stack"
+
+Parameters:
+  AutoScalingGroupName:
+    Type: String
+    Description: Name of the Auto Scaling Group to add lifecycle hook to
+
+  HeartbeatTimeout:
+    Type: Number
+    Description: Number of seconds agents have to gracefully terminate (1-3600)
+    Default: 3600
+    MinValue: 60
+    MaxValue: 3600
+
+Resources:
+  TerminationLifecycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroupName
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      DefaultResult: ABANDON
+      HeartbeatTimeout: !Ref HeartbeatTimeout
+      NotificationMetadata: !Sub |
+        {
+          "AUTO_SCALING_GROUP_NAME":"${AutoScalingGroupName}",
+          "LIFECYCLE_HOOK_NAME":"${AWS::StackName}-TerminationLifecycleHook",
+          "LIFECYCLE_HEARTBEAT_TIMEOUT":"${HeartbeatTimeout}"
+        }
+
+  LifecycleHandlerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LifecycleHookCompletionPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - autoscaling:CompleteLifecycleAction
+            Resource: !Sub "arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AutoScalingGroupName}"
+      Roles:
+        - !ImportValue
+          "Fn::Sub": "${AutoScalingGroupName}-InstanceRoleName"
+
+Outputs:
+  LifecycleHookName:
+    Description: The name of the created lifecycle hook
+    Value: !Sub "${AWS::StackName}-TerminationLifecycleHook"
+    Export:
+      Name: !Sub "${AWS::StackName}-LifecycleHookName"
