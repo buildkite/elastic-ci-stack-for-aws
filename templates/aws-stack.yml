@@ -1146,6 +1146,7 @@ Resources:
             Action: sts:AssumeRole
       Path: /
 
+  # Basic IAM policies that are always included
   IAMPolicies:
     Type: AWS::IAM::Policy
     Properties:
@@ -1187,33 +1188,7 @@ Resources:
           - Effect: Allow
             Action:
               - autoscaling:DescribeAutoScalingInstances
-          - !If
-            - EnableGracefulScaleIn
-            - Sid: LifecycledSNSPermissions
-              Effect: Allow
-              Action:
-                - sns:Subscribe
-                - sns:Unsubscribe
-                - sns:ConfirmSubscription
-                - sns:CreateTopic
-                - sns:DeleteTopic
-                - sns:Receive
-              Resource: !Ref ScaleInLifecycleTopic
-            - !Ref "AWS::NoValue"
-          - !If
-            - EnableGracefulScaleIn
-            - Sid: LifecycledSQSPermissions
-              Effect: Allow
-              Action:
-                - sqs:CreateQueue
-                - sqs:DeleteQueue
-                - sqs:SetQueueAttributes
-                - sqs:GetQueueAttributes
-                - sqs:GetQueueUrl
-                - sqs:ReceiveMessage
-                - sqs:DeleteMessage
-              Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:lifecycled-*"
-            - !Ref "AWS::NoValue"
+            Resource: "*"
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
@@ -1819,6 +1794,37 @@ Resources:
     Properties:
       DisplayName: !Sub "${AWS::StackName}-ScaleInLifecycleTopic"
       
+  ScaleInLifecycleTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Condition: EnableGracefulScaleIn
+    Properties:
+      Topics:
+        - !Ref ScaleInLifecycleTopic
+      PolicyDocument:
+        Id: ScaleInLifecycleTopicPolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowASGToPublish
+            Effect: Allow
+            Principal:
+              Service: autoscaling.amazonaws.com
+            Action: sns:Publish
+            Resource: !GetAtt ScaleInLifecycleTopic.TopicArn
+      
+  LifecycleHookRole:
+    Type: AWS::IAM::Role
+    Condition: EnableGracefulScaleIn
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: autoscaling.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AutoScalingNotificationAccessRole
+
   ScaleInLifecycleHook:
     Type: AWS::AutoScaling::LifecycleHook
     Condition: EnableGracefulScaleIn
@@ -1829,7 +1835,7 @@ Resources:
       DefaultResult: ABANDON
       HeartbeatTimeout: !Ref GracefulTerminationHeartbeatTimeout
       NotificationTargetARN: !If [EnableGracefulScaleIn, !Ref ScaleInLifecycleTopic, !Ref "AWS::NoValue"]
-      RoleARN: !GetAtt IAMRole.Arn
+      RoleARN: !GetAtt LifecycleHookRole.Arn
       NotificationMetadata: !Sub |
         {
           "AUTO_SCALING_GROUP_NAME":"${AgentAutoScaleGroup}",
@@ -1849,6 +1855,31 @@ Resources:
             Action:
               - autoscaling:CompleteLifecycleAction
             Resource: !Sub "arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AgentAutoScaleGroup}"
+          - Sid: LifecycledSNSPermissions
+            Effect: Allow
+            Action:
+              - sns:Subscribe
+              - sns:Unsubscribe
+              - sns:ConfirmSubscription
+              - sns:ListSubscriptionsByTopic
+              - sns:CreateTopic
+              - sns:DeleteTopic
+              - sns:Receive
+              - sns:Publish
+            Resource: !GetAtt ScaleInLifecycleTopic.TopicArn
+          - Sid: LifecycledSQSPermissions
+            Effect: Allow
+            Action:
+              - sqs:CreateQueue
+              - sqs:DeleteQueue
+              - sqs:SetQueueAttributes
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:SendMessage
+              - sqs:ChangeMessageVisibility
+            Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:lifecycled-*"
       Roles:
         - !Ref IAMRole
 
