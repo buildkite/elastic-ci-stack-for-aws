@@ -1198,10 +1198,7 @@ Resources:
                 - sns:CreateTopic
                 - sns:DeleteTopic
                 - sns:Receive
-              Resource: !If 
-                - EnableGracefulScaleIn
-                - !Ref ScaleInLifecycleTopic
-                - "*"
+              Resource: !Ref ScaleInLifecycleTopic
             - !Ref "AWS::NoValue"
           - !If
             - EnableGracefulScaleIn
