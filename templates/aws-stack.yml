@@ -358,11 +358,11 @@ Parameters:
     Default: "false"
     
   GracefulTerminationHeartbeatTimeout:
-    Description: Number of seconds agents have to gracefully terminate (60-3600)
+    Description: Number of seconds agents have to gracefully terminate (60-172800, max 48 hours)
     Type: Number
     Default: 3600
     MinValue: 60
-    MaxValue: 3600
+    MaxValue: 172800
 
   OnDemandPercentage:
     Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
@@ -1854,6 +1854,7 @@ Resources:
           - Effect: Allow
             Action:
               - autoscaling:CompleteLifecycleAction
+              - autoscaling:RecordLifecycleActionHeartbeat
             Resource: !Sub "arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AgentAutoScaleGroup}"
           - Sid: LifecycledSNSPermissions
             Effect: Allow
