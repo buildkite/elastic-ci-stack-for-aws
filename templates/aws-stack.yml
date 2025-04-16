@@ -1791,4 +1791,3 @@ Resources:
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
-        EnableGracefulTermination: !Ref EnableGracefulTermination
