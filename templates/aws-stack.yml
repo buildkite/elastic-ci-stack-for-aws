@@ -350,19 +350,12 @@ Parameters:
     Default: "10s"
     
   EnableGracefulTermination:
-    Description: Enable graceful termination of agents during scale-in events using ASG lifecycle hooks, allowing running jobs to complete before instances are terminated
+    Description: Enable graceful termination of agents during scale-in events allowing agents to finish their jobs before instance termination
     Type: String
     AllowedValues:
       - "true"
       - "false"
     Default: "false"
-    
-  GracefulTerminationHeartbeatTimeout:
-    Description: Number of seconds agents have to gracefully terminate (60-172800, max 48 hours)
-    Type: Number
-    Default: 3600
-    MinValue: 60
-    MaxValue: 172800
 
   OnDemandPercentage:
     Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
@@ -682,11 +675,6 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-ManagedSecretsLoggingBucket'
 
-  ScaleInLifecycleTopicARN:
-    Condition: EnableGracefulScaleIn
-    Value: !Ref ScaleInLifecycleTopic
-    Export:
-      Name: !Sub '${AWS::StackName}-ScaleInLifecycleTopic'
 
   PipelineSigningKMSKey:
     Value:
@@ -716,9 +704,6 @@ Conditions:
          - !Equals [ !Ref EnableSecretsPlugin, "true"]
          - !Equals [ !Ref SecretsBucket, "" ]
          
-    EnableGracefulScaleIn:
-      !Equals [ !Ref EnableGracefulTermination, "true" ]
-
     EnforceSecretsBucketEncryption:
       !And
          - !Condition CreateSecretsBucket
@@ -1478,10 +1463,7 @@ Resources:
                     - CreateSecretsBucket
                     - !Ref "AWS::Region"
                     - !Ref SecretsBucketRegion
-                  LifecycledSnsTopic: !If
-                    - EnableGracefulScaleIn
-                    - !Ref ScaleInLifecycleTopic
-                    - ""
+                  LifecycledSnsTopic: ""
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath
@@ -1560,10 +1542,7 @@ Resources:
                     - CreateSecretsBucket
                     - !Ref "AWS::Region"
                     - !Ref SecretsBucketRegion
-                  LifecycledSnsTopic: !If
-                    - EnableGracefulScaleIn
-                    - !Ref ScaleInLifecycleTopic
-                    - ""
+                  LifecycledSnsTopic: ""
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath
@@ -1787,102 +1766,8 @@ Resources:
       ToPort: 22
       CidrIp: 0.0.0.0/0
       
-  # Lifecycle hook components
-  ScaleInLifecycleTopic:
-    Type: AWS::SNS::Topic
-    Condition: EnableGracefulScaleIn
-    Properties:
-      DisplayName: !Sub "${AWS::StackName}-ScaleInLifecycleTopic"
-      
-  ScaleInLifecycleTopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Condition: EnableGracefulScaleIn
-    Properties:
-      Topics:
-        - !Ref ScaleInLifecycleTopic
-      PolicyDocument:
-        Id: ScaleInLifecycleTopicPolicy
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowASGToPublish
-            Effect: Allow
-            Principal:
-              Service: autoscaling.amazonaws.com
-            Action: sns:Publish
-            Resource: !GetAtt ScaleInLifecycleTopic.TopicArn
-      
-  LifecycleHookRole:
-    Type: AWS::IAM::Role
-    Condition: EnableGracefulScaleIn
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: autoscaling.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AutoScalingNotificationAccessRole
-
-  ScaleInLifecycleHook:
-    Type: AWS::AutoScaling::LifecycleHook
-    Condition: EnableGracefulScaleIn
-    Properties:
-      AutoScalingGroupName: !Ref AgentAutoScaleGroup
-      LifecycleHookName: !Sub "${AWS::StackName}-ScaleInLifecycleHook"
-      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
-      DefaultResult: ABANDON
-      HeartbeatTimeout: !Ref GracefulTerminationHeartbeatTimeout
-      NotificationTargetARN: !If [EnableGracefulScaleIn, !Ref ScaleInLifecycleTopic, !Ref "AWS::NoValue"]
-      RoleARN: !GetAtt LifecycleHookRole.Arn
-      NotificationMetadata: !Sub |
-        {
-          "AUTO_SCALING_GROUP_NAME":"${AgentAutoScaleGroup}",
-          "LIFECYCLE_HOOK_NAME":"${AWS::StackName}-ScaleInLifecycleHook",
-          "LIFECYCLE_HEARTBEAT_TIMEOUT":"${GracefulTerminationHeartbeatTimeout}"
-        }
-        
-  ScaleInLifecyclePolicy:
-    Type: AWS::IAM::Policy
-    Condition: EnableGracefulScaleIn
-    Properties:
-      PolicyName: ScaleInLifecyclePolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              - autoscaling:CompleteLifecycleAction
-              - autoscaling:RecordLifecycleActionHeartbeat
-            Resource: !Sub "arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AgentAutoScaleGroup}"
-          - Sid: LifecycledSNSPermissions
-            Effect: Allow
-            Action:
-              - sns:Subscribe
-              - sns:Unsubscribe
-              - sns:ConfirmSubscription
-              - sns:ListSubscriptionsByTopic
-              - sns:CreateTopic
-              - sns:DeleteTopic
-              - sns:Receive
-              - sns:Publish
-            Resource: !GetAtt ScaleInLifecycleTopic.TopicArn
-          - Sid: LifecycledSQSPermissions
-            Effect: Allow
-            Action:
-              - sqs:CreateQueue
-              - sqs:DeleteQueue
-              - sqs:SetQueueAttributes
-              - sqs:GetQueueAttributes
-              - sqs:GetQueueUrl
-              - sqs:ReceiveMessage
-              - sqs:DeleteMessage
-              - sqs:SendMessage
-              - sqs:ChangeMessageVisibility
-            Resource: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:lifecycled-*"
-      Roles:
-        - !Ref IAMRole
+  # Graceful termination is now handled via direct SIGTERM via SSM 
+  # (not using ASG lifecycle hooks anymore)
 
   Autoscaling:
     Type: AWS::Serverless::Application
@@ -1906,3 +1791,4 @@ Resources:
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
+        GracefulTermination: !Ref EnableGracefulTermination

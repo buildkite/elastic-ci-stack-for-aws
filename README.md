@@ -156,12 +156,28 @@ to decide whether to apply it.
 
 ## Graceful Termination
 
-The Elastic CI Stack supports graceful termination of instances during scale-in, allowing running jobs to complete before instances are terminated. This is implemented using AWS Auto Scaling Group (ASG) lifecycle hooks.
+The Elastic CI Stack supports graceful termination of instances during scale-in, allowing running jobs to complete before instances are terminated. This is implemented using direct SIGTERM signals via AWS Systems Manager (SSM).
 
-When an instance is selected for termination:
-- A lifecycle hook pauses the termination process for up to 1 hour (configurable)
-- Running jobs are allowed to complete before the instance is terminated
-- No jobs are interrupted, improving build reliability
+### How it Works
+
+1. **Agent Selection**: When scaling in, the agent scaler identifies instances to terminate.
+2. **Direct SIGTERM**: The scaler sends SIGTERM directly to the buildkite-agent processes via SSM Run Command before reducing ASG capacity.
+3. **Graceful Shutdown**: The agent receives the SIGTERM signal and begins its graceful shutdown process.
+4. **Job Completion**: The agent completes any running jobs before shutting down.
+5. **ASG Capacity Reduction**: After sending SIGTERM, the scaler reduces the desired capacity of the ASG.
+6. **Instance Termination**: AWS terminates instances according to its termination policy.
+
+### Configuration
+
+Graceful termination can be configured with this CloudFormation parameter:
+
+- **EnableGracefulTermination**: Enable/disable the graceful termination feature (default: `false`)
+
+### Benefits
+
+- No jobs are interrupted during scale-in operations
+- Properly cleans up resources before termination
+
 
 ## Recommended reading
 
