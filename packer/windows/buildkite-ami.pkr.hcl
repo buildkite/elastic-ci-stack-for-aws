@@ -43,13 +43,13 @@ data "amazon-ami" "windows-server-2022" {
     virtualization-type = "hvm"
   }
   most_recent = true
-  owners      = ["amazon"]
+  owners = ["amazon"]
   region      = var.region
 }
 
 source "amazon-ebs" "elastic-ci-stack" {
   ami_description = "Buildkite Elastic Stack (Windows Server 2022 w/ docker)"
-  ami_groups      = ["all"]
+  ami_groups = ["all"]
   ami_name        = "buildkite-stack-windows-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
@@ -134,11 +134,20 @@ build {
     script = "scripts/configure-ec2launch.ps1"
   }
 
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
   provisioner "powershell" {
-    inline = ["Remove-Item -Path C:/packer-temp -Recurse"]
+    inline = [
+      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' validate"
+    ]
   }
 
   provisioner "powershell" {
-    script = "scripts/configure-ec2launch.ps1"
+    inline = [
+      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep"
+    ]
+  }
+
+  provisioner "powershell" {
+    inline = ["Remove-Item -Path C:/packer-temp -Recurse"]
   }
 }

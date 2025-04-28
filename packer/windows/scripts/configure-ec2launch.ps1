@@ -1,28 +1,59 @@
 try {
-    # Delete the default agent-config.yml and replace it with our empty version
-    # EC2Launch v2 expects a specific format for this file which is different from v1
-    # The error indicates it's expecting a task list rather than a map
     $configPath = "C:\ProgramData\Amazon\EC2Launch\config\agent-config.yml"
+
     if (Test-Path $configPath) {
-        Write-Host "Backing up original agent-config.yml"
+        Write-Host "Backing up original agent-config.yml to $configPath.bak"
         Copy-Item -Path $configPath -Destination "$configPath.bak" -Force
     }
 
-    # Create a properly formatted empty configuration file
-    # Format: a list of tasks with ExecuteScript type
     @"
-- task: executeScript
-  inputs:
-  - frequency: always
-    type: powershell
-    runAs: localSystem
-    content: |
-      # Placeholder script
-      Write-Host "EC2Launch v2 script executed"
+version: 1.0
+config:
+- stage: boot
+  tasks:
+  - task: extendRootPartition
+- stage: preReady
+  tasks:
+  - task: activateWindows
+    inputs:
+      activation:
+        type: amazon
+  - task: setDnsSuffix
+    inputs:
+      suffixes:
+      - $REGION.ec2-utilities.amazonaws.com
+  - task: setAdminAccount
+    inputs:
+      password:
+        type: random
+  - task: setWallpaper
+    inputs:
+      attributes:
+      - hostName
+      - instanceId
+      - privateIpAddress
+      - publicIpAddress
+      - instanceSize
+      - availabilityZone
+      - architecture
+      - memory
+      - network
+      path: C:\Windows\Web\Wallpaper\Windows\img0.jpg
+- stage: postReady
+  tasks:
+  - task: startSsm
 "@ | Out-File -FilePath $configPath -Encoding utf8 -Force
 
-    Write-Host "Created new EC2Launch v2 configuration file at $configPath"
-} catch {
-    Write-Host "Error configuring EC2Launch v2: $_"
+    Write-Host "Wrote merged EC2Launch v2 configuration file at $configPath"
+
+    & "C:\Program Files\Amazon\EC2Launch\EC2Launch.exe" validate
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "EC2Launch config validation failed!"
+        exit 1
+    }
+    Write-Host "Valid EC2Launch configuration file: $configPath"
+}
+catch {
+    Write-Error "Error configuring EC2Launch v2: $_"
     exit 1
 }
