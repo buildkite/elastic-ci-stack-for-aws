@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOCKER_COMPOSE_V2_VERSION=2.31.0
+DOCKER_COMPOSE_V2_VERSION=2.35.1
 DOCKER_BUILDX_VERSION=0.23.0
 MACHINE=$(uname -m)
 
