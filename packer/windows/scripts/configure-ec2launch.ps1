@@ -44,7 +44,7 @@ config:
   - task: startSsm
 "@ | Out-File -FilePath $configPath -Encoding utf8 -Force
 
-    Write-Host "Wrote merged EC2Launch v2 configuration file at $configPath"
+    Write-Host "Wrote EC2Launch v2 configuration file at $configPath"
 
     & "C:\Program Files\Amazon\EC2Launch\EC2Launch.exe" validate
     if ($LASTEXITCODE -ne 0) {
