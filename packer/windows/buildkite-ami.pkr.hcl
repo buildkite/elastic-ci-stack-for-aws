@@ -136,20 +136,11 @@ build {
     script = "scripts/install-session-manager-plugin.ps1"
   }
 
-  # provisioner "powershell" {
-  #   script = "scripts/configure-ec2launch.ps1"
-  # }
-
-  # provisioner "powershell" {
-  #   inline = ["Remove-Item -Path C:/packer-temp -Recurse"]
-  # }
-
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
-
   provisioner "powershell" {
     inline = [
-      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' validate",
-      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep --shutdown true --clean true"
+      "& 'Remove-Item -Path C:/packer-temp -Recurse'",
+      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep --clean true"
     ]
   }
 }

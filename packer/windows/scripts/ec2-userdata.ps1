@@ -12,7 +12,6 @@ $cert = New-SelfSignedCertificate `
   -DnsName (hostname) `
   -CertStoreLocation Cert:\LocalMachine\My
 
-# 4) Create an HTTPS WinRM listener on 5986
 New-Item -Path WSMan:\LocalHost\Listener `
   -Transport HTTPS `
   -Address * `
