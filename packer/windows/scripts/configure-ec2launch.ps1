@@ -1,50 +1,54 @@
 try {
     $configPath = "C:\ProgramData\Amazon\EC2Launch\config\agent-config.yml"
 
-    if (Test-Path $configPath) {
-        Write-Host "Backing up original agent-config.yml to $configPath.bak"
-        Copy-Item -Path $configPath -Destination "$configPath.bak" -Force
-    }
-
     @"
 version: 1.0
 config:
-- stage: boot
-  tasks:
-  - task: extendRootPartition
-- stage: preReady
-  tasks:
-  - task: activateWindows
-    inputs:
-      activation:
-        type: amazon
-  - task: setDnsSuffix
-    inputs:
-      suffixes:
-      - $REGION.ec2-utilities.amazonaws.com
-  - task: setAdminAccount
-    inputs:
-      password:
-        type: random
-  - task: setWallpaper
-    inputs:
-      attributes:
-      - hostName
-      - instanceId
-      - privateIpAddress
-      - publicIpAddress
-      - instanceSize
-      - availabilityZone
-      - architecture
-      - memory
-      - network
-      path: C:\Windows\Web\Wallpaper\Windows\img0.jpg
-- stage: postReady
-  tasks:
-  - task: startSsm
-"@ | Out-File -FilePath $configPath -Encoding utf8 -Force
+  - stage: boot
+    tasks:
+      - task: extendRootPartition
 
-    Write-Host "Wrote EC2Launch v2 configuration file at $configPath"
+  - stage: network
+    tasks:
+      - task: configureWinRM
+        inputs:
+          http: true
+          https: true
+          certificateThumbprint:
+            type: generate
+
+  - stage: preReady
+    tasks:
+      - task: activateWindows
+        inputs:
+          activation:
+            type: amazon
+      - task: setDnsSuffix
+        inputs:
+          suffixes:
+            - \$REGION.ec2-utilities.amazonaws.com
+      - task: setAdminAccount
+        inputs:
+          password:
+            type: random
+      - task: setWallpaper
+        inputs:
+          path: C:\ProgramData\Amazon\EC2Launch\wallpaper\Ec2Wallpaper.jpg
+          attributes:
+            - hostName
+            - instanceId
+            - privateIpAddress
+            - publicIpAddress
+            - instanceSize
+            - availabilityZone
+            - architecture
+            - memory
+            - network
+
+  - stage: postReady
+    tasks:
+      - task: startSsm
+"@ | Out-File -FilePath $configPath -Encoding utf8 -Force
 
     & "C:\Program Files\Amazon\EC2Launch\EC2Launch.exe" validate
     if ($LASTEXITCODE -ne 0) {

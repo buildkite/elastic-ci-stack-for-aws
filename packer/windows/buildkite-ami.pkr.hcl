@@ -58,6 +58,8 @@ source "amazon-ebs" "elastic-ci-stack" {
   user_data_file  = "scripts/ec2-userdata.ps1"
   winrm_insecure  = true
   winrm_use_ssl   = true
+  winrm_port      = 5986
+  winrm_timeout   = "60m"
   winrm_username  = "Administrator"
 
   launch_block_device_mappings {
@@ -130,24 +132,16 @@ build {
     script = "scripts/install-session-manager-plugin.ps1"
   }
 
-  provisioner "powershell" {
-    script = "scripts/configure-ec2launch.ps1"
-  }
+  # provisioner "powershell" {
+  #   script = "scripts/configure-ec2launch.ps1"
+  # }
 
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
-  provisioner "powershell" {
-    inline = [
-      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' validate"
-    ]
-  }
 
   provisioner "powershell" {
     inline = [
-      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep"
+      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' validate",
+      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep --shutdown true --clean true"
     ]
-  }
-
-  provisioner "powershell" {
-    inline = ["Remove-Item -Path C:/packer-temp -Recurse"]
   }
 }
