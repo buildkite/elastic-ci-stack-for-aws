@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.37.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.36.0...v6.37.0) (2025-04-30)
+
+### Added
+* Option to recursively copy AWS SSM parameters to an env file by @wolfeidau in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1455
+* More instance types by @ivannalisetska in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1465
+* `BuildkiteAgentSignalGracePeriod` parameter by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1468
+
+### Changed
+* Buildkite Agent v3.97.0, was v3.93.1 by @pda & @PriyaSudip in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1473 & https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1453
+* Go 1.23 by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1467
+  * Go 1.23.6 (just fixes) by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1469
+* Bump golang.org/x/sys from 0.30.0 to 0.32.0 by @dependabot in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1464
+
 ## [v6.36.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.35.0...v6.36.0) (2025-03-10)
 
 ### Changed
