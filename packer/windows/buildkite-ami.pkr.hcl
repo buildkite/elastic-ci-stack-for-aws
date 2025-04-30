@@ -140,7 +140,7 @@ build {
   provisioner "powershell" {
     inline = [
       "& 'Remove-Item -Path C:/packer-temp -Recurse'",
-      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep --clean true"
+      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep --shutdown true --clean true"
     ]
   }
 }
