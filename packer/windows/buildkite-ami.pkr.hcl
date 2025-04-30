@@ -90,6 +90,11 @@ build {
 
   provisioner "file" {
     destination = "C:/packer-temp"
+    source      = "scripts"
+  }
+
+  provisioner "file" {
+    destination = "C:/packer-temp"
     source      = "../../plugins"
   }
 
@@ -109,16 +114,15 @@ build {
     script = "scripts/enable-containers.ps1"
   }
 
-  // need to restart after enabling containers
-  // for some reason the restart provisioner does not wait for the previous provisioner to finish
-  // so we pause for some amount of time
   provisioner "windows-restart" {
-    pause_before = "10s"
+    restart_command = "C:/packer-temp/scripts/enable-containers.ps1"
+    timeout         = "20m"
   }
 
   provisioner "powershell" {
     script = "scripts/install-docker.ps1"
   }
+
 
   provisioner "powershell" {
     script = "scripts/install-buildkite-agent.ps1"
@@ -134,6 +138,10 @@ build {
 
   # provisioner "powershell" {
   #   script = "scripts/configure-ec2launch.ps1"
+  # }
+
+  # provisioner "powershell" {
+  #   inline = ["Remove-Item -Path C:/packer-temp -Recurse"]
   # }
 
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
