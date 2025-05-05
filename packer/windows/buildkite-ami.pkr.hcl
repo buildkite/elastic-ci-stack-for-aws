@@ -99,47 +99,33 @@ build {
   }
 
   provisioner "powershell" {
-    script = "scripts/install-utils.ps1"
+    scripts = [
+      "scripts/install-utils.ps1",
+      "scripts/install-cloudwatch-agent.ps1",
+      "scripts/install-lifecycled.ps1",
+      "scripts/enable-containers.ps1"
+    ]
   }
 
-  provisioner "powershell" {
-    script = "scripts/install-cloudwatch-agent.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/install-lifecycled.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/enable-containers.ps1"
-  }
-
+  # Reboot with enable-containers, to make sure containers feature is ready
   provisioner "windows-restart" {
     restart_command = "C:/packer-temp/scripts/enable-containers.ps1"
     timeout         = "20m"
   }
 
   provisioner "powershell" {
-    script = "scripts/install-docker.ps1"
-  }
-
-
-  provisioner "powershell" {
-    script = "scripts/install-buildkite-agent.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/install-s3secrets-helper.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/install-session-manager-plugin.ps1"
+    scripts = [
+      "scripts/install-docker.ps1",
+      "scripts/install-buildkite-agent.ps1",
+      "scripts/install-s3secrets-helper.ps1",
+      "scripts/install-session-manager-plugin.ps1"
+      ]
   }
 
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
   provisioner "powershell" {
     inline = [
-      "& 'Remove-Item -Path C:/packer-temp -Recurse'",
+      "Remove-Item -Path C:/packer-temp -Recurse",
       "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep --shutdown true --clean true"
     ]
   }
