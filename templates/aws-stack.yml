@@ -60,6 +60,7 @@ Metadata:
         - BuildkiteAgentScalerServerlessARN
         - BuildkiteAgentScalerVersion
         - LogRetentionDays
+        - BuildkiteAgentEnableGracefulShutdown
 
       - Label:
           default: Network Configuration
@@ -209,6 +210,14 @@ Parameters:
     Type: Number
     Description: The number of days to retain the Cloudwatch Logs of the lambda.
     Default: "1"
+
+  BuildkiteAgentEnableGracefulShutdown:
+    Description: Set to true to enable graceful shutdown of agents when the ASG is updated with replacement. This allows ASGs to be removed in a timely manner during an in-place update of the elastic stack, and allows remaining agents to finish jobs without interruptions.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   BuildkiteAgentTracingBackend:
     Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
@@ -817,6 +826,9 @@ Conditions:
 
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
+
+    EnableBuildkiteAgentGracefulShutdown:
+      !Equals [ !Ref BuildkiteAgentEnableGracefulShutdown, "true" ]
 
     UsePipelineSigningKMSKey:
       !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
@@ -1729,6 +1741,7 @@ Resources:
 
   StopBuildkiteAgentsRole:
     Type: AWS::IAM::Role
+    Condition: EnableBuildkiteAgentGracefulShutdown
     Properties:
       PermissionsBoundary:
         !If [
@@ -1780,6 +1793,7 @@ Resources:
 
   StopBuildkiteAgentsFunction:
     Type: AWS::Lambda::Function
+    Condition: EnableBuildkiteAgentGracefulShutdown
     Properties:
       Description: "Gracefully stops all Buildkite agents in a given Auto Scaling group."
       Code:
@@ -1852,6 +1866,7 @@ Resources:
 
   StopBuildkiteAgents:
     Type: AWS::CloudFormation::CustomResource
+    Condition: EnableBuildkiteAgentGracefulShutdown
     Version: 1.0
     Properties:
       ServiceToken: !GetAtt StopBuildkiteAgentsFunction.Arn
