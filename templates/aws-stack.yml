@@ -1727,6 +1727,136 @@ Resources:
       ServiceToken: !GetAtt AzRebalancingSuspenderFunction.Arn
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
 
+  StopBuildkiteAgentsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary:
+        !If [
+          SetInstanceRolePermissionsBoundaryARN,
+          !Ref InstanceRolePermissionsBoundaryARN,
+          !Ref "AWS::NoValue",
+        ]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DescribeASGs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "autoscaling:DescribeAutoScalingGroups"
+                Resource: "*"
+        - PolicyName: RunStopBuildkiteDocument
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ssm:SendCommand"
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+        - PolicyName: StopBuildkiteInstances
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ssm:SendCommand"
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    "aws:resourceTag/aws:cloudformation:logical-id": "AgentAutoScaleGroup"
+
+  StopBuildkiteAgentsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: "Gracefully stops all Buildkite agents in a given Auto Scaling group."
+      Code:
+        ZipFile: |
+          import boto3
+          import logging
+          import cfnresponse
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          autoscaling_client = boto3.client("autoscaling")
+          ssm_client = boto3.client("ssm")
+
+          def handler(event, context):
+              logger.info(f"Received event: {event}")
+              
+              # only trigger on update upon replacement events
+              if event["RequestType"] == "Update":
+                  try:
+                      props = event["OldResourceProperties"]
+                      autoscaling_group_name = props["AutoScalingGroupName"]
+
+                      # Get all instances in the Auto Scaling group
+                      instances = get_autoscaling_instances(autoscaling_group_name)
+                      
+                      # Stop the Buikdite agent on each instance
+                      if len(instances) == 0:
+                          logger.info("No instances found in the Auto Scaling group.")
+                      else:
+                          logger.info(f"Stopping Buildkite agents on instances: {instances}")
+                          stop_bk_agents(instances)
+                      
+                      # Send success response to CloudFormation
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
+                  except Exception as e:
+                      logger.error(f"Error: {str(e)}")
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {"Error": str(e)}, "CustomResourcePhysicalID")
+              else:
+                  # For Create and Delete events, just send success response
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
+
+          def get_autoscaling_instances(autoscaling_group_name):
+              """Retrieve all instance IDs in the specified Auto Scaling group."""
+              logger.info(f"Retrieving instances in Auto Scaling group: {autoscaling_group_name}")
+              response = autoscaling_client.describe_auto_scaling_groups(
+                  AutoScalingGroupNames=[autoscaling_group_name],
+                  MaxRecords=1
+              )
+              instances = []
+              for instance in response["AutoScalingGroups"][0]["Instances"]:
+                  instances.append(instance["InstanceId"])
+              logger.info(f"Instances in Auto Scaling group {autoscaling_group_name}: {instances}")
+              return instances
+
+          def stop_bk_agents(instances):
+              """Gracefully terminates the Buildkite agent running on the given instances."""
+              logger.info(f"Running agent termination command on {instances}")
+              response = ssm_client.send_command(
+                  InstanceIds=instances,
+                  DocumentName="AWS-RunShellScript",
+                  Parameters={
+                      "commands": ["sudo kill -s SIGTERM $(/bin/pidof buildkite-agent)"]
+                  }
+              )
+              logger.info(f"SSM command response: {response}")
+      Handler: index.handler
+      Role: !GetAtt StopBuildkiteAgentsRole.Arn
+      Runtime: "python3.12"
+
+  StopBuildkiteAgents:
+    Type: AWS::CloudFormation::CustomResource
+    Version: 1.0
+    Properties:
+      ServiceToken: !GetAtt StopBuildkiteAgentsFunction.Arn
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Condition: CreateSecurityGroup
