@@ -1,4 +1,9 @@
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-Write-Output "Enabling Containers feature. We need to restart after this."
-Add-WindowsFeature Containers
+Write-Host "=== Enabling Windows Containers feature ==="
+
+Install-WindowsFeature -Name Containers -IncludeAllSubFeature -ErrorAction Stop
+
+Write-Host "Containers feature is installed, rebooting in 5s"
+Start-Sleep -Seconds 5
+Restart-Computer -Force
