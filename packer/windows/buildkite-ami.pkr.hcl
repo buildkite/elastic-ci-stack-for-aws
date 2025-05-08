@@ -43,13 +43,13 @@ data "amazon-ami" "windows-server-2022" {
     virtualization-type = "hvm"
   }
   most_recent = true
-  owners = ["amazon"]
+  owners      = ["amazon"]
   region      = var.region
 }
 
 source "amazon-ebs" "elastic-ci-stack" {
   ami_description = "Buildkite Elastic Stack (Windows Server 2022 w/ docker)"
-  ami_groups = ["all"]
+  ami_groups      = ["all"]
   ami_name        = "buildkite-stack-windows-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
@@ -119,7 +119,7 @@ build {
       "scripts/install-buildkite-agent.ps1",
       "scripts/install-s3secrets-helper.ps1",
       "scripts/install-session-manager-plugin.ps1"
-      ]
+    ]
   }
 
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
