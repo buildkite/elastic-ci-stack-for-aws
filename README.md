@@ -159,7 +159,6 @@ to decide whether to apply it.
 To gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
 
 * [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic-ci-aws/elastic-ci-stack-overview)
-* [Installation and setup recommendations](https://buildkite.com/docs/agent/v3/aws)
 * [Elastic CI Stack for AWS Linux and Windows setup](https://buildkite.com/docs/agent/v3/elastic-ci-aws)
 * [Template parameters for Elastic CI Stack for AWS](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
 * [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
