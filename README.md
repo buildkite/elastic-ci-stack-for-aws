@@ -15,9 +15,8 @@ based services and apps, or run AWS ops tasks.
 
 Learn more about getting started with the Elastic CI Stack for AWS in the Buildkite Docs:
 
-- [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic-ci-aws/elastic-ci-stack-overview) page, which outlines how the Elastic CI Stack works.
 - [Linux and Windows setup for the Elastic CI Stack for AWS](https://buildkite.com/docs/guides/elastic-ci-stack-aws) page for a step-by-step guide on how to set up the Elastic CI Stack in AWS for these operating systems.
-
+- [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic-ci-aws/elastic-ci-stack-overview) page, which outlines how the Elastic CI Stack works.
 A [list of recommended resources](#recommended-reading) provides links to other pages in the Buildkite Docs for more detailed information.
 
 Alternatively, jump straight in:
@@ -152,8 +151,9 @@ to decide whether to apply it.
 
 ## Recommended reading
 
-Following on from the [Getting started](#getting-started) pages above, to gain a more detailed understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
+Following on from the [Getting started](#getting-started) pages above, to gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
 
+- [Running Buildkite Agent on AWS](https://buildkite.com/docs/agent/v3/aws)
 - [Template parameters for Elastic CI Stack for AWS](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
 - [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
 - [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
