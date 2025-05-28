@@ -4,7 +4,7 @@
 
 ## Buildkite Elastic CI Stack for AWS
 
-[Buildkite](https://buildkite.com/) and Pipelines is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
+[Buildkite](https://buildkite.com/) is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
 The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling
 [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize
