@@ -239,6 +239,62 @@ Parameters:
       - "false"
     Default: "false"
 
+  ExperimentalEnableResourceLimits:
+    Description: >
+      (Experimental) If true, enables systemd resource limits for the Buildkite agent.
+      This helps prevent resource exhaustion by limiting CPU, memory, and I/O usage.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  ResourceLimitsMemoryHigh:
+    Description: >
+      (Experimental) Sets the MemoryHigh limit for the Buildkite agent slice.
+      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
+    Type: String
+    Default: '90%'
+
+  ResourceLimitsMemoryMax:
+    Description: >
+      (Experimental) Sets the MemoryMax limit for the Buildkite agent slice.
+      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
+    Type: String
+    Default: '90%'
+
+  ResourceLimitsMemorySwapMax:
+    Description: >
+      (Experimental) Sets the MemorySwapMax limit for the Buildkite agent slice.
+      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
+    Type: String
+    Default: '90%'
+
+  ResourceLimitsCPUWeight:
+    Description: >
+      (Experimental) Sets the CPU weight for the Buildkite agent slice (1-10000, default 100).
+      Higher values give more CPU time to the agent.
+    Type: Number
+    Default: 100
+    MinValue: 1
+    MaxValue: 10000
+
+  ResourceLimitsCPUQuota:
+    Description: >
+      (Experimental) Sets the CPU quota for the Buildkite agent slice.
+      Can be a percentage (e.g., '90%') or a value with units (e.g., '1800m' for 1.8 CPUs).
+    Type: String
+    Default: '90%'
+
+  ResourceLimitsIOWeight:
+    Description: >
+      (Experimental) Sets the I/O weight for the Buildkite agent slice (1-10000, default 80).
+      Higher values give more I/O bandwidth to the agent.
+    Type: Number
+    Default: 80
+    MinValue: 1
+    MaxValue: 10000
+
   BuildkiteAdditionalSudoPermissions:
     Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo. Note that the commands should be fully qualified paths to executables.
     Type: String
@@ -1514,6 +1570,13 @@ Resources:
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   AWS_REGION="${AWS::Region}" \
+                  ENABLE_RESOURCE_LIMITS="${ExperimentalEnableResourceLimits}" \
+                  RESOURCE_LIMITS_MEMORY_HIGH="${ResourceLimitsMemoryHigh}" \
+                  RESOURCE_LIMITS_MEMORY_MAX="${ResourceLimitsMemoryMax}" \
+                  RESOURCE_LIMITS_MEMORY_SWAP_MAX="${ResourceLimitsMemorySwapMax}" \
+                  RESOURCE_LIMITS_CPU_WEIGHT="${ResourceLimitsCPUWeight}" \
+                  RESOURCE_LIMITS_CPU_QUOTA="${ResourceLimitsCPUQuota}" \
+                  RESOURCE_LIMITS_IO_WEIGHT="${ResourceLimitsIOWeight}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If

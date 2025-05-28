@@ -362,6 +362,53 @@ until check_docker || [[ $next_wait_time -eq 5 ]]; do
   sleep $((next_wait_time++))
 done
 
+# Configure resource limits if enabled
+if [[ "${ENABLE_RESOURCE_LIMITS:-false}" == "true" ]]; then
+  echo "Configuring systemd resource limits for Buildkite agent..."
+
+  MEMORY_HIGH="${RESOURCE_LIMITS_MEMORY_HIGH:-90%}"
+  MEMORY_MAX="${RESOURCE_LIMITS_MEMORY_MAX:-90%}"
+  MEMORY_SWAP_MAX="${RESOURCE_LIMITS_MEMORY_SWAP_MAX:-90%}"
+  CPU_WEIGHT="${RESOURCE_LIMITS_CPU_WEIGHT:-100}"
+  CPU_QUOTA="${RESOURCE_LIMITS_CPU_QUOTA:-90%}"
+  IO_WEIGHT="${RESOURCE_LIMITS_IO_WEIGHT:-80}"
+
+  echo "Resource limits configuration:"
+  echo "  MemoryHigh: ${MEMORY_HIGH}"
+  echo "  MemoryMax: ${MEMORY_MAX}"
+  echo "  MemorySwapMax: ${MEMORY_SWAP_MAX}"
+  echo "  CPUWeight: ${CPU_WEIGHT}"
+  echo "  CPUQuota: ${CPU_QUOTA}"
+  echo "  IOWeight: ${IO_WEIGHT}"
+
+  cat >/etc/systemd/system/buildkite-agent.slice <<EOL
+[Unit]
+Description=Buildkite Agent Slice
+Before=slices.target
+
+[Slice]
+MemoryHigh=${MEMORY_HIGH}
+MemoryMax=${MEMORY_MAX}
+MemorySwapMax=${MEMORY_SWAP_MAX}
+CPUWeight=${CPU_WEIGHT}
+CPUQuota=${CPU_QUOTA}
+IOWeight=${IO_WEIGHT}
+EOL
+
+  mkdir -p /etc/systemd/system/buildkite-agent.service.d
+  cat >/etc/systemd/system/buildkite-agent.service.d/10-resource-limits.conf <<'EOL'
+[Service]
+Slice=buildkite-agent.slice
+IgnoreOnIsolate=yes
+EOL
+
+  chmod 644 /etc/systemd/system/buildkite-agent.slice
+  chmod 644 /etc/systemd/system/buildkite-agent.service.d/10-resource-limits.conf
+
+  systemctl daemon-reload
+  echo "Resource limits configured successfully"
+fi
+
 echo "Waited $next_wait_time times for docker to start. We will exit if it still has not started."
 check_docker
 
