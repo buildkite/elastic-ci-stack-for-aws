@@ -4,24 +4,26 @@
 
 ## Buildkite Elastic CI Stack for AWS
 
-[Buildkite](https://buildkite.com/) is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
+[Buildkite](https://buildkite.com/) provides a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
-The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling
-[Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize
-large test suites across thousands of nodes, run tests and deployments for Linux or Windows
-based services and apps, or run AWS ops tasks.
+The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize large test suites across thousands of nodes, run tests and deployments for Linux or Windows based services and apps, or run AWS ops tasks.
 
 ## Getting started
 
-See the [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/guides/elastic-ci-stack-aws) for a step-by-step guide, the [Elastic CI Stack for AWS documentation](https://buildkite.com/docs/agent/v3/elastic-ci-aws), or the full [list of recommended resources](#recommended-reading) for detailed information.
+Learn more about the Elastic CI Stack for AWS and how to get started with it from the Buildkite Docs:
 
-Or jump straight in:
+- [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic-ci-aws/elastic-ci-stack-overview) page, for a summary of the stack's architecture and supported features.
+- [Linux and Windows setup for the Elastic CI Stack for AWS](https://buildkite.com/docs/guides/elastic-ci-stack-aws) page for a step-by-step guide on how to set up the Elastic CI Stack in AWS for these operating systems.
+
+A [list of recommended resources](#recommended-reading) provides links to other pages in the Buildkite Docs for more detailed information.
+
+Alternatively, jump straight in:
 
 [![Launch AWS Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=buildkite&templateURL=https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml)
 
 The current release is ![](https://img.shields.io/github/release/buildkite/elastic-ci-stack-for-aws.svg). See [Releases](https://github.com/buildkite/elastic-ci-stack-for-aws/releases) for older releases.
 
-> Although the stack creates its own VPC by default, we highly recommend following best practice by setting up a separate development AWS account and using role switching and consolidated billing — see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
+> Although the stack creates its own VPC by default, Buildkite highly recommends following best practices by setting up a separate development AWS account and using role switching and consolidated billing — see the [Delegate Access Across AWS Accounts tutorial](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html) for more information.
 
 If you want to use the [AWS CLI](https://aws.amazon.com/cli/), download [`config.json.example`](config.json.example), rename it to `config.json`, and then run the below command:
 
@@ -34,55 +36,21 @@ aws cloudformation create-stack \
   --parameters "$(cat config.json)"
 ```
 
-## Supported Features
-
-Most features are supported across both Linux and Windows. See below for details
-of per-operating system support:
-
-Feature | Linux | Windows
---- | --- | ---
-Docker | ✅ | ✅
-Docker Compose | ✅ | ✅
-AWS CLI | ✅ | ✅
-S3 Secrets Bucket | ✅ | ✅
-ECR Login | ✅ | ✅
-Docker Login | ✅ | ✅
-CloudWatch Logs Agent | ✅ | ✅
-Per-Instance Bootstrap Script | ✅ | ✅
-SSM Access | ✅ | ✅
-Instance Storage (NVMe) | ✅ |
-SSH Access | ✅ |
-Periodic authorized_keys Refresh | ✅ |
-Periodic Instance Health Check | ✅ |
-git lfs | ✅ |
-Additional sudo Permissions | ✅ |
-RDP Access | | ✅
-Pipeline Signing | ✅ | ✅
-
 ## Security
 
-This repository hasn't been reviewed by security researchers so exercise caution and careful thought with what credentials you make available to your builds.
+This repository hasn't been reviewed by security researchers. Therefore, exercise caution and careful thought with what credentials you make available to your builds.
 
 Anyone with commit access to your codebase (including third-party pull-requests if you've enabled them in Buildkite) will have access to your secrets bucket files.
 
-Also keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
+Also, keep in mind the EC2 HTTP metadata server is available from within builds, which means builds act with the same IAM permissions as the instance.
 
 ### Limiting CloudFormation Permissions
 
-By default, CloudFormation will operate using the permissions granted to the
-identity of the credentials used to initiate a stack deployment or update.
+By default, CloudFormation will operate using the permissions granted to the identity of the credentials used to initiate a stack deployment or update.
 
-If you want to explicitly specify which actions CloudFormation can perform on
-your behalf, you can either create your stack using credentials for an IAM
-identity with limited permissions, or provide an [AWS CloudFormation service role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html).
+If you want to explicitly specify which actions CloudFormation can perform on your behalf, you can either create your stack using credentials for an IAM identity with limited permissions, or provide an [AWS CloudFormation service role](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html).
 
-🧑‍🔬 [templates/service-role.yml](templates/service-role.yml) template contains an
-experimental service role and set of IAM Policies that list the IAM
-Actions necessary to create, update, and delete a CloudFormation Stack created
-with the Buildkite Elastic CI Stack template. The role created by this template
-is currently being tested, but it has not been tested enough to be depended on.
-There are likely to be missing permissions for some stack parameter
-permutations.
+🧑‍🔬 [templates/service-role.yml](templates/service-role.yml) template contains an experimental service role and set of IAM Policies that list the IAM Actions necessary to create, update, and delete a CloudFormation Stack created with the Buildkite Elastic CI Stack template. The role created by this template is currently being tested, but it has not been tested enough to be depended on. There are likely to be missing permissions for some stack parameter permutations.
 
 ```bash
 aws cloudformation deploy --template-file templates/service-role.yml --stack-name buildkite-elastic-ci-stack-service-role --region us-east-1 --capabilities CAPABILITY_IAM
@@ -133,13 +101,14 @@ aim to publish a new tagged release of this template at the end of each month.
 
 ### AWS Regions
 
-We support all AWS Regions, except China and US GovCloud.
+Buildkite:
 
-We aim to support new regions within one month of general availability.
+- Supports all AWS Regions, except China and US GovCloud.
+- Aims to support new regions within one month of general availability.
 
 ### Operating Systems
 
-We build and deploy the following AMIs to all our supported regions:
+Buildkite builds and deploys the following AMIs to all our supported regions:
 
 - Amazon Linux 2023 (64-bit x86)
 - Amazon Linux 2023 (64-bit Arm)
@@ -156,33 +125,35 @@ to decide whether to apply it.
 
 ## Recommended reading
 
-To gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
+Following on from the [Getting started](#getting-started) pages above, to gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
 
-* [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic_ci_aws)
-* [Elastic CI Stack for AWS tutorial](https://buildkite.com/docs/tutorials/elastic-ci-stack-aws)
-* [Running Buildkite Agent on AWS](https://buildkite.com/docs/agent/v3/aws)
-* [Template parameters for Elastic CI Stack for AWS](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
-* [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
-* [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
-* [CloudFormation Service Role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
+- [Installation and setup options](https://buildkite.com/docs/agent/v3/aws)
+- [Template parameters](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
+- [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
+- [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
+- [CloudFormation service role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
 
 ## Questions and support
 
-Feel free to drop an email to support@buildkite.com with questions. It helps us if you can provide the following details:
+Feel free to drop an email to support@buildkite.com with questions. It'll also help us if you can provide the following details:
 
-```
+```bash
 # List your stack parameters
 aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
   --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
 ```
-### Collect logs from CloudWatch
-Provide us with logs from CloudWatch Logs:
 
-```
+### Collect logs from CloudWatch
+
+Provide Buildkite with logs from CloudWatch Logs:
+
+```bash
 /buildkite/elastic-stack/{instance-id}
 /buildkite/system/{instance-id}
 ```
+
 ### Collect logs via script
+
 An alternative method to collect the logs is to use the `log-collector` script in the `utils` folder.
 The script will collect CloudWatch logs for the Instance, Lambda function, and AutoScaling activity and package them in a
 zip archive which you can send via email to support@buildkite.com.
