@@ -4,19 +4,17 @@
 
 ## Buildkite Elastic CI Stack for AWS
 
-[Buildkite](https://buildkite.com/) is a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
+[Buildkite](https://buildkite.com/) provides a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
-The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling
-[Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize
-large test suites across thousands of nodes, run tests and deployments for Linux or Windows
-based services and apps, or run AWS ops tasks.
+The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize large test suites across thousands of nodes, run tests and deployments for Linux or Windows based services and apps, or run AWS ops tasks.
 
 ## Getting started
 
-Learn more about getting started with the Elastic CI Stack for AWS in the Buildkite Docs:
+Learn more about the Elastic CI Stack for AWS and how to get started with it from the Buildkite Docs:
 
+- [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic-ci-aws/elastic-ci-stack-overview) page, for a summary of the stack's architecture and supported features.
 - [Linux and Windows setup for the Elastic CI Stack for AWS](https://buildkite.com/docs/guides/elastic-ci-stack-aws) page for a step-by-step guide on how to set up the Elastic CI Stack in AWS for these operating systems.
-- [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic-ci-aws/elastic-ci-stack-overview) page, which outlines how the Elastic CI Stack works.
+
 A [list of recommended resources](#recommended-reading) provides links to other pages in the Buildkite Docs for more detailed information.
 
 Alternatively, jump straight in:
@@ -37,30 +35,6 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
   --parameters "$(cat config.json)"
 ```
-
-## Supported Features
-
-Most features are supported across both Linux and Windows. The following table provides details of which features are supported by these operating systems:
-
-Feature | Linux | Windows
---- | --- | ---
-Docker | ✅ | ✅
-Docker Compose | ✅ | ✅
-AWS CLI | ✅ | ✅
-S3 Secrets Bucket | ✅ | ✅
-ECR Login | ✅ | ✅
-Docker Login | ✅ | ✅
-CloudWatch Logs Agent | ✅ | ✅
-Per-Instance Bootstrap Script | ✅ | ✅
-SSM Access | ✅ | ✅
-Instance Storage (NVMe) | ✅ |
-SSH Access | ✅ |
-Periodic authorized_keys Refresh | ✅ |
-Periodic Instance Health Check | ✅ |
-git lfs | ✅ |
-Additional sudo Permissions | ✅ |
-RDP Access | | ✅
-Pipeline Signing | ✅ | ✅
 
 ## Security
 
@@ -153,11 +127,11 @@ to decide whether to apply it.
 
 Following on from the [Getting started](#getting-started) pages above, to gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
 
-- [Running Buildkite Agent on AWS](https://buildkite.com/docs/agent/v3/aws)
-- [Template parameters for Elastic CI Stack for AWS](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
+- [Installation and setup recommendations](https://buildkite.com/docs/agent/v3/aws)
+- [Template parameters](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
 - [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
 - [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
-- [CloudFormation Service Role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
+- [CloudFormation service role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
 
 ## Questions and support
 
