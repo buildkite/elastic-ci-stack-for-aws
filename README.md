@@ -127,7 +127,7 @@ to decide whether to apply it.
 
 Following on from the [Getting started](#getting-started) pages above, to gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
 
-- [Installation and setup recommendations](https://buildkite.com/docs/agent/v3/aws)
+- [Installation and setup options](https://buildkite.com/docs/agent/v3/aws)
 - [Template parameters](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
 - [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
 - [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
