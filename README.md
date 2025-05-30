@@ -56,6 +56,42 @@ If you want to explicitly specify which actions CloudFormation can perform on yo
 aws cloudformation deploy --template-file templates/service-role.yml --stack-name buildkite-elastic-ci-stack-service-role --region us-east-1 --capabilities CAPABILITY_IAM
 ```
 
+### Experimental Resource Limits
+
+The Elastic CI Stack includes configurable systemd resource limits to prevent resource exhaustion. These limits can be configured using CloudFormation parameters:
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `ExperimentalEnableResourceLimits` | Enable systemd resource limits for the Buildkite agent | `false` |
+| `ResourceLimitsMemoryHigh` | MemoryHigh limit (e.g., '90%' or '4G') | `90%` |
+| `ResourceLimitsMemoryMax` | MemoryMax limit (e.g., '90%' or '4G') | `90%` |
+| `ResourceLimitsMemorySwapMax` | MemorySwapMax limit (e.g., '90%' or '4G') | `90%` |
+| `ResourceLimitsCPUWeight` | CPU weight (1-10000) | `100` |
+| `ResourceLimitsCPUQuota` | CPU quota (e.g., '90%' or '1800m' for 1.8 CPUs) | `90%` |
+| `ResourceLimitsIOWeight` | I/O weight (1-10000) | `80` |
+
+### Example Configuration
+
+To enable resource limits with custom values, include these parameters in your CloudFormation template or config file:
+
+```yaml
+{
+  "Parameters": {
+    "ExperimentalEnableResourceLimits": "true",
+    "ResourceLimitsMemoryHigh": "80%",
+    "ResourceLimitsMemoryMax": "85%",
+    "ResourceLimitsMemorySwapMax": "90%",
+    "ResourceLimitsCPUWeight": "100",
+    "ResourceLimitsCPUQuota": "85%",
+    "ResourceLimitsIOWeight": "75"
+  }
+}
+```
+
+### Notes
+- Resource limits are disabled by default
+- Values can be specified as percentages or absolute values (for memory-related parameters)
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
