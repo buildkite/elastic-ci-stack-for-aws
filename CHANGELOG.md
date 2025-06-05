@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.38.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.37.0...v6.38.0) (2025-05-13)
+
+## Changed
+* Bump Docker buildx to v0.23.0 and Docker Compose to v2.35.1 by @orien in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1472
+* ⬆️ Bump Windows server to 2022 by @mcncl and @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1456
+* Bump golang.org/x/sys from 0.32.0 to 0.33.0 by @dependabot in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1478
+
 ## [v6.37.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.36.0...v6.37.0) (2025-04-30)
 
 ### Added
@@ -144,7 +151,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - 🔨 Add GitHub action for Linear sync [#1433](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1433) (@mcncl)
 - Add EBS volume tag for BK queue, keep optional cost allocation tags [#1430](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1430) (@petetomasik)
 
-> [!WARNING]  
+> [!WARNING]
 > This release will force an upgrade of the agent scaler by checking the version is 1.9.1 or higher. This is required so we can introduce a new parameter to the agent scaler to pass through agent endpoint.
 
 ## [v6.33.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.33.0) (2025-01-09)
