@@ -1,32 +1,37 @@
+<persist>true</persist>
 <powershell>
-Start-Transcript
+Start-Transcript -Path C:\Windows\Temp\ec2-userdata.log -Force
+Write-Host "=== User Data: Configuring WinRM HTTPS w/ Self-Signed Cert ==="
 
-write-output "Running User Data Script"
-write-host "(host) Running User Data Script"
+Set-Service -Name WinRM -StartupType Automatic
+Start-Service  WinRM
 
-Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -ErrorAction Ignore
+Remove-Item -Path WSMan:\Localhost\Listener\Listener* -Recurse -ErrorAction SilentlyContinue
 
-# Don't set this before Set-ExecutionPolicy as it throws an error
-$ErrorActionPreference = "stop"
+$cert = New-SelfSignedCertificate `
+  -DnsName (hostname) `
+  -CertStoreLocation Cert:\LocalMachine\My
 
-# Remove HTTP listener
-Remove-Item -Path WSMan:\Localhost\listener\listener* -Recurse
+New-Item -Path WSMan:\LocalHost\Listener `
+  -Transport HTTPS `
+  -Address * `
+  -CertificateThumbPrint $cert.Thumbprint `
+  -Force
 
-$Cert = New-SelfSignedCertificate -CertstoreLocation Cert:\LocalMachine\My -DnsName "packer"
-New-Item -Path WSMan:\LocalHost\Listener -Transport HTTPS -Address * -CertificateThumbPrint $Cert.Thumbprint -Force
+winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
 
-# WinRM
-write-output "Setting up WinRM"
-write-host "(host) setting up WinRM"
+winrm set winrm/config/service/auth '@{Basic="true"}'
+winrm set winrm/config/service '@{AllowUnencrypted="true"}'
 
-winrm set "winrm/config" '@{MaxTimeoutms="1800000"}'
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
-winrm set "winrm/config/winrs" '@{MaxMemoryPerShellMB="1024"}'
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
-winrm set "winrm/config/service/auth" '@{Basic="true"}'
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
-netsh advfirewall firewall add rule name="Port 5986" protocol=TCP dir=in localport=5986 action=allow
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
+winrm set winrm/config/client `
+  '@{SkipCACheck="true"; SkipCNCheck="true"; TrustedHosts="*"}'
 
+netsh advfirewall firewall add rule `
+  name="WinRM HTTP" protocol=TCP dir=in localport=5985 action=allow
+netsh advfirewall firewall add rule `
+  name="WinRM HTTPS" protocol=TCP dir=in localport=5986 action=allow
+
+Write-Host "=== WinRM HTTPS configuration complete ==="
 Stop-Transcript
 </powershell>

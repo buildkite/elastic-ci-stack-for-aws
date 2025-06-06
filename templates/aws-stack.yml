@@ -140,7 +140,7 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: Optional - SSH keypair used to access the buildkite instances via ec2_user, setting this will enable SSH ingress
+    Description: Optional - SSH keypair used to access the buildkite instances via ec2-user, setting this will enable SSH ingress
     Type: String
     Default: ""
 
@@ -306,7 +306,7 @@ Parameters:
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress. authorized_keys are applied to ec2_user
+    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress. authorized_keys are applied to ec2-user
     Type: String
     Default: ""
 
@@ -1726,7 +1726,7 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, {}, "CustomResourcePhysicalID")
       Handler: index.handler
       Role: !GetAtt AsgProcessSuspenderRole.Arn
-      Runtime: 'python3.10'
+      Runtime: 'python3.13'
 
   AzRebalancingSuspender:
     Type: AWS::CloudFormation::CustomResource
