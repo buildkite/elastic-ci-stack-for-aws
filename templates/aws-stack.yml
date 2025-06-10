@@ -205,7 +205,7 @@ Parameters:
     ConstraintDescription: "The agent scaler release must be greater than 1.9.0 as a new parameter was introduced in 1.9.1"
     Default: "1.9.3"
 
-  ExperimentalEnableElasticCIMode:
+  ScalerEnableExperimentalElasticCIMode:
     Description: "[EXPERIMENTAL] Enable the Elastic CI Mode with enhanced features like safety checks, agent sorting, dangling instance detection, and graceful termination"
     Type: String
     AllowedValues:
@@ -752,13 +752,13 @@ Conditions:
 
     UseInstanceType7:
       !Not [ !Equals [ !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
-
+    
     UseInstanceType8:
       !Not [ !Equals [ !Select [ "7", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
-
+    
     UseInstanceType9:
       !Not [ !Equals [ !Select [ "8", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
-
+    
     UseInstanceType10:
       !Not [ !Equals [ !Select [ "9", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
 
@@ -1580,7 +1580,7 @@ Resources:
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType7
-            - InstanceType: !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ]
+            - InstanceType: !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType8
@@ -1777,4 +1777,4 @@ Resources:
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
-        EnableElasticCIMode: !Ref ExperimentalEnableElasticCIMode
+        EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
