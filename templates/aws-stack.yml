@@ -203,7 +203,15 @@ Parameters:
     Type: String
     AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.[1-9]\d*))$'
     ConstraintDescription: "The agent scaler release must be greater than 1.9.0 as a new parameter was introduced in 1.9.1"
-    Default: "1.9.1"
+    Default: "1.9.3"
+
+  ExperimentalEnableElasticCIMode:
+    Description: "[EXPERIMENTAL] Enable the Elastic CI Mode with enhanced features like safety checks, agent sorting, dangling instance detection, and graceful termination"
+    Type: String
+    AllowedValues:
+        - "true"
+        - "false"
+    Default: "false"
 
   LogRetentionDays:
     Type: Number
@@ -1769,3 +1777,4 @@ Resources:
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
+        EnableElasticCIMode: !Ref ExperimentalEnableElasticCIMode
