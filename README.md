@@ -12,8 +12,8 @@ The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling [Buildki
 
 Learn more about the Elastic CI Stack for AWS and how to get started with it from the Buildkite Docs:
 
-- [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/elastic-ci-aws/elastic-ci-stack-overview) page, for a summary of the stack's architecture and supported features.
-- [Linux and Windows setup for the Elastic CI Stack for AWS](https://buildkite.com/docs/guides/elastic-ci-stack-aws) page for a step-by-step guide on how to set up the Elastic CI Stack in AWS for these operating systems.
+- [Elastic CI Stack for AWS overview](https://buildkite.com/docs/agent/v3/aws/elastic-ci-stack) page, for a summary of the stack's architecture and supported features.
+- [Linux and Windows setup for the Elastic CI Stack for AWS](https://buildkite.com/docs/agent/v3/aws/elastic-ci-stack/ec2-linux-and-windows/setup) page for a step-by-step guide on how to set up the Elastic CI Stack in AWS for these operating systems.
 
 A [list of recommended resources](#recommended-reading) provides links to other pages in the Buildkite Docs for more detailed information.
 
@@ -127,11 +127,11 @@ to decide whether to apply it.
 
 Following on from the [Getting started](#getting-started) pages above, to gain a better understanding of how Elastic CI Stack works and how to use it most effectively and securely, see the following resources:
 
-- [Installation and setup options](https://buildkite.com/docs/agent/v3/aws)
-- [Template parameters](https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters)
-- [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/secrets-manager)
-- [VPC Design](https://buildkite.com/docs/agent/v3/aws/vpc)
-- [CloudFormation service role](https://buildkite.com/docs/agent/v3/elastic-ci-aws/cloudformation-service-role)
+- [Buildkite Agents in AWS overview](https://buildkite.com/docs/agent/v3/aws)
+- [Template parameters](https://buildkite.com/docs/agent/v3/aws/elastic-ci-stack/ec2-linux-and-windows/template-parameters)
+- [Using AWS Secrets Manager](https://buildkite.com/docs/agent/v3/aws/elastic-ci-stack/ec2-linux-and-windows/secrets-manager)
+- [VPC design](https://buildkite.com/docs/agent/v3/aws/architecture/vpc)
+- [CloudFormation service role](https://buildkite.com/docs/agent/v3/aws/elastic-ci-stack/ec2-linux-and-windows/cloudformation-service-role)
 
 ## Questions and support
 
