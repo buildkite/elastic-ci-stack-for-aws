@@ -67,7 +67,7 @@ The Elastic CI Stack includes configurable systemd resource limits to prevent re
 | `ResourceLimitsMemoryMax` | MemoryMax limit (e.g., '90%' or '4G') | `90%` |
 | `ResourceLimitsMemorySwapMax` | MemorySwapMax limit (e.g., '90%' or '4G') | `90%` |
 | `ResourceLimitsCPUWeight` | CPU weight (1-10000) | `100` |
-| `ResourceLimitsCPUQuota` | CPU quota (e.g., '90%' or '1800m' for 1.8 CPUs) | `90%` |
+| `ResourceLimitsCPUQuota` | CPU quota (e.g., '90%') | `90%` |
 | `ResourceLimitsIOWeight` | I/O weight (1-10000) | `80` |
 
 ### Example Configuration
@@ -103,7 +103,7 @@ The Elastic CI Stack includes configurable systemd resource limits to prevent re
 | `ResourceLimitsMemoryMax` | MemoryMax limit (e.g., '90%' or '4G') | `90%` |
 | `ResourceLimitsMemorySwapMax` | MemorySwapMax limit (e.g., '90%' or '4G') | `90%` |
 | `ResourceLimitsCPUWeight` | CPU weight (1-10000) | `100` |
-| `ResourceLimitsCPUQuota` | CPU quota (e.g., '90%' or '1800m' for 1.8 CPUs) | `90%` |
+| `ResourceLimitsCPUQuota` | CPU quota (e.g., '90%') | `90%` |
 | `ResourceLimitsIOWeight` | I/O weight (1-10000) | `80` |
 
 ### Example Configuration

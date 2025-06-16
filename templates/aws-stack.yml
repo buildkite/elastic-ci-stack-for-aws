@@ -255,6 +255,8 @@ Parameters:
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|\d+%|infinity)$'
+    ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
 
   ResourceLimitsMemoryMax:
     Description: >
@@ -262,6 +264,8 @@ Parameters:
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|\d+%|infinity)$'
+    ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
 
   ResourceLimitsMemorySwapMax:
     Description: >
@@ -269,6 +273,8 @@ Parameters:
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|\d+%|infinity)$'
+    ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
 
   ResourceLimitsCPUWeight:
     Description: >
@@ -282,65 +288,11 @@ Parameters:
   ResourceLimitsCPUQuota:
     Description: >
       (Experimental) Sets the CPU quota for the Buildkite agent slice.
-      Can be a percentage (e.g., '90%') or a value with units (e.g., '1800m' for 1.8 CPUs).
+      Takes a percentage value, suffixed with "%" .
     Type: String
     Default: '90%'
-
-  ResourceLimitsIOWeight:
-    Description: >
-      (Experimental) Sets the I/O weight for the Buildkite agent slice (1-10000, default 80).
-      Higher values give more I/O bandwidth to the agent.
-    Type: Number
-    Default: 80
-    MinValue: 1
-    MaxValue: 10000
-
-  ExperimentalEnableResourceLimits:
-    Description: >
-      (Experimental) If true, enables systemd resource limits for the Buildkite agent.
-      This helps prevent resource exhaustion by limiting CPU, memory, and I/O usage.
-    Type: String
-    AllowedValues:
-      - "true"
-      - "false"
-    Default: "false"
-
-  ResourceLimitsMemoryHigh:
-    Description: >
-      (Experimental) Sets the MemoryHigh limit for the Buildkite agent slice.
-      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
-    Type: String
-    Default: '90%'
-
-  ResourceLimitsMemoryMax:
-    Description: >
-      (Experimental) Sets the MemoryMax limit for the Buildkite agent slice.
-      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
-    Type: String
-    Default: '90%'
-
-  ResourceLimitsMemorySwapMax:
-    Description: >
-      (Experimental) Sets the MemorySwapMax limit for the Buildkite agent slice.
-      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
-    Type: String
-    Default: '90%'
-
-  ResourceLimitsCPUWeight:
-    Description: >
-      (Experimental) Sets the CPU weight for the Buildkite agent slice (1-10000, default 100).
-      Higher values give more CPU time to the agent.
-    Type: Number
-    Default: 100
-    MinValue: 1
-    MaxValue: 10000
-
-  ResourceLimitsCPUQuota:
-    Description: >
-      (Experimental) Sets the CPU quota for the Buildkite agent slice.
-      Can be a percentage (e.g., '90%') or a value with units (e.g., '1800m' for 1.8 CPUs).
-    Type: String
-    Default: '90%'
+    AllowedPattern: '^\d+%$'
+    ConstraintDescription: "Must be a percentage value (e.g., 90%)."
 
   ResourceLimitsIOWeight:
     Description: >
