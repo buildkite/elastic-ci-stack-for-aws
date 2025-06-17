@@ -925,9 +925,6 @@ Conditions:
     UseWindowsAgents:
       !Equals [ !Ref InstanceOperatingSystem, "windows" ]
 
-    UseLinuxAgents:
-      !Equals [ !Ref InstanceOperatingSystem, "linux" ]
-
     # Unfortunately, Cloudformation's !Or intrinsic function only accepts
     # between 2 and 10 arguments.  To get around this, we're grouping the
     # instance families in sub-conditionals.  At least this doesn't force us
@@ -1099,6 +1096,7 @@ Resources:
   PipelineSigningKMSKey:
     Type: AWS::KMS::Key
     Condition: CreatePipelineSigningKMSKey
+    UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
       Description: Key used to sign and verify pipelines
@@ -1276,6 +1274,7 @@ Resources:
   ManagedSecretsLoggingBucket:
     Type: AWS::S3::Bucket
     Condition: CreateSecretsBucket
+    UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
       PublicAccessBlockConfiguration:
@@ -1338,6 +1337,7 @@ Resources:
   ManagedSecretsBucket:
     Type: AWS::S3::Bucket
     Condition: CreateSecretsBucket
+    UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
       BucketEncryption:
