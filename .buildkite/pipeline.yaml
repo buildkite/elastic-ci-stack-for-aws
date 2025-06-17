@@ -7,6 +7,17 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
+  - id: "cfn-lint"
+    name: ":mag: cfn-lint"
+    command: .buildkite/steps/cfn-lint.sh
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    soft_fail:
+    # https://github.com/aws-cloudformation/cfn-lint#exit-codes
+      - exit_status: 4 # Warning
+      - exit_status: 8 # Informational
+      - exit_status: 12 # Warning and informational
+
   - label: ":bash: shfmt"
     key: fmt
     command: .buildkite/steps/shfmt.sh
@@ -30,6 +41,7 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
     plugins:
       - aws-assume-role-with-web-identity#v1.1.0:
@@ -45,6 +57,7 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
     plugins:
       - aws-assume-role-with-web-identity#v1.1.0:
@@ -98,6 +111,7 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
     plugins:
       - aws-assume-role-with-web-identity#v1.1.0:
@@ -150,6 +164,7 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
     plugins:
       - aws-assume-role-with-web-identity#v1.1.0:
