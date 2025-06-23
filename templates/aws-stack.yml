@@ -263,7 +263,7 @@ Parameters:
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
-    AllowedPattern: '^(\d+([KkMmGgTt])?|\d+%|infinity)$'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|(?:[1-9][0-9]?|100)%|infinity)$'
     ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
 
   ResourceLimitsMemoryMax:
@@ -272,7 +272,7 @@ Parameters:
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
-    AllowedPattern: '^(\d+([KkMmGgTt])?|\d+%|infinity)$'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|(?:[1-9][0-9]?|100)%|infinity)$'
     ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
 
   ResourceLimitsMemorySwapMax:
@@ -281,7 +281,7 @@ Parameters:
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
-    AllowedPattern: '^(\d+([KkMmGgTt])?|\d+%|infinity)$'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|(?:[1-9][0-9]?|100)%|infinity)$'
     ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
 
   ResourceLimitsCPUWeight:
