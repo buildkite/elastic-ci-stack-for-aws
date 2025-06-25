@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.40.3](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.2...v6.40.3) (2025-06-25)
+### Added
+- feat: pave road to resource limit control [#1481](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1481) ([scadu](https://github.com/scadu))
+
+### Internal
+- chore: add cfn-lint to the pipeline [#1491](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1491) ([scadu](https://github.com/scadu))
+- Add link from build badge in README [#1490](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1490) ([sj26](https://github.com/sj26))
+- Update EC2 README after AWS section change in Docs [#1489](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1489) ([karensawrey](https://github.com/karensawrey))
+
 ## [v6.40.2](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.1...v6.40.2) (2025-06-11)
 - fix: update agent-scaler to 1.9.4 [#1487](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1487) ([scadu](https://github.com/scadu))
 

@@ -199,14 +199,14 @@ Parameters:
     Default: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
 
   BuildkiteAgentScalerVersion:
-    Description: Version of the buildkite-agent-scaler to use
+    Description: "Version of the buildkite-agent-scaler to use."
     Type: String
     AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.[1-9]\d*))$'
     ConstraintDescription: "The agent scaler release must be greater than 1.9.0 as a new parameter was introduced in 1.9.1"
-    Default: "1.9.4"
+    Default: "1.9.5"
 
   ScalerEnableExperimentalElasticCIMode:
-    Description: "[EXPERIMENTAL] Enable the Elastic CI Mode with enhanced features like safety checks, agent sorting, dangling instance detection, and graceful termination"
+    Description: "[EXPERIMENTAL] Enable the Elastic CI Mode with enhanced features like safety checks, agent sorting, dangling instance detection, and graceful termination. Available since BuildkiteAgentScalerVersion 1.9.3"
     Type: String
     AllowedValues:
         - "true"
