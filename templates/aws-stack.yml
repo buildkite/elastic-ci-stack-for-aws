@@ -112,6 +112,7 @@ Metadata:
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
         - ScalerMinPollInterval
+        - TerminationPolicies
 
       - Label:
           default: Cost Allocation Configuration
@@ -458,6 +459,11 @@ Parameters:
     Description: Timeout period for Autoscaling Group Creation Policy
     Type: String
     Default: ""
+
+  TerminationPolicies:
+    Description: Optional - Autoscaling Group termination policies
+    Type: CommaDelimitedList
+    Default: "OldestLaunchConfiguration,ClosestToNextInstanceHour"
 
   RootVolumeSize:
     Description: Size of each instance's root EBS volume (in GB)
@@ -1738,9 +1744,7 @@ Resources:
             - GroupTerminatingInstances
             - GroupPendingInstances
             - GroupDesiredCapacity
-      TerminationPolicies:
-        - OldestLaunchConfiguration
-        - ClosestToNextInstanceHour
+      TerminationPolicies: !Ref TerminationPolicies
       NewInstancesProtectedFromScaleIn: true
     CreationPolicy:
       ResourceSignal:
