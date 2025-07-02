@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.40.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.4...v6.40.5) (2025-07-02)
+
+### Added
+- Allow terminating EC2 when no enough disk space available [#1494](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1494) ([scadu](https://github.com/scadu))
+
+### Internal
+- Add new parameters to labeled sections [#1497](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1497) ([scadu](https://github.com/scadu))
+
 ## [v6.40.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.40.4) (2025-06-30)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.3...v6.40.4)
 
