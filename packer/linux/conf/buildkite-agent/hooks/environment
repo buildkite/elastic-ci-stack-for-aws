@@ -47,20 +47,27 @@ if ! /usr/local/bin/bk-check-disk-space.sh; then
   echo "Checking disk space again"
   # Capture disk space output for potential error logging
   if ! disk_check_output=$(/usr/local/bin/bk-check-disk-space.sh 2>&1); then
-    echo "--- :warning: Disk health checks failed. Terminating instance."
+    echo "--- :warning: Disk health checks failed."
     echo "${disk_check_output}"
 
-    export BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=true
+    # Check if instance termination is enabled (default: false for backward compatibility)
+    if [[ "${BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL:-false}" == "true" ]]; then
+      echo "Terminating instance due to disk space issues."
+      export BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=true
 
-    if [[ -x /usr/local/bin/terminate-instance ]]; then
-      /usr/local/bin/terminate-instance
+      if [[ -x /usr/local/bin/terminate-instance ]]; then
+        /usr/local/bin/terminate-instance
+      else
+        echo "terminate-instance script not found, falling back to exit 1" >&2
+        exit 1
+      fi
+
+      # Should not reach here if termination succeeds
+      exit 1
     else
-      echo "terminate-instance script not found, falling back to exit 1" >&2
+      echo "Exiting job due to insufficient disk space (set BuildkiteTerminateInstanceOnDiskFull to true in CloudFormation Stack to terminate instance instead)."
       exit 1
     fi
-
-    # Should not reach here if termination succeeds
-    exit 1
   fi
 fi
 
