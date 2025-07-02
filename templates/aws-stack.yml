@@ -98,6 +98,13 @@ Metadata:
         - IMDSv2Tokens
         - EnableDetailedMonitoring
         - InstanceName
+        - ExperimentalEnableResourceLimits
+        - ResourceLimitsMemoryHigh
+        - ResourceLimitsMemoryMax
+        - ResourceLimitsMemorySwapMax
+        - ResourceLimitsCPUWeight
+        - ResourceLimitsCPUQuota
+        - ResourceLimitsIOWeight
 
       - Label:
           default: Auto-scaling Configuration
@@ -112,6 +119,7 @@ Metadata:
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
         - ScalerMinPollInterval
+        - ScalerEnableExperimentalElasticCIMode
 
       - Label:
           default: Cost Allocation Configuration
