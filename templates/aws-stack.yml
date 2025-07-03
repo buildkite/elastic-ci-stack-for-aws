@@ -60,6 +60,10 @@ Metadata:
         - BuildkiteAgentScalerServerlessARN
         - BuildkiteAgentScalerVersion
         - LogRetentionDays
+        - BuildkiteAgentSigningKeySSMParameter
+        - BuildkiteAgentSigningKeyID
+        - BuildkiteAgentVerificationKeySSMParameter
+        - BuildkiteAgentVerificationFailureBehavior
 
       - Label:
           default: Network Configuration
@@ -233,6 +237,34 @@ Parameters:
       - ""
       - "datadog"
       - "opentelemetry"
+    Default: ""
+
+  BuildkiteAgentSigningKeySSMParameter:
+    Description: Existing SSM Parameter Store path to the to a JSON Web Key Set (JWKS) containing a key to sign jobs with.
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^/[a-zA-Z0-9_.\\-/]+$"
+    ConstraintDescription: "Expects a leading forward slash"
+
+  BuildkiteAgentSigningKeyID:
+    Description: The ID of the key in the JWKS to use for signing jobs. If not specified, and the JWKS contains only one key, that key will be used.
+    Type: String
+    Default: ""
+
+  BuildkiteAgentVerificationKeySSMParameter:
+    Description: Existing SSM Parameter Store path to the to a JSON Web Key Set (JWKS) containing keys with which to verify jobs.
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^/[a-zA-Z0-9_.\\-/]+$"
+    ConstraintDescription: "Expects a leading forward slash"
+
+  BuildkiteAgentVerificationFailureBehavior:
+    Description: "How the agent should respond when a job signature fails verification"
+    Type: String
+    AllowedValues:
+      - "block"
+      - "warn"
+      - ""
     Default: ""
 
   BuildkiteAgentCancelGracePeriod:
@@ -1508,6 +1540,10 @@ Resources:
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
                   $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
                   $Env:BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}"
+                  $Env:BUILDKITE_AGENT_SIGNING_KEY_PATH="${BuildkiteAgentSigningKeySSMParameter}"
+                  $Env:BUILDKITE_AGENT_SIGNING_KEY_ID="${BuildkiteAgentSigningKeyID}"
+                  $Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH="${BuildkiteAgentVerificationKeySSMParameter}"
+                  $Env:BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR="${BuildkiteAgentVerificationFailureBehavior}"
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
                   $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}"
@@ -1581,6 +1617,10 @@ Resources:
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
                   BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
                   BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
+                  BUILDKITE_AGENT_SIGNING_KEY_PATH="${BuildkiteAgentSigningKeySSMParameter}" \
+                  BUILDKITE_AGENT_SIGNING_KEY_ID="${BuildkiteAgentSigningKeyID}" \
+                  BUILDKITE_AGENT_VERIFICATION_KEY_PATH="${BuildkiteAgentVerificationKeySSMParameter}" \
+                  BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR="${BuildkiteAgentVerificationFailureBehavior}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_AGENT_CANCEL_GRACE_PERIOD="${BuildkiteAgentCancelGracePeriod}" \
                   BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS="${BuildkiteAgentSignalGracePeriod}" \
