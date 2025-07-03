@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.40.6](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.5...v6.40.6) (2025-07-03)
+### Changed
+- Update agent to v3.101.0 [#1499](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1499) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+## [v3.101.0](https://github.com/buildkite/agent/tree/v3.101.0) (2025-07-01)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.100.1...v3.101.0)
+
+### Added
+- Add support for http/protobuf transport for OTLP [#3366](https://github.com/buildkite/agent/pull/3366) (@catkins)
+
+### Fixed
+- Tweak apply-if-changed flag and usage string [#3367](https://github.com/buildkite/agent/pull/3367) (@DrJosh9000)
+- Gather changed files list once [#3368](https://github.com/buildkite/agent/pull/3368) (@DrJosh9000)
+- if_changed fixes: support older Git versions, adhere to skip string limit [#3372](https://github.com/buildkite/agent/pull/3372) (@DrJosh9000)
+- Self-execute the path from os.Executable in more places [#3338](https://github.com/buildkite/agent/pull/3338) (@DrJosh9000)
+
+### Dependencies
+- build(deps): bump the otel group with 9 updates [#3362](https://github.com/buildkite/agent/pull/3362) (@dependabot[bot])
+- build(deps): bump the cloud-providers group with 2 updates [#3363](https://github.com/buildkite/agent/pull/3363) (@dependabot[bot])
+- build(deps): bump the container-images group across 6 directories with 2 updates [#3364](https://github.com/buildkite/agent/pull/3364) (@dependabot[bot])
+- build(deps): bump gopkg.in/DataDog/dd-trace-go.v1 from 1.74.0 to 1.74.2 [#3365](https://github.com/buildkite/agent/pull/3365) (@dependabot[bot])
+- build(deps): bump github.com/go-viper/mapstructure/v2 from 2.2.1 to 2.3.0 [#3371](https://github.com/buildkite/agent/pull/3371) (@dependabot[bot])
+
+</details>
+
 ## [v6.40.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.4...v6.40.5) (2025-07-02)
 
 ### Added
