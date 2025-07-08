@@ -16,6 +16,7 @@ sudo dnf install -yq \
   amazon-ssm-agent \
   aws-cfn-bootstrap \
   awscli-2 \
+  ec2-instance-connect \
   git \
   jq \
   mdadm \

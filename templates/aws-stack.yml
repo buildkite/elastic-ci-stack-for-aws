@@ -53,6 +53,7 @@ Metadata:
         - BuildkiteAgentEnableGitMirrors
         - BuildkiteAgentTracingBackend
         - BuildkiteAgentCancelGracePeriod
+        - BuildkiteAgentSignalGracePeriod
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
@@ -97,6 +98,13 @@ Metadata:
         - IMDSv2Tokens
         - EnableDetailedMonitoring
         - InstanceName
+        - ExperimentalEnableResourceLimits
+        - ResourceLimitsMemoryHigh
+        - ResourceLimitsMemoryMax
+        - ResourceLimitsMemorySwapMax
+        - ResourceLimitsCPUWeight
+        - ResourceLimitsCPUQuota
+        - ResourceLimitsIOWeight
 
       - Label:
           default: Auto-scaling Configuration
@@ -112,6 +120,7 @@ Metadata:
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
         - ScalerMinPollInterval
+        - ScalerEnableExperimentalElasticCIMode
 
       - Label:
           default: Cost Allocation Configuration
@@ -140,7 +149,7 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: Optional - SSH keypair used to access the buildkite instances via ec2_user, setting this will enable SSH ingress
+    Description: Optional - SSH keypair used to access the buildkite instances via ec2-user, setting this will enable SSH ingress
     Type: String
     Default: ""
 
@@ -199,9 +208,19 @@ Parameters:
     Default: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
 
   BuildkiteAgentScalerVersion:
-    Description: Version of the buildkite-agent-scaler to use
+    Description: "Version of the buildkite-agent-scaler to use."
     Type: String
-    Default: "1.8.0"
+    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.[1-9]\d*))$'
+    ConstraintDescription: "The agent scaler release must be greater than 1.9.0 as a new parameter was introduced in 1.9.1"
+    Default: "1.9.5"
+
+  ScalerEnableExperimentalElasticCIMode:
+    Description: "[EXPERIMENTAL] Enable the Elastic CI Mode with enhanced features like safety checks, agent sorting, dangling instance detection, and graceful termination. Available since BuildkiteAgentScalerVersion 1.9.3"
+    Type: String
+    AllowedValues:
+        - "true"
+        - "false"
+    Default: "false"
 
   LogRetentionDays:
     Type: Number
@@ -223,6 +242,12 @@ Parameters:
     Default: 60
     MinValue: 1
 
+  BuildkiteAgentSignalGracePeriod:
+    Description: The number of seconds given to a subprocess to handle being sent `cancel-signal`. After this period has elapsed, SIGKILL will be sent.
+    Type: Number
+    Default: 60
+    MinValue: -1
+
   BuildkiteTerminateInstanceAfterJob:
     Description: Set to "true" to terminate the instance after a job has completed.
     Type: String
@@ -230,6 +255,78 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  BuildkiteTerminateInstanceOnDiskFull:
+    Description: Set to "true" to terminate the instance when disk space is critically low (default is to exit job with code 1).
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  ExperimentalEnableResourceLimits:
+    Description: >
+      (Experimental) If true, enables systemd resource limits for the Buildkite agent.
+      This helps prevent resource exhaustion by limiting CPU, memory, and I/O usage.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  ResourceLimitsMemoryHigh:
+    Description: >
+      (Experimental) Sets the MemoryHigh limit for the Buildkite agent slice.
+      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
+    Type: String
+    Default: '90%'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|(?:[1-9][0-9]?|100)%|infinity)$'
+    ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
+
+  ResourceLimitsMemoryMax:
+    Description: >
+      (Experimental) Sets the MemoryMax limit for the Buildkite agent slice.
+      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
+    Type: String
+    Default: '90%'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|(?:[1-9][0-9]?|100)%|infinity)$'
+    ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
+
+  ResourceLimitsMemorySwapMax:
+    Description: >
+      (Experimental) Sets the MemorySwapMax limit for the Buildkite agent slice.
+      The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
+    Type: String
+    Default: '90%'
+    AllowedPattern: '^(\d+([KkMmGgTt])?|(?:[1-9][0-9]?|100)%|infinity)$'
+    ConstraintDescription: "Must be a percentage (e.g., 90%), a value in bytes with an optional unit [K,M,G,T] (e.g., 4G), or 'infinity'."
+
+  ResourceLimitsCPUWeight:
+    Description: >
+      (Experimental) Sets the CPU weight for the Buildkite agent slice (1-10000, default 100).
+      Higher values give more CPU time to the agent.
+    Type: Number
+    Default: 100
+    MinValue: 1
+    MaxValue: 10000
+
+  ResourceLimitsCPUQuota:
+    Description: >
+      (Experimental) Sets the CPU quota for the Buildkite agent slice.
+      Takes a percentage value, suffixed with "%" .
+    Type: String
+    Default: '90%'
+    AllowedPattern: '^\d+%$'
+    ConstraintDescription: "Must be a percentage value (e.g., 90%)."
+
+  ResourceLimitsIOWeight:
+    Description: >
+      (Experimental) Sets the I/O weight for the Buildkite agent slice (1-10000, default 80).
+      Higher values give more I/O bandwidth to the agent.
+    Type: Number
+    Default: 80
+    MinValue: 1
+    MaxValue: 10000
 
   BuildkiteAdditionalSudoPermissions:
     Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo. Note that the commands should be fully qualified paths to executables.
@@ -290,7 +387,7 @@ Parameters:
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress. authorized_keys are applied to ec2_user
+    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress. authorized_keys are applied to ec2-user
     Type: String
     Default: ""
 
@@ -310,12 +407,12 @@ Parameters:
     Default: ""
 
   InstanceTypes:
-    Description: Comma-separated list with 1-10 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
+    Description: Comma-separated list with 1-25 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
     Type: String
     Default: t3.large
     MinLength: 1
-    AllowedPattern: "^[\\w-\\.]+(,[\\w-\\.]*){0,9}$"
-    ConstraintDescription: "must contain 1-10 instance types separated by commas. No space before/after the comma."
+    AllowedPattern: "^[\\w-\\.]+(,[\\w-\\.]*){0,24}$"
+    ConstraintDescription: "must contain 1-25 instance types separated by commas. No space before/after the comma."
 
   MaxSize:
     Description: Maximum number of instances
@@ -590,7 +687,7 @@ Parameters:
 
   PipelineSigningKMSKeyId:
     Type: String
-    Description: Optional - Identifier of the KMS key used to sign and verify pipelines (Created if left blank and PipelineSigningKMSKeySpec is selected)
+    Description: Optional - Identifier or ARN of the KMS key used to sign and verify pipelines (created if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank and PipelineSigningKMSKeySpec is selected)
     Default: ""
 
   PipelineSigningKMSKeySpec:
@@ -641,7 +738,7 @@ Rules:
             - !Equals
               - !Ref PipelineSigningKMSKeySpec
               - "none"
-        AssertDescription: "You must provide either provide a PipelineSigningKMSKeyId or select a PipelineSigningKMSKeySpec but not both"
+        AssertDescription: "You must provide either a PipelineSigningKMSKeyId, or select a PipelineSigningKMSKeySpec, but not both"
 
 Outputs:
   VpcId:
@@ -725,31 +822,76 @@ Conditions:
       !Equals [ !Ref RootVolumeName, "" ]
 
     UseInstanceType2:
-      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
 
     UseInstanceType3:
-      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
 
     UseInstanceType4:
-      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
 
     UseInstanceType5:
-      !Not [ !Equals [ !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
 
     UseInstanceType6:
-      !Not [ !Equals [ !Select [ "5", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "5", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
 
     UseInstanceType7:
-      !Not [ !Equals [ !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
-
+      !Not [ !Equals [ !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
     UseInstanceType8:
-      !Not [ !Equals [ !Select [ "7", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
-
+      !Not [ !Equals [ !Select [ "7", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
     UseInstanceType9:
-      !Not [ !Equals [ !Select [ "8", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
-
+      !Not [ !Equals [ !Select [ "8", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
     UseInstanceType10:
-      !Not [ !Equals [ !Select [ "9", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ], ""] ]
+      !Not [ !Equals [ !Select [ "9", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType11:
+      !Not [ !Equals [ !Select [ "10", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType12:
+      !Not [ !Equals [ !Select [ "11", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
+    UseInstanceType13:
+      !Not [ !Equals [ !Select [ "12", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType14:
+      !Not [ !Equals [ !Select [ "13", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
+    UseInstanceType15:
+      !Not [ !Equals [ !Select [ "14", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType16:
+      !Not [ !Equals [ !Select [ "15", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType17:
+      !Not [ !Equals [ !Select [ "16", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
+    UseInstanceType18:
+      !Not [ !Equals [ !Select [ "17", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
+    UseInstanceType19:
+      !Not [ !Equals [ !Select [ "18", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
+    UseInstanceType20:
+      !Not [ !Equals [ !Select [ "19", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType21:
+      !Not [ !Equals [ !Select [ "20", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType22:
+      !Not [ !Equals [ !Select [ "21", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType23:
+      !Not [ !Equals [ !Select [ "22", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+    
+    UseInstanceType24:
+      !Not [ !Equals [ !Select [ "23", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
+
+    UseInstanceType25:
+      !Not [ !Equals [ !Select [ "24", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ], ""] ]
 
     UseManagedPolicyARN:
       !Not [ !Equals [ !Join [ "", !Ref ManagedPolicyARNs ], "" ] ]
@@ -784,6 +926,9 @@ Conditions:
     HasSigningKMSAccessSignAndVerify:
       !Equals [ !Ref PipelineSigningKMSAccess, "sign-and-verify" ]
 
+    PipelineSigningKMSKeyIsARN:
+      !Equals [!Select [0, !Split [":", !Ref PipelineSigningKMSKeyId]], "arn"]
+
     HasKeyName:
       !Not [ !Equals [ !Ref KeyName, "" ] ]
 
@@ -801,9 +946,6 @@ Conditions:
 
     UseWindowsAgents:
       !Equals [ !Ref InstanceOperatingSystem, "windows" ]
-
-    UseLinuxAgents:
-      !Equals [ !Ref InstanceOperatingSystem, "linux" ]
 
     # Unfortunately, Cloudformation's !Or intrinsic function only accepts
     # between 2 and 10 arguments.  To get around this, we're grouping the
@@ -976,6 +1118,7 @@ Resources:
   PipelineSigningKMSKey:
     Type: AWS::KMS::Key
     Condition: CreatePipelineSigningKMSKey
+    UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
       Description: Key used to sign and verify pipelines
@@ -1031,10 +1174,14 @@ Resources:
                         - kms:GetPublicKey
                       - - kms:Verify
                         - kms:GetPublicKey
-                  Resource: !If
-                              - CreatePipelineSigningKMSKey
-                              - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
-                              - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
+                  Resource:
+                    !If
+                      - CreatePipelineSigningKMSKey
+                      - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
+                      - !If
+                        - PipelineSigningKMSKeyIsARN
+                        - !Ref PipelineSigningKMSKeyId
+                        - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKeyId}
           - !Ref 'AWS::NoValue'
         - !If
           - UseCustomerManagedKeyForParameterStore
@@ -1149,6 +1296,7 @@ Resources:
   ManagedSecretsLoggingBucket:
     Type: AWS::S3::Bucket
     Condition: CreateSecretsBucket
+    UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
       PublicAccessBlockConfiguration:
@@ -1211,6 +1359,7 @@ Resources:
   ManagedSecretsBucket:
     Type: AWS::S3::Bucket
     Condition: CreateSecretsBucket
+    UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
       BucketEncryption:
@@ -1276,7 +1425,7 @@ Resources:
           KeyName: !If [ "HasKeyName", !Ref KeyName, !Ref 'AWS::NoValue' ]
           IamInstanceProfile:
             Arn: !GetAtt "IAMInstanceProfile.Arn"
-          InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", ""] ] ] ]
+          InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""] ] ] ]
           MetadataOptions:
             HttpTokens: !Ref IMDSv2Tokens
             # Allow containers using a Docker network on the host to receive IDMSv2 responses
@@ -1384,12 +1533,22 @@ Resources:
                   $Env:AWS_REGION="${AWS::Region}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
-                - {
-                    LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
-                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref "AWS::Region", !Ref SecretsBucketRegion ],
-                    AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
-                    PipelineSigningKMSKey: !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, !Ref PipelineSigningKMSKeyId ],
-                  }
+                - LocalSecretsBucket: !If
+                    - CreateSecretsBucket
+                    - !Ref ManagedSecretsBucket
+                    - !Ref SecretsBucket
+                  LocalSecretsBucketRegion: !If
+                    - CreateSecretsBucket
+                    - !Ref "AWS::Region"
+                    - !Ref SecretsBucketRegion
+                  AgentTokenPath: !If
+                    - UseCustomerManagedParameterPath
+                    - !Ref BuildkiteAgentTokenParameterStorePath
+                    - !Ref BuildkiteAgentTokenParameter
+                  PipelineSigningKMSKey: !If
+                    - CreatePipelineSigningKMSKey
+                    - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
+                    - !Ref PipelineSigningKMSKeyId
               - !Sub
                 - |
                   Content-Type: multipart/mixed; boundary="==BOUNDARY=="
@@ -1430,6 +1589,7 @@ Resources:
                   BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
                   BUILDKITE_AGENT_CANCEL_GRACE_PERIOD="${BuildkiteAgentCancelGracePeriod}" \
+                  BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS="${BuildkiteAgentSignalGracePeriod}" \
                   BUILDKITE_AGENT_SIGNING_KMS_KEY="${PipelineSigningKMSKey}" \
                   BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR="${PipelineSigningVerificationFailureBehavior}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
@@ -1440,6 +1600,7 @@ Resources:
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
                   BUILDKITE_ECR_POLICY="${ECRAccessPolicy}" \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}" \
+                  BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL="${BuildkiteTerminateInstanceOnDiskFull}" \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}" \
                   AWS_DEFAULT_REGION="${AWS::Region}" \
                   SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}" \
@@ -1448,14 +1609,31 @@ Resources:
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   AWS_REGION="${AWS::Region}" \
+                  ENABLE_RESOURCE_LIMITS="${ExperimentalEnableResourceLimits}" \
+                  RESOURCE_LIMITS_MEMORY_HIGH="${ResourceLimitsMemoryHigh}" \
+                  RESOURCE_LIMITS_MEMORY_MAX="${ResourceLimitsMemoryMax}" \
+                  RESOURCE_LIMITS_MEMORY_SWAP_MAX="${ResourceLimitsMemorySwapMax}" \
+                  RESOURCE_LIMITS_CPU_WEIGHT="${ResourceLimitsCPUWeight}" \
+                  RESOURCE_LIMITS_CPU_QUOTA="${ResourceLimitsCPUQuota}" \
+                  RESOURCE_LIMITS_IO_WEIGHT="${ResourceLimitsIOWeight}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
-                - {
-                    LocalSecretsBucket: !If [ CreateSecretsBucket, !Ref ManagedSecretsBucket, !Ref SecretsBucket ],
-                    LocalSecretsBucketRegion: !If [ CreateSecretsBucket, !Ref "AWS::Region", !Ref SecretsBucketRegion ],
-                    AgentTokenPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ],
-                    PipelineSigningKMSKey: !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, !Ref PipelineSigningKMSKeyId ],
-                  }
+                - LocalSecretsBucket: !If
+                    - CreateSecretsBucket
+                    - !Ref ManagedSecretsBucket
+                    - !Ref SecretsBucket
+                  LocalSecretsBucketRegion: !If
+                    - CreateSecretsBucket
+                    - !Ref "AWS::Region"
+                    - !Ref SecretsBucketRegion
+                  AgentTokenPath: !If
+                    - UseCustomerManagedParameterPath
+                    - !Ref BuildkiteAgentTokenParameterStorePath
+                    - !Ref BuildkiteAgentTokenParameter
+                  PipelineSigningKMSKey: !If
+                    - CreatePipelineSigningKMSKey
+                    - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
+                    - !Ref PipelineSigningKMSKeyId
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -1473,42 +1651,102 @@ Resources:
             LaunchTemplateId: !Ref AgentLaunchTemplate
             Version: !GetAtt "AgentLaunchTemplate.LatestVersionNumber"
           Overrides:
-          - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+          - InstanceType: !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
           - !If
             - UseInstanceType2
-            - InstanceType: !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType3
-            - InstanceType: !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType4
-            - InstanceType: !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType5
-            - InstanceType: !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType6
-            - InstanceType: !Select [ "5", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "5", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType7
-            - InstanceType: !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "6", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType8
-            - InstanceType: !Select [ "7", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "7", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType9
-            - InstanceType: !Select [ "8", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "8", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
           - !If
             - UseInstanceType10
-            - InstanceType: !Select [ "9", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - InstanceType: !Select [ "9", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType11
+            - InstanceType: !Select [ "10", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType12
+            - InstanceType: !Select [ "11", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType13
+            - InstanceType: !Select [ "12", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType14
+            - InstanceType: !Select [ "13", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType15
+            - InstanceType: !Select [ "14", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType16
+            - InstanceType: !Select [ "15", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType17
+            - InstanceType: !Select [ "16", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType18
+            - InstanceType: !Select [ "17", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType19
+            - InstanceType: !Select [ "18", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType20
+            - InstanceType: !Select [ "19", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType21
+            - InstanceType: !Select [ "20", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType22
+            - InstanceType: !Select [ "21", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType23
+            - InstanceType: !Select [ "22", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType24
+            - InstanceType: !Select [ "23", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
+            - !Ref "AWS::NoValue"
+          - !If
+            - UseInstanceType25
+            - InstanceType: !Select [ "24", !Split [ ",", !Join [ ",", [ !Ref InstanceTypes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" ] ] ] ]
             - !Ref "AWS::NoValue"
 
       MinSize: !Ref MinSize
@@ -1582,7 +1820,7 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, {}, "CustomResourcePhysicalID")
       Handler: index.handler
       Role: !GetAtt AsgProcessSuspenderRole.Arn
-      Runtime: 'python3.10'
+      Runtime: 'python3.13'
 
   AzRebalancingSuspender:
     Type: AWS::CloudFormation::CustomResource
@@ -1622,6 +1860,7 @@ Resources:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
         RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
+        AgentEndpoint: !Ref AgentEndpoint
         BuildkiteQueue: !Ref BuildkiteQueue
         AgentsPerInstance: !Ref AgentsPerInstance
         MinSize: !Ref MinSize
@@ -1633,3 +1872,4 @@ Resources:
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
+        EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
