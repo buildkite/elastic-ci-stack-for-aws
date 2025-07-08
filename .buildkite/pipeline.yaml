@@ -44,7 +44,7 @@ steps:
       - "cfn-lint"
       - "fixperms-tests"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "packer-windows-amd64"
@@ -60,7 +60,7 @@ steps:
       - "cfn-lint"
       - "fixperms-tests"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "launch-windows-amd64"
@@ -73,7 +73,7 @@ steps:
       - "packer-windows-amd64"
       - "deploy-service-role-stack"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "test-windows-amd64"
@@ -98,7 +98,7 @@ steps:
     depends_on:
       - "test-windows-amd64"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "packer-linux-amd64"
@@ -114,7 +114,7 @@ steps:
       - "cfn-lint"
       - "fixperms-tests"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "launch-linux-amd64"
@@ -127,7 +127,7 @@ steps:
       - "packer-linux-amd64"
       - "deploy-service-role-stack"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "test-linux-amd64"
@@ -151,7 +151,7 @@ steps:
     depends_on:
       - "test-linux-amd64"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "packer-linux-arm64"
@@ -167,7 +167,7 @@ steps:
       - "cfn-lint"
       - "fixperms-tests"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "launch-linux-arm64"
@@ -180,7 +180,7 @@ steps:
       - "packer-linux-arm64"
       - "deploy-service-role-stack"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "test-linux-arm64"
@@ -204,7 +204,7 @@ steps:
     depends_on:
       - "test-linux-arm64"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "delete-service-role-stack"
@@ -217,7 +217,7 @@ steps:
       - "delete-linux-amd64"
       - "delete-linux-arm64"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "copy-ami"
@@ -231,7 +231,7 @@ steps:
       - "test-linux-arm64"
       - "test-windows-amd64"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: "publish"
@@ -245,7 +245,7 @@ steps:
     artifact_paths: "build/*.yml"
     depends_on: "copy-ami"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
 
   - id: cleanup
@@ -255,5 +255,5 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on: "publish"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
