@@ -18,8 +18,8 @@
         "\\$AGENT_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
       "datasourceTemplate": "github-releases",
-      "packageName": "buildkite/agent",
       "depNameTemplate": "buildkite/agent",
+      "versioningTemplate": "semver",
       "extractVersionTemplate": "^v?(?<version>.*)$"
     }
   ],
