@@ -18,9 +18,8 @@
         "\\$AGENT_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
       "datasourceTemplate": "github-releases",
-      "packageName": "buildkite/agent",
       "depNameTemplate": "buildkite/agent",
-      "extractVersionTemplate": "^v?(?<version>.*)$"
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
@@ -34,7 +33,7 @@
       "commitMessageTopic": "buildkite-agent",
       "commitMessageExtra": "to v{{newVersion}}",
       "semanticCommitType": "chore",
-      "prBodyTemplate": "This PR updates the buildkite-agent from v{{currentVersion}} to v{{newVersion}}.\n\n### Agent Release Notes\n\nSee the [full release notes](https://github.com/buildkite/agent/releases/tag/v{{newVersion}}) for details about what's included in this update.\n\n{{{changelog}}}",
+      "prBodyTemplate": "This PR updates the buildkite-agent from v{{{currentVersion}}} to v{{{newVersion}}}.\n\n### Agent Release Notes\n\nSee the [full release notes](https://github.com/buildkite/agent/releases/tag/v{{{newVersion}}}) for details about what's included in this update.\n\n{{{changelog}}}",
       "labels": [
         "dependencies",
         "buildkite-agent"
