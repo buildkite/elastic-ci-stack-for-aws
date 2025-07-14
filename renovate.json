@@ -19,8 +19,7 @@
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "buildkite/agent",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.*)$"
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
