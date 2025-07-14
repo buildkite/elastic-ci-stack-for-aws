@@ -1852,6 +1852,8 @@ Resources:
   Autoscaling:
     Type: AWS::Serverless::Application
     Condition: HasVariableSize
+    Metadata:
+      ScalerVersion: !Ref BuildkiteAgentScalerVersion
     Properties:
       Location:
         ApplicationId: !Ref BuildkiteAgentScalerServerlessARN
