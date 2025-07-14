@@ -907,7 +907,9 @@ Conditions:
       !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ]
 
     HasVariableSize:
-      !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
+      !Or
+        - !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
+        - !Not [ !Equals [ !Ref BuildkiteAgentScalerVersion, "1.9.5" ] ]
 
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
