@@ -7,6 +7,9 @@ PACKER_VERSION ?= 1.11.2
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
+# Allow passing an existing golden base AMI into packer via `BASE_AMI_ID` env var
+override BASE_AMI_ID ?=
+
 GO_VERSION ?= 1.23.6
 
 FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
@@ -77,9 +80,10 @@ build/aws-stack.yml:
 	}' templates/aws-stack.yml | sed "s/%v/$(VERSION)/" > $@
 
 # -----------------------------------------
-# AMI creation with Packer
 
-packer: packer-linux-amd64.output packer-linux-arm64.output packer-windows-amd64.output
+
+# Full images depend on base images when available
+packer: packer-base-linux-amd64.output packer-base-linux-arm64.output packer-base-windows-amd64.output packer-linux-amd64.output packer-linux-arm64.output packer-windows-amd64.output
 
 build/mappings.yml: build/linux-amd64-ami.txt build/linux-arm64-ami.txt build/windows-amd64-ami.txt
 	mkdir -p build
@@ -109,6 +113,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-amd64
 			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'base_ami_id=$(BASE_AMI_ID)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -144,6 +149,7 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-arm64
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_LINUX)' \
+			-var 'base_ami_id=$(BASE_AMI_ID)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
@@ -171,7 +177,74 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_WINDOWS)' \
+			-var 'base_ami_id=$(BASE_AMI_ID)' \
 			buildkite-ami.pkr.hcl | tee $@
+
+# -----------------------------------------
+# Base AMI creation
+
+# Build base AMI for linux amd64
+packer-base-linux-amd64.output: $(PACKER_LINUX_FILES)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/linux \
+		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=x86_64' \
+			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
+			base.pkr.hcl | tee $@
+
+# Build base AMI for linux arm64
+packer-base-linux-arm64.output: $(PACKER_LINUX_FILES)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/linux \
+		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=arm64' \
+			-var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
+			base.pkr.hcl | tee $@
+
+# Build base AMI for windows amd64
+packer-base-windows-amd64.output: $(PACKER_WINDOWS_FILES)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/windows \
+		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=x86_64' \
+			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
+			base.pkr.hcl | tee $@
 
 # -----------------------------------------
 # fixperms
