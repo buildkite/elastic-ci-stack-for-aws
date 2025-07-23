@@ -31,6 +31,11 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-elastic-stack-for-aws-ami-cleaner
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
+            - branch_build
       - docker-compose#v5.4.1:
           run: ruby
           config: .buildkite/docker-compose.yml

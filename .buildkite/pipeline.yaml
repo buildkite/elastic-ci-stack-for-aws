@@ -46,6 +46,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "packer-windows-amd64"
     name: ":packer: :windows:"
@@ -62,6 +66,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "launch-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Launch"
@@ -75,6 +83,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "test-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Test"
@@ -100,6 +112,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "packer-linux-amd64"
     name: ":packer: :linux: AMD64"
@@ -116,6 +132,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "launch-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Launch"
@@ -129,6 +149,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
@@ -153,6 +177,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "packer-linux-arm64"
     name: ":packer: :linux: ARM64"
@@ -169,6 +197,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "launch-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Launch"
@@ -182,6 +214,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "test-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Test"
@@ -206,6 +242,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "delete-service-role-stack"
     name: ":aws-iam: :cloudformation: Delete"
@@ -219,6 +259,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "copy-ami"
     name: ":cloudformation: 🚚 🌎"
@@ -233,6 +277,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "publish"
     name: ":cloudformation: :rocket:"
@@ -247,6 +295,10 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: cleanup
     name: ":broom: Cleanup"
@@ -257,3 +309,7 @@ steps:
     plugins:
       - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
