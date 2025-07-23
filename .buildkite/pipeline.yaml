@@ -80,34 +80,6 @@ steps:
                 agents:
                   queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
-  - id: "packer-base-windows-amd64"
-    name: ":packer: :windows: (base)"
-
-    depends_on:
-      - "fmt"
-      - "lint"
-      - "cfn-lint"
-      - "fixperms-tests"
-    plugins:
-      - &aws_role_plugin
-        aws-assume-role-with-web-identity#v1.4.0:
-          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
-      - buildkite-plugins/monorepo-diff#v1.4.0:
-          watch:
-            - path: 
-                - "packer/windows/base.pkr.hcl"
-                - "packer/windows/scripts/install-*.ps1"
-                - "packer/windows/conf/**"
-                - "packer/windows/build/**"
-                - "plugins/**"
-              config:
-                plugins:
-                  - *aws_role_plugin
-                command: ".buildkite/steps/packer.sh windows amd64 base"
-                label: ":packer: :windows: (base build)"
-                timeout_in_minutes: 40
-                agents:
-                  queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
   - id: "packer-windows-amd64"
     name: ":packer: :windows:"
