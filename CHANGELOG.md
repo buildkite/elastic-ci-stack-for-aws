@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.40.9](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.8...v6.40.9) (2025-07-23)
+
+### Changed
+* Update docker compose to 2.38.2 and docker buildx to 0.26.1 [#1531](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1531) ([scadu](https://github.com/scadu))
+
+### Internal
+* Update to use OIDC session tokens on AWS role assumption [#1526](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1526) ([duckalini](https://github.com/duckalini))
+
+
 ## [v6.40.8](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.7...v6.40.8) (2025-07-22)
 
 ### Changed
