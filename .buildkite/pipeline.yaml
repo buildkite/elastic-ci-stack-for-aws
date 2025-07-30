@@ -63,6 +63,11 @@ steps:
       - &aws_role_plugin
         aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
+          
       - buildkite-plugins/monorepo-diff#v1.4.0:
           watch:
             - path: 
