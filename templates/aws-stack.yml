@@ -245,7 +245,7 @@ Parameters:
   BuildkiteAgentSignalGracePeriod:
     Description: The number of seconds given to a subprocess to handle being sent `cancel-signal`. After this period has elapsed, SIGKILL will be sent.
     Type: Number
-    Default: 60
+    Default: -1
     MinValue: -1
 
   BuildkiteTerminateInstanceAfterJob:
