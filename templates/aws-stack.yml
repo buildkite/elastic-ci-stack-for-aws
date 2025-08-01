@@ -225,7 +225,7 @@ Parameters:
   ScaleOutCooldownPeriod:
     Description: Cooldown period in seconds before allowing another scale-out event
     Type: Number
-    Default: 300
+    Default: 0
 
   ScaleInCooldownPeriod:
     Description: Cooldown period in seconds before allowing another scale-in event
