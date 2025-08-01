@@ -222,6 +222,16 @@ Parameters:
         - "false"
     Default: "false"
 
+  ScaleOutCooldownPeriod:
+    Description: Cooldown period in seconds before allowing another scale-out event
+    Type: Number
+    Default: 300
+
+  ScaleInCooldownPeriod:
+    Description: Cooldown period in seconds before allowing another scale-in event
+    Type: Number
+    Default: 3600
+
   LogRetentionDays:
     Type: Number
     Description: The number of days to retain the Cloudwatch Logs of the lambda.
@@ -1869,6 +1879,8 @@ Resources:
         AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
+        ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
+        ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
