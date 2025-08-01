@@ -36,7 +36,7 @@ steps:
             - organization_id
             - pipeline_slug
             - branch_build
-      - docker-compose#v5.4.1:
+      - docker-compose#v5.10.0:
           run: ruby
           config: .buildkite/docker-compose.yml
           propagate-aws-auth-tokens: true
