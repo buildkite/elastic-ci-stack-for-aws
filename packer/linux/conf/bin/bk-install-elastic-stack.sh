@@ -134,6 +134,7 @@ set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTAN
 
 # also set via /etc/systemd/system/buildkite-agent.service.d/environment.conf
 set_always         "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB" "$BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB"
+set_always         "BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL" "$BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL"
 
 set_always         "BUILDKITE_ECR_POLICY" "${BUILDKITE_ECR_POLICY:-none}"
 set_always         "BUILDKITE_SECRETS_BUCKET" "$BUILDKITE_SECRETS_BUCKET"
@@ -292,6 +293,7 @@ disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
 cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
+signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
 EOF

@@ -98,12 +98,20 @@ Metadata:
         - IMDSv2Tokens
         - EnableDetailedMonitoring
         - InstanceName
+        - ExperimentalEnableResourceLimits
+        - ResourceLimitsMemoryHigh
+        - ResourceLimitsMemoryMax
+        - ResourceLimitsMemorySwapMax
+        - ResourceLimitsCPUWeight
+        - ResourceLimitsCPUQuota
+        - ResourceLimitsIOWeight
 
       - Label:
           default: Auto-scaling Configuration
         Parameters:
         - MinSize
         - MaxSize
+        - InstanceBuffer
         - OnDemandPercentage
         - SpotAllocationStrategy
         - ScaleOutFactor
@@ -112,6 +120,7 @@ Metadata:
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
         - ScalerMinPollInterval
+        - ScalerEnableExperimentalElasticCIMode
 
       - Label:
           default: Cost Allocation Configuration
@@ -201,8 +210,8 @@ Parameters:
   BuildkiteAgentScalerVersion:
     Description: "Version of the buildkite-agent-scaler to use."
     Type: String
-    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.[1-9]\d*))$'
-    ConstraintDescription: "The agent scaler release must be greater than 1.9.0 as a new parameter was introduced in 1.9.1"
+    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))$'
+    ConstraintDescription: "The agent scaler release must be 1.9.5 or newer."
     Default: "1.9.5"
 
   ScalerEnableExperimentalElasticCIMode:
@@ -236,11 +245,19 @@ Parameters:
   BuildkiteAgentSignalGracePeriod:
     Description: The number of seconds given to a subprocess to handle being sent `cancel-signal`. After this period has elapsed, SIGKILL will be sent.
     Type: Number
-    Default: 60
+    Default: -1
     MinValue: -1
 
   BuildkiteTerminateInstanceAfterJob:
     Description: Set to "true" to terminate the instance after a job has completed.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  BuildkiteTerminateInstanceOnDiskFull:
+    Description: Set to "true" to terminate the instance when disk space is critically low (default is to exit job with code 1).
     Type: String
     AllowedValues:
       - "true"
@@ -408,6 +425,11 @@ Parameters:
     Type: Number
     Default: 0
     MinValue: 0
+
+  InstanceBuffer:
+    Description: How many free instances to maintain
+    Type: Number
+    Default: "0"
 
   ScalerEventSchedulePeriod:
     Description: How often the Event Schedule for buildkite-agent-scaler is triggered. Should be an expression with units, e.g. "30 seconds", "1 minute", "5 minutes".
@@ -1578,6 +1600,7 @@ Resources:
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
                   BUILDKITE_ECR_POLICY="${ECRAccessPolicy}" \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}" \
+                  BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL="${BuildkiteTerminateInstanceOnDiskFull}" \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}" \
                   AWS_DEFAULT_REGION="${AWS::Region}" \
                   SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}" \
@@ -1842,6 +1865,7 @@ Resources:
         AgentsPerInstance: !Ref AgentsPerInstance
         MinSize: !Ref MinSize
         MaxSize: !Ref MaxSize
+        InstanceBuffer: !Ref InstanceBuffer
         AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
         ScaleOutFactor: !Ref ScaleOutFactor
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
