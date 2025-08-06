@@ -587,6 +587,16 @@ Parameters:
       - "dualstack"
     Default: "ipv4"
 
+  DockerAddressPool1:
+    Type: String
+    Description: Primary CIDR block for Docker default address pools. Only applies to Linux instances, not Windows.
+    Default: "172.17.0.0/12"
+
+  DockerAddressPool2:
+    Type: String
+    Description: Secondary CIDR block for Docker default address pools. Only applies to Linux instances, not Windows.
+    Default: "192.168.0.0/16"
+
   EnableSecretsPlugin:
     Type: String
     Description: Enables s3-secrets plugin for all pipelines
@@ -1571,6 +1581,8 @@ Resources:
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
                   DOCKER_NETWORKING_PROTOCOL=${DockerNetworkingProtocol} \
+                  DOCKER_ADDRESS_POOL_1=${DockerAddressPool1} \
+                  DOCKER_ADDRESS_POOL_2=${DockerAddressPool2} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                     /usr/local/bin/bk-configure-docker.sh
                   --==BOUNDARY==
