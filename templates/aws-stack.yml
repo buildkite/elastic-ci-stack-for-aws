@@ -1769,6 +1769,14 @@ Resources:
                 Action:
                   - "autoscaling:DescribeAutoScalingGroups"
                 Resource: "*"
+        - PolicyName: ModifyASGs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "autoscaling:UpdateAutoScalingGroup"
+                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
         - PolicyName: RunStopBuildkiteDocument
           PolicyDocument:
             Version: 2012-10-17
@@ -1810,23 +1818,19 @@ Resources:
 
           def handler(event, context):
               logger.info(f"Received event: {event}")
-              
+
               # only trigger on update upon replacement events
               if event["RequestType"] == "Update":
                   try:
                       props = event["OldResourceProperties"]
                       autoscaling_group_name = props["AutoScalingGroupName"]
 
-                      # Get all instances in the Auto Scaling group
-                      instances = get_autoscaling_instances(autoscaling_group_name)
-                      
-                      # Stop the Buikdite agent on each instance
-                      if len(instances) == 0:
-                          logger.info("No instances found in the Auto Scaling group.")
-                      else:
-                          logger.info(f"Stopping Buildkite agents on instances: {instances}")
-                          stop_bk_agents(instances)
-                      
+                      # Scale ASG down to zero, to allow Buildkite agents to terminate
+                      force_instance_termination(autoscaling_group_name)
+
+                      # Stop all Buildkite agents in the old ASG
+                      stop_bk_agents(autoscaling_group_name)
+
                       # Send success response to CloudFormation
                       cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
                   except Exception as e:
@@ -1836,25 +1840,29 @@ Resources:
                   # For Create and Delete events, just send success response
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
 
-          def get_autoscaling_instances(autoscaling_group_name):
-              """Retrieve all instance IDs in the specified Auto Scaling group."""
-              logger.info(f"Retrieving instances in Auto Scaling group: {autoscaling_group_name}")
-              response = autoscaling_client.describe_auto_scaling_groups(
-                  AutoScalingGroupNames=[autoscaling_group_name],
-                  MaxRecords=1
+          def force_instance_termination(autoscaling_group_name):
+              """Forces all EC2 instances to terminate in the specified Auto Scaling group by setting the desired capacity to zero."""
+              logger.info(f"Setting the desired capacity of {autoscaling_group_name} to zero")
+              autoscaling_client.update_auto_scaling_group(
+                  AutoScalingGroupName=autoscaling_group_name,
+                  MinSize=0,
+                  DesiredCapacity=0
               )
-              instances = []
-              for instance in response["AutoScalingGroups"][0]["Instances"]:
-                  instances.append(instance["InstanceId"])
-              logger.info(f"Instances in Auto Scaling group {autoscaling_group_name}: {instances}")
-              return instances
 
-          def stop_bk_agents(instances):
-              """Gracefully terminates the Buildkite agent running on the given instances."""
-              logger.info(f"Running agent termination command on {instances}")
+          def stop_bk_agents(autoscaling_group_name):
+              """Gracefully terminates Buildkite agents running in the given Auto Scaling Group."""
+              stack_name = autoscaling_group_name.split("-AgentAutoScaleGroup")[0]
+
+              logger.info(f"Stopping BK agents in {stack_name}")
               response = ssm_client.send_command(
-                  InstanceIds=instances,
+                  Targets=[
+                      {
+                          "Key": "tag:aws:autoscaling:groupName",
+                          "Values": [autoscaling_group_name]
+                      }
+                  ],
                   DocumentName="AWS-RunShellScript",
+                  Comment=f"Stopping BK agents in {stack_name}",
                   Parameters={
                       "commands": ["sudo kill -s SIGTERM $(/bin/pidof buildkite-agent)"]
                   }
