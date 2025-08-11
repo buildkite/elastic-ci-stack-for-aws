@@ -589,7 +589,7 @@ Parameters:
 
   DockerIPv4AddressPool1:
     Type: String
-    Description: Primary IPv4 CIDR block for Docker default address pools. Only applies to Linux instances, not Windows.
+    Description: Primary IPv4 CIDR block for Docker default address pools. Must not conflict with host network or VPC CIDR. Only applies to Linux instances, not Windows.
     Default: "172.17.0.0/12"
 
   DockerIPv4AddressPool2:
