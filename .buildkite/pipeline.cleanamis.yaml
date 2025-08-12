@@ -29,9 +29,14 @@ steps:
       - "me-south-1"
       - "sa-east-1"
     plugins:
-      - aws-assume-role-with-web-identity#v1.1.0:
+      - aws-assume-role-with-web-identity#v1.4.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-elastic-stack-for-aws-ami-cleaner
-      - docker-compose#v5.4.1:
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
+            - branch_build
+      - docker-compose#v5.10.0:
           run: ruby
           config: .buildkite/docker-compose.yml
           propagate-aws-auth-tokens: true

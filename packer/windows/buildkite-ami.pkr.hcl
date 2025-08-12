@@ -37,9 +37,9 @@ variable "is_released" {
   default = false
 }
 
-data "amazon-ami" "windows-server-2019" {
+data "amazon-ami" "windows-server-2022" {
   filters = {
-    name                = "Windows_Server-2019-English-Full-Base-*"
+    name                = "Windows_Server-2022-English-Full-Base-*"
     virtualization-type = "hvm"
   }
   most_recent = true
@@ -48,16 +48,18 @@ data "amazon-ami" "windows-server-2019" {
 }
 
 source "amazon-ebs" "elastic-ci-stack" {
-  ami_description = "Buildkite Elastic Stack (Windows Server 2019 w/ docker)"
+  ami_description = "Buildkite Elastic Stack (Windows Server 2022 w/ docker)"
   ami_groups      = ["all"]
   ami_name        = "buildkite-stack-windows-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
   region          = var.region
-  source_ami      = data.amazon-ami.windows-server-2019.id
+  source_ami      = data.amazon-ami.windows-server-2022.id
   user_data_file  = "scripts/ec2-userdata.ps1"
   winrm_insecure  = true
   winrm_use_ssl   = true
+  winrm_port      = 5986
+  winrm_timeout   = "60m"
   winrm_username  = "Administrator"
 
   launch_block_device_mappings {
@@ -69,12 +71,12 @@ source "amazon-ebs" "elastic-ci-stack" {
 
   tags = {
     Name          = "elastic-ci-stack-windows"
-    OSVersion     = "Windows Server 2019"
+    OSVersion     = "Windows Server 2022"
     BuildNumber   = var.build_number
     AgentVersion  = var.agent_version
     IsReleased    = var.is_released
-    SourceAMIID   = data.amazon-ami.windows-server-2019.id
-    SourceAMIName = data.amazon-ami.windows-server-2019.name
+    SourceAMIID   = data.amazon-ami.windows-server-2022.id
+    SourceAMIName = data.amazon-ami.windows-server-2022.name
   }
 }
 
@@ -88,53 +90,43 @@ build {
 
   provisioner "file" {
     destination = "C:/packer-temp"
+    source      = "scripts"
+  }
+
+  provisioner "file" {
+    destination = "C:/packer-temp"
     source      = "../../plugins"
   }
 
   provisioner "powershell" {
-    script = "scripts/install-utils.ps1"
+    scripts = [
+      "scripts/install-utils.ps1",
+      "scripts/install-cloudwatch-agent.ps1",
+      "scripts/install-lifecycled.ps1",
+      "scripts/enable-containers.ps1"
+    ]
   }
 
-  provisioner "powershell" {
-    script = "scripts/install-cloudwatch-agent.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/install-lifecycled.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/enable-containers.ps1"
-  }
-
-  // need to restart after enabling containers
-  // for some reason the restart provisioner does not wait for the previous provisioner to finish
-  // so we pause for some amount of time
+  # Reboot with enable-containers, to make sure containers feature is ready
   provisioner "windows-restart" {
-    pause_before = "10s"
+    restart_command = "C:/packer-temp/scripts/enable-containers.ps1"
+    timeout         = "20m"
   }
 
   provisioner "powershell" {
-    script = "scripts/install-docker.ps1"
+    scripts = [
+      "scripts/install-docker.ps1",
+      "scripts/install-buildkite-agent.ps1",
+      "scripts/install-s3secrets-helper.ps1",
+      "scripts/install-session-manager-plugin.ps1"
+    ]
   }
 
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
   provisioner "powershell" {
-    script = "scripts/install-buildkite-agent.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/install-s3secrets-helper.ps1"
-  }
-
-  provisioner "powershell" {
-    script = "scripts/install-session-manager-plugin.ps1"
-  }
-
-  provisioner "powershell" {
-    inline = ["Remove-Item -Path C:/packer-temp -Recurse"]
-  }
-
-  provisioner "powershell" {
-    inline = ["C:/ProgramData/Amazon/EC2-Windows/Launch/Scripts/InitializeInstance.ps1 -Schedule", "C:/ProgramData/Amazon/EC2-Windows/Launch/Scripts/SysprepInstance.ps1 -NoShutdown"]
+    inline = [
+      "Remove-Item -Path C:/packer-temp -Recurse",
+      "& 'C:/Program Files/Amazon/EC2Launch/EC2Launch.exe' sysprep --shutdown true --clean true"
+    ]
   }
 }
