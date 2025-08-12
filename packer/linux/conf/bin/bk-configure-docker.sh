@@ -57,7 +57,9 @@ if [[ "${DOCKER_NETWORKING_PROTOCOL}" == "ipv4" ]]; then
   # This is the default
   cat <<<"$(
     jq \
-      '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' \
+      --arg pool1 "${DOCKER_IPV4_ADDRESS_POOL_1:-172.17.0.0/12}" \
+      --arg pool2 "${DOCKER_IPV4_ADDRESS_POOL_2:-192.168.0.0/16}" \
+      '."default-address-pools"=[{"base":$pool1,"size":20},{"base":$pool2,"size":24}]' \
       /etc/docker/daemon.json
   )" >/etc/docker/daemon.json
 elif [[ "${DOCKER_NETWORKING_PROTOCOL}" == "dualstack" ]]; then
@@ -66,7 +68,10 @@ elif [[ "${DOCKER_NETWORKING_PROTOCOL}" == "dualstack" ]]; then
   DOCKER_EXPERIMENTAL=true
   cat <<<"$(
     jq \
-      '.ipv6=true | ."fixed-cidr-v6"="2001:db8:1::/64" | .ip6tables=true | ."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24},{"base":"2001:db8:2::/104","size":112}]' \
+      --arg pool1 "${DOCKER_IPV4_ADDRESS_POOL_1:-172.17.0.0/12}" \
+      --arg pool2 "${DOCKER_IPV4_ADDRESS_POOL_2:-192.168.0.0/16}" \
+      --arg pool6 "${DOCKER_IPV6_ADDRESS_POOL:-2001:db8:2::/104}" \
+      '.ipv6=true | ."fixed-cidr-v6"="2001:db8:1::/64" | .ip6tables=true | ."default-address-pools"=[{"base":$pool1,"size":20},{"base":$pool2,"size":24},{"base":$pool6,"size":112}]' \
       /etc/docker/daemon.json
   )" >/etc/docker/daemon.json
 else
