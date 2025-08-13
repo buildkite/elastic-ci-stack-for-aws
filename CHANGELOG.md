@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.40.10](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.9...v6.40.10) (2025-08-13)
+
+### Changed
+* feat: gracefully terminate agents when ASG is updated with replacement [#1476](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1476) ([n-tucker](https://github.com/n-tucker))
+* Allow Docker default address pools to be changed [#1542](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1542) ([petetomasik](https://github.com/petetomasik))
+* Add scale-in/out cooldown params [#1540](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1540) ([scadu](https://github.com/scadu))
+* Require agent-scaler 1.9.5 or newer [#1533](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1533) ([scadu](https://github.com/scadu))
+
+
+### Internal
+* Update buildkite-agent to v3.103.1 [#1541](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1541) ([renovate[bot]](https://github.com/apps/renovate))
+* SUP-4081 - Update config.json.example for installing Elastic CI stack with the AWS CLI [#1493](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1493) ([Mykematt](https://github.com/Mykematt))
+* Update dependency node to v22 [#1539](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1539) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite plugin docker-compose to v5.10.0 [#1538](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1538) ([renovate[bot]](https://github.com/apps/renovate))
+* Update ruby Docker tag to v3.4 [#1537](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1537) ([renovate[bot]](https://github.com/apps/renovate))
+* Update dependency go to v1.24.5 [#1536](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1536) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Fixed
+* Fix agent's signal-grace-period-seconds [#1534](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1534) ([scadu](https://github.com/scadu))
+
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.103.1](https://github.com/buildkite/agent/tree/v3.103.1) (2025-08-07)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.103.0...v3.103.1)
+
+### Fixed
+- PS-980: fix custom TMPDIR break hook wrapper [#3416](https://github.com/buildkite/agent/pull/3416) (@zhming0)
+
+### Changed
+- PS-1000: ensure a static & short checkout path for k8s stack agent [#3420](https://github.com/buildkite/agent/pull/3420) (@zhming0)
+- Make the 'Pipeline upload not yet applied: processing' message info, not warning [#3419](https://github.com/buildkite/agent/pull/3419) (@moskyb)
+
+### Internal
+- build(deps): bump thor from 0.19.4 to 1.4.0 [#3417](https://github.com/buildkite/agent/pull/3417) (@dependabot[bot])
+- build(deps): bump the cloud-providers group across 1 directory with 7 updates [#3414](https://github.com/buildkite/agent/pull/3414) (@dependabot[bot])
+- build(deps): bump the container-images group across 7 directories with 4 updates [#3415](https://github.com/buildkite/agent/pull/3415) (@dependabot[bot])
+- Update to use OIDC session tags on AWS role assumption [#3412](https://github.com/buildkite/agent/pull/3412) (@duckalini)
+- chore: move the tool.go to new tool dependency [#3409](https://github.com/buildkite/agent/pull/3409) (@wolfeidau)
+- Upgrade to go-pipeline v0.15.0 [#3408](https://github.com/buildkite/agent/pull/3408) (@DrJosh9000)
+- Only run tests if code has changed [#3407](https://github.com/buildkite/agent/pull/3407) (@DrJosh9000)
+</details>
+
+
 ## [v6.40.9](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.8...v6.40.9) (2025-07-23)
 
 ### Changed
