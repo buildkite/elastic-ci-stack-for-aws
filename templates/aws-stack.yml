@@ -60,6 +60,7 @@ Metadata:
         - BuildkiteAgentScalerServerlessARN
         - BuildkiteAgentScalerVersion
         - LogRetentionDays
+        - BuildkiteAgentEnableGracefulShutdown
 
       - Label:
           default: Network Configuration
@@ -236,6 +237,14 @@ Parameters:
     Type: Number
     Description: The number of days to retain the Cloudwatch Logs of the lambda.
     Default: "1"
+
+  BuildkiteAgentEnableGracefulShutdown:
+    Description: Set to true to enable graceful shutdown of agents when the ASG is updated with replacement. This allows ASGs to be removed in a timely manner during an in-place update of the elastic stack, and allows remaining agents to finish jobs without interruptions.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   BuildkiteAgentTracingBackend:
     Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
@@ -936,6 +945,9 @@ Conditions:
 
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
+
+    EnableBuildkiteAgentGracefulShutdown:
+      !Equals [ !Ref BuildkiteAgentEnableGracefulShutdown, "true" ]
 
     UsePipelineSigningKMSKey:
       !Not [ !Equals [ !Ref PipelineSigningKMSKeyId, "" ] ]
@@ -1856,6 +1868,147 @@ Resources:
     Version: 1.0
     Properties:
       ServiceToken: !GetAtt AzRebalancingSuspenderFunction.Arn
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+
+  StopBuildkiteAgentsRole:
+    Type: AWS::IAM::Role
+    Condition: EnableBuildkiteAgentGracefulShutdown
+    Properties:
+      PermissionsBoundary:
+        !If [
+          SetInstanceRolePermissionsBoundaryARN,
+          !Ref InstanceRolePermissionsBoundaryARN,
+          !Ref "AWS::NoValue",
+        ]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DescribeASGs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "autoscaling:DescribeAutoScalingGroups"
+                Resource: "*"
+        - PolicyName: ModifyASGs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "autoscaling:UpdateAutoScalingGroup"
+                Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
+        - PolicyName: RunStopBuildkiteDocument
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ssm:SendCommand"
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+        - PolicyName: StopBuildkiteInstances
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ssm:SendCommand"
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    "aws:resourceTag/aws:cloudformation:logical-id": "AgentAutoScaleGroup"
+
+  StopBuildkiteAgentsFunction:
+    Type: AWS::Lambda::Function
+    Condition: EnableBuildkiteAgentGracefulShutdown
+    Properties:
+      Description: "Gracefully stops all Buildkite agents in a given Auto Scaling group."
+      Code:
+        ZipFile: |
+          import boto3
+          import logging
+          import cfnresponse
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          autoscaling_client = boto3.client("autoscaling")
+          ssm_client = boto3.client("ssm")
+
+          def handler(event, context):
+              logger.info(f"Received event: {event}")
+
+              # only trigger on update upon replacement events
+              if event["RequestType"] == "Update":
+                  try:
+                      props = event["OldResourceProperties"]
+                      autoscaling_group_name = props["AutoScalingGroupName"]
+
+                      # Scale ASG down to zero, to allow Buildkite agents to terminate
+                      force_instance_termination(autoscaling_group_name)
+
+                      # Stop all Buildkite agents in the old ASG
+                      stop_bk_agents(autoscaling_group_name)
+
+                      # Send success response to CloudFormation
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
+                  except Exception as e:
+                      logger.error(f"Error: {str(e)}")
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {"Error": str(e)}, "CustomResourcePhysicalID")
+              else:
+                  # For Create and Delete events, just send success response
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, "CustomResourcePhysicalID")
+
+          def force_instance_termination(autoscaling_group_name):
+              """Forces all EC2 instances to terminate in the specified Auto Scaling group by setting the desired capacity to zero."""
+              logger.info(f"Setting the desired capacity of {autoscaling_group_name} to zero")
+              autoscaling_client.update_auto_scaling_group(
+                  AutoScalingGroupName=autoscaling_group_name,
+                  MinSize=0,
+                  DesiredCapacity=0
+              )
+
+          def stop_bk_agents(autoscaling_group_name):
+              """Gracefully terminates Buildkite agents running in the given Auto Scaling Group."""
+              stack_name = autoscaling_group_name.split("-AgentAutoScaleGroup")[0]
+
+              logger.info(f"Stopping BK agents in {stack_name}")
+              response = ssm_client.send_command(
+                  Targets=[
+                      {
+                          "Key": "tag:aws:autoscaling:groupName",
+                          "Values": [autoscaling_group_name]
+                      }
+                  ],
+                  DocumentName="AWS-RunShellScript",
+                  Comment=f"Stopping BK agents in {stack_name}",
+                  Parameters={
+                      "commands": ["sudo kill -s SIGTERM $(/bin/pidof buildkite-agent)"]
+                  }
+              )
+              logger.info(f"SSM command response: {response}")
+      Handler: index.handler
+      Role: !GetAtt StopBuildkiteAgentsRole.Arn
+      Runtime: "python3.12"
+
+  StopBuildkiteAgents:
+    Type: AWS::CloudFormation::CustomResource
+    Condition: EnableBuildkiteAgentGracefulShutdown
+    Version: 1.0
+    Properties:
+      ServiceToken: !GetAtt StopBuildkiteAgentsFunction.Arn
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
 
   SecurityGroup:
