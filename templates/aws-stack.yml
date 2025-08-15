@@ -1150,7 +1150,11 @@ Resources:
       VpcResources: !If
         - CreateVpcResources
         - [ !Ref RouteDefault, !Ref Subnet0Routes, !Ref Subnet1Routes ]
-        - !Ref "AWS::NoValue"
+        - []
+      # By referencing these resources, CloudFormation creates implicit dependencies
+      Subnet0RouteCheck: !If [ CreateVpcResources, !Ref Subnet0Routes, !Ref "AWS::NoValue" ]
+      Subnet1RouteCheck: !If [ CreateVpcResources, !Ref Subnet1Routes, !Ref "AWS::NoValue" ]
+      RouteDefaultCheck: !If [ CreateVpcResources, !Ref RouteDefault, !Ref "AWS::NoValue" ]
 
   BuildkiteAgentTokenParameter:
     Type: AWS::SSM::Parameter
