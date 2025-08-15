@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+
+require "bundler/inline"
+require "date"
+
+gemfile do
+  source "https://rubygems.org"
+
+  gem "oga" # an xml parser is required by aws-sdk
+  gem "aws-sdk-ec2"
+  gem "ostruct"
+  gem "logger"
+  gem "base64"
+end
+
+def die(msg)
+  $stderr.puts msg
+  exit 1
+end
+
+MAX_DELETIONS = 100
+
+region = ARGV[0] || ENV["AWS_REGION"]
+dry_run = ENV["DRY_RUN"]
+
+die("region not found") if region.nil? || region == ""
+
+client = Aws::EC2::Client.new(region: region)
+
+# Fetch all AMIs that we own in the current region
+res = client.describe_images(owners: ["self"], include_deprecated: true)
+all_images = []
+res.images.each do |image|
+   all_images << image
+end
+
+# Filter the list of AMIs down to just those that were published by the elastic stack
+# pipeline. There might be other AMIs in this account, and we don't wantto mess with them
+all_images.select! { |image|
+  image.name.start_with?("buildkite-stack-") ||        # The name we used until mid 2019
+  image.name.start_with?("buildkite-stack-linux-") ||  # The name we used for linux amd64/arm64 from mid 2019
+  image.name.start_with?("buildkite-stack-windows-")   # The name we used for windows amd64 from mid 2019
+}
+
+# We'd like to process the images oldest to newest
+all_images.sort_by! { |image| image.creation_date }
+
+# Each AMI *can* be used in multiple elastic stack releases. It's rare, but it happens. This will extract one
+# of the versions - if any - from the tags. Enough to confirm this image is one we published in Cloud Formation
+# templates on githib.com and customers might be using it
+def get_stack_version_from_tags(image)
+  image.tags.each do |tag|
+    if tag.key.start_with?("Version:")
+      return tag.key[/^Version:(.+)$/, 1]
+    end
+  end
+  nil
+end
+
+# If we only deregister the AMI then we'll be left with orphaned snapshots and keep paying for storage. This
+# extracts the snapshot IDs that the AMI is pointing at, so we can delete them as well
+def get_snapshot_ids(image)
+  image.block_device_mappings.map { |blk| blk.ebs&.snapshot_id }.compact
+end
+
+# Deregister an AMI, and delete any associated snapshots
+def deregister_image(client, image, dry_run)
+  snapshot_ids = get_snapshot_ids(image)
+  tag = dry_run ? "[DRY RUN]" : ""
+
+  puts "- #{tag} deregistering image #{image.image_id}"
+  client.deregister_image({image_id: image.image_id}) unless dry_run
+
+  snapshot_ids.each do |snapshot_id|
+    puts "- #{tag} deleting snapshot #{snapshot_id}"
+    client.delete_snapshot({ snapshot_id: snapshot_id }) unless dry_run
+  end
+end
+
+one_year_ago = Time.now - (60 * 60 * 24 * 365)
+deleted_counter = 0
+  
+# Time to get down to business.
+#
+# Loop over each elastic stack AMI, skip over any that we want to keep, and anything else we can deregister
+# and save some money
+
+all_images.each do |image|
+  puts "ID: #{image.image_id}, Name: #{image.name}, Created: #{image.creation_date}, Last Launched: #{image.last_launched_time}, Public: #{image.public}, Version Tag; #{get_stack_version_from_tags(image)}"
+
+  if get_stack_version_from_tags(image)
+    puts "- keep (released version)"
+  elsif DateTime.parse(image.creation_date).to_time >= one_year_ago
+    puts "- keep (created recently)"
+  elsif image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
+    puts "- keep (launched recently)"
+  elsif deleted_counter >= MAX_DELETIONS
+    puts "- deletion candidate, but we've reached MAX_DELETIONS (#{MAX_DELETIONS})"
+  else
+    deregister_image(client, image, dry_run)
+    deleted_counter += 1
+  end
+  puts
+  puts
+
+end
+
+puts "COMPLETE: #{all_images.size} AMIs checked, #{deleted_counter} deregistered"

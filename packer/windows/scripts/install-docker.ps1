@@ -6,7 +6,7 @@ Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/
 .\install-docker-ce.ps1
 docker --version
 
-$docker_compose_version="1.29.2"
+$docker_compose_version="2.35.1"
 Write-Output "Installing docker-compose..."
 choco install -y docker-compose --version $docker_compose_version
 If ($lastexitcode -ne 0) { Exit $lastexitcode }

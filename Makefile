@@ -3,11 +3,11 @@
 VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 
-PACKER_VERSION ?= 1.9.4
+PACKER_VERSION ?= 1.11.2
 PACKER_LINUX_FILES = $(exec find packer/linux)
 PACKER_WINDOWS_FILES = $(exec find packer/windows)
 
-GO_VERSION ?= 1.22
+GO_VERSION ?= 1.23.6
 
 FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
 
