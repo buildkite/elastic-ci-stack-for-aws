@@ -74,7 +74,7 @@ build/aws-stack.yml:
 		} else { \
 			print \
 		}\
-	}' templates/aws-stack.yml | sed "s/%v/$(VERSION)/" > $@
+	}' templates/aws-stack.yml | $(SED) "s/%v/$(VERSION)/" > $@
 
 # -----------------------------------------
 # AMI creation with Packer
@@ -235,9 +235,12 @@ AGENT_VERSION ?= $(shell curl -Lfs "https://buildkite.com/agent/releases/latest?
 
 SED ?= sed
 ifeq ($(shell uname), Darwin)
-	# Use GNU sed, not MacOS sed
-	# Install with: brew install gsed
+	# Use GNU sed, not MacOS sed - required for extended regex support
+	# BSD sed (default on macOS) doesn't support the regex patterns used in this Makefile
 	SED = gsed
+	ifeq ($(shell command -v gsed >/dev/null 2>&1 && echo yes || echo no), no)
+		$(error GNU sed (gsed) is required on macOS but not found. Please install with: brew install gnu-sed)
+	endif
 endif
 
 bump-agent-version:
