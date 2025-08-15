@@ -7,6 +7,17 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
+  - id: "cfn-lint"
+    name: ":mag: cfn-lint"
+    command: .buildkite/steps/cfn-lint.sh
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    soft_fail:
+    # https://github.com/aws-cloudformation/cfn-lint#exit-codes
+      - exit_status: 4 # Warning
+      - exit_status: 8 # Informational
+      - exit_status: 12 # Warning and informational
+
   - label: ":bash: shfmt"
     key: fmt
     command: .buildkite/steps/shfmt.sh
@@ -18,7 +29,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     plugins:
-      - docker-compose#v2.1.0:
+      - docker-compose#v5.10.0:
           run: fixperms-tests
           config: .buildkite/docker-compose.yml
 
@@ -30,7 +41,15 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "packer-windows-amd64"
     name: ":packer: :windows:"
@@ -42,7 +61,15 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "launch-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Launch"
@@ -53,13 +80,20 @@ steps:
     depends_on:
       - "packer-windows-amd64"
       - "deploy-service-role-stack"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "test-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Test"
     command:
       - git --version
       - docker info
-      - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2019 cmd.exe /c echo hello
+      - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
@@ -75,6 +109,13 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-windows-amd64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "packer-linux-amd64"
     name: ":packer: :linux: AMD64"
@@ -86,7 +127,15 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "launch-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Launch"
@@ -97,12 +146,19 @@ steps:
     depends_on:
       - "packer-linux-amd64"
       - "deploy-service-role-stack"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
     command:
       - git --version
-      - goss validate --format documentation
+      - sudo goss validate --format documentation
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
@@ -118,6 +174,13 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-linux-amd64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "packer-linux-arm64"
     name: ":packer: :linux: ARM64"
@@ -129,7 +192,15 @@ steps:
     depends_on:
       - "fmt"
       - "lint"
+      - "cfn-lint"
       - "fixperms-tests"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "launch-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Launch"
@@ -140,12 +211,19 @@ steps:
     depends_on:
       - "packer-linux-arm64"
       - "deploy-service-role-stack"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "test-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Test"
     command:
       - git --version
-      - goss validate --format documentation
+      - sudo goss validate --format documentation
     timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
@@ -161,6 +239,13 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
       - "test-linux-arm64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "delete-service-role-stack"
     name: ":aws-iam: :cloudformation: Delete"
@@ -171,6 +256,13 @@ steps:
       - "delete-windows-amd64"
       - "delete-linux-amd64"
       - "delete-linux-arm64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "copy-ami"
     name: ":cloudformation: 🚚 🌎"
@@ -182,6 +274,13 @@ steps:
       - "test-linux-amd64"
       - "test-linux-arm64"
       - "test-windows-amd64"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "publish"
     name: ":cloudformation: :rocket:"
@@ -193,6 +292,13 @@ steps:
     concurrency_method: eager
     artifact_paths: "build/*.yml"
     depends_on: "copy-ami"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: cleanup
     name: ":broom: Cleanup"
@@ -200,3 +306,10 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on: "publish"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.4.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug

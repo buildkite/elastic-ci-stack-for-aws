@@ -2,10 +2,19 @@ version: '3'
 
 services:
   fixperms-tests:
-    image: golang:1.21
+    image: golang:1.24
     working_dir: /code
     environment:
       CGO_ENABLED: 0
     volumes:
       - ..:/code:ro
     command: go test -v ./...
+
+  ruby:
+    image: ruby:3.4
+    working_dir: /work
+    environment:
+      - DRY_RUN
+      - AWS_REGION
+    volumes:
+      - ..:/work:ro

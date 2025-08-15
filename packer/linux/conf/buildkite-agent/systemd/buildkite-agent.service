@@ -9,7 +9,7 @@ After=docker.service
 Type=simple
 User=buildkite-agent
 Environment="HOME=/var/lib/buildkite-agent"
-Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="PATH=/usr/local/bin:/usr/bin"
 Environment="USER=buildkite-agent"
 # The =- (rather than just = ) in the line below means that systemd won't complain if it can't find the file
 EnvironmentFile=-/var/lib/buildkite-agent/env
@@ -21,6 +21,10 @@ RestartForceExitStatus=SIGPIPE
 TimeoutStartSec=10
 TimeoutStopSec=0
 KillMode=process
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#OOMScoreAdjust=
+# Set to -1000 to disable OOM killing of processes of buildkite-agent service
+# managing EC2 instance lifecycle
+OOMScoreAdjust=-1000
 
 [Install]
 WantedBy=multi-user.target

@@ -27,28 +27,6 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 
 echo "Starting ${BASH_SOURCE[0]}..."
 
-echo Sourcing /usr/local/lib/bk-configure-docker.sh...
-echo This file is written by the scripts in packer/scripts.
-echo Note that the path is /usr/local/lib, not /usr/local/bin.
-echo Contents of /usr/local/lib/bk-configure-docker.sh:
-cat /usr/local/lib/bk-configure-docker.sh
-# shellcheck disable=SC1091
-source /usr/local/lib/bk-configure-docker.sh
-
-echo Installing qemu binfmt for multiarch...
-if ! docker run \
-  --privileged \
-  --userns=host \
-  --pull=never \
-  --rm \
-  "tonistiigi/binfmt@${QEMU_BINFMT_DIGEST}" \
-  --install all; then
-  echo Failed to install binfmt.
-  echo Avaliable docker images:
-  docker image ls
-  exit 1
-fi
-
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
 
@@ -69,6 +47,38 @@ else
   echo User namespace remapping not configured.
 fi
 
+# One day we can auto-detect whether the instance is v4-only, dualstack or v6-only. To avoid a
+# breaking change though, we'll default to ipv4 only and users can opt into v6 support. The elastic
+# stack has always defaulted to v4-only so this ensures no breaking behaviour.
+# v6-only is currently not an option because docker doesn't support it, but maybe one day....
+echo Customising docker network configuration...
+
+if [[ "${DOCKER_NETWORKING_PROTOCOL}" == "ipv4" ]]; then
+  # This is the default
+  cat <<<"$(
+    jq \
+      --arg pool1 "${DOCKER_IPV4_ADDRESS_POOL_1:-172.17.0.0/12}" \
+      --arg pool2 "${DOCKER_IPV4_ADDRESS_POOL_2:-192.168.0.0/16}" \
+      '."default-address-pools"=[{"base":$pool1,"size":20},{"base":$pool2,"size":24}]' \
+      /etc/docker/daemon.json
+  )" >/etc/docker/daemon.json
+elif [[ "${DOCKER_NETWORKING_PROTOCOL}" == "dualstack" ]]; then
+  # Using v6 inside containers requires DOCKER_EXPERIMENTAL. This is configured
+  # further down
+  DOCKER_EXPERIMENTAL=true
+  cat <<<"$(
+    jq \
+      --arg pool1 "${DOCKER_IPV4_ADDRESS_POOL_1:-172.17.0.0/12}" \
+      --arg pool2 "${DOCKER_IPV4_ADDRESS_POOL_2:-192.168.0.0/16}" \
+      --arg pool6 "${DOCKER_IPV6_ADDRESS_POOL:-2001:db8:2::/104}" \
+      '.ipv6=true | ."fixed-cidr-v6"="2001:db8:1::/64" | .ip6tables=true | ."default-address-pools"=[{"base":$pool1,"size":20},{"base":$pool2,"size":24},{"base":$pool6,"size":112}]' \
+      /etc/docker/daemon.json
+  )" >/etc/docker/daemon.json
+else
+  # docker 25.0 doesn't support ipv6 only, so we don't support it either
+  true
+fi
+
 if [[ "${DOCKER_EXPERIMENTAL:-false}" == "true" ]]; then
   echo Configuring experiment flag for docker daemon...
   cat <<<"$(jq '.experimental=true' /etc/docker/daemon.json)" >/etc/docker/daemon.json
@@ -84,13 +94,6 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
 else
   echo Instance storage not configured.
 fi
-
-echo Customising docker IP address pools...
-cat <<<"$(
-  jq \
-    '."default-address-pools"=[{"base":"172.17.0.0/12","size":20},{"base":"192.168.0.0/16","size":24}]' \
-    /etc/docker/daemon.json
-)" >/etc/docker/daemon.json
 
 echo Cleaning up docker images...
 systemctl start docker-low-disk-gc.service

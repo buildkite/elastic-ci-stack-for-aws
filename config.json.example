@@ -1,14 +1,6 @@
 [
   {
     "ParameterKey": "BuildkiteAgentToken",
-    "ParameterValue": "TokenGoesHere"
-  },
-  {
-    "ParameterKey": "KeyName",
-    "ParameterValue": "default"
-  },
-  {
-    "ParameterKey": "ImageId",
-    "ParameterValue": ""
+    "ParameterValue": "<insert-your-token>"
   }
 ]

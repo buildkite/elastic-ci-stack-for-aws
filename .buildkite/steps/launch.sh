@@ -100,6 +100,10 @@ cat <<EOF >config.json
   {
     "ParameterKey": "EnableInstanceStorage",
     "ParameterValue": "${enable_instance_storage:-false}"
+  },
+  {
+    "ParameterKey": "BuildkiteAdditionalSudoPermissions",
+    "ParameterValue": "/usr/local/bin/goss"
   }
 ]
 EOF

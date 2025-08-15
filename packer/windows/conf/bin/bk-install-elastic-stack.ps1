@@ -86,6 +86,7 @@ set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
 set_always         "PLUGINS_ENABLED" "$PLUGINS_ENABLED"
 set_unless_present "AWS_DEFAULT_REGION" "$Env:AWS_REGION"
 set_unless_present "AWS_REGION" "$Env:AWS_REGION"
+set_unless_present "BUILDKITE_AGENT_ENDPOINT" "https://agent.buildkite.com/v3"
 "@
 
 If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
@@ -95,7 +96,14 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   If ($lastexitcode -ne 0) { Exit $lastexitcode }
 }
 
-Copy-Item -Path C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe -Destination C:\buildkite-agent\bin\buildkite-agent.exe
+# Check if the source agent executable exists before copying
+$sourceAgentPath = "C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe"
+if (-not (Test-Path -Path $sourceAgentPath -PathType Leaf)) {
+  Write-Error "Source agent executable not found: $sourceAgentPath. Check AMI build logs or agent release parameter."
+  # The trap should handle signaling failure, but we explicitly exit just in case.
+  exit 1
+}
+Copy-Item -Path $sourceAgentPath -Destination C:\buildkite-agent\bin\buildkite-agent.exe
 
 $agent_metadata=@(
   "queue=${Env:BUILDKITE_QUEUE}"
@@ -131,6 +139,7 @@ $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
 token="${Env:BUILDKITE_AGENT_TOKEN}"
+endpoint="${Env:BUILDKITE_AGENT_ENDPOINT}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true
 no-ansi-timestamps=${Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
@@ -147,6 +156,8 @@ shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
+signing-aws-kms-key=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
+verification-failure-behavior=${Env:BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
 "@
 $OFS=" "
 
@@ -190,18 +201,62 @@ nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
 Restart-Service lifecycled
 
-# wait for docker to start
+# wait for docker service and API to be ready
 $next_wait_time=0
+$max_wait_time=30 # Increased wait time
+$docker_ready = $false
 do {
-  Write-Output "Sleeping $next_wait_time seconds"
-  Start-Sleep -Seconds ($next_wait_time++)
-  docker ps
-} until ($? -OR ($next_wait_time -eq 5))
+  Write-Output "Waiting for Docker... ($next_wait_time/$max_wait_time seconds)"
+  Start-Sleep -Seconds 1 # Sleep 1 second each iteration
+  $next_wait_time++
 
-docker ps
-if (! $?) {
-  Write-Output "Failed to contact docker"
-  exit 1
+  # Check Docker service status
+  $dockerService = Get-Service docker -ErrorAction SilentlyContinue
+  if ($dockerService -ne $null -and $dockerService.Status -eq [System.ServiceProcess.ServiceControllerStatus]::Running) {
+    Write-Output "Docker service is running. Checking API..."
+    # Try docker ps, capture errors, check success status
+    try {
+        # Run docker ps, redirect stdout to null, keep stderr for potential capture
+        docker ps *> $null
+        # If the command succeeded ($? is true)
+        if ($?) {
+            Write-Output "Docker API is responsive."
+            $docker_ready = $true
+        } else {
+            # Command failed without throwing terminating exception, $? is false
+            Write-Warning "Docker service running, but API not responsive yet (docker ps failed)."
+            # Try to capture the error output directly for more context
+            $ErrorActionPreference = "SilentlyContinue" # Prevent non-terminating errors below from stopping script
+            $dockerErrorOutput = docker ps 2>&1 | Out-String
+            $ErrorActionPreference = "Stop" # Restore error preference
+            if ($dockerErrorOutput) {
+                Write-Warning "Docker ps error output: $dockerErrorOutput"
+            }
+        }
+    } catch {
+        # Command failed with a terminating exception
+        Write-Warning "Docker service running, but API not responsive yet (docker ps threw an exception)."
+        Write-Warning "Docker ps exception details: $($_.Exception.Message)"
+        # Optionally log the full error record: Write-Warning $_
+    }
+  } else {
+    Write-Output "Docker service is not running or not found."
+  }
+
+} until ($docker_ready -OR ($next_wait_time -ge $max_wait_time))
+
+# Final check after the loop
+if ($docker_ready) {
+  Write-Output "Docker is ready."
+  # Optionally run docker ps again to show output if needed, but the check already passed
+  # docker ps
+} else {
+  Write-Output "Failed to confirm Docker readiness after $max_wait_time seconds."
+  # Add more diagnostics if possible
+  $dockerService = Get-Service docker -ErrorAction SilentlyContinue
+  Write-Output "Final Docker Service Status: $($dockerService.Status)"
+  # Consider explicitly calling the error handler or ensuring exit code triggers trap
+  exit 1 # Ensure script exits on failure
 }
 
 # prevent password from being revealed by debug tracing
