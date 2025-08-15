@@ -239,7 +239,9 @@ Parameters:
     Default: "1"
 
   BuildkiteAgentEnableGracefulShutdown:
-    Description: Set to true to enable graceful shutdown of agents when the ASG is updated with replacement. This allows ASGs to be removed in a timely manner during an in-place update of the elastic stack, and allows remaining agents to finish jobs without interruptions.
+    Description: >
+      Set to true to enable graceful shutdown of agents when the ASG is updated with replacement.
+      This allows ASGs to be removed in a timely manner during an in-place update of th Elastic Stack, and allows remaining agents to finish jobs without interruptions.
     Type: String
     AllowedValues:
       - "true"
@@ -367,7 +369,9 @@ Parameters:
     MinLength: 1
 
   AgentsPerInstance:
-    Description: Number of Buildkite agents to run on each instance
+    Description: >
+      Number of Buildkite agents to run on each instance. This determines the initial count of agents launched when an instance starts.
+      If an individual agent is terminated (e.g., due to a job failure or manual shutdown), it will not be automatically restarted, resulting in fewer agents on that instance (N-1). The ScaleInIdlePeriod parameter does not affect this agent count.
     Type: Number
     Default: 1
     MinValue: 1
@@ -483,7 +487,10 @@ Parameters:
     Default: 1.0
 
   ScaleInIdlePeriod:
-    Description: Number of seconds an agent must be idle before terminating
+    Description: >
+      Number of seconds ALL agents on an instance must be idle before the instance is terminated.
+      When all AgentsPerInstance agents are idle for this duration, the entire instance is terminated, not individual agents.
+      This parameter controls instance-level scaling behavior.
     Type: Number
     Default: 600
 
