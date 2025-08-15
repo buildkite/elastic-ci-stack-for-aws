@@ -172,6 +172,10 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
     --query Parameter.Value `
     --output text >"$keyfile"
 
+  Write-Output "Setting permissions for $keyfile..."
+  # Remove inheritance and set explicit permissions: Administrators=FullControl, buildkite-agent=Read
+  icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "buildkite-agent:R"
+
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-file=$keyfile"
 }
 
@@ -194,6 +198,9 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
     --query Parameter.Value `
     --output text >"$keyfile"
 
+  Write-Output "Setting permissions for $keyfile..."
+  # Remove inheritance and set explicit permissions: Administrators=FullControl, buildkite-agent=Read  
+  icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "buildkite-agent:R"
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "verification-jwks-file=$keyfile"
 }
 

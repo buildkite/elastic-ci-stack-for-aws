@@ -310,8 +310,9 @@ if [[ -n "$BUILDKITE_AGENT_SIGNING_KEY_PATH" ]]; then
     --query Parameter.Value \
     --output text >"$keyfile"
 
-  echo "Setting ownership of $keyfile to buildkite-agent..."
-  chown buildkite-agent: "$keyfile"
+  echo "Setting ownership and permissions for $keyfile..."
+  chown root:buildkite-agent "$keyfile"
+  chmod 640 "$keyfile"
 
   echo "signing-jwks-file=$keyfile" >>/etc/buildkite-agent/buildkite-agent.cfg
 fi
@@ -325,7 +326,7 @@ if [[ -n "$BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR" ]]; then
 fi
 
 if [[ -n "$BUILDKITE_AGENT_VERIFICATION_KEY_PATH" ]]; then
-  echo "Fetching signing key from ssm: $BUILDKITE_AGENT_VERIFICATION_KEY_PATH..."
+  echo "Fetching verification key from ssm: $BUILDKITE_AGENT_VERIFICATION_KEY_PATH..."
 
   keyfile=/etc/buildkite-agent/verification-key.json
 
@@ -335,8 +336,9 @@ if [[ -n "$BUILDKITE_AGENT_VERIFICATION_KEY_PATH" ]]; then
     --query Parameter.Value \
     --output text >"$keyfile"
 
-  echo "Setting ownership of $keyfile to buildkite-agent..."
-  chown buildkite-agent: "$keyfile"
+  echo "Setting ownership and permissions for $keyfile..."
+  chown root:buildkite-agent "$keyfile"
+  chmod 640 "$keyfile"
 
   echo "verification-jwks-file=$keyfile" >>/etc/buildkite-agent/buildkite-agent.cfg
 fi
