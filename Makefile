@@ -239,7 +239,7 @@ ifeq ($(shell uname), Darwin)
 	# BSD sed (default on macOS) doesn't support the regex patterns used in this Makefile
 	SED = gsed
 	ifeq ($(shell command -v gsed >/dev/null 2>&1 && echo yes || echo no), no)
-		$(error GNU sed (gsed) is required on macOS but not found. Please install with: brew install gnu-sed)
+    $(error GNU sed (gsed) is required on macOS but not found. Please install with: brew install gnu-sed)
 	endif
 endif
 
