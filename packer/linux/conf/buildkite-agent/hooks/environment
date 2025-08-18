@@ -115,6 +115,11 @@ if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" 
     export BUILDKITE_PLUGIN_ECR_ACCOUNT_IDS_0="${AWS_ECR_LOGIN_REGISTRY_IDS}"
   fi
 
+  # map AWS_ECR_LOGIN into the plugin format
+  if [[ -n "${AWS_ECR_LOGIN:-}" ]]; then
+    export BUILDKITE_PLUGIN_ECR_LOGIN="${AWS_ECR_LOGIN}"
+  fi
+
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/environment
 fi
