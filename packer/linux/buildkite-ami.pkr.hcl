@@ -62,7 +62,7 @@ data "amazon-ami" "al2023" {
 
 source "amazon-ebs" "elastic-ci-stack-ami" {
   ami_description                           = "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
-  ami_groups                                = var.ami_public ? ["all"] : ["self"]
+  ami_groups                                = var.ami_public ? ["all"] : []
   ami_users                                 = var.ami_public ? [] : var.ami_users
   ami_name                                  = "buildkite-stack-linux-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type                             = var.instance_type

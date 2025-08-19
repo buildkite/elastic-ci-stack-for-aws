@@ -61,7 +61,7 @@ data "amazon-ami" "windows-server-2022" {
 
 source "amazon-ebs" "elastic-ci-stack" {
   ami_description = "Buildkite Elastic Stack (Windows Server 2022 w/ docker)"
-  ami_groups      = var.ami_public ? ["all"] : ["self"]
+  ami_groups      = var.ami_public ? ["all"] : []
   ami_users       = var.ami_public ? [] : var.ami_users
   ami_name        = "buildkite-stack-windows-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
