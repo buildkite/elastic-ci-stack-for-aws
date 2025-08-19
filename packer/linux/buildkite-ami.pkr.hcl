@@ -131,6 +131,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "scripts/install-socketcan.sh"
+  }
+
+  provisioner "shell" {
     script = "scripts/cleanup.sh"
   }
 }
