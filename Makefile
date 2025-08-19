@@ -20,6 +20,13 @@ WIN64_INSTANCE_TYPE ?= m7i.xlarge
 BUILDKITE_BUILD_NUMBER ?= none
 BUILDKITE_PIPELINE_DEFAULT_BRANCH ?= main
 
+# AMI visibility configuration
+AMI_PUBLIC ?= false
+AMI_USERS ?=
+
+# Convert comma-separated AMI_USERS to JSON array format
+AMI_USERS_JSON = $(if $(AMI_USERS),[$(shell echo '$(AMI_USERS)' | $(SED) 's/[^,][^,]*/"&"/g')],[])
+
 IS_RELEASED ?= false
 ifeq ($(BUILDKITE_BRANCH),$(BUILDKITE_PIPELINE_DEFAULT_BRANCH))
 	IS_RELEASED = true
@@ -109,6 +116,8 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-amd64
 			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_JSON)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -144,6 +153,8 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-arm64
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_LINUX)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_JSON)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
@@ -171,6 +182,8 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_FILES)
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_WINDOWS)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_JSON)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 # -----------------------------------------
