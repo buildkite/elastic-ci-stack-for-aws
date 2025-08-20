@@ -870,6 +870,8 @@ Conditions:
 
     UseArtifactsBucket:
       !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
+    IsArtifactsBucketRegionEmpty:
+      !Equals [ !Ref ArtifactsBucketRegion, "" ]
 
     HasImageId:
       !Not [ !Equals [ !Ref ImageId, "" ] ]
@@ -1616,7 +1618,7 @@ Resources:
                   LocalArtifactsBucketRegion: !If
                     - UseArtifactsBucket
                     - !If
-                      - !Equals [ !Ref ArtifactsBucketRegion, "" ]
+                      - IsArtifactsBucketRegionEmpty
                       - !Ref "AWS::Region"
                       - !Ref ArtifactsBucketRegion
                     - !Ref "AWS::Region"
