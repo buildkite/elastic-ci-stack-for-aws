@@ -37,6 +37,18 @@ variable "is_released" {
   default = false
 }
 
+variable "ami_public" {
+  type        = bool
+  description = "Whether to make the AMI publicly available to all AWS users. Defaults to false for security."
+  default     = false
+}
+
+variable "ami_users" {
+  type        = list(string)
+  description = "List of AWS account IDs that should have access to the AMI when ami_public is false."
+  default     = []
+}
+
 data "amazon-ami" "al2023" {
   filters = {
     architecture        = var.arch
@@ -50,7 +62,8 @@ data "amazon-ami" "al2023" {
 
 source "amazon-ebs" "elastic-ci-stack-ami" {
   ami_description                           = "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
-  ami_groups                                = ["all"]
+  ami_groups                                = var.ami_public ? ["all"] : []
+  ami_users                                 = var.ami_public ? [] : var.ami_users
   ami_name                                  = "buildkite-stack-linux-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type                             = var.instance_type
   region                                    = var.region

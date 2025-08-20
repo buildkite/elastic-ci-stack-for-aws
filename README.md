@@ -115,18 +115,36 @@ aws-vault exec some-profile -- make create-stack
 ```
 
 If you need to build your own AMI (because you've changed something in the
-`packer` directory), run packer with AWS credentials in your shell environment:
+`packer` directory), run packer with AWS credentials in your shell environment.
+
+By default, AMIs are built as private (only accessible to the AWS account that created them) for security. You can control AMI visibility and build location using these variables:
+
+- **`AMI_PUBLIC`** - Set to `true` to make AMIs publicly accessible to all AWS users, or `false` (default) for private AMIs
+- **`AMI_USERS`** - Comma-separated list of AWS account IDs that should have access to private AMIs (ignored when `AMI_PUBLIC=true`)
+- **`AWS_REGION`** - AWS region where AMIs should be built (defaults to `us-east-1`)
 
 ```bash
+# Build private AMIs (default - recommended for security)
 make packer
+
+# Build public AMIs (available to all AWS users)
+make packer AMI_PUBLIC=true
+
+# Build private AMIs with access for specific AWS accounts
+make packer AMI_USERS="123456789012,987654321098,555666777888"
+
+# Combined: private AMIs with specific account access in a different region
+make packer AMI_PUBLIC=false AMI_USERS="123456789012,987654321098" AWS_REGION=us-west-2
 ```
 
-This will boot and image three AWS EC2 instances in your account’s `us-east-1`
-default VPC:
+This will boot and image three AWS EC2 instances in your account's `us-east-1`
+default VPC (or the region specified by `AWS_REGION`):
 
 - Linux (64-bit x86)
 - Linux (64-bit Arm)
 - Windows (64-bit x86)
+
+**Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
 ## Support Policy
 
