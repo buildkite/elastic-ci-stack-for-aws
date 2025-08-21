@@ -18,13 +18,13 @@ fi
 mkdir -p "build/"
 
 # Build a hash of packer files and the agent versions
-# Include variant in the hash so base and full images don’t clash
 packer_files_sha=$(find Makefile "packer/${os}" plugins/ -type f -print0 | xargs -0 sha256sum | awk '{print $1}' | sort | sha256sum | awk '{print $1}')
 internal_files_sha=$(find go.mod go.sum internal/ -type f -print0 | xargs -0 sha256sum | awk '{print $1}' | sort | sha256sum | awk '{print $1}')
 stable_agent_sha=$(curl -Lfs "https://download.buildkite.com/agent/stable/latest/${agent_binary}.sha256")
 unstable_agent_sha=$(curl -Lfs "https://download.buildkite.com/agent/unstable/latest/${agent_binary}.sha256")
 packer_hash=$(echo "$packer_files_sha" "$internal_files_sha" "$arch" "$stable_agent_sha" "$unstable_agent_sha" | sha256sum | awk '{print $1}')
 
+# Include variant in the hash so base and full images don’t clash
 echo "Packer image hash for ${os}/${arch} (${variant}) is ${packer_hash}"
 if [[ "${variant}" == "base" ]]; then
   packer_file="packer-${packer_hash}-${os}-${arch}-base.output"
