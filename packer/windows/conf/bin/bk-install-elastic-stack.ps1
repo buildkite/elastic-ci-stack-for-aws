@@ -155,6 +155,7 @@ no-color=true
 shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
+disconnect-after-uptime=${Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
 tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
 signing-aws-kms-key=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${Env:BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
