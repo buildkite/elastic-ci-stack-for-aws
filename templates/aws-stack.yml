@@ -287,6 +287,15 @@ Parameters:
       - "false"
     Default: "false"
 
+  BuildkiteAgentDisconnectAfterUptime:
+    Description: >
+      The maximum uptime in seconds before the agent stops accepting new jobs and shuts down
+      after any running jobs complete. Set to 0 to disable uptime-based termination.
+      This helps regularly cycle out machines and prevent resource accumulation issues.
+    Type: Number
+    Default: 0
+    MinValue: 0
+
   ExperimentalEnableResourceLimits:
     Description: >
       (Experimental) If true, enables systemd resource limits for the Buildkite agent.
@@ -1598,6 +1607,7 @@ Resources:
                   $Env:BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}"
                   $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
                   $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
+                  $Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME="${BuildkiteAgentDisconnectAfterUptime}"
                   $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
                   $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
                   $Env:AWS_DEFAULT_REGION="${AWS::Region}"
@@ -1687,6 +1697,7 @@ Resources:
                   BUILDKITE_AUTHORIZED_USERS_URL="${AuthorizedUsersUrl}" \
                   BUILDKITE_ECR_POLICY="${ECRAccessPolicy}" \
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}" \
+                  BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME="${BuildkiteAgentDisconnectAfterUptime}" \
                   BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL="${BuildkiteTerminateInstanceOnDiskFull}" \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}" \
                   AWS_DEFAULT_REGION="${AWS::Region}" \
