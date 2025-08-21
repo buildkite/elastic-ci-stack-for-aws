@@ -429,6 +429,32 @@ systemctl daemon-reload
 echo Starting buildkite-agent...
 systemctl enable --now buildkite-agent
 
+echo Configuring CloudWatch agent log retention...
+if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
+  echo "Setting CloudWatch EC2 log retention to ${EC2_LOG_RETENTION_DAYS} days"
+  echo "WARNING: This will delete EC2 logs older than ${EC2_LOG_RETENTION_DAYS} days from existing log groups"
+
+  # Update the CloudWatch agent config with the retention value
+  CONFIG_FILE="/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+  if [[ -f "$CONFIG_FILE" ]]; then
+    # Add retention_in_days to all collect_list items using jq
+    jq --arg retention "$EC2_LOG_RETENTION_DAYS" '
+      .logs.logs_collected.files.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
+    ' "$CONFIG_FILE" >/tmp/cloudwatch_config.json && mv /tmp/cloudwatch_config.json "$CONFIG_FILE"
+
+    # Restart CloudWatch agent to pick up the new configuration
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c "file:$CONFIG_FILE" || echo "Warning: Failed to restart CloudWatch agent"
+    echo "CloudWatch agent configuration updated and restarted"
+  else
+    echo "Warning: CloudWatch agent config file not found at $CONFIG_FILE"
+  fi
+elif [[ -n "${EC2_LOG_RETENTION_DAYS:-}" ]]; then
+  echo "EC2 log retention set to ${EC2_LOG_RETENTION_DAYS} days but EnableEC2LogRetentionPolicy is false"
+  echo "Skipping EC2 log retention configuration to protect existing logs"
+else
+  echo "EC2 log retention not set, using CloudWatch agent defaults (never expire)"
+fi
+
 echo Signaling success to CloudFormation...
 # This will fail if the stack has already completed, for instance if there is a min size
 # of 1 and this is the 2nd instance. This is ok, so we just ignore the error

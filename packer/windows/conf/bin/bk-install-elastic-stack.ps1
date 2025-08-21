@@ -306,6 +306,38 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Restart-Service buildkite-agent
 
+Write-Output "Configuring CloudWatch agent log retention..."
+if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "true") {
+  Write-Output "Setting CloudWatch EC2 log retention to $($Env:EC2_LOG_RETENTION_DAYS) days"
+  Write-Output "WARNING: This will delete EC2 logs older than $($Env:EC2_LOG_RETENTION_DAYS) days from existing log groups"
+
+  $configFile = "C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json"
+  if (Test-Path $configFile) {
+    # Add retention_in_days to all collect_list items using jq
+    $tempFile = "$env:TEMP\cloudwatch_config.json"
+    & jq --arg retention $Env:EC2_LOG_RETENTION_DAYS '
+      .logs.logs_collected.files.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)}) |
+      .logs.logs_collected.windows_events.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
+    ' $configFile > $tempFile
+    Move-Item $tempFile $configFile
+
+    # Restart CloudWatch agent to pick up the new configuration
+    try {
+      & "C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1" -a fetch-config -m ec2 -s -c "file:$configFile"
+      Write-Output "CloudWatch agent configuration updated and restarted"
+    } catch {
+      Write-Output "Warning: Failed to restart CloudWatch agent: $($_.Exception.Message)"
+    }
+  } else {
+    Write-Output "Warning: CloudWatch agent config file not found at $configFile"
+  }
+} elseif ($Env:EC2_LOG_RETENTION_DAYS) {
+  Write-Output "EC2 log retention set to $($Env:EC2_LOG_RETENTION_DAYS) days but EnableEC2LogRetentionPolicy is false"
+  Write-Output "Skipping EC2 log retention configuration to protect existing logs"
+} else {
+  Write-Output "EC2 log retention not set, using CloudWatch agent defaults (never expire)"
+}
+
 # renable debug tracing
 Set-PSDebug -Trace 2
 
