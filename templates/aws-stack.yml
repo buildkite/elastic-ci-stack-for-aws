@@ -59,6 +59,8 @@ Metadata:
         - BuildkiteWindowsAdministrator
         - BuildkiteAgentScalerServerlessARN
         - BuildkiteAgentScalerVersion
+        - EnableEC2LogRetentionPolicy
+        - EC2LogRetentionDays
         - LogRetentionDays
         - BuildkiteAgentEnableGracefulShutdown
 
@@ -236,10 +238,27 @@ Parameters:
     Type: Number
     Default: 3600
 
+  EnableEC2LogRetentionPolicy:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: >
+      Enable CloudWatch log retention policy for EC2 instance logs managed by the CloudWatch agent.
+      When enabled, EC2 logs older than EC2LogRetentionDays will be automatically deleted to reduce storage costs.
+      This only affects logs from Buildkite agents, system logs, and other EC2-generated logs - not Lambda or other AWS service logs.
+      WARNING: For existing stacks, this will delete historical EC2 logs older than the retention period. This action cannot be undone.
+
+  EC2LogRetentionDays:
+    Type: Number
+    Description: The number of days to retain CloudWatch Logs for EC2 instances managed by the CloudWatch agent (Buildkite agents, system logs, etc).
+    Default: 7
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653]
+
   LogRetentionDays:
     Type: Number
-    Description: The number of days to retain the Cloudwatch Logs of the lambda.
-    Default: "1"
+    Description: The number of days to retain CloudWatch Logs for Lambda functions in the stack.
+    Default: 1
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653]
 
   BuildkiteAgentEnableGracefulShutdown:
     Description: >
@@ -1358,6 +1377,7 @@ Resources:
               - logs:PutLogEvents
               - logs:DescribeLogGroups
               - logs:DescribeLogStreams
+              - logs:PutRetentionPolicy
             Resource: "*"
           - Sid: Ssm
             Effect: Allow
@@ -1622,6 +1642,8 @@ Resources:
                   $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
                   $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
                   $Env:AWS_REGION="${AWS::Region}"
+                  $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
+                  $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
                 - LocalSecretsBucket: !If
@@ -1721,6 +1743,8 @@ Resources:
                   RESOURCE_LIMITS_CPU_WEIGHT="${ResourceLimitsCPUWeight}" \
                   RESOURCE_LIMITS_CPU_QUOTA="${ResourceLimitsCPUQuota}" \
                   RESOURCE_LIMITS_IO_WEIGHT="${ResourceLimitsIOWeight}" \
+                  ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}" \
+                  EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If

@@ -53,6 +53,12 @@
 						"log_group_name": "/buildkite/auth",
 						"log_stream_name": "{instance_id}",
 						"timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
+					},
+					{
+						"file_path": "/var/log/lifecycled.log",
+						"log_group_name": "/buildkite/lifecycled",
+						"log_stream_name": "{instance_id}",
+						"timestamp_format": "%Y-%m-%dT%H:%M:%S.%f"
 					}
 				]
 			}
