@@ -57,7 +57,7 @@ aarch64)
   exit 1
   ;;
 esac
-unzip awscliv2.zip
+unzip -qq awscliv2.zip
 sudo ./aws/install
 popd
 
