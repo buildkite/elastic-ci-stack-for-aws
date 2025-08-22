@@ -104,6 +104,8 @@ steps:
   - id: "test-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Test"
     command:
+      - aws --version
+      - jq --version
       - git --version
       - docker info
       - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
@@ -174,6 +176,8 @@ steps:
   - id: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
     command:
+      - aws --version
+      - jq --version
       - git --version
       - sudo goss validate --format documentation
     timeout_in_minutes: 5
