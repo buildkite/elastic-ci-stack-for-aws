@@ -88,6 +88,8 @@ Metadata:
         - SecretsBucketRegion
         - SecretsBucketEncryption
         - ArtifactsBucket
+        - ArtifactsBucketRegion
+        - ArtifactsS3ACL
         - AuthorizedUsersUrl
         - BootstrapScriptUrl
         - AgentEnvFileUrl
@@ -427,6 +429,24 @@ Parameters:
     Description: Optional - Name of an existing S3 bucket for build artifact storage
     Type: String
     Default: ""
+
+  ArtifactsBucketRegion:
+    Description: Optional - Region for the ArtifactsBucket. If blank the bucket's region is dynamically discovered.
+    Type: String
+    Default: ""
+
+  ArtifactsS3ACL:
+    Description: Optional - ACL to use for S3 artifact uploads
+    Type: String
+    AllowedValues:
+      - "private"
+      - "public-read"
+      - "public-read-write"
+      - "authenticated-read"
+      - "aws-exec-read"
+      - "bucket-owner-read"
+      - "bucket-owner-full-control"
+    Default: "private"
 
   BootstrapScriptUrl:
     Description: Optional - HTTPS or S3 URL for a script to run on each instance during boot
@@ -885,6 +905,8 @@ Conditions:
 
     UseArtifactsBucket:
       !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
+    IsArtifactsBucketRegionEmpty:
+      !Equals [ !Ref ArtifactsBucketRegion, "" ]
 
     HasImageId:
       !Not [ !Equals [ !Ref ImageId, "" ] ]
@@ -1592,6 +1614,9 @@ Resources:
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
+                  $Env:BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}"
+                  $Env:BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}"
+                  $Env:BUILDKITE_S3_ACL="${ArtifactsS3ACL}"
                   $Env:BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}"
@@ -1629,6 +1654,13 @@ Resources:
                     - CreateSecretsBucket
                     - !Ref "AWS::Region"
                     - !Ref SecretsBucketRegion
+                  LocalArtifactsBucketRegion: !If
+                    - UseArtifactsBucket
+                    - !If
+                      - IsArtifactsBucketRegionEmpty
+                      - !Ref "AWS::Region"
+                      - !Ref ArtifactsBucketRegion
+                    - !Ref "AWS::Region"
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath
@@ -1671,6 +1703,9 @@ Resources:
                   BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}" \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
+                  BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}" \
+                  BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}" \
+                  BUILDKITE_S3_ACL="${ArtifactsS3ACL}" \
                   BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}" \
@@ -1720,6 +1755,13 @@ Resources:
                     - CreateSecretsBucket
                     - !Ref "AWS::Region"
                     - !Ref SecretsBucketRegion
+                  LocalArtifactsBucketRegion: !If
+                    - UseArtifactsBucket
+                    - !If
+                      - IsArtifactsBucketRegionEmpty
+                      - !Ref "AWS::Region"
+                      - !Ref ArtifactsBucketRegion
+                    - !Ref "AWS::Region"
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath

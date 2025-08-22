@@ -37,6 +37,12 @@ variable "is_released" {
   default = false
 }
 
+# Optional override for building from a pre-baked “golden base” AMI
+variable "base_ami_id" {
+  type    = string
+  default = ""
+}
+
 variable "ami_public" {
   type        = bool
   description = "Whether to make the AMI publicly available to all AWS users. Defaults to false for security."
@@ -59,6 +65,7 @@ data "amazon-ami" "windows-server-2022" {
   region      = var.region
 }
 
+
 source "amazon-ebs" "elastic-ci-stack" {
   ami_description = "Buildkite Elastic Stack (Windows Server 2022 w/ docker)"
   ami_groups      = var.ami_public ? ["all"] : []
@@ -67,13 +74,14 @@ source "amazon-ebs" "elastic-ci-stack" {
   communicator    = "winrm"
   instance_type   = var.instance_type
   region          = var.region
-  source_ami      = data.amazon-ami.windows-server-2022.id
-  user_data_file  = "scripts/ec2-userdata.ps1"
-  winrm_insecure  = true
-  winrm_use_ssl   = true
-  winrm_port      = 5986
-  winrm_timeout   = "60m"
-  winrm_username  = "Administrator"
+  # Allow golden-base override
+  source_ami     = var.base_ami_id
+  user_data_file = "scripts/ec2-userdata.ps1"
+  winrm_insecure = true
+  winrm_use_ssl  = true
+  winrm_port     = 5986
+  winrm_timeout  = "60m"
+  winrm_username = "Administrator"
 
   launch_block_device_mappings {
     volume_type           = "gp3"
@@ -83,13 +91,12 @@ source "amazon-ebs" "elastic-ci-stack" {
   }
 
   tags = {
-    Name          = "elastic-ci-stack-windows"
-    OSVersion     = "Windows Server 2022"
-    BuildNumber   = var.build_number
-    AgentVersion  = var.agent_version
-    IsReleased    = var.is_released
-    SourceAMIID   = data.amazon-ami.windows-server-2022.id
-    SourceAMIName = data.amazon-ami.windows-server-2022.name
+    Name         = "elastic-ci-stack-windows"
+    OSVersion    = "Windows Server 2022"
+    BuildNumber  = var.build_number
+    AgentVersion = var.agent_version
+    IsReleased   = var.is_released
+    SourceAMIID  = var.base_ami_id
   }
 }
 
@@ -113,25 +120,8 @@ build {
 
   provisioner "powershell" {
     scripts = [
-      "scripts/install-utils.ps1",
-      "scripts/install-cloudwatch-agent.ps1",
-      "scripts/install-lifecycled.ps1",
-      "scripts/enable-containers.ps1"
-    ]
-  }
-
-  # Reboot with enable-containers, to make sure containers feature is ready
-  provisioner "windows-restart" {
-    restart_command = "C:/packer-temp/scripts/enable-containers.ps1"
-    timeout         = "20m"
-  }
-
-  provisioner "powershell" {
-    scripts = [
-      "scripts/install-docker.ps1",
       "scripts/install-buildkite-agent.ps1",
-      "scripts/install-s3secrets-helper.ps1",
-      "scripts/install-session-manager-plugin.ps1"
+      "scripts/install-s3secrets-helper.ps1"
     ]
   }
 
