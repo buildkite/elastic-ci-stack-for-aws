@@ -60,6 +60,12 @@ data "amazon-ami" "al2023" {
   region      = var.region
 }
 
+# Optional override for building from a pre-baked “golden base” AMI
+variable "base_ami_id" {
+  type    = string
+  default = ""
+}
+
 source "amazon-ebs" "elastic-ci-stack-ami" {
   ami_description                           = "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
   ami_groups                                = var.ami_public ? ["all"] : []
@@ -67,17 +73,17 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   ami_name                                  = "buildkite-stack-linux-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type                             = var.instance_type
   region                                    = var.region
-  source_ami                                = data.amazon-ami.al2023.id
+  source_ami                                = var.base_ami_id
   ssh_username                              = "ec2-user"
   ssh_clear_authorized_keys                 = true
   temporary_security_group_source_public_ip = true
 
   metadata_options {
-    http_endpoint = "enabled"
-    http_tokens = "required"
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
     http_put_response_hop_limit = 1
   }
-  imds_support  = "v2.0"
+  imds_support = "v2.0"
 
   launch_block_device_mappings {
     volume_type           = "gp3"
@@ -91,13 +97,12 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   }
 
   tags = {
-    Name          = "elastic-ci-stack-linux-${var.arch}"
-    OSVersion     = "Amazon Linux 2023"
-    BuildNumber   = var.build_number
-    AgentVersion  = var.agent_version
-    IsReleased    = var.is_released
-    SourceAMIID   = data.amazon-ami.al2023.id
-    SourceAMIName = data.amazon-ami.al2023.name
+    Name         = "elastic-ci-stack-linux-${var.arch}"
+    OSVersion    = "Amazon Linux 2023"
+    BuildNumber  = var.build_number
+    AgentVersion = var.agent_version
+    IsReleased   = var.is_released
+    SourceAMIID  = var.base_ami_id
   }
 }
 
@@ -119,21 +124,6 @@ build {
     source      = "../../build"
   }
 
-  provisioner "shell" {
-    script = "scripts/install-utils.sh"
-  }
-
-  provisioner "shell" {
-    script = "scripts/install-cloudwatch-agent.sh"
-  }
-
-  provisioner "shell" {
-    script = "scripts/install-docker.sh"
-  }
-
-  provisioner "shell" {
-    script = "scripts/install-session-manager-plugin.sh"
-  }
 
   provisioner "shell" {
     script = "scripts/install-buildkite-agent.sh"
