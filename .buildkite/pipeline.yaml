@@ -77,6 +77,8 @@ steps:
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
     timeout_in_minutes: 60
+    env:
+      AMI_PUBLIC: true
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -104,6 +106,8 @@ steps:
   - id: "test-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Test"
     command:
+      - aws --version
+      - jq --version
       - git --version
       - docker info
       - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
@@ -146,6 +150,8 @@ steps:
     name: ":packer: :linux: AMD64"
     command: .buildkite/steps/packer.sh linux
     timeout_in_minutes: 60
+    env:
+      AMI_PUBLIC: true
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -174,6 +180,8 @@ steps:
   - id: "test-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Test"
     command:
+      - aws --version
+      - jq --version
       - git --version
       - sudo goss validate --format documentation
     timeout_in_minutes: 5
@@ -216,6 +224,8 @@ steps:
     name: ":packer: :linux: ARM64"
     command: .buildkite/steps/packer.sh linux arm64
     timeout_in_minutes: 60
+    env:
+      AMI_PUBLIC: true
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -243,6 +253,8 @@ steps:
   - id: "test-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Test"
     command:
+      - aws --version
+      - jq --version
       - git --version
       - sudo goss validate --format documentation
     retry: { automatic: { limit: 3 } }
