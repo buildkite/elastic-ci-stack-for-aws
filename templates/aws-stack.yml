@@ -115,6 +115,7 @@ Metadata:
         - MinSize
         - MaxSize
         - InstanceBuffer
+        - OnDemandBaseCapacity
         - OnDemandPercentage
         - SpotAllocationStrategy
         - ScaleOutFactor
@@ -492,6 +493,12 @@ Parameters:
     Description: Minimum interval at which the auto scaler should poll the AWS API
     Type: String
     Default: "10s"
+
+  OnDemandBaseCapacity:
+    Description: Specify how much On-Demand capacity the Auto Scaling group should have for its base portion before scaling by percentages. The maximum group size will be increased (but not decreased) to this value.
+    Type: Number
+    Default: 0
+    MinValue: 0
 
   OnDemandPercentage:
     Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
@@ -1749,6 +1756,7 @@ Resources:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
       MixedInstancesPolicy:
         InstancesDistribution:
+          OnDemandBaseCapacity: !Ref OnDemandBaseCapacity
           OnDemandPercentageAboveBaseCapacity: !Ref OnDemandPercentage
           SpotAllocationStrategy: !Ref SpotAllocationStrategy
         LaunchTemplate:
