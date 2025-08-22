@@ -77,6 +77,8 @@ steps:
     name: ":packer: :windows:"
     command: .buildkite/steps/packer.sh windows
     timeout_in_minutes: 60
+    env:
+      AMI_PUBLIC: true
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -146,6 +148,8 @@ steps:
     name: ":packer: :linux: AMD64"
     command: .buildkite/steps/packer.sh linux
     timeout_in_minutes: 60
+    env:
+      AMI_PUBLIC: true
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -216,6 +220,8 @@ steps:
     name: ":packer: :linux: ARM64"
     command: .buildkite/steps/packer.sh linux arm64
     timeout_in_minutes: 60
+    env:
+      AMI_PUBLIC: true
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
