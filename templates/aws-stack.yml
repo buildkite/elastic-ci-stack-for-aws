@@ -100,6 +100,7 @@ Metadata:
         - ManagedPolicyARNs
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
+        - InstanceRoleTags
         - IMDSv2Tokens
         - EnableDetailedMonitoring
         - InstanceName
@@ -634,6 +635,12 @@ Parameters:
     Description: The ARN of the policy used to set the permissions boundary for the role.
     Default: ""
 
+  InstanceRoleTags:
+    Description: "Optional - Comma-separated key=value pairs for instance IAM role tags (up to 5 tags). Example: 'Environment=production,Team=platform,Purpose=ci'. Note: Keys and values cannot contain '=' characters."
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*(,[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*){0,4}$"
+
   InstanceOperatingSystem:
     Type: String
     Description: The operating system to run on the instances
@@ -893,6 +900,17 @@ Conditions:
 
     SetInstanceRolePermissionsBoundaryARN:
       !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
+
+    UseInstanceRoleTag1:
+      !Not [ !Equals [ !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ], "" ] ]
+    UseInstanceRoleTag2:
+      !Not [ !Equals [ !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ], "" ] ]
+    UseInstanceRoleTag3:
+      !Not [ !Equals [ !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ], "" ] ]
+    UseInstanceRoleTag4:
+      !Not [ !Equals [ !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ], "" ] ]
+    UseInstanceRoleTag5:
+      !Not [ !Equals [ !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ], "" ] ]
 
     UseSpecifiedSecretsBucket:
       !Not [ !Equals [ !Ref SecretsBucket, "" ] ]
@@ -1317,6 +1335,34 @@ Resources:
               Service: [ autoscaling.amazonaws.com, ec2.amazonaws.com ]
             Action: sts:AssumeRole
       Path: /
+      Tags:
+        - Key: CreatedBy
+          Value: buildkite-elastic-ci-stack
+        - !If
+          - UseInstanceRoleTag1
+          - Key: !Select [ "0", !Split [ "=", !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+            Value: !Select [ "1", !Split [ "=", !Select [ "0", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+          - !Ref 'AWS::NoValue'
+        - !If
+          - UseInstanceRoleTag2
+          - Key: !Select [ "0", !Split [ "=", !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+            Value: !Select [ "1", !Split [ "=", !Select [ "1", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+          - !Ref 'AWS::NoValue'
+        - !If
+          - UseInstanceRoleTag3
+          - Key: !Select [ "0", !Split [ "=", !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+            Value: !Select [ "1", !Split [ "=", !Select [ "2", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+          - !Ref 'AWS::NoValue'
+        - !If
+          - UseInstanceRoleTag4
+          - Key: !Select [ "0", !Split [ "=", !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+            Value: !Select [ "1", !Split [ "=", !Select [ "3", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+          - !Ref 'AWS::NoValue'
+        - !If
+          - UseInstanceRoleTag5
+          - Key: !Select [ "0", !Split [ "=", !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+            Value: !Select [ "1", !Split [ "=", !Select [ "4", !Split [ ",", !Join [ ",", [ !Ref InstanceRoleTags, "", "", "", "", "" ] ] ] ] ] ]
+          - !Ref 'AWS::NoValue'
 
   IAMPolicies:
     Type: AWS::IAM::Policy
