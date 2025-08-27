@@ -14,7 +14,6 @@ Environment="USER=buildkite-agent"
 # The =- (rather than just = ) in the line below means that systemd won't complain if it can't find the file
 EnvironmentFile=-/var/lib/buildkite-agent/env
 ExecStart=/usr/bin/buildkite-agent start
-ExecStopPost=/usr/local/bin/terminate-instance
 RestartSec=5
 Restart=on-failure
 RestartForceExitStatus=SIGPIPE
