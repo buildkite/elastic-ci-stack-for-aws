@@ -40,6 +40,11 @@ sudo dnf install -yq \
 
 sudo dnf -yq groupinstall "Development Tools"
 
+# Upgrade GPG to full version to support development tools like asdf
+# See https://github.com/buildkite/elastic-ci-stack-for-aws/issues/1402
+echo "Upgrading GPG from minimum to full version..."
+sudo dnf swap -yq gnupg2-minimal gnupg2-full
+
 sudo systemctl enable --now amazon-ssm-agent
 sudo systemctl enable --now rsyslog
 
