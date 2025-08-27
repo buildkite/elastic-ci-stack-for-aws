@@ -58,3 +58,6 @@ sudo systemctl start docker-binfmt.service
 
 echo "show docker-binfmt status..."
 systemctl status docker-binfmt.service
+
+echo "Installing Amazon ECR credential helper..."
+sudo dnf install -y amazon-ecr-credential-helper
