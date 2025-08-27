@@ -1,10 +1,8 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-# pinned because awscli v2 drops 'aws ecr get-login'
-# https://github.com/buildkite-plugins/ecr-buildkite-plugin/issues/37
-$AWS_CLI_VERSION = 1.18.11
-$GIT_VERSION = 2.39.1
+$AWS_CLI_WINDOWS_VERSION = "2.28.15"
+$GIT_VERSION = "2.39.1"
 
 Write-Output "Installing chocolatey package manager"
 Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -14,8 +12,13 @@ Write-Output "Installing jq"
 choco install -y jq
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-Write-Output "Installing awscli"
-choco install -y awscli --version=$AWS_CLI_VERSION
+Write-Output "Installing AWS CLI v2 $AWS_CLI_WINDOWS_VERSION..."
+$tempDir = New-TemporaryFile | %{ Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+$msiPath = Join-Path $tempDir "AWSCLIV2.msi"
+$msiUrl = "https://awscli.amazonaws.com/AWSCLIV2-$AWS_CLI_WINDOWS_VERSION.msi"
+Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath
+Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$msiPath`" /quiet" -Wait
+Remove-Item -Recurse -Force $tempDir
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Git for Windows"
@@ -42,7 +45,7 @@ Update-SessionEnvironment
 Write-Output "Prepending 'gitinstall\mingw64\bin' and 'gitinstall\usr\bin' to the system's PATH"
 $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).Path
 $newpath = "C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;$oldpath"
-Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
+Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newpath
 
 # Set autocrlf to false so we don't end up with mismatched line endings
 git config --system core.autocrlf false

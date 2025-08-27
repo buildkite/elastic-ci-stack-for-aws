@@ -145,6 +145,9 @@ set_always         "BUILDKITE_DOCKER_EXPERIMENTAL" "$DOCKER_EXPERIMENTAL"
 set_always         "DOCKER_USERNS_REMAP" "$DOCKER_USERNS_REMAP"
 set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
 set_always         "PLUGINS_ENABLED" "${PLUGINS_ENABLED[*]-}"
+set_always         "BUILDKITE_ARTIFACTS_BUCKET" "$BUILDKITE_ARTIFACTS_BUCKET"
+set_always         "BUILDKITE_S3_DEFAULT_REGION" "$BUILDKITE_S3_DEFAULT_REGION"
+set_always         "BUILDKITE_S3_ACL" "$BUILDKITE_S3_ACL"
 set_unless_present "AWS_DEFAULT_REGION" "$AWS_REGION"
 set_unless_present "AWS_REGION" "$AWS_REGION"
 EOF
@@ -428,6 +431,32 @@ systemctl daemon-reload
 
 echo Starting buildkite-agent...
 systemctl enable --now buildkite-agent
+
+echo Configuring CloudWatch agent log retention...
+if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
+  echo "Setting CloudWatch EC2 log retention to ${EC2_LOG_RETENTION_DAYS} days"
+  echo "WARNING: This will delete EC2 logs older than ${EC2_LOG_RETENTION_DAYS} days from existing log groups"
+
+  # Update the CloudWatch agent config with the retention value
+  CONFIG_FILE="/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+  if [[ -f "$CONFIG_FILE" ]]; then
+    # Add retention_in_days to all collect_list items using jq
+    jq --arg retention "$EC2_LOG_RETENTION_DAYS" '
+      .logs.logs_collected.files.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
+    ' "$CONFIG_FILE" >/tmp/cloudwatch_config.json && mv /tmp/cloudwatch_config.json "$CONFIG_FILE"
+
+    # Restart CloudWatch agent to pick up the new configuration
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c "file:$CONFIG_FILE" || echo "Warning: Failed to restart CloudWatch agent"
+    echo "CloudWatch agent configuration updated and restarted"
+  else
+    echo "Warning: CloudWatch agent config file not found at $CONFIG_FILE"
+  fi
+elif [[ -n "${EC2_LOG_RETENTION_DAYS:-}" ]]; then
+  echo "EC2 log retention set to ${EC2_LOG_RETENTION_DAYS} days but EnableEC2LogRetentionPolicy is false"
+  echo "Skipping EC2 log retention configuration to protect existing logs"
+else
+  echo "EC2 log retention not set, using CloudWatch agent defaults (never expire)"
+fi
 
 echo Signaling success to CloudFormation...
 # This will fail if the stack has already completed, for instance if there is a min size

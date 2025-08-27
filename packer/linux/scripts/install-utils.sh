@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+AWS_CLI_LINUX_VERSION=2.28.15
+
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
 aarch64) ARCH=arm64 ;;
@@ -15,7 +17,6 @@ echo Installing utils...
 sudo dnf install -yq \
   amazon-ssm-agent \
   aws-cfn-bootstrap \
-  awscli-2 \
   ec2-instance-connect \
   git \
   jq \
@@ -39,8 +40,31 @@ sudo dnf install -yq \
 
 sudo dnf -yq groupinstall "Development Tools"
 
+# Upgrade GPG to full version to support development tools like asdf
+# See https://github.com/buildkite/elastic-ci-stack-for-aws/issues/1402
+echo "Upgrading GPG from minimum to full version..."
+sudo dnf swap -yq gnupg2-minimal gnupg2-full
+
 sudo systemctl enable --now amazon-ssm-agent
 sudo systemctl enable --now rsyslog
+
+echo "Installing AWS CLI v2 ${AWS_CLI_LINUX_VERSION}..."
+pushd "$(mktemp -d)"
+case $(uname -m) in
+x86_64)
+  curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_LINUX_VERSION}.zip" -o "awscliv2.zip"
+  ;;
+aarch64)
+  curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWS_CLI_LINUX_VERSION}.zip" -o "awscliv2.zip"
+  ;;
+*)
+  echo "Unsupported architecture for AWS CLI v2"
+  exit 1
+  ;;
+esac
+unzip -qq awscliv2.zip
+sudo ./aws/install
+popd
 
 GIT_LFS_VERSION=3.4.0
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
