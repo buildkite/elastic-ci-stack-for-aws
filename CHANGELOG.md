@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.41.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.41.0) (2025-08-29)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.10...v6.41.0)
+
+### Changed
+- Enable ECR Credential Helper, update plugins, PATH fix [#1565](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1565) (@petetomasik)
+- Install AWS ECR Credential Helper [#1561](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1561) (@petetomasik)
+- Upgrade gpg in AL2023 to full install [#1562](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1562) (@petetomasik)
+- Implement IAM permissions required to use ECR Private Registry as pull through cache [#1560](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1560) (@petetomasik)
+- AWS CLI v2 in Windows AMI [#1558](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1558) (@petetomasik)
+- Ensure all AMIs are public in new split build process [#1557](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1557) (@petetomasik)
+- Allow up to 5 tags to be defined on the EC2 instance role [#1556](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1556) (@petetomasik)
+- Implement CloudWatch LogGroup retention policies [#1555](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1555) (@petetomasik)
+- Split AMI build process [#1548](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1548) (@scadu)
+- Add support for ArtifactsBucket region, with bucket ACL and Region configs [#1554](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1554) (@JoeColeman95)
+- Add OnDemandBaseCapacity parameter [#1552](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1552) (@petetomasik)
+- Implement new agent disconnect-after-uptime config [#1553](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1553) (@petetomasik)
+- Make custom AMI builds have private visibility, by default [#1551](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1551) (@petetomasik)
+- Bumping S3 Secrets plugin to v2.5.0 [#1549](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1549) (@JoeColeman95)
+- ensure the SED var is used by inline commands [#1356](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1356) (@wolfeidau)
+- Create additional dependencies for VPC creation completion [#1546](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1546) (@petetomasik)
+- Ensure AWS_ECR_LOGIN is passed into ECR plugin [#1547](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1547) (@petetomasik)
+- Clarify AgentsPerInstance behavior [#1545](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1545) (@scadu)
+- chore(deps): bump golang.org/x/sys from 0.34.0 to 0.35.0 [#1543](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1543) (@dependabot[bot])
+- Update changelog to v6.40.10 [#1544](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1544) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.103.1](https://github.com/buildkite/agent/tree/v3.103.1) (2025-08-07)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.103.0...v3.103.1)
+
+### Fixed
+- PS-980: fix custom TMPDIR break hook wrapper [#3416](https://github.com/buildkite/agent/pull/3416) (@zhming0)
+
+### Changed
+- PS-1000: ensure a static & short checkout path for k8s stack agent [#3420](https://github.com/buildkite/agent/pull/3420) (@zhming0)
+- Make the 'Pipeline upload not yet applied: processing' message info, not warning [#3419](https://github.com/buildkite/agent/pull/3419) (@moskyb)
+
+### Internal
+- build(deps): bump thor from 0.19.4 to 1.4.0 [#3417](https://github.com/buildkite/agent/pull/3417) (@dependabot[bot])
+- build(deps): bump the cloud-providers group across 1 directory with 7 updates [#3414](https://github.com/buildkite/agent/pull/3414) (@dependabot[bot])
+- build(deps): bump the container-images group across 7 directories with 4 updates [#3415](https://github.com/buildkite/agent/pull/3415) (@dependabot[bot])
+- Update to use OIDC session tags on AWS role assumption [#3412](https://github.com/buildkite/agent/pull/3412) (@duckalini)
+- chore: move the tool.go to new tool dependency [#3409](https://github.com/buildkite/agent/pull/3409) (@wolfeidau)
+- Upgrade to go-pipeline v0.15.0 [#3408](https://github.com/buildkite/agent/pull/3408) (@DrJosh9000)
+- Only run tests if code has changed [#3407](https://github.com/buildkite/agent/pull/3407) (@DrJosh9000)
+</details>
+
+
 ## [v6.40.10](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.9...v6.40.10) (2025-08-13)
 
 ### Changed
