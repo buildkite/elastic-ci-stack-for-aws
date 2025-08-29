@@ -18,3 +18,11 @@ $docker_plugins_dir = "${env:ProgramFiles}\Docker"
 New-Item -ItemType Directory -Force -Path $docker_plugins_dir | Out-Null
 Invoke-WebRequest -Uri $ecr_cred_helper_url -OutFile "$docker_plugins_dir\docker-credential-ecr-login.exe"
 Write-Output "Amazon ECR credential helper v$ecr_cred_helper_version installed to $docker_plugins_dir"
+
+Write-Output "Adding Docker plugins directory to system PATH..."
+$oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).Path
+if ($oldpath -notlike "*$docker_plugins_dir*") {
+  $newpath = "$docker_plugins_dir;$oldpath"
+  Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newpath
+  Write-Output "Added $docker_plugins_dir to system PATH"
+}
