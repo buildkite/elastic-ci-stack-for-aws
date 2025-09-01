@@ -16,7 +16,7 @@ if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
   disk_avail_human=$(numfmt --to=iec-i --suffix=B --from-unit=1024 "${disk_avail}")
   echo "Not enough disk space free: ${disk_avail_human} (${disk_avail}KB) available, cutoff is ${disk_min_human} (${DISK_MIN_AVAILABLE}KB) 🚨" >&2
 
-  # Last resort to clear space with build directory cleanup (if enabled)
+  # Last resort for clearing space with build directory cleanup (if enabled)
   if [[ "${BUILDKITE_PURGE_BUILDS_ON_DISK_FULL:-false}" == "true" ]]; then
     echo "Purging all build directories to reclaim disk space..."
     rm -rf "${BUILDKITE_AGENT_BUILD_PATH:-/var/lib/buildkite-agent/builds}"/*
