@@ -15,7 +15,25 @@ if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
   disk_min_human=$(numfmt --to=iec-i --suffix=B --from-unit=1024 "${DISK_MIN_AVAILABLE}")
   disk_avail_human=$(numfmt --to=iec-i --suffix=B --from-unit=1024 "${disk_avail}")
   echo "Not enough disk space free: ${disk_avail_human} (${disk_avail}KB) available, cutoff is ${disk_min_human} (${DISK_MIN_AVAILABLE}KB) 🚨" >&2
-  exit 1
+
+  # Last resort to clear space with build directory cleanup (if enabled)
+  if [[ "${BUILDKITE_PURGE_BUILDS_ON_DISK_FULL:-false}" == "true" ]]; then
+    echo "Purging all build directories to reclaim disk space..."
+    rm -rf "${BUILDKITE_AGENT_BUILD_PATH:-/var/lib/buildkite-agent/builds}"/*
+    disk_avail=$(df -k --output=avail "$DOCKER_DIR" | tail -n1)
+    disk_avail_human=$(numfmt --to=iec-i --suffix=B --from-unit=1024 "${disk_avail}")
+    echo "Disk space free after build purge: ${disk_avail_human} (${disk_avail}KB)"
+    if [[ $disk_avail -ge $DISK_MIN_AVAILABLE ]]; then
+      echo "Disk space sufficient after build purge. Continuing."
+      exit 0
+    else
+      echo "Disk health checks failed after build purge. Terminating agent." >&2
+      exit 1
+    fi
+  else
+    echo "Disk health checks failed. Build purge not enabled. Terminating agent." >&2
+    exit 1
+  fi
 fi
 
 inodes_avail=$(df -k --output=iavail "$DOCKER_DIR" | tail -n1)
