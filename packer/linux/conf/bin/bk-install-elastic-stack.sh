@@ -305,10 +305,10 @@ EOF
 
 # Add spawn configuration based on the scaling method
 if [ "${BUILDKITE_AGENTS_PER_CPU:-0}" -gt 0 ]; then
-  echo "spawn-per-cpu=${BUILDKITE_AGENTS_PER_CPU}" >> /etc/buildkite-agent/buildkite-agent.cfg
+  echo "spawn-per-cpu=${BUILDKITE_AGENTS_PER_CPU}" >>/etc/buildkite-agent/buildkite-agent.cfg
   echo "Using CPU-based scaling: ${BUILDKITE_AGENTS_PER_CPU} agents per CPU core"
 else
-  echo "spawn=${BUILDKITE_AGENTS_PER_INSTANCE}" >> /etc/buildkite-agent/buildkite-agent.cfg
+  echo "spawn=${BUILDKITE_AGENTS_PER_INSTANCE}" >>/etc/buildkite-agent/buildkite-agent.cfg
   echo "Using static scaling: ${BUILDKITE_AGENTS_PER_INSTANCE} agents per instance"
 fi
 
