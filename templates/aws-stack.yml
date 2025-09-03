@@ -164,11 +164,15 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: Optional - SSH keypair used to access the buildkite instances via ec2-user, setting this will enable SSH ingress
+    Description: Optional - SSH keypair used to access the buildkite instances via ec2-user, setting this will enable SSH ingress.
     Type: String
     Default: ""
 
   BuildkiteAgentRelease:
+    Description: >
+        Buildkite agent release channel to install. 
+        'stable' = production-ready (recommended), 'beta' = pre-release with latest features, 'edge' = bleeding-edge development builds.
+        Use 'stable' unless specific new features are required.
     Type: String
     AllowedValues:
       - stable
@@ -177,13 +181,18 @@ Parameters:
     Default: "stable"
 
   BuildkiteAgentToken:
-    Description: Buildkite agent registration token. Or, preload it into SSM Parameter Store and use BuildkiteAgentTokenParameterStorePath for secure environments.
+    Description: > 
+        Buildkite agent registration token. 
+        Or, preload it into SSM Parameter Store and use BuildkiteAgentTokenParameterStorePath for secure environments.
     Type: String
     NoEcho: true
     Default: ""
 
   BuildkiteAgentTokenParameterStorePath:
-    Description: Existing SSM Parameter Store path to the Buildkite agent registration token (takes precedence over BuildkiteAgentToken). Expects a leading slash ('/').
+    Description: > 
+        Optional - Path to Buildkite agent token stored in AWS Systems Manager Parameter Store (e.g., '/buildkite/agent-token'). 
+        If provided, this overrides the BuildkiteAgentToken field. 
+        Recommended for better security instead of hardcoding tokens in the template.
     Type: String
     Default: ""
     AllowedPattern: "^$|^/[a-zA-Z0-9_.\\-/]+$"
@@ -195,17 +204,22 @@ Parameters:
     Default: ""
 
   AgentEndpoint:
-    Description: Override API endpoint the Buildkite Agent connects to.
+    Description: > 
+      API endpoint URL for Buildkite Agent communication. Most
+      customers shouldn't need to change this unless using a custom endpoint agreed with the Buildkite team.
     Type: String
     Default: "https://agent.buildkite.com/v3"
 
   BuildkiteAgentTags:
-    Description: Additional tags separated by commas to provide to the agent. E.g os=linux,llamas=always
+    Description: >
+      Additional tags to help target specific agents in pipeline steps (comma-separated). 
+      Example: 'environment=production,docker=enabled,size=large'.
+      Use these tags in pipeline steps with 'agents: { environment: production }'.
     Type: String
     Default: ""
 
   BuildkiteAgentTimestampLines:
-    Description: Set to true to prepend timestamps to every line of output
+    Description: Set to true to prepend timestamps to every line of output.
     Type: String
     AllowedValues:
       - "true"
@@ -213,24 +227,28 @@ Parameters:
     Default: "false"
 
   BuildkiteAgentExperiments:
-    Description: Agent experiments to enable, comma delimited. See https://github.com/buildkite/agent/blob/-/EXPERIMENTS.md.
+    Description: > 
+        Optional - Agent experiments to enable, comma delimited. 
+        See https://github.com/buildkite/agent/blob/-/EXPERIMENTS.md.
     Type: String
     Default: ""
 
   BuildkiteAgentScalerServerlessARN:
     Description: ARN of the Serverless Application Repository that hosts the version of buildkite-agent-scaler to run. This needs to be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
     Type: String
-    Default: arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
+    Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
   BuildkiteAgentScalerVersion:
-    Description: "Version of the buildkite-agent-scaler to use."
+    Description: Version of the buildkite-agent-scaler to use.
     Type: String
     AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))$'
     ConstraintDescription: "The agent scaler release must be 1.9.5 or newer."
     Default: "1.9.5"
 
   ScalerEnableExperimentalElasticCIMode:
-    Description: "[EXPERIMENTAL] Enable the Elastic CI Mode with enhanced features like safety checks, agent sorting, dangling instance detection, and graceful termination. Available since BuildkiteAgentScalerVersion 1.9.3"
+    Description: >
+        Experimental - Enable the Elastic CI Mode with enhanced features like graceful termination and dangling instance detection. 
+        Available since BuildkiteAgentScalerVersion 1.9.3
     Type: String
     AllowedValues:
         - "true"
@@ -277,12 +295,12 @@ Parameters:
     MinValue: 0
 
   ScaleOutCooldownPeriod:
-    Description: Cooldown period in seconds before allowing another scale-out event
+    Description: Cooldown period in seconds before allowing another scale-out event.
     Type: Number
     Default: 300
 
   ScaleInCooldownPeriod:
-    Description: Cooldown period in seconds before allowing another scale-in event
+    Description: Cooldown period in seconds before allowing another scale-in event.
     Type: Number
     Default: 3600
 
@@ -291,10 +309,10 @@ Parameters:
     Default: "false"
     AllowedValues: ["true", "false"]
     Description: >
-      Enable CloudWatch log retention policy for EC2 instance logs managed by the CloudWatch agent.
-      When enabled, EC2 logs older than EC2LogRetentionDays will be automatically deleted to reduce storage costs.
-      This only affects logs from Buildkite agents, system logs, and other EC2-generated logs - not Lambda or other AWS service logs.
-      WARNING: For existing stacks, this will delete historical EC2 logs older than the retention period. This action cannot be undone.
+      Enable automatic deletion of old EC2 logs to reduce CloudWatch storage costs. 
+      Disabled by default to preserve all logs. When enabled, EC2 logs older than EC2LogRetentionDays will be automatically deleted. 
+      This only affects EC2 instance logs (agents, system logs), not Lambda logs. 
+      WARNING: Enabling this on existing stacks will delete historical logs older than the retention period - this cannot be undone.
 
   EC2LogRetentionDays:
     Type: Number
@@ -319,7 +337,7 @@ Parameters:
     Default: "false"
 
   BuildkiteAgentTracingBackend:
-    Description: The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing
+    Description: Optional - The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing.
     Type: String
     AllowedValues:
       - ""
@@ -334,7 +352,9 @@ Parameters:
     MinValue: 1
 
   BuildkiteAgentSignalGracePeriod:
-    Description: The number of seconds given to a subprocess to handle being sent `cancel-signal`. After this period has elapsed, SIGKILL will be sent.
+    Description: > 
+        The number of seconds given to a subprocess to handle being sent `cancel-signal`. 
+        After this period has elapsed, SIGKILL will be sent.
     Type: Number
     Default: -1
     MinValue: -1
@@ -374,7 +394,7 @@ Parameters:
 
   ExperimentalEnableResourceLimits:
     Description: >
-      (Experimental) If true, enables systemd resource limits for the Buildkite agent.
+      Experimental - If true, enables systemd resource limits for the Buildkite agent.
       This helps prevent resource exhaustion by limiting CPU, memory, and I/O usage.
     Type: String
     AllowedValues:
@@ -384,7 +404,7 @@ Parameters:
 
   ResourceLimitsMemoryHigh:
     Description: >
-      (Experimental) Sets the MemoryHigh limit for the Buildkite agent slice.
+      Experimental - Sets the MemoryHigh limit for the Buildkite agent slice.
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
@@ -393,7 +413,7 @@ Parameters:
 
   ResourceLimitsMemoryMax:
     Description: >
-      (Experimental) Sets the MemoryMax limit for the Buildkite agent slice.
+      Experimental - Sets the MemoryMax limit for the Buildkite agent slice.
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
@@ -402,7 +422,7 @@ Parameters:
 
   ResourceLimitsMemorySwapMax:
     Description: >
-      (Experimental) Sets the MemorySwapMax limit for the Buildkite agent slice.
+      Experimental - Sets the MemorySwapMax limit for the Buildkite agent slice.
       The value can be a percentage (e.g., '90%') or an absolute value (e.g., '4G').
     Type: String
     Default: '90%'
@@ -411,7 +431,7 @@ Parameters:
 
   ResourceLimitsCPUWeight:
     Description: >
-      (Experimental) Sets the CPU weight for the Buildkite agent slice (1-10000, default 100).
+      Experimental - Sets the CPU weight for the Buildkite agent slice (1-10000, default 100).
       Higher values give more CPU time to the agent.
     Type: Number
     Default: 100
@@ -420,7 +440,7 @@ Parameters:
 
   ResourceLimitsCPUQuota:
     Description: >
-      (Experimental) Sets the CPU quota for the Buildkite agent slice.
+      Experimental - Sets the CPU quota for the Buildkite agent slice.
       Takes a percentage value, suffixed with "%" .
     Type: String
     Default: '90%'
@@ -429,7 +449,7 @@ Parameters:
 
   ResourceLimitsIOWeight:
     Description: >
-      (Experimental) Sets the I/O weight for the Buildkite agent slice (1-10000, default 80).
+      Experimental - Sets the I/O weight for the Buildkite agent slice (1-10000, default 80).
       Higher values give more I/O bandwidth to the agent.
     Type: Number
     Default: 80
@@ -437,12 +457,17 @@ Parameters:
     MaxValue: 10000
 
   BuildkiteAdditionalSudoPermissions:
-    Description: Optional - Comma separated list of commands to allow the buildkite-agent user to run using sudo. Note that the commands should be fully qualified paths to executables.
+    Description: > 
+        Optional - Comma-separated list of specific commands (full paths) that build jobs can run with sudo privileges. 
+        Only add commands essential for builds. Leave blank unless builds require specific system-level operations.
     Type: String
     Default: ""
 
   BuildkiteWindowsAdministrator:
-    Description: Set to "true" to add the local "buildkite-agent" user account to the local Windows Administrator group.
+    Description: > 
+        Add buildkite-agent user to Windows Administrators group. 
+        This provides full system access for build jobs. 
+        Set to "false" if builds don't require administrator privileges for additional security isolation.
     Type: String
     AllowedValues:
       - "true"
@@ -450,15 +475,17 @@ Parameters:
     Default: "true"
 
   BuildkiteQueue:
-    Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}"
+    Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}".
     Type: String
-    Default: default
+    Default: "default"
     MinLength: 1
 
   AgentsPerInstance:
     Description: >
-      Number of Buildkite agents to run on each instance. This determines the initial count of agents launched when an instance starts.
-      If an individual agent is terminated (e.g., due to a job failure or manual shutdown), it will not be automatically restarted, resulting in fewer agents on that instance (N-1). The ScaleInIdlePeriod parameter does not affect this agent count.
+      Number of Buildkite agents to start on each EC2 instance. 
+      WARNING: If an agent crashes or is terminated, it won't be automatically restarted, leaving fewer active agents on that instance. 
+      The ScaleInIdlePeriod parameter controls when the entire instance terminates (when all agents are idle), not individual agent restarts. 
+      Consider enabling ScalerEnableExperimentalElasticCIMode for better agent management, or use fewer agents per instance with more instances for high availability.
     Type: Number
     Default: 1
     MinValue: 1
@@ -510,7 +537,10 @@ Parameters:
     Default: ""
 
   AgentEnvFileUrl:
-    Description: Optional - HTTPS or S3 URL for a list of environment variables to propagate into the agent's execution environment. Note that these environment variables **will not** be passed into builds running on the agent, only to the agent process itself.
+    Description: >
+        Optional - HTTPS or S3 URL containing environment variables for the Buildkite agent process itself (not for builds). 
+        These variables configure agent behavior like proxy settings or debugging options. 
+        For build environment variables, use pipeline 'env' configuration instead.
     Type: String
     Default: ""
 
@@ -535,9 +565,13 @@ Parameters:
     Default: ""
 
   InstanceTypes:
-    Description: Comma-separated list with 1-25 instance types. The order is a prioritized preference for launching OnDemand instances, and a non-prioritized list of types to consider for Spot Instances (where used).
+    Description: >
+        EC2 instance types to use (comma-separated, up to 25). 
+        The first type listed is preferred for OnDemand instances.
+        Additional types improve Spot instance availability but make costs less predictable. 
+        Choose types that match build workload requirements.
     Type: String
-    Default: t3.large
+    Default: "t3.large"
     MinLength: 1
     AllowedPattern: "^[\\w-\\.]+(,[\\w-\\.]*){0,24}$"
     ConstraintDescription: "must contain 1-25 instance types separated by commas. No space before/after the comma."
@@ -563,37 +597,52 @@ Parameters:
     MinValue: 0
 
   InstanceBuffer:
-    Description: How many free instances to maintain
+    Description: Number of idle instances to keep running. Lower values save costs, higher values reduce wait times for new jobs.
     Type: Number
-    Default: "0"
+    Default: 0
 
   ScalerEventSchedulePeriod:
-    Description: How often the Event Schedule for buildkite-agent-scaler is triggered. Should be an expression with units, e.g. "30 seconds", "1 minute", "5 minutes".
+    Description: >
+      How often the Event Schedule for buildkite-agent-scaler is triggered. 
+      Should be an expression with units. Example: "30 seconds", "1 minute", "5 minutes".
     Type: String
     Default: "1 minute"
 
   ScalerMinPollInterval:
-    Description: Minimum interval at which the auto scaler should poll the AWS API
+    Description: >
+      Minimum time between auto-scaler checks for new build jobs (e.g., '30s', '1m').
     Type: String
     Default: "10s"
 
   OnDemandBaseCapacity:
-    Description: Specify how much On-Demand capacity the Auto Scaling group should have for its base portion before scaling by percentages. The maximum group size will be increased (but not decreased) to this value.
+    Description: >
+      Specify how much On-Demand capacity the Auto Scaling group should have for its base portion before scaling by percentages. 
+      The maximum group size will be increased (but not decreased) to this value.
     Type: Number
     Default: 0
     MinValue: 0
 
   OnDemandPercentage:
-    Description: Percentage of total instances that should launch as OnDemand. Default is 100% OnDemand - reduce this to use some Spot Instances when they're available and cheaper than the OnDemand price. A value of 70 means 70% OnDemand and 30% Spot Instances.
+    Description: >
+      Percentage of instances to launch as reliable OnDemand vs cheaper Spot instances.
+      OnDemand instances are guaranteed availability but cost more. 
+      Spot instances offer significant cost savings but may be terminated by AWS with 2-minute notice. 
+      Consider AWS Savings Plans for cost reductions on OnDemand instances while maintaining reliability. 
+      Use 100% for critical workloads, lower values for cost-sensitive development environments.
     Type: Number
     Default: 100
     MinValue: 0
     MaxValue: 100
 
   SpotAllocationStrategy:
-    Description: The strategy for allocating Spot Instances when launching or replacing instances. If choosing `capacity-optimized-prioritized`, the order you specify in InstanceTypes will be the priority.
+    Description: > 
+      Strategy for selecting Spot instance types to minimize interruptions and costs. 
+      'capacity-optimized' (recommended) chooses types with the most available capacity. 
+      'price-capacity-optimized' balances low prices with availability. 
+      'lowest-price' prioritizes cost savings. 
+      'capacity-optimized-prioritized' follows InstanceTypes order while optimizing for capacity.
     Type: String
-    Default: capacity-optimized
+    Default: "capacity-optimized"
     AllowedValues:
       - price-capacity-optimized
       - capacity-optimized
@@ -601,7 +650,10 @@ Parameters:
       - capacity-optimized-prioritized
 
   ScaleOutFactor:
-    Description: A decimal factor to apply to scale out changes to speed up or slow down scale-out
+    Description: > 
+      Multiplier for scale-out speed. 
+      Values higher than 1.0 create instances more aggressively, values lower than 1.0 more conservatively. 
+      Use higher values for time-sensitive workloads, lower values to control costs.
     Type: Number
     Default: 1.0
 
@@ -614,15 +666,17 @@ Parameters:
     Default: 600
 
   ScaleOutForWaitingJobs:
+    Description: >
+      Scale up instances for pipeline steps that are queued after 'wait' steps in the pipeline.
+      Enable this only if ScaleInIdlePeriod is long enough to prevent premature instance termination while waiting for manual approvals or other wait conditions.
     Type: String
-    Description: Whether to scale-out for steps behind wait steps. Make sure you have a long enough idle period!
     AllowedValues:
       - "true"
       - "false"
     Default: "false"
 
   InstanceCreationTimeout:
-    Description: Timeout period for Autoscaling Group Creation Policy
+    Description: Optional - Timeout period for Autoscaling Group Creation Policy.
     Type: String
     Default: ""
 
@@ -633,12 +687,14 @@ Parameters:
     MinValue: 10
 
   RootVolumeName:
-    Description: Name of the root block device for your AMI
+    Description: Optional - Name of the root block device for the AMI.
     Type: String
     Default: ""
 
   RootVolumeType:
-    Description: Type of root volume to use. If you are specifying `io1` or `io2`, you will most likely want to specify `RootVolumeIOPS` as well.
+    Description: >
+      Type of root volume to use. If specifying `io1` or `io2`, specify `RootVolumeIOPS` as well for optimal performance.
+      See https://docs.aws.amazon.com/ebs/latest/userguide/provisioned-iops.html for more details.
     Type: String
     Default: "gp3"
 
@@ -682,11 +738,14 @@ Parameters:
 
   IMDSv2Tokens:
     Type: String
-    Description: Whether IMDSv2 tokens must be used for the Instance Metadata Service.
+    Description: >
+      Security setting for EC2 instance metadata access. 
+      'Required' enforces secure token-based access (recommended for security), 'Optional' allows both secure and legacy access methods. 
+      Use 'Required' unless legacy applications require the older metadata service.
     AllowedValues:
       - optional
       - required
-    Default: optional
+    Default: "optional"
 
   InstanceRoleName:
     Type: String
@@ -695,11 +754,14 @@ Parameters:
 
   InstanceRolePermissionsBoundaryARN:
     Type: String
-    Description: The ARN of the policy used to set the permissions boundary for the role.
+    Description: Optional - The ARN of the policy used to set the permissions boundary for the role.
     Default: ""
 
   InstanceRoleTags:
-    Description: "Optional - Comma-separated key=value pairs for instance IAM role tags (up to 5 tags). Example: 'Environment=production,Team=platform,Purpose=ci'. Note: Keys and values cannot contain '=' characters."
+    Description: >
+      Optional - Comma-separated key=value pairs for instance IAM role tags (up to 5 tags). 
+      Example: 'Environment=production,Team=platform,Purpose=ci'. 
+      Note: Keys and values cannot contain '=' characters.
     Type: String
     Default: ""
     AllowedPattern: "^$|^[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*(,[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*){0,4}$"
@@ -714,7 +776,10 @@ Parameters:
 
   ECRAccessPolicy:
     Type: String
-    Description: ECR access policy to give instances. The `-pullthrough` variants add ECR pull-through cache permissions (including `ecr:CreateRepository`, `ecr:BatchImportUpstreamImage`, `ecr:GetImageCopyStatus`, and upload permissions) to enable transparent upstream registry caching.
+    Description: > 
+      Docker image registry permissions for agents. 
+      'none' = no access, 'readonly' = pull images only, 'poweruser' = pull/push images, 'full' = complete ECR access. 
+      The '-pullthrough' variants (e.g., 'readonly-pullthrough') add permissions to enable automatic caching of public Docker images, reducing pull times and bandwidth costs.
     AllowedValues:
       - none
       - readonly
@@ -726,7 +791,9 @@ Parameters:
 
   AssociatePublicIpAddress:
     Type: String
-    Description: Associate instances with public IP addresses
+    Description: >
+      Give instances public IP addresses for direct internet access. 
+      Set to 'false' for a more isolated environment if the VPC has alternative outbound internet access configured.
     AllowedValues:
       - "true"
       - "false"
@@ -734,7 +801,9 @@ Parameters:
 
   DockerNetworkingProtocol:
     Type: String
-    Description: Which IP version to enable for docker containers and building docker images. Only applies to Linux instances, not Windows.
+    Description: > 
+      Which IP version to enable for docker containers and building docker images. 
+      Only applies to Linux instances, not Windows.
     AllowedValues:
       - "ipv4"
       - "dualstack"
@@ -808,7 +877,10 @@ Parameters:
 
   MountTmpfsAtTmp:
     Type: String
-    Description: Controls the filesystem mounted at /tmp. By default, /tmp is a tmpfs (memory-backed filesystem). Disabling this causes /tmp to be stored in the root filesystem.
+    Description: > 
+      Controls the filesystem mounted at /tmp. 
+      By default, /tmp is a tmpfs (memory-backed filesystem). 
+      Disabling this causes /tmp to be stored in the root filesystem.
     AllowedValues:
       - "true"
       - "false"
