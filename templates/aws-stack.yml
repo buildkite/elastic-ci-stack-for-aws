@@ -84,6 +84,7 @@ Metadata:
         - EnableInstanceStorage
         - MountTmpfsAtTmp
         - AgentsPerInstance
+        - AgentsPerCPU
         - KeyName
         - SecretsBucket
         - SecretsBucketRegion
@@ -413,9 +414,22 @@ Parameters:
     Description: >
       Number of Buildkite agents to run on each instance. This determines the initial count of agents launched when an instance starts.
       If an individual agent is terminated (e.g., due to a job failure or manual shutdown), it will not be automatically restarted, resulting in fewer agents on that instance (N-1). The ScaleInIdlePeriod parameter does not affect this agent count.
+      This parameter is ignored when AgentsPerCPU is set to a value greater than 0.
     Type: Number
     Default: 1
     MinValue: 1
+
+  AgentsPerCPU:
+    Description: >
+      Number of Buildkite agents to run per CPU core on each instance. When set to a value greater than 0, this overrides AgentsPerInstance.
+      The total number of agents will be calculated as: AgentsPerCPU * CPU_CORE_COUNT.
+      This allows dynamic scaling based on instance size, maximizing utilization of spot instances with varying CPU counts.
+      Set to 0 to disable CPU-based scaling and use AgentsPerInstance instead.
+      Requires Buildkite agent version 3.70.0 or later.
+    Type: Number
+    Default: 0
+    MinValue: 0
+    MaxValue: 10
 
   SecretsBucket:
     Description: Optional - Name of an existing S3 bucket containing pipeline secrets (Created if left blank)
@@ -1700,6 +1714,7 @@ Resources:
                   $Env:BUILDKITE_S3_ACL="${ArtifactsS3ACL}"
                   $Env:BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
+                  $Env:BUILDKITE_AGENTS_PER_CPU="${AgentsPerCPU}"
                   $Env:BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
                   $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
@@ -1789,6 +1804,7 @@ Resources:
                   BUILDKITE_S3_ACL="${ArtifactsS3ACL}" \
                   BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
+                  BUILDKITE_AGENTS_PER_CPU="${AgentsPerCPU}" \
                   BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
                   BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
@@ -2223,6 +2239,7 @@ Resources:
         AgentEndpoint: !Ref AgentEndpoint
         BuildkiteQueue: !Ref BuildkiteQueue
         AgentsPerInstance: !Ref AgentsPerInstance
+        AgentsPerCPU: !Ref AgentsPerCPU
         MinSize: !Ref MinSize
         MaxSize: !Ref MaxSize
         InstanceBuffer: !Ref InstanceBuffer

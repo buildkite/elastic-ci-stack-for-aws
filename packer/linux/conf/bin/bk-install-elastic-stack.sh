@@ -131,6 +131,7 @@ echo Writing Phase 2/2 for /var/lib/buildkite-agent/cfn-env helper function...
 cat <<EOF >>/var/lib/buildkite-agent/cfn-env
 
 set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTANCE"
+set_always         "BUILDKITE_AGENTS_PER_CPU" "$BUILDKITE_AGENTS_PER_CPU"
 
 # also set via /etc/systemd/system/buildkite-agent.service.d/environment.conf
 set_always         "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB" "$BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB"
@@ -272,6 +273,7 @@ BUILDKITE_AGENT_TOKEN="$(
     --output text
 )"
 
+
 # DO NOT write this file to logs. It contains secrets.
 cat <<EOF >/etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
@@ -290,7 +292,6 @@ plugins-path=/var/lib/buildkite-agent/plugins
 git-mirrors-path="${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
-spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
@@ -301,6 +302,15 @@ signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
 EOF
+
+# Add spawn configuration based on the scaling method
+if [ "${BUILDKITE_AGENTS_PER_CPU:-0}" -gt 0 ]; then
+  echo "spawn-per-cpu=${BUILDKITE_AGENTS_PER_CPU}" >> /etc/buildkite-agent/buildkite-agent.cfg
+  echo "Using CPU-based scaling: ${BUILDKITE_AGENTS_PER_CPU} agents per CPU core"
+else
+  echo "spawn=${BUILDKITE_AGENTS_PER_INSTANCE}" >> /etc/buildkite-agent/buildkite-agent.cfg
+  echo "Using static scaling: ${BUILDKITE_AGENTS_PER_INSTANCE} agents per instance"
+fi
 
 if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
   echo "Fetching env file from ${BUILDKITE_ENV_FILE_URL}..."
