@@ -78,6 +78,10 @@ cat <<EOF >config.json
     "ParameterValue": "3"
   },
   {
+    "ParameterKey": "AgentsPerCPU",
+    "ParameterValue": "0"
+  },
+  {
     "ParameterKey": "ECRAccessPolicy",
     "ParameterValue": "readonly"
   },
