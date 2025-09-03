@@ -2239,7 +2239,6 @@ Resources:
         AgentEndpoint: !Ref AgentEndpoint
         BuildkiteQueue: !Ref BuildkiteQueue
         AgentsPerInstance: !Ref AgentsPerInstance
-        AgentsPerCPU: !Ref AgentsPerCPU
         MinSize: !Ref MinSize
         MaxSize: !Ref MaxSize
         InstanceBuffer: !Ref InstanceBuffer
