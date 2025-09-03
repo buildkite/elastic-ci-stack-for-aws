@@ -72,6 +72,7 @@ function set_always() {
 Add-Content -Path C:\buildkite-agent\cfn-env -Value @"
 
 set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$Env:BUILDKITE_AGENTS_PER_INSTANCE"
+set_always         "BUILDKITE_AGENTS_PER_CPU" "$Env:BUILDKITE_AGENTS_PER_CPU"
 
 # also set via nssm
 set_always         "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB" "$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB"
@@ -138,6 +139,7 @@ If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PA
   $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
 }
 
+
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"
@@ -153,7 +155,6 @@ plugins-path="C:\buildkite-agent\plugins"
 git-mirrors-path="${Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
 experiment="${Env:BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
-spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}
 no-color=true
 shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
@@ -164,6 +165,16 @@ signing-aws-kms-key=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${Env:BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
 "@
 $OFS=" "
+
+# Add spawn configuration based on the scaling method
+$AgentsPerCPU = [int]$Env:BUILDKITE_AGENTS_PER_CPU
+If ($AgentsPerCPU -gt 0) {
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "spawn-per-cpu=${AgentsPerCPU}"
+  Write-Host "Using CPU-based scaling: ${AgentsPerCPU} agents per CPU core"
+} Else {
+  Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "spawn=${Env:BUILDKITE_AGENTS_PER_INSTANCE}"
+  Write-Host "Using static scaling: ${Env:BUILDKITE_AGENTS_PER_INSTANCE} agents per instance"
+}
 
 nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"

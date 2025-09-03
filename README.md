@@ -92,6 +92,40 @@ To enable resource limits with custom values, include these parameters in your C
 - Resource limits are disabled by default
 - Values can be specified as percentages or absolute values (for memory-related parameters)
 
+## Agent Scaling Configuration
+
+The Elastic CI Stack supports two methods for configuring the number of Buildkite agents per instance:
+
+### Static Agent Count (Default)
+Use `AgentsPerInstance` to set a fixed number of agents per instance regardless of CPU count.
+
+### Dynamic CPU-based Scaling
+Use `AgentsPerCPU` to automatically scale agents based on the number of CPU cores available. This is particularly useful for spot instances where you might receive instances with more CPU cores than originally requested.
+
+**Note**: Requires Buildkite agent version 3.70.0 or later.
+
+| Parameter           | Description                                            | Default | Range |
+|--------------------|--------------------------------------------------------|---------|-------|
+| `AgentsPerInstance`| Number of agents per instance (ignored when AgentsPerCPU > 0) | `1` | 1+ |
+| `AgentsPerCPU` | Number of agents per CPU core (0 = disabled)          | `0`     | 0-10 |
+
+### Example Configuration
+
+To enable CPU-based scaling with 2 agents per CPU core:
+
+```yaml
+{
+  "Parameters": {
+    "AgentsPerCPU": "2"
+  }
+}
+```
+
+### Notes
+- **Requires Buildkite agent version 3.70.0 or later** (`spawn-per-cpu` added to Buildkite agent)
+- When `AgentsPerCPU` is set to a value greater than 0, it overrides `AgentsPerInstance`
+- Maximum value is capped at 10 agents per CPU core to prevent resource exhaustion on large instances
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
