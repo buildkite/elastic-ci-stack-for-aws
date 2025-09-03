@@ -273,7 +273,6 @@ BUILDKITE_AGENT_TOKEN="$(
     --output text
 )"
 
-
 # DO NOT write this file to logs. It contains secrets.
 cat <<EOF >/etc/buildkite-agent/buildkite-agent.cfg
 name="${BUILDKITE_STACK_NAME}-${INSTANCE_ID}-%spawn"
