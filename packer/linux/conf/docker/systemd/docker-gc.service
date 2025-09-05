@@ -1,7 +1,0 @@
-[Unit]
-Description=Clean files used by docker except for the build cache
-Wants=docker-gc.timer
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/docker-gc

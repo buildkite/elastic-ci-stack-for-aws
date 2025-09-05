@@ -141,6 +141,12 @@ Metadata:
         Parameters:
         - EnableDockerUserNamespaceRemap
         - EnableDockerExperimental
+        - DockerGCSchedule
+        - DockerGCPruneUntil
+        - DockerGCPruneImages
+        - DockerGCPruneVolumes
+        - DiskMinAvailable
+        - DiskMinInodes
 
       - Label:
           default: Docker Registry Configuration
@@ -731,6 +737,44 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  DockerGCSchedule:
+    Description: Systemd timer schedule for docker garbage collection (default is hourly)
+    Type: String
+    Default: "hourly"
+
+  DockerGCPruneUntil:
+    Description: Remove docker resources older than this duration (default is 4h)
+    Type: String
+    Default: "4h"
+
+  DockerGCPruneImages:
+    Description: Set to "true" to prune all unused images, not just dangling ones
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  DockerGCPruneVolumes:
+    Description: Set to "true" to prune anonymous volumes during garbage collection
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  DiskMinAvailable:
+    Description: Minimum disk space (in KB) before triggering emergency Docker cleanup (default is 5GB)
+    Type: Number
+    Default: 5242880
+    MinValue: 524288
+
+  DiskMinInodes:
+    Description: Minimum free inodes before triggering emergency Docker cleanup
+    Type: Number
+    Default: 250000
+    MinValue: 10000
 
   EnableInstanceStorage:
     Type: String
@@ -1807,6 +1851,12 @@ Resources:
                   DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}" \
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
+                  DOCKER_GC_SCHEDULE="${DockerGCSchedule}" \
+                  DOCKER_GC_PRUNE_UNTIL="${DockerGCPruneUntil}" \
+                  DOCKER_GC_PRUNE_IMAGES="${DockerGCPruneImages}" \
+                  DOCKER_GC_PRUNE_VOLUMES="${DockerGCPruneVolumes}" \
+                  DISK_MIN_AVAILABLE="${DiskMinAvailable}" \
+                  DISK_MIN_INODES="${DiskMinInodes}" \
                   AWS_REGION="${AWS::Region}" \
                   ENABLE_RESOURCE_LIMITS="${ExperimentalEnableResourceLimits}" \
                   RESOURCE_LIMITS_MEMORY_HIGH="${ResourceLimitsMemoryHigh}" \
@@ -1818,6 +1868,9 @@ Resources:
                   ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}" \
                   EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
+
+                  # Configure Docker GC with custom parameters
+                  /usr/local/bin/bk-configure-docker-gc.sh
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If
                     - CreateSecretsBucket
