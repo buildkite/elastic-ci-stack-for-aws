@@ -9,17 +9,17 @@ DOCKER_GC_PRUNE_IMAGES="${DOCKER_GC_PRUNE_IMAGES:-false}"
 DOCKER_GC_PRUNE_VOLUMES="${DOCKER_GC_PRUNE_VOLUMES:-false}"
 
 if ! [[ "$DOCKER_GC_PRUNE_UNTIL" =~ ^[0-9]+[smhd]$ ]]; then
-    echo "Warning: time format not expected: $DOCKER_GC_PRUNE_UNTIL" >&2
-    echo "use format like 4h, 30m, 1d" >&2
+  echo "Warning: time format not expected: $DOCKER_GC_PRUNE_UNTIL" >&2
+  echo "use format like 4h, 30m, 1d" >&2
 fi
 
 case "$DOCKER_GC_SCHEDULE" in
-    hourly|daily|weekly|monthly) ;;
-    *[0-9]*) ;;
-    *)
-        echo "Warning: time format not expected - $DOCKER_GC_SCHEDULE" >&2
-        echo "use hourly, daily, weekly, monthly" >&2
-        ;;
+hourly | daily | weekly | monthly) ;;
+*[0-9]*) ;;
+*)
+  echo "Warning: time format not expected - $DOCKER_GC_SCHEDULE" >&2
+  echo "use hourly, daily, weekly, monthly" >&2
+  ;;
 esac
 
 echo "Schedule: $DOCKER_GC_SCHEDULE"
@@ -27,7 +27,7 @@ echo "Prune older than: $DOCKER_GC_PRUNE_UNTIL"
 echo "Cleaning all images: $DOCKER_GC_PRUNE_IMAGES"
 echo "Volumes: $DOCKER_GC_PRUNE_VOLUMES"
 
-cat > /usr/local/bin/docker-gc << 'EOF'
+cat >/usr/local/bin/docker-gc <<'EOF'
 #!/bin/bash
 set -euo pipefail
 
@@ -65,7 +65,7 @@ sed -i "s/DOCKER_GC_PRUNE_VOLUMES_PLACEHOLDER/$DOCKER_GC_PRUNE_VOLUMES/g" /usr/l
 
 chmod +x /usr/local/bin/docker-gc
 
-cat > /etc/systemd/system/docker-gc.timer << EOF
+cat >/etc/systemd/system/docker-gc.timer <<EOF
 [Unit]
 Description=Docker GC Cleanup Timer
 Requires=docker-gc.service
@@ -79,7 +79,7 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
-cat > /etc/systemd/system/docker-gc.service << EOF
+cat >/etc/systemd/system/docker-gc.service <<EOF
 [Unit]
 Description=Docker GC Cleanup
 Wants=docker-gc.timer
@@ -100,12 +100,12 @@ echo "Docker GC Cleanup configured"
 echo "Schedule: $DOCKER_GC_SCHEDULE"
 echo "Prune older than: $DOCKER_GC_PRUNE_UNTIL"
 if [[ "$DOCKER_GC_PRUNE_IMAGES" == "true" ]]; then
-    echo "Will clean all images"
+  echo "Will clean all images"
 else
-    echo "Will clean dangling images only"
+  echo "Will clean dangling images only"
 fi
 if [[ "$DOCKER_GC_PRUNE_VOLUMES" == "true" ]]; then
-    echo "Will clean volumes"
+  echo "Will clean volumes"
 else
-    echo "Volumes left alone"
+  echo "Volumes left alone"
 fi
