@@ -119,8 +119,8 @@ wait_for_network() {
     check_count=$((check_count + 1))
 
     # Test multiple network endpoints to ensure robust connectivity
-    if curl -s --connect-timeout 3 --max-time 5 http://169.254.169.254/latest/meta-data/ >/dev/null 2>&1 && \
-       curl -s --connect-timeout 3 --max-time 5 https://aws.amazon.com >/dev/null 2>&1; then
+    if curl -s --connect-timeout 3 --max-time 5 http://169.254.169.254/latest/meta-data/ >/dev/null 2>&1 \
+      && curl -s --connect-timeout 3 --max-time 5 https://aws.amazon.com >/dev/null 2>&1; then
       echo "Network is ready (verified after ${check_count} attempts)"
       return 0
     fi
@@ -162,7 +162,7 @@ fetch_env_file() {
         if [ $attempt -lt $max_retries ]; then
           echo "Retrying in ${retry_delay} seconds..."
           sleep $retry_delay
-          retry_delay=$((retry_delay * 2))  # exponential backoff
+          retry_delay=$((retry_delay * 2)) # exponential backoff
         else
           echo "Warning: All attempts failed, creating empty environment file"
           touch /var/lib/buildkite-agent/env
@@ -191,7 +191,7 @@ fetch_authorized_users() {
     echo "Fetching authorized users from ${BUILDKITE_AUTHORIZED_USERS_URL}..."
 
     # Create the refresh script with retry logic
-    cat <<-EOF > /usr/local/bin/refresh_authorized_keys
+    cat <<-EOF >/usr/local/bin/refresh_authorized_keys
 #!/bin/bash
 set -euo pipefail
 
@@ -240,7 +240,7 @@ EOF
         if [ $attempt -lt $max_retries ]; then
           echo "Retrying in ${retry_delay} seconds..."
           sleep $retry_delay
-          retry_delay=$((retry_delay * 2))  # exponential backoff
+          retry_delay=$((retry_delay * 2)) # exponential backoff
         else
           echo "Warning: All attempts failed for authorized users configuration"
         fi
@@ -249,8 +249,8 @@ EOF
     done
 
     # Enable the timer for periodic updates
-    systemctl enable refresh_authorized_keys.timer 2>/dev/null || \
-      echo "Warning: Failed to enable refresh_authorized_keys timer"
+    systemctl enable refresh_authorized_keys.timer 2>/dev/null \
+      || echo "Warning: Failed to enable refresh_authorized_keys timer"
   else
     echo "No authorized users URL configured"
   fi
@@ -343,7 +343,7 @@ fetch_agent_token() {
       if [[ -n "$BUILDKITE_AGENT_TOKEN" && "$BUILDKITE_AGENT_TOKEN" != "None" ]]; then
         echo "Buildkite agent token retrieved successfully"
         # Write token to file for main process to read
-        echo "$BUILDKITE_AGENT_TOKEN" > "$token_file"
+        echo "$BUILDKITE_AGENT_TOKEN" >"$token_file"
         chmod 600 "$token_file"
         echo "Token written to secure temporary file"
         return 0
@@ -353,15 +353,15 @@ fetch_agent_token() {
     else
       local exit_code=$?
       case $exit_code in
-        255|254) echo "WARNING: SSM parameter not found or access denied" ;;
-        *) echo "WARNING: SSM API call failed with exit code $exit_code" ;;
+      255 | 254) echo "WARNING: SSM parameter not found or access denied" ;;
+      *) echo "WARNING: SSM API call failed with exit code $exit_code" ;;
       esac
     fi
 
     if [ $attempt -lt $max_retries ]; then
       echo "Retrying in ${retry_delay} seconds..."
       sleep $retry_delay
-      retry_delay=$((retry_delay * 2))  # exponential backoff: 2s, 4s
+      retry_delay=$((retry_delay * 2)) # exponential backoff: 2s, 4s
     fi
 
     attempt=$((attempt + 1))
@@ -469,7 +469,7 @@ declare -A background_processes
 start_background_process() {
   local name="$1"
   local function_name="$2"
-  local critical="${3:-false}"  # Optional: whether process failure should be fatal
+  local critical="${3:-false}" # Optional: whether process failure should be fatal
 
   echo "Starting $name in background..."
 
@@ -489,7 +489,7 @@ start_background_process() {
 # Function to wait for a background process with timeout and error handling
 wait_for_background_process() {
   local name="$1"
-  local timeout="${2:-300}"  # Default 5 minute timeout
+  local timeout="${2:-300}" # Default 5 minute timeout
 
   if [[ -z "${background_processes[$name]:-}" ]]; then
     echo "ERROR: Background process '$name' was not started"
@@ -730,7 +730,7 @@ fi
 token_file="/tmp/buildkite_agent_token"
 if [[ -f "$token_file" ]]; then
   BUILDKITE_AGENT_TOKEN=$(cat "$token_file")
-  rm -f "$token_file"  # Clean up immediately after reading
+  rm -f "$token_file" # Clean up immediately after reading
   echo "Token read from temporary file and file cleaned up"
 else
   echo "ERROR: Token file not found at $token_file"
@@ -823,7 +823,7 @@ lifecycled_ready() {
 }
 
 echo "Waiting for lifecycled to be active..."
-timeout=15  # Increased timeout for slower instances
+timeout=15 # Increased timeout for slower instances
 start_time=$(date +%s)
 while ! lifecycled_ready; do
   current_time=$(date +%s)
@@ -923,8 +923,8 @@ signal_cfn_success() {
     --region "$AWS_REGION" \
     --stack "$BUILDKITE_STACK_NAME" \
     --resource "AgentAutoScaleGroup" \
-    --exit-code 0 >/dev/null 2>&1 || \
-    echo "Warning: CloudFormation signal failed (non-critical)"
+    --exit-code 0 >/dev/null 2>&1 \
+    || echo "Warning: CloudFormation signal failed (non-critical)"
 }
 
 signal_cfn_success &
