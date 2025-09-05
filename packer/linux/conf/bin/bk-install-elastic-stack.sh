@@ -4,11 +4,45 @@ set -Eeuo pipefail
 
 ## Installs the Buildkite Agent, run from the CloudFormation template
 
+# Function to clean up background processes on exit
+cleanup_background_processes() {
+  echo "Cleaning up remaining background processes..."
+
+  for process_name in "${!background_processes[@]}"; do
+    local process_info="${background_processes[$process_name]}"
+    local pid="${process_info%%:*}"
+    local critical="${process_info##*:}"
+
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "Terminating $process_name (PID: $pid)..."
+
+      # Try graceful termination first
+      kill -TERM "$pid" 2>/dev/null || true
+
+      # Wait a moment for graceful shutdown
+      sleep 2
+
+      # Force kill if still running
+      if kill -0 "$pid" 2>/dev/null; then
+        echo "Force killing $process_name (PID: $pid)"
+        kill -KILL "$pid" 2>/dev/null || true
+      fi
+    fi
+  done
+
+  # Clean up temporary files
+  rm -f /tmp/buildkite_agent_token 2>/dev/null || true
+  echo "Background process cleanup completed"
+}
+
 on_error() {
   local exit_code="$?"
   local error_line="$1"
 
   echo "${BASH_SOURCE[0]} errored with exit code ${exit_code} on line ${error_line}."
+
+  # Clean up background processes before failing
+  cleanup_background_processes
 
   if [[ $exit_code != 0 ]]; then
     if ! aws autoscaling set-instance-health \
@@ -32,6 +66,9 @@ trap 'on_error $LINENO' ERR
 
 on_exit() {
   echo "${BASH_SOURCE[0]} completed successfully."
+
+  # Clean up any remaining background processes on successful exit
+  cleanup_background_processes
 }
 
 trap '[[ $? = 0 ]] && on_exit' EXIT
@@ -69,6 +106,274 @@ check_status() {
 }
 
 check_status
+
+# Network readiness check function
+wait_for_network() {
+  echo "Checking network readiness..."
+  local timeout=30
+  local start_time
+  start_time=$(date +%s)
+  local check_count=0
+
+  while true; do
+    check_count=$((check_count + 1))
+
+    # Test multiple network endpoints to ensure robust connectivity
+    if curl -s --connect-timeout 3 --max-time 5 http://169.254.169.254/latest/meta-data/ >/dev/null 2>&1 && \
+       curl -s --connect-timeout 3 --max-time 5 https://aws.amazon.com >/dev/null 2>&1; then
+      echo "Network is ready (verified after ${check_count} attempts)"
+      return 0
+    fi
+
+    local current_time
+    current_time=$(date +%s)
+    if [ $((current_time - start_time)) -gt "$timeout" ]; then
+      echo "WARNING: Network not fully ready after ${timeout}s and ${check_count} attempts"
+      echo "Proceeding with degraded network conditions - some operations may retry"
+      return 0
+    fi
+
+    sleep 1
+  done
+}
+
+# Enhanced function to fetch environment file with error handling and retry logic
+fetch_env_file() {
+  echo "Starting environment file fetch..."
+
+  # Wait for network readiness
+  wait_for_network
+
+  if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
+    echo "Fetching env file from ${BUILDKITE_ENV_FILE_URL}..."
+
+    local max_retries=3
+    local retry_delay=2
+    local attempt=1
+
+    while [ $attempt -le $max_retries ]; do
+      echo "Environment file fetch attempt $attempt of $max_retries..."
+
+      if /usr/local/bin/bk-fetch.sh "${BUILDKITE_ENV_FILE_URL}" /var/lib/buildkite-agent/env; then
+        echo "Environment file fetched successfully"
+        break
+      else
+        echo "Warning: Attempt $attempt failed to fetch environment file"
+        if [ $attempt -lt $max_retries ]; then
+          echo "Retrying in ${retry_delay} seconds..."
+          sleep $retry_delay
+          retry_delay=$((retry_delay * 2))  # exponential backoff
+        else
+          echo "Warning: All attempts failed, creating empty environment file"
+          touch /var/lib/buildkite-agent/env
+        fi
+      fi
+      attempt=$((attempt + 1))
+    done
+  else
+    echo "No env file URL configured, creating empty environment file"
+    touch /var/lib/buildkite-agent/env
+  fi
+
+  # Ensure proper ownership
+  chown buildkite-agent: /var/lib/buildkite-agent/env 2>/dev/null || true
+  echo "Environment file fetch completed"
+}
+
+# Enhanced function to fetch authorized users in background with retry logic
+fetch_authorized_users() {
+  echo "Starting authorized users fetch..."
+
+  # Wait for network readiness
+  wait_for_network
+
+  if [[ -n "$BUILDKITE_AUTHORIZED_USERS_URL" ]]; then
+    echo "Fetching authorized users from ${BUILDKITE_AUTHORIZED_USERS_URL}..."
+
+    # Create the refresh script with retry logic
+    cat <<-EOF > /usr/local/bin/refresh_authorized_keys
+#!/bin/bash
+set -euo pipefail
+
+MAX_RETRIES=3
+RETRY_DELAY=2
+ATTEMPT=1
+
+while [ \$ATTEMPT -le \$MAX_RETRIES ]; do
+  echo "Authorized users fetch attempt \$ATTEMPT of \$MAX_RETRIES..."
+
+  if /usr/local/bin/bk-fetch.sh "$BUILDKITE_AUTHORIZED_USERS_URL" /tmp/authorized_keys; then
+    mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
+    chmod 600 /home/ec2-user/.ssh/authorized_keys
+    chown ec2-user: /home/ec2-user/.ssh/authorized_keys
+    echo "Authorized users updated successfully"
+    exit 0
+  else
+    echo "Warning: Attempt \$ATTEMPT failed to fetch authorized users"
+    if [ \$ATTEMPT -lt \$MAX_RETRIES ]; then
+      echo "Retrying in \$RETRY_DELAY seconds..."
+      sleep \$RETRY_DELAY
+      RETRY_DELAY=\$((RETRY_DELAY * 2))  # exponential backoff
+    fi
+  fi
+  ATTEMPT=\$((ATTEMPT + 1))
+done
+
+echo "ERROR: Failed to fetch authorized users after \$MAX_RETRIES attempts"
+exit 1
+EOF
+    chmod +x /usr/local/bin/refresh_authorized_keys
+
+    # Perform initial fetch with retry logic
+    local max_retries=3
+    local retry_delay=2
+    local attempt=1
+
+    while [ $attempt -le $max_retries ]; do
+      echo "Authorized users initial fetch attempt $attempt of $max_retries..."
+
+      if /usr/local/bin/refresh_authorized_keys; then
+        echo "Authorized users configured successfully"
+        break
+      else
+        echo "Warning: Attempt $attempt failed to configure authorized users"
+        if [ $attempt -lt $max_retries ]; then
+          echo "Retrying in ${retry_delay} seconds..."
+          sleep $retry_delay
+          retry_delay=$((retry_delay * 2))  # exponential backoff
+        else
+          echo "Warning: All attempts failed for authorized users configuration"
+        fi
+      fi
+      attempt=$((attempt + 1))
+    done
+
+    # Enable the timer for periodic updates
+    systemctl enable refresh_authorized_keys.timer 2>/dev/null || \
+      echo "Warning: Failed to enable refresh_authorized_keys timer"
+  else
+    echo "No authorized users URL configured"
+  fi
+  echo "Authorized users fetch completed"
+}
+
+# Enhanced function to run bootstrap script with proper error handling
+run_bootstrap_script() {
+  echo "Processing bootstrap script..."
+  if [[ -n "$BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" ]]; then
+    echo "Fetching and running bootstrap script from $BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT..."
+
+    if /usr/local/bin/bk-fetch.sh "$BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" /tmp/elastic_bootstrap; then
+      echo "Bootstrap script fetched successfully, executing..."
+      if bash </tmp/elastic_bootstrap; then
+        echo "Bootstrap script completed successfully"
+      else
+        local exit_code=$?
+        echo "ERROR: Bootstrap script execution failed with exit code $exit_code"
+        rm -f /tmp/elastic_bootstrap
+        return $exit_code
+      fi
+      rm -f /tmp/elastic_bootstrap
+    else
+      echo "ERROR: Failed to fetch bootstrap script from $BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT"
+      return 1
+    fi
+  else
+    echo "No bootstrap script configured"
+  fi
+  echo "Bootstrap script processing completed"
+}
+
+# Enhanced function to configure CloudWatch agent log retention
+configure_cloudwatch_retention() {
+  echo "Configuring CloudWatch agent log retention in background..."
+
+  if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
+    echo "Setting CloudWatch EC2 log retention to ${EC2_LOG_RETENTION_DAYS} days"
+    echo "WARNING: This will delete EC2 logs older than ${EC2_LOG_RETENTION_DAYS} days from existing log groups"
+
+    # Update the CloudWatch agent config with the retention value
+    local CONFIG_FILE="/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+    if [[ -f "$CONFIG_FILE" ]]; then
+      # Add retention_in_days to all collect_list items using jq
+      if jq --arg retention "$EC2_LOG_RETENTION_DAYS" '
+        .logs.logs_collected.files.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
+      ' "$CONFIG_FILE" >/tmp/cloudwatch_config.json && mv /tmp/cloudwatch_config.json "$CONFIG_FILE"; then
+
+        # Restart CloudWatch agent to pick up the new configuration
+        if /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c "file:$CONFIG_FILE"; then
+          echo "CloudWatch agent configuration updated and restarted successfully"
+        else
+          echo "Warning: Failed to restart CloudWatch agent"
+        fi
+      else
+        echo "Error: Failed to update CloudWatch agent configuration file"
+      fi
+    else
+      echo "Warning: CloudWatch agent config file not found at $CONFIG_FILE"
+    fi
+  elif [[ -n "${EC2_LOG_RETENTION_DAYS:-}" ]]; then
+    echo "EC2 log retention set to ${EC2_LOG_RETENTION_DAYS} days but EnableEC2LogRetentionPolicy is false"
+    echo "Skipping EC2 log retention configuration to protect existing logs"
+  else
+    echo "EC2 log retention not set, using CloudWatch agent defaults (never expire)"
+  fi
+
+  echo "CloudWatch agent configuration completed"
+}
+
+# Enhanced function to fetch Buildkite agent token with retry logic
+fetch_agent_token() {
+  local token_file="/tmp/buildkite_agent_token"
+  echo "Fetching Buildkite agent token from SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH..."
+  local max_retries=3
+  local retry_delay=2
+  local attempt=1
+
+  while [ $attempt -le $max_retries ]; do
+    echo "SSM fetch attempt $attempt of $max_retries..."
+
+    if BUILDKITE_AGENT_TOKEN=$(aws ssm get-parameter \
+      --name "$BUILDKITE_AGENT_TOKEN_PATH" \
+      --with-decryption \
+      --query Parameter.Value \
+      --output text 2>/dev/null); then
+
+      # Validate token is not empty
+      if [[ -n "$BUILDKITE_AGENT_TOKEN" && "$BUILDKITE_AGENT_TOKEN" != "None" ]]; then
+        echo "Buildkite agent token retrieved successfully"
+        # Write token to file for main process to read
+        echo "$BUILDKITE_AGENT_TOKEN" > "$token_file"
+        chmod 600 "$token_file"
+        echo "Token written to secure temporary file"
+        return 0
+      else
+        echo "WARNING: Retrieved empty or invalid token from SSM"
+      fi
+    else
+      local exit_code=$?
+      case $exit_code in
+        255|254) echo "WARNING: SSM parameter not found or access denied" ;;
+        *) echo "WARNING: SSM API call failed with exit code $exit_code" ;;
+      esac
+    fi
+
+    if [ $attempt -lt $max_retries ]; then
+      echo "Retrying in ${retry_delay} seconds..."
+      sleep $retry_delay
+      retry_delay=$((retry_delay * 2))  # exponential backoff: 2s, 4s
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  echo "ERROR: Failed to retrieve Buildkite agent token after $max_retries attempts"
+  echo "Please verify:"
+  echo "  1. SSM parameter '$BUILDKITE_AGENT_TOKEN_PATH' exists"
+  echo "  2. Instance has proper IAM permissions for SSM:GetParameter"
+  echo "  3. Network connectivity to AWS SSM service"
+  return 1
+}
 
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
@@ -156,6 +461,156 @@ EOF
 echo Wrote to /var/lib/buildkite-agent/cfn-env:
 cat /var/lib/buildkite-agent/cfn-env
 echo
+
+# Enhanced background process management with error handling and timeout protection
+declare -A background_processes
+
+# Function to start a background process with monitoring
+start_background_process() {
+  local name="$1"
+  local function_name="$2"
+  local critical="${3:-false}"  # Optional: whether process failure should be fatal
+
+  echo "Starting $name in background..."
+
+  # Start the function in a subshell with error handling
+  (
+    set -euo pipefail
+    echo "$name: Process started (PID: $$)"
+    $function_name
+    echo "$name: Process completed successfully"
+  ) &
+
+  local pid=$!
+  background_processes["$name"]="$pid:$critical"
+  echo "$name started (PID: $pid, critical: $critical)"
+}
+
+# Function to wait for a background process with timeout and error handling
+wait_for_background_process() {
+  local name="$1"
+  local timeout="${2:-300}"  # Default 5 minute timeout
+
+  if [[ -z "${background_processes[$name]:-}" ]]; then
+    echo "ERROR: Background process '$name' was not started"
+    return 1
+  fi
+
+  local process_info="${background_processes["$name"]}"
+  local pid="${process_info%%:*}"
+  local critical="${process_info##*:}"
+
+  echo "Waiting for $name (PID: $pid, timeout: ${timeout}s, critical: $critical)..."
+
+  local start_time
+  start_time=$(date +%s)
+  while kill -0 "$pid" 2>/dev/null; do
+    local current_time
+    current_time=$(date +%s)
+    if [ $((current_time - start_time)) -gt "$timeout" ]; then
+      echo "WARNING: $name (PID: $pid) exceeded timeout of ${timeout}s"
+
+      # Try to terminate gracefully first
+      kill -TERM "$pid" 2>/dev/null || true
+      sleep 5
+
+      # Force kill if still running
+      if kill -0 "$pid" 2>/dev/null; then
+        echo "Force killing $name (PID: $pid)"
+        kill -KILL "$pid" 2>/dev/null || true
+      fi
+
+      if [[ "$critical" == "true" ]]; then
+        echo "ERROR: Critical process '$name' failed due to timeout"
+        return 1
+      else
+        echo "WARNING: Non-critical process '$name' timed out - continuing"
+        return 0
+      fi
+    fi
+    sleep 1
+  done
+
+  # Check exit status
+  if wait "$pid"; then
+    echo "$name completed successfully"
+    unset "background_processes[$name]"
+    return 0
+  else
+    local exit_code=$?
+    echo "ERROR: $name failed with exit code $exit_code"
+
+    if [[ "$critical" == "true" ]]; then
+      echo "ERROR: Critical process '$name' failed - this will cause bootstrap to fail"
+      return $exit_code
+    else
+      echo "WARNING: Non-critical process '$name' failed - continuing with degraded functionality"
+      return 0
+    fi
+  fi
+}
+
+# Function to display status of all background processes
+show_background_process_status() {
+  echo "Background process status:"
+
+  if [[ ${#background_processes[@]} -eq 0 ]]; then
+    echo "  No background processes running"
+    return 0
+  fi
+
+  for process_name in "${!background_processes[@]}"; do
+    local process_info="${background_processes[$process_name]}"
+    local pid="${process_info%%:*}"
+    local critical="${process_info##*:}"
+
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "  $process_name: RUNNING (PID: $pid, critical: $critical)"
+    else
+      echo "  $process_name: COMPLETED/FAILED (PID: $pid, critical: $critical)"
+    fi
+  done
+}
+
+# Function to check for failed background processes
+check_background_process_health() {
+  local failed_critical=false
+  local failed_processes=()
+
+  for process_name in "${!background_processes[@]}"; do
+    local process_info="${background_processes[$process_name]}"
+    local pid="${process_info%%:*}"
+    local critical="${process_info##*:}"
+
+    if ! kill -0 "$pid" 2>/dev/null; then
+      # Process has exited, check if it failed
+      if ! wait "$pid" 2>/dev/null; then
+        failed_processes+=("$process_name")
+        if [[ "$critical" == "true" ]]; then
+          failed_critical=true
+        fi
+      fi
+    fi
+  done
+
+  if [[ ${#failed_processes[@]} -gt 0 ]]; then
+    echo "WARNING: Background processes failed: ${failed_processes[*]}"
+    if [[ "$failed_critical" == "true" ]]; then
+      echo "ERROR: Critical background processes have failed"
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+# Start background processes with proper monitoring
+start_background_process "token_fetch" "fetch_agent_token" "true"
+start_background_process "env_fetch" "fetch_env_file" "true"
+start_background_process "auth_fetch" "fetch_authorized_users" "false"
+
+# Show initial status
+show_background_process_status
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]]; then
   echo Downloading buildkite-agent edge...
@@ -263,14 +718,39 @@ echo Setting \$BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS to \$BUILDKITE_AGENT_TIMESTAMP
 echo "BUILDKITE_AGENT_TIMESTAMP_LINES is $BUILDKITE_AGENT_TIMESTAMPS_LINES"
 echo "BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS is $BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS"
 
-echo "Setting \$BUILDKITE_AGENT_TOKEN from SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH"
-BUILDKITE_AGENT_TOKEN="$(
-  aws ssm get-parameter \
-    --name "$BUILDKITE_AGENT_TOKEN_PATH" \
-    --with-decryption \
-    --query Parameter.Value \
-    --output text
-)"
+echo "Waiting for critical background processes to complete..."
+
+# Wait for token fetch (critical - 60 second timeout)
+if ! wait_for_background_process "token_fetch" 60; then
+  echo "ERROR: Token fetch process failed - cannot proceed without agent token"
+  exit 1
+fi
+
+# Read token from secure temporary file
+token_file="/tmp/buildkite_agent_token"
+if [[ -f "$token_file" ]]; then
+  BUILDKITE_AGENT_TOKEN=$(cat "$token_file")
+  rm -f "$token_file"  # Clean up immediately after reading
+  echo "Token read from temporary file and file cleaned up"
+else
+  echo "ERROR: Token file not found at $token_file"
+  echo "This indicates the background token retrieval process failed"
+  exit 1
+fi
+
+if [[ -z "$BUILDKITE_AGENT_TOKEN" ]]; then
+  echo "ERROR: BUILDKITE_AGENT_TOKEN is empty after reading from file"
+  echo "This indicates a problem with the background token retrieval process"
+  exit 1
+fi
+
+echo "Buildkite agent token is ready for configuration"
+
+# Wait for environment file fetch (critical - 30 second timeout)
+if ! wait_for_background_process "env_fetch" 30; then
+  echo "ERROR: Environment file fetch failed - this is required for agent configuration"
+  exit 1
+fi
 
 # DO NOT write this file to logs. It contains secrets.
 cat <<EOF >/etc/buildkite-agent/buildkite-agent.cfg
@@ -302,47 +782,25 @@ signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
 EOF
 
-if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
-  echo "Fetching env file from ${BUILDKITE_ENV_FILE_URL}..."
-  /usr/local/bin/bk-fetch.sh "${BUILDKITE_ENV_FILE_URL}" /var/lib/buildkite-agent/env
-else
-  echo No env file to fetch.
-fi
-
 echo Setting ownership of /etc/buildkite-agent/buildkite-agent.cfg to buildkite-agent...
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
-if [[ -n "$BUILDKITE_AUTHORIZED_USERS_URL" ]]; then
-  echo Writing authorized user fetching script...
-  cat <<-EOF | tee /usr/local/bin/refresh_authorized_keys
-		/usr/local/bin/bk-fetch.sh "$BUILDKITE_AUTHORIZED_USERS_URL" /tmp/authorized_keys
-		mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
-		chmod 600 /home/ec2-user/.ssh/authorized_keys
-		chown ec2-user: /home/ec2-user/.ssh/authorized_keys
-	EOF
-
-  echo Setting ownership of /usr/local/bin/refresh_authorized_keys to root...
-  chmod +x /usr/local/bin/refresh_authorized_keys
-
-  echo Running authorized user fetching script...
-  /usr/local/bin/refresh_authorized_keys
-
-  echo Enabling authorized user fetching timer...
-  systemctl enable refresh_authorized_keys.timer
-else
-  echo No authorized users to fetch.
-fi
+# Note: Authorized users fetch continues in background (non-critical)
 
 echo Installing git-lfs for buildkite-agent user...
 su buildkite-agent -l -c 'git lfs install'
 
-if [[ -n "$BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" ]]; then
-  echo "Running bootstrap script from $BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT..."
-  /usr/local/bin/bk-fetch.sh "$BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" /tmp/elastic_bootstrap
-  bash </tmp/elastic_bootstrap
-  rm /tmp/elastic_bootstrap
-else
-  echo No bootstrap script to run.
+# Check background process health before continuing
+echo "Checking background process health before bootstrap script..."
+if ! check_background_process_health; then
+  echo "ERROR: Critical background processes have failed before bootstrap script"
+  exit 1
+fi
+
+# Execute bootstrap script with enhanced error handling
+if ! run_bootstrap_script; then
+  echo "ERROR: Bootstrap script execution failed"
+  exit 1
 fi
 
 echo Writing lifecycled configuration...
@@ -352,32 +810,70 @@ LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
 EOF
 
-echo Starting lifecycled...
+# Phase 1: Start lifecycled first (CRITICAL for spot instance handling)
+echo "Starting lifecycled (required for spot instance handling)..."
+
+# Ensure systemd is ready before operations
+sleep 1
 systemctl enable --now lifecycled.service
 
-echo Waiting for docker to start...
-check_docker() {
-  if ! docker ps >/dev/null; then
-    echo Failed to contact docker.
-    return 1
-  fi
+# Verify lifecycled is actually running before proceeding
+lifecycled_ready() {
+  systemctl is-active --quiet lifecycled.service
 }
 
-next_wait_time=0
-until check_docker || [[ $next_wait_time -eq 5 ]]; do
-  sleep $((next_wait_time++))
+echo "Waiting for lifecycled to be active..."
+timeout=15  # Increased timeout for slower instances
+start_time=$(date +%s)
+while ! lifecycled_ready; do
+  current_time=$(date +%s)
+  if [ $((current_time - start_time)) -gt $timeout ]; then
+    echo "ERROR: lifecycled failed to start within ${timeout}s - this is critical for spot instance handling"
+    echo "Systemd status:"
+    systemctl status lifecycled.service || true
+    exit 1
+  fi
+  sleep 0.5
 done
+echo "lifecycled is running and ready"
 
-# Configure resource limits if enabled
-if [[ "${ENABLE_RESOURCE_LIMITS:-false}" == "true" ]]; then
+# Phase 2: Start parallel preparation tasks
+echo "Preparing buildkite-agent startup in parallel..."
+
+# Background task 1: Docker availability check with improved logic
+wait_for_docker() {
+  local timeout=30
+  local start_time
+  start_time=$(date +%s)
+  local check_count=0
+
+  echo "Checking Docker availability..."
+  while ! docker ps >/dev/null 2>&1; do
+    local current_time
+    current_time=$(date +%s)
+    if [ $((current_time - start_time)) -gt "$timeout" ]; then
+      echo "ERROR: Docker failed to start within ${timeout}s after ${check_count} attempts"
+      exit 1
+    fi
+    check_count=$((check_count + 1))
+    sleep 0.5
+  done
+  echo "Docker is ready (verified after ${check_count} attempts)"
+}
+
+wait_for_docker &
+docker_check_pid=$!
+
+# Background task 2: Resource limits configuration
+configure_resource_limits() {
   echo "Configuring systemd resource limits for Buildkite agent..."
 
-  MEMORY_HIGH="${RESOURCE_LIMITS_MEMORY_HIGH:-90%}"
-  MEMORY_MAX="${RESOURCE_LIMITS_MEMORY_MAX:-90%}"
-  MEMORY_SWAP_MAX="${RESOURCE_LIMITS_MEMORY_SWAP_MAX:-90%}"
-  CPU_WEIGHT="${RESOURCE_LIMITS_CPU_WEIGHT:-100}"
-  CPU_QUOTA="${RESOURCE_LIMITS_CPU_QUOTA:-90%}"
-  IO_WEIGHT="${RESOURCE_LIMITS_IO_WEIGHT:-80}"
+  local MEMORY_HIGH="${RESOURCE_LIMITS_MEMORY_HIGH:-90%}"
+  local MEMORY_MAX="${RESOURCE_LIMITS_MEMORY_MAX:-90%}"
+  local MEMORY_SWAP_MAX="${RESOURCE_LIMITS_MEMORY_SWAP_MAX:-90%}"
+  local CPU_WEIGHT="${RESOURCE_LIMITS_CPU_WEIGHT:-100}"
+  local CPU_QUOTA="${RESOURCE_LIMITS_CPU_QUOTA:-90%}"
+  local IO_WEIGHT="${RESOURCE_LIMITS_IO_WEIGHT:-80}"
 
   echo "Resource limits configuration:"
   echo "  MemoryHigh: ${MEMORY_HIGH}"
@@ -411,14 +907,61 @@ EOL
   chmod 644 /etc/systemd/system/buildkite-agent.slice
   chmod 644 /etc/systemd/system/buildkite-agent.service.d/10-resource-limits.conf
 
+  echo "Resource limits configuration files created successfully"
+}
+
+resource_limits_pid=""
+if [[ "${ENABLE_RESOURCE_LIMITS:-false}" == "true" ]]; then
+  configure_resource_limits &
+  resource_limits_pid=$!
+fi
+
+# Background task 3: CloudFormation success signal (non-blocking)
+signal_cfn_success() {
+  echo "Signaling success to CloudFormation in background..."
+  cfn-signal \
+    --region "$AWS_REGION" \
+    --stack "$BUILDKITE_STACK_NAME" \
+    --resource "AgentAutoScaleGroup" \
+    --exit-code 0 >/dev/null 2>&1 || \
+    echo "Warning: CloudFormation signal failed (non-critical)"
+}
+
+signal_cfn_success &
+
+# Phase 3: Wait for prerequisites before starting buildkite-agent
+echo "Waiting for buildkite-agent prerequisites..."
+
+# Wait for Docker (critical)
+wait $docker_check_pid || {
+  echo "ERROR: Docker prerequisite failed"
+  exit 1
+}
+
+# Wait for resource limits configuration (if configured)
+if [[ -n "$resource_limits_pid" ]]; then
+  wait $resource_limits_pid || {
+    echo "ERROR: Resource limits configuration failed"
+    exit 1
+  }
+  echo "Reloading systemd configuration for resource limits..."
+  # Add delay to prevent systemd conflicts
+  sleep 2
   systemctl daemon-reload
+  sleep 1
   echo "Resource limits configured successfully"
 fi
 
-echo "Waited $next_wait_time times for docker to start. We will exit if it still has not started."
-check_docker
+# Final background process health check
+echo "Final background process health check before buildkite-agent startup..."
+show_background_process_status
+if ! check_background_process_health; then
+  echo "ERROR: Critical background processes have failed before buildkite-agent startup"
+  exit 1
+fi
 
-echo Writing buildkite-agent systemd environment override...
+# Phase 4: Final buildkite-agent configuration and startup
+echo "Writing buildkite-agent systemd environment override..."
 # also set in /var/lib/buildkite-agent/cfn-env so that it's shown in the job logs
 mkdir -p /etc/systemd/system/buildkite-agent.service.d
 cat <<EOF | tee /etc/systemd/system/buildkite-agent.service.d/environment.conf
@@ -426,46 +969,31 @@ cat <<EOF | tee /etc/systemd/system/buildkite-agent.service.d/environment.conf
 Environment="BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}"
 EOF
 
-echo Reloading systemctl services...
+echo "Reloading systemctl services..."
+# Add delay to prevent systemd conflicts
+sleep 1
 systemctl daemon-reload
+sleep 2
 
-echo Starting buildkite-agent...
+echo "Starting buildkite-agent (lifecycled is ready for spot handling)..."
 systemctl enable --now buildkite-agent
 
-echo Configuring CloudWatch agent log retention...
-if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
-  echo "Setting CloudWatch EC2 log retention to ${EC2_LOG_RETENTION_DAYS} days"
-  echo "WARNING: This will delete EC2 logs older than ${EC2_LOG_RETENTION_DAYS} days from existing log groups"
-
-  # Update the CloudWatch agent config with the retention value
-  CONFIG_FILE="/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
-  if [[ -f "$CONFIG_FILE" ]]; then
-    # Add retention_in_days to all collect_list items using jq
-    jq --arg retention "$EC2_LOG_RETENTION_DAYS" '
-      .logs.logs_collected.files.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
-    ' "$CONFIG_FILE" >/tmp/cloudwatch_config.json && mv /tmp/cloudwatch_config.json "$CONFIG_FILE"
-
-    # Restart CloudWatch agent to pick up the new configuration
-    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c "file:$CONFIG_FILE" || echo "Warning: Failed to restart CloudWatch agent"
-    echo "CloudWatch agent configuration updated and restarted"
-  else
-    echo "Warning: CloudWatch agent config file not found at $CONFIG_FILE"
-  fi
-elif [[ -n "${EC2_LOG_RETENTION_DAYS:-}" ]]; then
-  echo "EC2 log retention set to ${EC2_LOG_RETENTION_DAYS} days but EnableEC2LogRetentionPolicy is false"
-  echo "Skipping EC2 log retention configuration to protect existing logs"
-else
-  echo "EC2 log retention not set, using CloudWatch agent defaults (never expire)"
+# Verify buildkite-agent started successfully
+sleep 2
+if ! systemctl is-active --quiet buildkite-agent; then
+  echo "ERROR: buildkite-agent failed to start"
+  echo "Service status:"
+  systemctl status buildkite-agent || true
+  exit 1
 fi
+echo "buildkite-agent is running successfully"
 
-echo Signaling success to CloudFormation...
-# This will fail if the stack has already completed, for instance if there is a min size
-# of 1 and this is the 2nd instance. This is ok, so we just ignore the error
-cfn-signal \
-  --region "$AWS_REGION" \
-  --stack "$BUILDKITE_STACK_NAME" \
-  --resource "AgentAutoScaleGroup" \
-  --exit-code 0 || echo Signal failed
+# Start CloudWatch agent log retention configuration in background
+echo "Starting CloudWatch agent configuration in background..."
+configure_cloudwatch_retention &
+echo "CloudWatch configuration will complete in background (non-blocking)"
+
+# CloudFormation success signal is already sent in background during Phase 2
 
 # Record bootstrap as complete (this should be the last step in this file)
 echo "Completed" >"$STATUS_FILE"
