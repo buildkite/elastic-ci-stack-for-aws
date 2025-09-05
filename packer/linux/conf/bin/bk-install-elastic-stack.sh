@@ -605,9 +605,10 @@ check_background_process_health() {
 }
 
 # Start background processes with proper monitoring
+start_background_process "cloudwatch_config" "configure_cloudwatch_retention" "false"
+start_background_process "auth_fetch" "fetch_authorized_users" "false"
 start_background_process "token_fetch" "fetch_agent_token" "true"
 start_background_process "env_fetch" "fetch_env_file" "true"
-start_background_process "auth_fetch" "fetch_authorized_users" "false"
 
 # Show initial status
 show_background_process_status
@@ -916,18 +917,7 @@ if [[ "${ENABLE_RESOURCE_LIMITS:-false}" == "true" ]]; then
   resource_limits_pid=$!
 fi
 
-# Background task 3: CloudFormation success signal (non-blocking)
-signal_cfn_success() {
-  echo "Signaling success to CloudFormation in background..."
-  cfn-signal \
-    --region "$AWS_REGION" \
-    --stack "$BUILDKITE_STACK_NAME" \
-    --resource "AgentAutoScaleGroup" \
-    --exit-code 0 >/dev/null 2>&1 \
-    || echo "Warning: CloudFormation signal failed (non-critical)"
-}
-
-signal_cfn_success &
+# Background task 3: Resource limits configuration already handled above if enabled
 
 # Phase 3: Wait for prerequisites before starting buildkite-agent
 echo "Waiting for buildkite-agent prerequisites..."
@@ -988,12 +978,19 @@ if ! systemctl is-active --quiet buildkite-agent; then
 fi
 echo "buildkite-agent is running successfully"
 
-# Start CloudWatch agent log retention configuration in background
-echo "Starting CloudWatch agent configuration in background..."
-configure_cloudwatch_retention &
-echo "CloudWatch configuration will complete in background (non-blocking)"
+# Signal success to CloudFormation now that buildkite-agent is running
+echo "Signaling success to CloudFormation..."
+if ! cfn-signal \
+  --region "$AWS_REGION" \
+  --stack "$BUILDKITE_STACK_NAME" \
+  --resource "AgentAutoScaleGroup" \
+  --exit-code 0; then
+  echo "Warning: CloudFormation signal failed (non-critical - instance may still be marked unhealthy)"
+else
+  echo "Successfully signaled CloudFormation that instance is ready"
+fi
 
-# CloudFormation success signal is already sent in background during Phase 2
+# CloudWatch configuration was started earlier in background and should be completing
 
 # Record bootstrap as complete (this should be the last step in this file)
 echo "Completed" >"$STATUS_FILE"
