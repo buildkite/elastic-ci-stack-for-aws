@@ -81,6 +81,7 @@ Metadata:
         - ImageIdParameter
         - InstanceOperatingSystem
         - InstanceTypes
+        - CpuCredits
         - EnableInstanceStorage
         - MountTmpfsAtTmp
         - AgentsPerInstance
@@ -495,6 +496,14 @@ Parameters:
     MinLength: 1
     AllowedPattern: "^[\\w-\\.]+(,[\\w-\\.]*){0,24}$"
     ConstraintDescription: "must contain 1-25 instance types separated by commas. No space before/after the comma."
+
+  CpuCredits:
+    Description: Credit option for CPU usage of the instance.
+    Type: String
+    AllowedValues:
+      - standard
+      - unlimited
+    Default: "unlimited"
 
   MaxSize:
     Description: Maximum number of instances
@@ -1118,6 +1127,13 @@ Conditions:
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t4g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "x2gd" ]
 
+    UsingBurstableInstances:
+      !Or
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t2" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t3" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t3a" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t4g" ]
+
     UseStackNameForInstanceName:
       !Equals [ !Ref InstanceName, "" ]
 
@@ -1651,6 +1667,10 @@ Resources:
                 Encrypted: !Ref RootVolumeEncrypted
                 Throughput: !If [ IsRootVolumeIsGp3, !Ref RootVolumeThroughput, !Ref "AWS::NoValue" ]
                 Iops: !If [ IsRootVolumeIsIo1OrIo2OrGp3, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
+          CreditSpecification: !If
+            - UsingBurstableInstances
+            - CpuCredits: !Ref CpuCredits
+            - !Ref "AWS::NoValue"
           TagSpecifications:
             - ResourceType: instance
               Tags:
