@@ -498,7 +498,7 @@ Parameters:
     ConstraintDescription: "must contain 1-25 instance types separated by commas. No space before/after the comma."
 
   CpuCredits:
-    Description: Credit option for CPU usage of the instance.
+    Description: Credit option for CPU usage of burstable instances. Sets the CreditSpecification.CpuCredits property in the LaunchTemplate for T-class instance types (t2, t3, t3a, t4g).
     Type: String
     AllowedValues:
       - standard
