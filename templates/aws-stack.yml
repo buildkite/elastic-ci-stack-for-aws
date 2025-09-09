@@ -3,19 +3,19 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Buildkite stack %v"
 
 # The Buildkite Elastic CI Stack for AWS gives you a private,
-# autoscaling Buildkite Agent cluster. Use it to parallelize
+# autoscaling Buildkite agent cluster. Use it to parallelize
 # large test suites across thousands of nodes, run tests and
 # deployments for Linux or Windows based services and apps,
 # or run AWS ops tasks.
 #
-# To gain a better understanding of how Elastic CI Stack works
+# To gain a better understanding of how Elastic CI Stack for AWS works
 # and how to use it most effectively and securely, check out
 # the following resources:
 #
 # * Elastic CI Stack for AWS Overview: https://buildkite.com/docs/agent/v3/elastic_ci_aws
 # * Elastic CI Stack for AWS Tutorial: https://buildkite.com/docs/tutorials/elastic-ci-stack-aws
-# * Running Buildkite Agent on AWS: https://buildkite.com/docs/agent/v3/aws
-# * GitHub Repo for Elastic CI Stack: https://github.com/buildkite/elastic-ci-stack-for-aws
+# * Running Buildkite agent on AWS: https://buildkite.com/docs/agent/v3/aws
+# * GitHub Repo for Elastic CI Stack for AWS: https://github.com/buildkite/elastic-ci-stack-for-aws
 # * Template Parameters for Elastic CI Stack for AWS: https://buildkite.com/docs/agent/v3/elastic-ci-aws/parameters
 # * Using AWS Secrets Manager: https://buildkite.com/docs/agent/v3/aws/secrets-manager
 # * VPC Design: https://buildkite.com/docs/agent/v3/aws/vpc
@@ -164,7 +164,7 @@ Metadata:
 
 Parameters:
   KeyName:
-    Description: Optional - SSH keypair used to access the buildkite instances via ec2-user, setting this will enable SSH ingress.
+    Description: Optional - SSH keypair used to access the Buildkite instances via ec2-user, setting this will enable SSH ingress.
     Type: String
     Default: ""
 
@@ -199,20 +199,20 @@ Parameters:
     ConstraintDescription: "Expects a leading forward slash"
 
   BuildkiteAgentTokenParameterStoreKMSKey:
-    Description: AWS KMS key ID used to encrypt the SSM parameter (if encrypted)
+    Description: Optional - AWS KMS key ID used to encrypt the SSM parameter.
     Type: String
     Default: ""
 
   AgentEndpoint:
     Description: > 
-      API endpoint URL for Buildkite Agent communication. Most
+      API endpoint URL for Buildkite agent communication. Most
       customers shouldn't need to change this unless using a custom endpoint agreed with the Buildkite team.
     Type: String
     Default: "https://agent.buildkite.com/v3"
 
   BuildkiteAgentTags:
     Description: >
-      Additional tags to help target specific agents in pipeline steps (comma-separated). 
+      Additional tags to help target specific Buildkite agents in pipeline steps (comma-separated). 
       Example: 'environment=production,docker=enabled,size=large'.
       Use these tags in pipeline steps with 'agents: { environment: production }'.
     Type: String
@@ -234,7 +234,7 @@ Parameters:
     Default: ""
 
   BuildkiteAgentScalerServerlessARN:
-    Description: ARN of the Serverless Application Repository that hosts the version of buildkite-agent-scaler to run. This needs to be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
+    Description: ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function. The scaler automatically manages Buildkite agent instances based on job queue demand. Repository must be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
     Type: String
     Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
@@ -295,12 +295,12 @@ Parameters:
     MinValue: 0
 
   ScaleOutCooldownPeriod:
-    Description: Cooldown period in seconds before allowing another scale-out event.
+    Description: Cooldown period in seconds before allowing another scale-out event. Prevents rapid scaling and reduces costs from frequent instance launches.
     Type: Number
     Default: 300
 
   ScaleInCooldownPeriod:
-    Description: Cooldown period in seconds before allowing another scale-in event.
+    Description: Cooldown period in seconds before allowing another scale-in event. Longer periods prevent premature termination when job queues fluctuate.
     Type: Number
     Default: 3600
 
@@ -328,8 +328,8 @@ Parameters:
 
   BuildkiteAgentEnableGracefulShutdown:
     Description: >
-      Set to true to enable graceful shutdown of agents when the ASG is updated with replacement.
-      This allows ASGs to be removed in a timely manner during an in-place update of th Elastic Stack, and allows remaining agents to finish jobs without interruptions.
+      Set to true to enable graceful shutdown of Buildkite agents when the ASG is updated with replacement.
+      This allows ASGs to be removed in a timely manner during an in-place update of the Elastic CI Stack for AWS, and allows remaining Buildkite agents to finish jobs without interruptions.
     Type: String
     AllowedValues:
       - "true"
@@ -360,7 +360,7 @@ Parameters:
     MinValue: -1
 
   BuildkiteTerminateInstanceAfterJob:
-    Description: Set to "true" to terminate the instance after a job has completed.
+    Description: Set to 'true' to terminate the instance after a job has completed.
     Type: String
     AllowedValues:
       - "true"
@@ -368,7 +368,7 @@ Parameters:
     Default: "false"
 
   BuildkiteTerminateInstanceOnDiskFull:
-    Description: Set to "true" to terminate the instance when disk space is critically low (default is to exit job with code 1).
+    Description: Set to 'true' to terminate the instance when disk space is critically low (default is to exit job with code 1).
     Type: String
     AllowedValues:
       - "true"
@@ -376,7 +376,7 @@ Parameters:
     Default: "false"
 
   BuildkitePurgeBuildsOnDiskFull:
-    Description: Set to "true" to purge build directories as a last resort when disk space is critically low.
+    Description: Set to 'true' to purge build directories as a last resort when disk space is critically low.
     Type: String
     AllowedValues:
       - "true"
@@ -385,7 +385,7 @@ Parameters:
 
   BuildkiteAgentDisconnectAfterUptime:
     Description: >
-      The maximum uptime in seconds before the agent stops accepting new jobs and shuts down
+      The maximum uptime in seconds before the Buildkite agent stops accepting new jobs and shuts down
       after any running jobs complete. Set to 0 to disable uptime-based termination.
       This helps regularly cycle out machines and prevent resource accumulation issues.
     Type: Number
@@ -395,7 +395,7 @@ Parameters:
   ExperimentalEnableResourceLimits:
     Description: >
       Experimental - If true, enables systemd resource limits for the Buildkite agent.
-      This helps prevent resource exhaustion by limiting CPU, memory, and I/O usage.
+      This helps prevent resource exhaustion by limiting CPU, memory, and I/O usage. Useful for shared instances running multiple agents or resource-intensive builds.
     Type: String
     AllowedValues:
       - "true"
@@ -441,7 +441,7 @@ Parameters:
   ResourceLimitsCPUQuota:
     Description: >
       Experimental - Sets the CPU quota for the Buildkite agent slice.
-      Takes a percentage value, suffixed with "%" .
+      Takes a percentage value, suffixed with "%".
     Type: String
     Default: '90%'
     AllowedPattern: '^\d+%$'
@@ -459,7 +459,7 @@ Parameters:
   BuildkiteAdditionalSudoPermissions:
     Description: > 
         Optional - Comma-separated list of specific commands (full paths) that build jobs can run with sudo privileges. 
-        Only add commands essential for builds. Leave blank unless builds require specific system-level operations.
+        Include only commands essential for builds. Leave blank unless builds require specific system-level operations.
     Type: String
     Default: ""
 
@@ -467,7 +467,7 @@ Parameters:
     Description: > 
         Add buildkite-agent user to Windows Administrators group. 
         This provides full system access for build jobs. 
-        Set to "false" if builds don't require administrator privileges for additional security isolation.
+        Set to 'false' if builds don't require administrator privileges for additional security isolation.
     Type: String
     AllowedValues:
       - "true"
@@ -475,7 +475,7 @@ Parameters:
     Default: "true"
 
   BuildkiteQueue:
-    Description: Queue name that agents will use, targeted in pipeline steps using "queue={value}".
+    Description: Queue name that agents will use, targeted in pipeline steps using 'queue={value}'.
     Type: String
     Default: "default"
     MinLength: 1
@@ -483,7 +483,7 @@ Parameters:
   AgentsPerInstance:
     Description: >
       Number of Buildkite agents to start on each EC2 instance. 
-      WARNING: If an agent crashes or is terminated, it won't be automatically restarted, leaving fewer active agents on that instance. 
+      NOTE: If an agent crashes or is terminated, it won't be automatically restarted, leaving fewer active agents on that instance. 
       The ScaleInIdlePeriod parameter controls when the entire instance terminates (when all agents are idle), not individual agent restarts. 
       Consider enabling ScalerEnableExperimentalElasticCIMode for better agent management, or use fewer agents per instance with more instances for high availability.
     Type: Number
@@ -491,7 +491,7 @@ Parameters:
     MinValue: 1
 
   SecretsBucket:
-    Description: Optional - Name of an existing S3 bucket containing pipeline secrets (Created if left blank)
+    Description: Optional - Name of an existing S3 bucket containing pipeline secrets (Created if left blank).
     Type: String
     Default: ""
 
@@ -501,7 +501,7 @@ Parameters:
     Default: ""
 
   SecretsBucketEncryption:
-    Description: Indicates whether the SecretsBucket should enforce encryption at rest and in transit
+    Description: Indicates whether the SecretsBucket should enforce encryption at rest and in transit.
     Type: String
     AllowedValues:
       - "true"
@@ -509,7 +509,7 @@ Parameters:
     Default: "false"
 
   ArtifactsBucket:
-    Description: Optional - Name of an existing S3 bucket for build artifact storage
+    Description: Optional - Name of an existing S3 bucket for build artifact storage.
     Type: String
     Default: ""
 
@@ -519,7 +519,7 @@ Parameters:
     Default: ""
 
   ArtifactsS3ACL:
-    Description: Optional - ACL to use for S3 artifact uploads
+    Description: Optional - ACL to use for S3 artifact uploads.
     Type: String
     AllowedValues:
       - "private"
@@ -532,7 +532,7 @@ Parameters:
     Default: "private"
 
   BootstrapScriptUrl:
-    Description: Optional - HTTPS or S3 URL for a script to run on each instance during boot
+    Description: Optional - HTTPS or S3 URL for a script to run on each instance during boot.
     Type: String
     Default: ""
 
@@ -545,13 +545,13 @@ Parameters:
     Default: ""
 
   AuthorizedUsersUrl:
-    Description: Optional - HTTPS or S3 URL to periodically download ssh authorized_keys from, setting this will enable SSH ingress. authorized_keys are applied to ec2-user
+    Description: Optional - HTTPS or S3 URL to periodically download SSH authorized_keys from, setting this will enable SSH ingress. authorized_keys are applied to ec2-user.
     Type: String
     Default: ""
 
   VpcId:
     Type: String
-    Description: Optional - Id of an existing VPC to launch instances into. Leave blank to have a new VPC created
+    Description: Optional - Id of an existing VPC to launch instances into. Leave blank to have a new VPC created.
     Default: ""
 
   Subnets:
@@ -561,7 +561,7 @@ Parameters:
 
   AvailabilityZones:
     Type: CommaDelimitedList
-    Description: Optional - Comma separated list of AZs that subnets are created in (if Subnets parameter is not specified)
+    Description: Optional - Comma separated list of AZs that subnets are created in (if Subnets parameter is not specified).
     Default: ""
 
   InstanceTypes:
@@ -569,7 +569,7 @@ Parameters:
         EC2 instance types to use (comma-separated, up to 25). 
         The first type listed is preferred for OnDemand instances.
         Additional types improve Spot instance availability but make costs less predictable. 
-        Choose types that match build workload requirements.
+        Examples: 't3.large' for light workloads, 'm5.xlarge,m5a.xlarge' for CPU-intensive builds, 'c5.2xlarge,c5.4xlarge' for compute-heavy tasks.
     Type: String
     Default: "t3.large"
     MinLength: 1
@@ -585,13 +585,13 @@ Parameters:
     Default: "unlimited"
 
   MaxSize:
-    Description: Maximum number of instances
+    Description: Maximum number of instances. Controls cost ceiling and prevents runaway scaling.
     Type: Number
     Default: 10
     MinValue: 0
 
   MinSize:
-    Description: Minimum number of instances
+    Description: Minimum number of instances. Ensures baseline capacity for immediate job execution.
     Type: Number
     Default: 0
     MinValue: 0
@@ -604,7 +604,7 @@ Parameters:
   ScalerEventSchedulePeriod:
     Description: >
       How often the Event Schedule for buildkite-agent-scaler is triggered. 
-      Should be an expression with units. Example: "30 seconds", "1 minute", "5 minutes".
+      Should be an expression with units. Example: '30 seconds', '1 minute', '5 minutes'.
     Type: String
     Default: "1 minute"
 
@@ -624,11 +624,10 @@ Parameters:
 
   OnDemandPercentage:
     Description: >
-      Percentage of instances to launch as reliable OnDemand vs cheaper Spot instances.
-      OnDemand instances are guaranteed availability but cost more. 
-      Spot instances offer significant cost savings but may be terminated by AWS with 2-minute notice. 
-      Consider AWS Savings Plans for cost reductions on OnDemand instances while maintaining reliability. 
-      Use 100% for critical workloads, lower values for cost-sensitive development environments.
+      Percentage of instances to launch as OnDemand vs Spot instances.
+      OnDemand instances provide guaranteed availability at higher cost.
+      Spot instances offer 60-90% cost savings but may be interrupted by AWS.
+      Use 100% for critical workloads, lower values when jobs can handle unexpected instance interruptions.
     Type: Number
     Default: 100
     MinValue: 0
@@ -667,8 +666,9 @@ Parameters:
 
   ScaleOutForWaitingJobs:
     Description: >
-      Scale up instances for pipeline steps that are queued after 'wait' steps in the pipeline.
-      Enable this only if ScaleInIdlePeriod is long enough to prevent premature instance termination while waiting for manual approvals or other wait conditions.
+      Scale up instances for pipeline steps queued behind manual approval or wait steps.
+      When enabled, the scaler will provision instances even when jobs can't start immediately due to pipeline waits.
+      Ensure ScaleInIdlePeriod is long enough to keep instances running during wait periods.
     Type: String
     AllowedValues:
       - "true"
@@ -676,12 +676,12 @@ Parameters:
     Default: "false"
 
   InstanceCreationTimeout:
-    Description: Optional - Timeout period for Autoscaling Group Creation Policy.
+    Description: Optional - Timeout period for Auto Scaling Group Creation Policy.
     Type: String
     Default: ""
 
   RootVolumeSize:
-    Description: Size of each instance's root EBS volume (in GB)
+    Description: Size of each instance's root EBS volume (in GB).
     Type: Number
     Default: 250
     MinValue: 10
@@ -699,17 +699,17 @@ Parameters:
     Default: "gp3"
 
   RootVolumeThroughput:
-    Description: If the `RootVolumeType` is gp3, the throughput to provision for the root volume
+    Description: If the `RootVolumeType` is gp3, the throughput (MB/s data transfer rate) to provision for the root volume.
     Type: Number
     Default: 125
 
   RootVolumeIops:
-    Description: If the `RootVolumeType` is gp3, io1, or io2, the number of IOPS to provision for the root volume
+    Description: If the `RootVolumeType` is gp3, io1, or io2, the number of IOPS to provision for the root volume.
     Type: Number
     Default: 1000
 
   RootVolumeEncrypted:
-    Description: Indicates whether the EBS volume is encrypted
+    Description: Indicates whether the EBS volume is encrypted.
     Type: String
     AllowedValues:
       - "true"
@@ -718,22 +718,22 @@ Parameters:
 
   SecurityGroupIds:
     Type: String
-    Description: Optional - Comma separated list of security group ids to assign to instances
+    Description: Optional - Comma separated list of security group ids to assign to instances.
     Default: ""
 
   ImageId:
     Type: String
-    Description: Optional - Custom AMI to use for instances (must be based on the stack's AMI)
+    Description: Optional - Custom AMI to use for instances (must be based on the stack's AMI).
     Default: ""
 
   ImageIdParameter:
     Type: String
-    Description: Optional - Custom AMI SSM Parameter to use for instances (must be based on the stack's AMI)
+    Description: Optional - Custom AMI SSM Parameter to use for instances (must be based on the stack's AMI).
     Default: ""
 
   ManagedPolicyARNs:
     Type: CommaDelimitedList
-    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role.
     Default: ""
 
   IMDSv2Tokens:
@@ -749,7 +749,7 @@ Parameters:
 
   InstanceRoleName:
     Type: String
-    Description: Optional - A name for the IAM Role attached to the Instance Profile
+    Description: Optional - A name for the IAM Role attached to the Instance Profile.
     Default: ""
 
   InstanceRolePermissionsBoundaryARN:
@@ -768,7 +768,7 @@ Parameters:
 
   InstanceOperatingSystem:
     Type: String
-    Description: The operating system to run on the instances
+    Description: The operating system to run on the instances.
     AllowedValues:
       - linux
       - windows
@@ -826,7 +826,7 @@ Parameters:
 
   EnableSecretsPlugin:
     Type: String
-    Description: Enables s3-secrets plugin for all pipelines
+    Description: Enables S3 Secrets plugin for all pipelines.
     AllowedValues:
       - "true"
       - "false"
@@ -834,7 +834,7 @@ Parameters:
 
   EnableECRPlugin:
     Type: String
-    Description: Enables ecr plugin for all pipelines
+    Description: Enables ECR plugin for all pipelines.
     AllowedValues:
       - "true"
       - "false"
@@ -842,7 +842,7 @@ Parameters:
 
   EnableDockerLoginPlugin:
     Type: String
-    Description: Enables docker-login plugin for all pipelines
+    Description: Enables docker-login plugin for all pipelines.
     AllowedValues:
       - "true"
       - "false"
@@ -850,7 +850,7 @@ Parameters:
 
   EnableDockerUserNamespaceRemap:
     Type: String
-    Description: Enables Docker user namespace remapping so docker runs as buildkite-agent
+    Description: Enables Docker user namespace remapping so docker runs as buildkite-agent.
     AllowedValues:
       - "true"
       - "false"
@@ -858,7 +858,7 @@ Parameters:
 
   EnableDockerExperimental:
     Type: String
-    Description: Enables Docker experimental features
+    Description: Enables Docker experimental features.
     AllowedValues:
       - "true"
       - "false"
@@ -888,7 +888,7 @@ Parameters:
 
   EnableCostAllocationTags:
     Type: String
-    Description: Enables AWS Cost Allocation tags for all resources in the stack. See https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html
+    Description: Enables AWS Cost Allocation tags for all resources in the stack. See https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html.
     AllowedValues:
       - "true"
       - "false"
@@ -896,17 +896,17 @@ Parameters:
 
   CostAllocationTagName:
     Type: String
-    Description: The name of the Cost Allocation Tag used for billing purposes
+    Description: The name of the Cost Allocation Tag used for billing purposes.
     Default: "CreatedBy"
 
   CostAllocationTagValue:
     Type: String
-    Description: The value of the Cost Allocation Tag used for billing purposes
+    Description: The value of the Cost Allocation Tag used for billing purposes.
     Default: "buildkite-elastic-ci-stack-for-aws"
 
   BuildkiteAgentEnableGitMirrors:
     Type: String
-    Description: Enables git-mirrors in the agent
+    Description: Enables Git mirrors in the agent.
     AllowedValues:
       - "true"
       - "false"
@@ -914,7 +914,7 @@ Parameters:
 
   EnableDetailedMonitoring:
     Type: String
-    Description: Enable detailed EC2 monitoring
+    Description: Enable detailed EC2 monitoring.
     AllowedValues:
       - "true"
       - "false"
@@ -922,17 +922,17 @@ Parameters:
 
   InstanceName:
     Type: String
-    Description: Optional - Customise the EC2 instance Name tag
+    Description: Optional - Customize the EC2 instance Name tag.
     Default: ""
 
   PipelineSigningKMSKeyId:
     Type: String
-    Description: Optional - Identifier or ARN of the KMS key used to sign and verify pipelines (created if both PipelineSigningKMSKeyId and PipelineSigningKMSKeyARN are left blank and PipelineSigningKMSKeySpec is selected)
+    Description: Optional - Identifier or ARN of existing KMS key for pipeline signing. Leave blank to create a new key when PipelineSigningKMSKeySpec is specified.
     Default: ""
 
   PipelineSigningKMSKeySpec:
     Type: String
-    Description: The key spec for the KMS key used to sign and verify pipelines
+    Description: Key specification for pipeline signing KMS key. Set to 'none' to disable pipeline signing, or 'ECC_NIST_P256' to enable with automatic key creation.
     AllowedValues:
       - "ECC_NIST_P256"
       - "none"
@@ -940,7 +940,7 @@ Parameters:
 
   PipelineSigningKMSAccess:
     Type: String
-    Description: The access level for the KMS key used to sign and verify pipelines
+    Description: Access permissions for pipeline signing. 'sign-and-verify' allows both operations, 'verify' restricts to verification only.
     AllowedValues:
       - "sign-and-verify"
       - "verify"
@@ -948,7 +948,7 @@ Parameters:
 
   PipelineSigningVerificationFailureBehavior:
     Type: String
-    Description: The behavior when a job is received without a valid verifiable signature (without a signature, with an invalid signature, or with a signature that fails verification)
+    Description: The behavior when a job is received without a valid verifiable signature (without a signature, with an invalid signature, or with a signature that fails verification).
     AllowedValues:
       - "block"
       - "warn"
@@ -1399,7 +1399,7 @@ Resources:
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
-      Description: Key used to sign and verify pipelines
+      Description: Key used to sign and verify pipelines.
       KeySpec: !Ref PipelineSigningKMSKeySpec
       KeyUsage: SIGN_VERIFY
       Tags:
@@ -2180,7 +2180,7 @@ Resources:
   AzRebalancingSuspenderFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: 'Disables AZ Rebalancing on the agent ASG'
+      Description: Disables AZ Rebalancing on the agent ASG.
       Code:
         ZipFile: |
           import cfnresponse
@@ -2272,7 +2272,7 @@ Resources:
     Type: AWS::Lambda::Function
     Condition: EnableBuildkiteAgentGracefulShutdown
     Properties:
-      Description: "Gracefully stops all Buildkite agents in a given Auto Scaling group."
+      Description: Gracefully stops all Buildkite agents in a given Auto Scaling group.
       Code:
         ZipFile: |
           import boto3
