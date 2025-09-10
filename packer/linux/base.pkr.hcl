@@ -91,11 +91,6 @@ build {
     source      = "../../plugins"
   }
 
-  provisioner "file" {
-    destination = "/tmp/build"
-    source      = "../../build"
-  }
-
   # Essential utilities & updates
   provisioner "shell" {
     script = "scripts/install-utils.sh"
