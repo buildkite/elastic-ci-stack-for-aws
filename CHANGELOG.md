@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v6.41.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.41.2) (2025-09-11)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.1...v6.41.2)
+
+### Changed
+- Update agent version to 3.105.0 [#1580](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1580) (@jonathanly)
+- Configurable CpuCredits parameter for T-class instances [#1574](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1574) (@petetomasik)
+- Allow scheduled scale up/down actions for MinSize [#1575](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1575) (@petetomasik)
+
+## Internal
+- chore(deps): bump golang.org/x/sys from 0.35.0 to 0.36.0 [#1573](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1573) (@dependabot[bot])
+- fix: align Go version with go.mod [#1579](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1579) (@scadu)
+- Fix base AMI hash calculation [#1578](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1578) (@scadu)
+- Fix base AMI hash calculation mismatch [#1576](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1576) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.105.0](https://github.com/buildkite/agent/tree/v3.105.0) (2025-09-10)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.104.0...v3.105.0)
+
+
+### Fixed
+- PS-1101: refresh Executor config for Job API env change in polyglot hook [#3467](https://github.com/buildkite/agent/pull/3467) (@zhming0)
+- PB-610: fix hook environment variable unable to propagate via bk-agent env set [#3466](https://github.com/buildkite/agent/pull/3466) (@zhming0)
+
+### Added
+- Support agent checkout on pull request merge refspecs [#3436](https://github.com/buildkite/agent/pull/3436) (@jonathanly)
+
+### Internal
+- Lower Go containers back to 1.24 [#3468](https://github.com/buildkite/agent/pull/3468) (@DrJosh9000)
+- Add replacer fuzz test corpus to repo, with fix [#3448](https://github.com/buildkite/agent/pull/3448) (@DrJosh9000)
+- Re-add test race detection, and skip a known-racy test under the race  regime [#3452](https://github.com/buildkite/agent/pull/3452) (@moskyb)
+- Dependancy updates: [#3463](https://github.com/buildkite/agent/pull/3463), [#3465](https://github.com/buildkite/agent/pull/3465), [#3462](https://github.com/buildkite/agent/pull/3462) ,[#3457](https://github.com/buildkite/agent/pull/3457), [#3460](https://github.com/buildkite/agent/pull/3460), [#3456](https://github.com/buildkite/agent/pull/3456), [#3454](https://github.com/buildkite/agent/pull/3454) (@dependabot[bot])
+</details>
+
+
 ## [v6.41.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.0...v6.41.1) (2025-09-08)
 
 * Update agent version to 3.104.0 [#1570](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1570) ([matthewborden](https://github.com/matthewborden))
@@ -737,7 +773,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Implement several documentation improvements to the Agent (for the Buildkite Docs). [#3043](https://github.com/buildkite/agent/pull/3043) (@gilesgas)
 - Allow token to be empty if graphql-token is provided [#3051](https://github.com/buildkite/agent/pull/3051) (@jordandcarter)
-- Fix multiline secret redaction when output with 
+- Fix multiline secret redaction when output with
  [#3050](https://github.com/buildkite/agent/pull/3050) (@DrJosh9000)
 - k8s exec: Perform liveness check of clients [#3045](https://github.com/buildkite/agent/pull/3045) (@DrJosh9000)
 - Fix request headers for multipart [#3042](https://github.com/buildkite/agent/pull/3042) (@DrJosh9000)
