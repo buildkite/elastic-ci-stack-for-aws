@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Configurable CpuCredits parameter for T-class instances [#1574](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1574) (@petetomasik)
 - Allow scheduled scale up/down actions for MinSize [#1575](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1575) (@petetomasik)
 
-## Internal
+### Internal
 - chore(deps): bump golang.org/x/sys from 0.35.0 to 0.36.0 [#1573](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1573) (@dependabot[bot])
 - fix: align Go version with go.mod [#1579](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1579) (@scadu)
 - Fix base AMI hash calculation [#1578](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1578) (@scadu)
