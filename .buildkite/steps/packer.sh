@@ -22,7 +22,13 @@ packer_files_sha=$(find Makefile "packer/${os}" plugins/ -type f -print0 | xargs
 internal_files_sha=$(find go.mod go.sum internal/ -type f -print0 | xargs -0 sha256sum | awk '{print $1}' | sort | sha256sum | awk '{print $1}')
 stable_agent_sha=$(curl -Lfs "https://download.buildkite.com/agent/stable/latest/${agent_binary}.sha256")
 unstable_agent_sha=$(curl -Lfs "https://download.buildkite.com/agent/unstable/latest/${agent_binary}.sha256")
-packer_hash=$(echo "$packer_files_sha" "$internal_files_sha" "$arch" "$stable_agent_sha" "$unstable_agent_sha" | sha256sum | awk '{print $1}')
+if [[ "${variant}" == "base" ]]; then
+  # Base AMI doesn't use Go dependencies
+  packer_hash=$(echo "$packer_files_sha" "$arch" "$stable_agent_sha" "$unstable_agent_sha" "$variant" | sha256sum | awk '{print $1}')
+else
+  # Full AMI includes Go dependencies for fix-perms binary
+  packer_hash=$(echo "$packer_files_sha" "$internal_files_sha" "$arch" "$stable_agent_sha" "$unstable_agent_sha" "$variant" | sha256sum | awk '{print $1}')
+fi
 
 # Include variant in the hash so base and full images don’t clash
 echo "Packer image hash for ${os}/${arch} (${variant}) is ${packer_hash}"
@@ -46,7 +52,8 @@ if [[ -n "${PACKER_REBUILD:-}" ]] || ! aws s3 cp "s3://${BUILDKITE_AWS_STACK_BUC
       echo "Base AMI ID not found in metadata, checking S3 for latest base image..."
 
       # Calculate hash for base image to find the S3 file
-      base_packer_hash=$(echo "$packer_files_sha" "$internal_files_sha" "$arch" "$stable_agent_sha" "$unstable_agent_sha" "base" | sha256sum | awk '{print $1}')
+      # Base AMI doesn't include Go dependencies, so exclude them from hash
+      base_packer_hash=$(echo "$packer_files_sha" "$arch" "$stable_agent_sha" "$unstable_agent_sha" "base" | sha256sum | awk '{print $1}')
       base_packer_file="packer-${base_packer_hash}-${os}-${arch}-base.output"
 
       # Try to download and extract AMI ID from the base image packer output
