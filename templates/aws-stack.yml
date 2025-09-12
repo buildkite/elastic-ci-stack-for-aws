@@ -1869,8 +1869,6 @@ Resources:
                   EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
 
-                  # Configure Docker GC with custom parameters
-                  /usr/local/bin/bk-configure-docker-gc.sh
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If
                     - CreateSecretsBucket

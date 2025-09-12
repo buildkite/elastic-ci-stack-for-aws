@@ -92,9 +92,19 @@ StandardError=journal
 EOF
 
 echo "Enabling timer"
-systemctl daemon-reload
-systemctl enable docker-gc.timer
-systemctl start docker-gc.timer
+systemctl daemon-reload || {
+  echo "Warning: systemctl daemon-reload failed, retrying in 5 seconds"
+  sleep 5
+  systemctl daemon-reload
+}
+
+systemctl enable docker-gc.timer || {
+  echo "Warning: failed to enable docker-gc.timer"
+}
+
+systemctl start docker-gc.timer || {
+  echo "Warning: failed to start docker-gc.timer, will retry later"
+}
 
 echo "Docker GC Cleanup configured"
 echo "Schedule: $DOCKER_GC_SCHEDULE"

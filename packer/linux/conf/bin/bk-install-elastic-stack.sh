@@ -424,6 +424,17 @@ fi
 echo "Waited $next_wait_time times for docker to start. We will exit if it still has not started."
 check_docker
 
+echo "Configuring Docker garbage collection..."
+if [[ -f "/usr/local/bin/bk-configure-docker-gc.sh" ]]; then
+  if /usr/local/bin/bk-configure-docker-gc.sh; then
+    echo "Docker GC configuration completed successfully"
+  else
+    echo "Warning: Docker GC configuration failed, continuing with installation..."
+  fi
+else
+  echo "Warning: bk-configure-docker-gc.sh not found, skipping Docker GC configuration"
+fi
+
 echo Writing buildkite-agent systemd environment override...
 # also set in /var/lib/buildkite-agent/cfn-env so that it's shown in the job logs
 mkdir -p /etc/systemd/system/buildkite-agent.service.d
