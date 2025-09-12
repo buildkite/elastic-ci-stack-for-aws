@@ -10,7 +10,7 @@ PACKER_WINDOWS_FILES = $(exec find packer/windows)
 # Allow passing an existing golden base AMI into packer via `BASE_AMI_ID` env var
 override BASE_AMI_ID ?=
 
-GO_VERSION ?= 1.23.6
+GO_VERSION ?= 1.24.0
 
 FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
 

@@ -55,6 +55,7 @@ Metadata:
         - BuildkiteAgentCancelGracePeriod
         - BuildkiteAgentSignalGracePeriod
         - BuildkiteTerminateInstanceAfterJob
+        - BuildkitePurgeBuildsOnDiskFull
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
         - BuildkiteAgentScalerServerlessARN
@@ -80,6 +81,7 @@ Metadata:
         - ImageIdParameter
         - InstanceOperatingSystem
         - InstanceTypes
+        - CpuCredits
         - EnableInstanceStorage
         - MountTmpfsAtTmp
         - AgentsPerInstance
@@ -128,6 +130,12 @@ Metadata:
         - ScalerEventSchedulePeriod
         - ScalerMinPollInterval
         - ScalerEnableExperimentalElasticCIMode
+        - EnableScheduledScaling
+        - ScheduleTimezone
+        - ScaleUpSchedule
+        - ScaleUpMinSize
+        - ScaleDownSchedule
+        - ScaleDownMinSize
 
       - Label:
           default: Cost Allocation Configuration
@@ -235,6 +243,45 @@ Parameters:
         - "false"
     Default: "false"
 
+  EnableScheduledScaling:
+    Description: Enable scheduled scaling to automatically adjust MinSize based on time-based schedules
+    Type: String
+    AllowedValues:
+        - "true"
+        - "false"
+    Default: "false"
+
+  ScheduleTimezone:
+    Description: "Timezone for scheduled scaling actions (only used when EnableScheduledScaling is true). See AWS documentation for supported formats: https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html#scheduled-scaling-timezone (America/New_York, UTC, Europe/London, etc.)"
+    Type: String
+    Default: "UTC"
+
+  ScaleUpSchedule:
+    Description: "Cron expression for when to scale up (only used when EnableScheduledScaling is true). See AWS documentation for format details: https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html#scheduled-scaling-cron (\"0 8 * * MON-FRI\" for 8 AM weekdays)"
+    Type: String
+    Default: "0 8 * * MON-FRI"
+    AllowedPattern: '^[0-9*,-/]+ [0-9*,-/]+ [0-9*,-/]+ [0-9*,-/]+ [0-9A-Za-z*,-/]+$'
+    ConstraintDescription: "Must be a valid cron expression (5 fields: minute hour day-of-month month day-of-week)"
+
+  ScaleUpMinSize:
+    Description: MinSize to set when the ScaleUpSchedule is triggered (applied at the time specified in ScaleUpSchedule, only used when EnableScheduledScaling is true). Cannot exceed MaxSize.
+    Type: Number
+    Default: 1
+    MinValue: 0
+
+  ScaleDownSchedule:
+    Description: "Cron expression for when to scale down (only used when EnableScheduledScaling is true). See AWS documentation for format details: https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html#scheduled-scaling-cron (\"0 18 * * MON-FRI\" for 6 PM weekdays)"
+    Type: String
+    Default: "0 18 * * MON-FRI"
+    AllowedPattern: '^[0-9*,-/]+ [0-9*,-/]+ [0-9*,-/]+ [0-9*,-/]+ [0-9A-Za-z*,-/]+$'
+    ConstraintDescription: "Must be a valid cron expression (5 fields: minute hour day-of-month month day-of-week)"
+
+  ScaleDownMinSize:
+    Description: MinSize to set when the ScaleDownSchedule is triggered (applied at the time specified in ScaleDownSchedule, only used when EnableScheduledScaling is true)
+    Type: Number
+    Default: 0
+    MinValue: 0
+
   ScaleOutCooldownPeriod:
     Description: Cooldown period in seconds before allowing another scale-out event
     Type: Number
@@ -308,6 +355,14 @@ Parameters:
 
   BuildkiteTerminateInstanceOnDiskFull:
     Description: Set to "true" to terminate the instance when disk space is critically low (default is to exit job with code 1).
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  BuildkitePurgeBuildsOnDiskFull:
+    Description: Set to "true" to purge build directories as a last resort when disk space is critically low.
     Type: String
     AllowedValues:
       - "true"
@@ -492,6 +547,14 @@ Parameters:
     MinLength: 1
     AllowedPattern: "^[\\w-\\.]+(,[\\w-\\.]*){0,24}$"
     ConstraintDescription: "must contain 1-25 instance types separated by commas. No space before/after the comma."
+
+  CpuCredits:
+    Description: Credit option for CPU usage of burstable instances. Sets the CreditSpecification.CpuCredits property in the LaunchTemplate for T-class instance types (t2, t3, t3a, t4g).
+    Type: String
+    AllowedValues:
+      - standard
+      - unlimited
+    Default: "unlimited"
 
   MaxSize:
     Description: Maximum number of instances
@@ -1153,6 +1216,13 @@ Conditions:
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t4g" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "x2gd" ]
 
+    UsingBurstableInstances:
+      !Or
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t2" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t3" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t3a" ]
+        - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t4g" ]
+
     UseStackNameForInstanceName:
       !Equals [ !Ref InstanceName, "" ]
 
@@ -1164,6 +1234,9 @@ Conditions:
         - !Equals [ !Ref RootVolumeType, "io1" ]
         - !Equals [ !Ref RootVolumeType, "io2" ]
         - !Equals [ !Ref RootVolumeType, "gp3" ]
+
+    EnableScheduledScaling:
+      !Equals [ !Ref EnableScheduledScaling, "true" ]
 
 Mappings:
   ECRManagedPolicy:
@@ -1686,6 +1759,10 @@ Resources:
                 Encrypted: !Ref RootVolumeEncrypted
                 Throughput: !If [ IsRootVolumeIsGp3, !Ref RootVolumeThroughput, !Ref "AWS::NoValue" ]
                 Iops: !If [ IsRootVolumeIsIo1OrIo2OrGp3, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
+          CreditSpecification: !If
+            - UsingBurstableInstances
+            - CpuCredits: !Ref CpuCredits
+            - !Ref "AWS::NoValue"
           TagSpecifications:
             - ResourceType: instance
               Tags:
@@ -1844,6 +1921,7 @@ Resources:
                   BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}" \
                   BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME="${BuildkiteAgentDisconnectAfterUptime}" \
                   BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL="${BuildkiteTerminateInstanceOnDiskFull}" \
+                  BUILDKITE_PURGE_BUILDS_ON_DISK_FULL="${BuildkitePurgeBuildsOnDiskFull}" \
                   BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}" \
                   AWS_DEFAULT_REGION="${AWS::Region}" \
                   SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}" \
@@ -2032,6 +2110,26 @@ Resources:
     UpdatePolicy:
       AutoScalingReplacingUpdate:
         WillReplace: true
+
+  ScheduledScaleUpAction:
+    Condition: EnableScheduledScaling
+    Type: AWS::AutoScaling::ScheduledAction
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      ScheduledActionName: !Sub "${AWS::StackName}-ScaleUp"
+      Recurrence: !Ref ScaleUpSchedule
+      MinSize: !Ref ScaleUpMinSize
+      TimeZone: !Ref ScheduleTimezone
+
+  ScheduledScaleDownAction:
+    Condition: EnableScheduledScaling
+    Type: AWS::AutoScaling::ScheduledAction
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      ScheduledActionName: !Sub "${AWS::StackName}-ScaleDown"
+      Recurrence: !Ref ScaleDownSchedule
+      MinSize: !Ref ScaleDownMinSize
+      TimeZone: !Ref ScheduleTimezone
 
   AsgProcessSuspenderRole:
     Type: AWS::IAM::Role

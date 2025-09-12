@@ -92,6 +92,60 @@ To enable resource limits with custom values, include these parameters in your C
 - Resource limits are disabled by default
 - Values can be specified as percentages or absolute values (for memory-related parameters)
 
+## Scheduled Scaling
+
+The Elastic CI Stack supports time-based scaling to automatically adjust the minimum number of instances based on your team's working hours. This feature helps optimize costs by scaling down during off-hours while allowing users the ability to proactively scale up capacity ahead of expected increasing capacity requirements.
+
+### Configuration Parameters
+
+| Parameter                | Description                                          | Default              |
+|--------------------------|------------------------------------------------------|----------------------|
+| `EnableScheduledScaling` | Enable scheduled scaling actions                     | `false`              |
+| `ScheduleTimezone`       | Timezone for scheduled actions                       | `UTC`                |
+| `ScaleUpSchedule`        | Cron expression for scaling up                       | `0 8 * * MON-FRI`    |
+| `ScaleUpMinSize`         | MinSize when scaling up                              | `1`                  |
+| `ScaleDownSchedule`      | Cron expression for scaling down                     | `0 18 * * MON-FRI`   |
+| `ScaleDownMinSize`       | MinSize when scaling down                            | `0`                  |
+
+### Example Configuration
+
+To enable scheduled scaling that maintains a minimum of 10 ASG instances during business hours (8 AM - 6 PM, Eastern Time) and 2 ASG instances during off-hours:
+
+```json
+{
+  "Parameters": {
+    "EnableScheduledScaling": "true",
+    "ScheduleTimezone": "America/New_York",
+    "ScaleUpSchedule": "0 8 * * MON-FRI",
+    "ScaleUpMinSize": "10",
+    "ScaleDownSchedule": "0 18 * * MON-FRI",
+    "ScaleDownMinSize": "2"
+  }
+}
+```
+
+### Schedule Format
+
+Scheduled scaling uses [AWS Auto Scaling cron expressions](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html#scheduled-scaling-cron) with the format:
+```
+minute hour day-of-month month day-of-week
+```
+
+Common examples:
+- `0 8 * * MON-FRI` - 8:00 AM on weekdays
+- `0 18 * * MON-FRI` - 6:00 PM on weekdays
+- `0 9 * * SAT` - 9:00 AM on Saturdays
+- `30 7 * * 1-5` - 7:30 AM Monday through Friday (using numbers)
+
+### Timezone Support
+
+The `ScheduleTimezone` parameter supports [IANA timezone names](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html#scheduled-scaling-timezone) such as:
+- `America/New_York` (Eastern Time)
+- `America/Los_Angeles` (Pacific Time)
+- `Europe/London` (Greenwich Mean Time)
+- `Asia/Tokyo` (Japan Standard Time)
+- `UTC` (Coordinated Universal Time)
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
