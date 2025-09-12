@@ -2,6 +2,26 @@
 
 set -euo pipefail
 
+# Check if we should skip termination due to agent failure
+# Only terminate on clean exit (code 0) or when systemd has given up on restarts
+if [[ ${EXIT_CODE:-0} != 0 ]]; then
+  # Check if systemd has hit restart limits
+  if systemctl is-failed buildkite-agent.service --quiet; then
+    failure_reason=$(systemctl show -p Result buildkite-agent.service --value 2>/dev/null || echo "unknown")
+    if [[ "$failure_reason" == "start-limit-hit" ]]; then
+      echo "systemd restart limit exceeded (exit code: $EXIT_CODE), proceeding with instance termination" | logger
+    else
+      echo "Agent exited with non-zero code ($EXIT_CODE) but systemd will retry, skipping termination" | logger
+      exit 0
+    fi
+  else
+    echo "Agent exited with non-zero code ($EXIT_CODE), allowing systemd restart" | logger
+    exit 0
+  fi
+else
+  echo "Agent exited normally (exit code: 0), proceeding with instance termination" | logger
+fi
+
 terminate() {
   aws autoscaling terminate-instance-in-auto-scaling-group \
     --region "$1" \
