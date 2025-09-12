@@ -104,6 +104,10 @@ cat <<EOF >config.json
   {
     "ParameterKey": "BuildkiteAdditionalSudoPermissions",
     "ParameterValue": "/usr/local/bin/goss"
+  },
+  {
+    "ParameterKey": "BuildkiteTerminateInstanceAfterJob",
+    "ParameterValue": "true"
   }
 ]
 EOF

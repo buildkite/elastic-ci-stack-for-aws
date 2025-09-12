@@ -15,6 +15,9 @@ secrets_logging_bucket=$(aws cloudformation describe-stacks \
   --query "Stacks[0].Outputs[?OutputKey=='ManagedSecretsLoggingBucket'].OutputValue" \
   --output text)
 
+echo "--- Preparing for stack deletion"
+echo "Note: CloudFormation will handle instance termination automatically"
+
 echo "--- Deleting stack $stack_name"
 aws cloudformation delete-stack --stack-name "$stack_name"
 aws cloudformation wait stack-delete-complete --stack-name "$stack_name"
