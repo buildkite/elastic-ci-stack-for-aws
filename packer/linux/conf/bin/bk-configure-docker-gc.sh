@@ -40,7 +40,7 @@ echo "$(date): Docker cleanup starting"
 TIME_FILTER="--filter until=DOCKER_PRUNE_UNTIL_PLACEHOLDER"
 
 echo "Cleaning networks and containers"
-docker network prune --force $TIME_FILTER
+docker network prune --force
 docker container prune --force $TIME_FILTER
 
 if [[ "DOCKER_GC_PRUNE_IMAGES_PLACEHOLDER" == "true" ]]; then
@@ -53,7 +53,7 @@ fi
 
 if [[ "DOCKER_GC_PRUNE_VOLUMES_PLACEHOLDER" == "true" ]]; then
     echo "Cleaning volumes"
-    docker volume prune --force $TIME_FILTER
+    docker volume prune --force
 fi
 
 echo "Cleanup Done"

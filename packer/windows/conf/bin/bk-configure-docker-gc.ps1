@@ -37,7 +37,7 @@ Add-Content -Path `$logFile -Value "`$(Get-Date): Docker cleanup starting"
 `$TimeFilter = "--filter until=$DockerGcPruneUntil"
 
 Add-Content -Path `$logFile -Value "Cleaning networks and containers"
-docker network prune --force `$TimeFilter
+docker network prune --force
 docker container prune --force `$TimeFilter
 
 if ("$DockerGcPruneImages" -eq "true") {
@@ -50,7 +50,7 @@ if ("$DockerGcPruneImages" -eq "true") {
 
 if ("$DockerGcPruneVolumes" -eq "true") {
     Add-Content -Path `$logFile -Value "Cleaning volumes"
-    docker volume prune --force `$TimeFilter
+    docker volume prune --force
 }
 
 Add-Content -Path `$logFile -Value "`$(Get-Date): Docker cleanup completed"
