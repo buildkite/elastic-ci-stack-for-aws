@@ -41,8 +41,11 @@ fi
 
 echo "Checking disk space"
 if ! /usr/local/bin/bk-check-disk-space.sh; then
-  echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL:-4h}"
-  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
+  echo "Disk space low, triggering emergency Docker cleanup"
+  if ! /usr/local/bin/docker-gc; then
+    echo "Emergency Docker cleanup failed" >&2
+    exit 1
+  fi
 
   echo "Checking disk space again"
   # Capture disk space output for potential error logging

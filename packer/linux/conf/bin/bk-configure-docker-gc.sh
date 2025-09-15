@@ -35,28 +35,75 @@ if [[ $EUID -eq 0 ]]; then
     exec >> /var/log/elastic-stack.log 2>&1
 fi
 
+mark_instance_unhealthy() {
+  # cancel any running buildkite builds
+  killall -QUIT buildkite-agent || true
+
+  # mark the instance for termination
+  echo "Marking instance as unhealthy"
+
+  # shellcheck disable=SC2155
+  local token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location "http://169.254.169.254/latest/api/token")
+  # shellcheck disable=SC2155
+  local instance_id=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/instance-id")
+  # shellcheck disable=SC2155
+  local region=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location "http://169.254.169.254/latest/meta-data/placement/region")
+
+  aws autoscaling set-instance-health \
+    --instance-id "${instance_id}" \
+    --region "${region}" \
+    --health-status Unhealthy
+}
+
+trap mark_instance_unhealthy ERR
+
 echo "$(date): Docker cleanup starting"
 
-TIME_FILTER="--filter until=DOCKER_PRUNE_UNTIL_PLACEHOLDER"
-
-echo "Cleaning networks and containers"
-docker network prune --force
-docker container prune --force $TIME_FILTER
-
-if [[ "DOCKER_GC_PRUNE_IMAGES_PLACEHOLDER" == "true" ]]; then
-    echo "Cleaning all images"
+# Check if this is a disk-space triggered cleanup or scheduled cleanup
+FORCE_CLEANUP=${1:-""}
+if [[ "$FORCE_CLEANUP" != "force" ]]; then
+    if /usr/local/bin/bk-check-disk-space.sh >/dev/null 2>&1; then
+        echo "$(date): Disk space is sufficient, skipping Docker cleanup"
+        exit 0
+    fi
+    echo "$(date): Disk space is low, proceeding with emergency Docker cleanup"
+    
+    TIME_FILTER="--filter until=DOCKER_PRUNE_UNTIL_PLACEHOLDER"
+    echo "Cleaning up docker resources older than DOCKER_PRUNE_UNTIL_PLACEHOLDER"
     docker image prune --all --force $TIME_FILTER
+    docker builder prune --all --force $TIME_FILTER
 else
-    echo "Cleaning dangling images only"
-    docker image prune --force $TIME_FILTER
+    echo "$(date): Running scheduled Docker cleanup"
+    
+    TIME_FILTER="--filter until=DOCKER_PRUNE_UNTIL_PLACEHOLDER"
+
+    echo "Cleaning networks and containers"
+    docker network prune --force
+    docker container prune --force $TIME_FILTER
+
+    if [[ "DOCKER_GC_PRUNE_IMAGES_PLACEHOLDER" == "true" ]]; then
+        echo "Cleaning all images"
+        docker image prune --all --force $TIME_FILTER
+    else
+        echo "Cleaning dangling images only"
+        docker image prune --force $TIME_FILTER
+    fi
+
+    if [[ "DOCKER_GC_PRUNE_VOLUMES_PLACEHOLDER" == "true" ]]; then
+        echo "Cleaning volumes"
+        docker volume prune --force
+    fi
 fi
 
-if [[ "DOCKER_GC_PRUNE_VOLUMES_PLACEHOLDER" == "true" ]]; then
-    echo "Cleaning volumes"
-    docker volume prune --force
+# After cleanup, verify we actually freed up space (but only if this was disk-triggered)
+if [[ "$FORCE_CLEANUP" != "force" ]]; then
+    if ! /usr/local/bin/bk-check-disk-space.sh; then
+        echo "$(date): Disk health checks failed after Docker cleanup" >&2
+        exit 1
+    fi
 fi
 
-echo "Cleanup Done"
+echo "$(date): Docker cleanup completed successfully"
 EOF
 
 sed -i "s/DOCKER_PRUNE_UNTIL_PLACEHOLDER/$DOCKER_GC_PRUNE_UNTIL/g" /usr/local/bin/docker-gc
@@ -86,7 +133,7 @@ Wants=docker-gc.timer
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/docker-gc
+ExecStart=/usr/local/bin/docker-gc force
 StandardOutput=journal
 StandardError=journal
 EOF
