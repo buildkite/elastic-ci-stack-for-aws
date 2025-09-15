@@ -95,7 +95,10 @@ echo "Enabling timer"
 systemctl daemon-reload || {
   echo "Warning: systemctl daemon-reload failed, retrying in 5 seconds"
   sleep 5
-  systemctl daemon-reload
+  systemctl daemon-reload || {
+    echo "Error: systemctl daemon-reload failed twice, skipping timer setup"
+    exit 0
+  }
 }
 
 systemctl enable docker-gc.timer || {
@@ -119,3 +122,6 @@ if [[ "$DOCKER_GC_PRUNE_VOLUMES" == "true" ]]; then
 else
   echo "Volumes left alone"
 fi
+
+echo Restarting docker daemon...
+systemctl restart docker

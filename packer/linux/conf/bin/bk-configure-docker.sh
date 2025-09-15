@@ -95,11 +95,5 @@ else
   echo Instance storage not configured.
 fi
 
-echo Cleaning up docker images...
-systemctl start docker-low-disk-gc.service
-
-echo Enabling docker-gc timers...
-systemctl enable docker-gc.timer docker-low-disk-gc.timer
-
 echo Restarting docker daemon...
 systemctl restart docker

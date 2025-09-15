@@ -160,12 +160,6 @@ command:
   /usr/local/bin/docker-gc:
     exit-status: 0
 
-  systemctl is-enabled docker-low-disk-gc.timer:
-    exit-status: 0
-
-  /usr/local/bin/docker-low-disk-gc:
-    exit-status: 0
-
   # test that we can build a docker image
   docker buildx build -f tests/Dockerfile --progress=plain -t buildkite-postgres:latest tests:
     exit-status: 0
