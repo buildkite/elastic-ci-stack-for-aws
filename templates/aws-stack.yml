@@ -243,6 +243,14 @@ Parameters:
         - "false"
     Default: "false"
 
+  DisableScaleIn:
+    Description: Whether the desired count should ever be decreased on the Auto Scaling group. When set to "true" (default), the scaler will not reduce the Auto Scaling group's desired capacity, and instances are expected to self-terminate when idle.
+    Type: String
+    AllowedValues:
+        - "true"
+        - "false"
+    Default: "true"
+
   EnableScheduledScaling:
     Description: Enable scheduled scaling to automatically adjust MinSize based on time-based schedules
     Type: String
@@ -2378,3 +2386,4 @@ Resources:
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
         EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
+        DisableScaleIn: !Ref DisableScaleIn
