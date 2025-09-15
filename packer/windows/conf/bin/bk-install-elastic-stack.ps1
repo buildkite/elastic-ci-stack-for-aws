@@ -82,6 +82,10 @@ set_always         "BUILDKITE_SECRETS_BUCKET_REGION" "$Env:BUILDKITE_SECRETS_BUC
 set_always         "BUILDKITE_STACK_NAME" "$Env:BUILDKITE_STACK_NAME"
 set_always         "BUILDKITE_STACK_VERSION" "$Env:BUILDKITE_STACK_VERSION"
 set_always         "BUILDKITE_DOCKER_EXPERIMENTAL" "$DOCKER_EXPERIMENTAL"
+set_always         "DOCKER_GC_SCHEDULE" "$Env:DOCKER_GC_SCHEDULE"
+set_always         "DOCKER_GC_PRUNE_UNTIL" "$Env:DOCKER_GC_PRUNE_UNTIL"
+set_always         "DOCKER_GC_PRUNE_IMAGES" "$Env:DOCKER_GC_PRUNE_IMAGES"
+set_always         "DOCKER_GC_PRUNE_VOLUMES" "$Env:DOCKER_GC_PRUNE_VOLUMES"
 set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
 set_always         "PLUGINS_ENABLED" "$PLUGINS_ENABLED"
 set_always         "BUILDKITE_ARTIFACTS_BUCKET" "$Env:BUILDKITE_ARTIFACTS_BUCKET"
@@ -218,6 +222,14 @@ if ($docker_ready) {
   Write-Output "Docker is ready."
   # Optionally run docker ps again to show output if needed, but the check already passed
   # docker ps
+
+  Write-Output "Configuring Docker garbage collection..."
+  try {
+    & "C:\buildkite-agent\bin\bk-configure-docker-gc.ps1"
+  } catch {
+    Write-Warning "Failed to configure Docker GC: $($_.Exception.Message)"
+    Write-Warning "Continuing without Docker GC configuration..."
+  }
 } else {
   Write-Output "Failed to confirm Docker readiness after $max_wait_time seconds."
   # Add more diagnostics if possible

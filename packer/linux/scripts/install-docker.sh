@@ -17,9 +17,11 @@ sudo mkdir -p /etc/docker
 sudo cp /tmp/conf/docker/daemon.json /etc/docker/daemon.json
 
 echo "Adding docker systemd timers..."
-sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
+if ls /tmp/conf/docker/scripts/* >/dev/null 2>&1; then
+  sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
+  sudo chmod +x /usr/local/bin/docker-*
+fi
 sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
-sudo chmod +x /usr/local/bin/docker-*
 
 echo "Installing docker buildx..."
 DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins

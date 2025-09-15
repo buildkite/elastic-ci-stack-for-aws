@@ -1800,6 +1800,10 @@ Resources:
                   $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
                   $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
                   $Env:DOCKER_NETWORKING_PROTOCOL="${DockerNetworkingProtocol}"
+                  $Env:DOCKER_GC_SCHEDULE="${DockerGCSchedule}"
+                  $Env:DOCKER_GC_PRUNE_UNTIL="${DockerGCPruneUntil}"
+                  $Env:DOCKER_GC_PRUNE_IMAGES="${DockerGCPruneImages}"
+                  $Env:DOCKER_GC_PRUNE_VOLUMES="${DockerGCPruneVolumes}"
                   powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 
                   $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
