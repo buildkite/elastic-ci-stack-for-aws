@@ -813,11 +813,15 @@ Parameters:
     Description: Systemd timer schedule for docker garbage collection (default is hourly)
     Type: String
     Default: "hourly"
+    AllowedPattern: "^(minutely|hourly|daily|weekly|monthly|yearly|\\*-\\*-\\* \\d{1,2}:\\d{2}:\\d{2}|\\d{1,2} \\d{1,2} \\* \\* \\*)$"
+    ConstraintDescription: Must be a valid systemd timer schedule (minutely, hourly, daily, weekly, monthly, yearly, or cron format like "0 3 * * *")
 
   DockerGCPruneUntil:
     Description: Remove docker resources older than this duration (default is 4h)
     Type: String
     Default: "4h"
+    AllowedPattern: "^\\d+[smhdw]$"
+    ConstraintDescription: Must be a valid duration format (e.g., 30s, 5m, 2h, 1d, 1w)
 
   DockerGCPruneImages:
     Description: Set to "true" to prune all unused images, not just dangling ones
