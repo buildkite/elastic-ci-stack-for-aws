@@ -86,10 +86,6 @@ build {
     source      = "conf"
   }
 
-  provisioner "file" {
-    destination = "/tmp/plugins"
-    source      = "../../plugins"
-  }
 
   # Essential utilities & updates
   provisioner "shell" {
