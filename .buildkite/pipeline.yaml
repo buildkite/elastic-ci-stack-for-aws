@@ -69,7 +69,6 @@ steps:
     depends_on:
       - "linting"
       - "fixperms-tests"
-    if_changed: "packer/windows/**"
     plugins:
       - *aws_role_plugin
 
@@ -142,7 +141,6 @@ steps:
     depends_on:
       - "linting"
       - "fixperms-tests"
-    if_changed: "packer/linux/**"
     plugins:
       - *aws_role_plugin
 
@@ -216,7 +214,6 @@ steps:
     depends_on:
       - "linting"
       - "fixperms-tests"
-    if_changed: "packer/linux/**"
     plugins:
       - *aws_role_plugin
 
