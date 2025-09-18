@@ -69,6 +69,7 @@ steps:
     depends_on:
       - "linting"
       - "fixperms-tests"
+    if_changed: '{packer/windows/base.pkr.hcl,packer/windows/conf/**,packer/windows/scripts/**,packer/windows/scripts/enable-containers.ps1,packer/windows/scripts/install-cloudwatch-agent.ps1,packer/windows/scripts/install-docker.ps1,packer/windows/scripts/install-lifecycled.ps1,packer/windows/scripts/install-session-manager-plugin.ps1,packer/windows/scripts/install-utils.ps1}'
     plugins:
       - *aws_role_plugin
 
@@ -141,6 +142,7 @@ steps:
     depends_on:
       - "linting"
       - "fixperms-tests"
+    if_changed: '{packer/linux/base.pkr.hcl,packer/linux/conf/**,packer/linux/scripts/cleanup.sh,packer/linux/scripts/install-cloudwatch-agent.sh,packer/linux/scripts/install-docker.sh,packer/linux/scripts/install-session-manager-plugin.sh,packer/linux/scripts/install-utils.sh}'
     plugins:
       - *aws_role_plugin
 
@@ -214,6 +216,7 @@ steps:
     depends_on:
       - "linting"
       - "fixperms-tests"
+    if_changed: '{packer/linux/base.pkr.hcl,packer/linux/conf/**,packer/linux/scripts/cleanup.sh,packer/linux/scripts/install-cloudwatch-agent.sh,packer/linux/scripts/install-docker.sh,packer/linux/scripts/install-session-manager-plugin.sh,packer/linux/scripts/install-utils.sh}'
     plugins:
       - *aws_role_plugin
 
