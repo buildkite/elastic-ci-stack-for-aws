@@ -312,6 +312,52 @@ This verification:
 
 For alternative verification methods (like keyless verification with Chainguard images), see the [Kaniko documentation](https://github.com/GoogleContainerTools/kaniko#verifying-signed-kaniko-images).
 
+### Debugging with Kaniko Debug Image
+
+When troubleshooting build issues, you can use the Kaniko debug image which includes additional debugging tools. The debug image contains utilities like `busybox` and `sh` for interactive debugging.
+
+To enable debug mode, set the `KANIKO_DEBUG` environment variable in your pipeline:
+
+```yaml
+steps:
+  - label: ":whale: Kaniko Debug"
+    env:
+      AWS_REGION: "us-east-1"
+      ECR_ACCOUNT_ID: "111122223333"
+      ECR_REPO: "hello-kaniko"
+      KANIKO_DEBUG: "1"  # Enable debug image
+    commands:
+      - bash .buildkite/steps/kaniko.sh
+```
+
+The debug image provides several debugging options:
+
+- **Interactive shell access**: Set `KANIKO_SHELL=1` to get an interactive shell inside the Kaniko container
+- **Verbose logging**: Use `KANIKO_VERBOSITY=debug` for detailed build logs
+- **No-push mode**: Set `KANIKO_NO_PUSH=1` to build without pushing to registry
+
+Example debug script configuration:
+
+```bash
+# Enable debug mode
+KANIKO_DEBUG=1
+KANIKO_VERBOSITY=debug
+
+# Optional: Interactive shell for troubleshooting
+KANIKO_SHELL=1
+
+# Optional: Build without pushing
+KANIKO_NO_PUSH=1
+```
+
+The debug image is particularly useful for:
+- Investigating build failures
+- Examining the build context and Dockerfile
+- Testing different Kaniko parameters
+- Debugging authentication issues
+
+For more information about the debug image capabilities, see the [Chainguard Kaniko documentation](https://github.com/chainguard-dev/kaniko?tab=readme-ov-file#debug-image).
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
