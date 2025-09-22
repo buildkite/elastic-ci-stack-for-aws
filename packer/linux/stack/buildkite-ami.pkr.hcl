@@ -116,14 +116,18 @@ build {
 
   provisioner "file" {
     destination = "/tmp/plugins"
-    source      = "../../plugins"
+    source      = "../../../plugins"
   }
 
   provisioner "file" {
     destination = "/tmp/build"
-    source      = "../../build"
+    source      = "../../../build"
   }
 
+
+  provisioner "shell" {
+    script = "scripts/configure-cloudwatch-agent.sh"
+  }
 
   provisioner "shell" {
     script = "scripts/install-buildkite-agent.sh"

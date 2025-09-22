@@ -115,11 +115,12 @@ build {
 
   provisioner "file" {
     destination = "C:/packer-temp"
-    source      = "../../plugins"
+    source      = "../../../plugins"
   }
 
   provisioner "powershell" {
     scripts = [
+      "scripts/configure-cloudwatch-agent.ps1",
       "scripts/install-buildkite-agent.ps1",
       "scripts/install-s3secrets-helper.ps1"
     ]

@@ -80,11 +80,6 @@ build {
 
   provisioner "file" {
     destination = "C:/packer-temp"
-    source      = "conf"
-  }
-
-  provisioner "file" {
-    destination = "C:/packer-temp"
     source      = "scripts"
   }
 
