@@ -146,6 +146,144 @@ The `ScheduleTimezone` parameter supports [IANA timezone names](https://docs.aws
 - `Asia/Tokyo` (Japan Standard Time)
 - `UTC` (Coordinated Universal Time)
 
+## Running Kaniko in Docker
+
+The Elastic CI Stack supports running [Kaniko](https://github.com/GoogleContainerTools/kaniko) for building container images without requiring Docker daemon privileges. This is useful for building images in environments where Docker-in-Docker is not available or desired.
+
+Kaniko executes your Dockerfile inside a container and pushes the resulting image to a registry. It doesn't depend on a Docker daemon and executes each command in the Dockerfile completely in userspace, making it more secure and suitable for environments where privileged access is not available.
+
+### Example Pipeline
+
+Here's a complete example of using Kaniko to build and push a container image:
+
+**pipeline.yml:**
+```yaml
+steps:
+  - label: ":whale: Kaniko"
+    env:
+      AWS_REGION: "us-east-1"          # your region
+      ECR_ACCOUNT_ID: "111122223333"   # your account
+      ECR_REPO: "hello-kaniko"         # repo NAME only
+    commands:
+      - bash .buildkite/steps/kaniko.sh
+```
+
+**Dockerfile:**
+```dockerfile
+FROM public.ecr.aws/docker/library/node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev || npm i --omit=dev
+COPY app.js ./
+CMD ["node","app.js"]
+```
+
+**package.json:**
+```json
+{
+  "name": "hello-kaniko",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Hello world app to demo Kaniko on Buildkite Elastic CI Stack for AWS",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  }
+}
+```
+
+**app.js:**
+```javascript
+// app.js
+console.log("Hello from Kaniko on Buildkite Elastic CI Stack!");
+```
+
+**Buildkite Step Script (.buildkite/steps/kaniko.sh):**
+```bash
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# ---- Required env from the step ----
+AWS_REGION="${AWS_REGION:?missing AWS_REGION}"
+ECR_ACCOUNT_ID="${ECR_ACCOUNT_ID:?missing ECR_ACCOUNT_ID}"
+ECR_REPO="${ECR_REPO:?missing ECR_REPO}"
+
+# ---- Derived refs (no ${...} in YAML; we're in bash now) ----
+ECR_HOST="${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+SHORT_SHA="$(echo "${BUILDKITE_COMMIT:-local}" | cut -c1-12)"
+BUILD_NUM="${BUILDKITE_BUILD_NUMBER:-0}"
+IMAGE_TAG="${SHORT_SHA}-${BUILD_NUM}"
+IMAGE_REPO="${ECR_HOST}/${ECR_REPO}"
+IMAGE_URI="${IMAGE_REPO}:${IMAGE_TAG}"
+
+echo "ECR_HOST=${ECR_HOST}"
+echo "IMAGE_URI=${IMAGE_URI}"
+
+# Optional sanity
+aws sts get-caller-identity --output text || true
+
+# ---- Prepare outputs & auth mounts ----
+mkdir -p out /tmp/kaniko/.docker
+
+AUTH_ARGS=()
+if [[ -f "$HOME/.docker/config.json" ]]; then
+  echo "Using host Docker auth (~/.docker/config.json) for Kaniko"
+  AUTH_ARGS+=(-v "$HOME/.docker/config.json:/kaniko/.docker/config.json:ro")
+else
+  echo "No host Docker auth found; using ECR credential helper with AWS creds"
+  # Tell Kaniko to use ECR helper; give it AWS config so helper can auth via instance role or profile
+  printf '{ "credHelpers": { "%s": "ecr-login" } }\n' "$ECR_HOST" > /tmp/kaniko/.docker/config.json
+  AUTH_ARGS+=(-v /tmp/kaniko/.docker:/kaniko/.docker:ro -v "$HOME/.aws:/root/.aws:ro" -e AWS_REGION -e AWS_SDK_LOAD_CONFIG=true)
+fi
+
+# ---- Build & push with Kaniko, AND write a tar we can run locally ----
+docker run --rm \
+  -v "$PWD":/workspace \
+  -v "$PWD/out":/out \
+  "${AUTH_ARGS[@]}" \
+  gcr.io/kaniko-project/executor:v1.23.2 \
+  --dockerfile=/workspace/Dockerfile \
+  --context=dir:///workspace \
+  --destination="${IMAGE_URI}" \
+  --cache=true \
+  --cache-repo="${IMAGE_REPO}-cache" \
+  --tar-path=/out/image.tar \
+  --push-retry=3 \
+  --verbosity=info \
+  --log-timestamp
+
+echo "Pushed ${IMAGE_URI}"
+
+# ---- Run the just-built image 
+ls -lh out
+docker load -i out/image.tar
+docker run --rm "${IMAGE_URI}"
+```
+
+### Key Benefits
+
+- **No Docker daemon required**: Kaniko runs as a container and doesn't need Docker-in-Docker
+- **Secure**: No privileged access required for building images
+- **Registry agnostic**: Works with any container registry (Docker Hub, ECR, GCR, etc.)
+- **Caching support**: Built-in support for registry-based caching to speed up builds
+- **Flexible authentication**: Supports Docker config and credential helpers
+- **Local testing**: Exports built images as tar files for immediate local testing
+- **Robust error handling**: Proper validation of required environment variables
+- **Smart tagging**: Uses commit SHA and build number for unique image tags
+
+### Environment Variables
+
+The example script uses these environment variables:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `AWS_REGION` | AWS region for ECR | `us-east-1` |
+| `ECR_ACCOUNT_ID` | Your AWS account ID | `111122223333` |
+| `ECR_REPO` | ECR repository name (without account/region) | `my-app` |
+
+**Note**: This example uses ECR, but Kaniko works with any container registry. Adjust the authentication and destination URL accordingly for other registries like Docker Hub, GCR, or Azure Container Registry.
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
