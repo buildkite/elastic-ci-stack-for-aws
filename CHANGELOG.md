@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.41.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.4...v6.41.5) (2025-09-22)
+
+### Changed
+
+- Update buildkite-agent to v3.107.0 [#1591](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1591) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Internal
+- Update changelog for v6.41.4 release [#1589](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1589) ([scadu](https://github.com/scadu))
+- Temporarily remove build conditional for base AMI [#1595](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1595) ([scadu](https://github.com/scadu))
+- Fix: base AMI lookup [#1594](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1594) ([scadu](https://github.com/scadu))
+- Simplify base AMI build logic [#1593](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1593) ([scadu](https://github.com/scadu))
+- Don't rebuild base image on plugin update [#1590](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1590) ([scadu](https://github.com/scadu))
+
+<details>
+
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.107.0](https://github.com/buildkite/agent/tree/v3.107.0) (2025-09-18)
+
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.106.0...v3.107.0)
+
+### Added
+
+- Added ability to fetch multiple secrets in a single call [#3483](https://github.com/buildkite/agent/pull/3483) (@moskyb)
+- Experiment for propagating agent config env vars [#3471](https://github.com/buildkite/agent/pull/3471) (@DrJosh9000)
+- `oidc request-token` can now output in a GCP Workload Federation-compatible format [#3480](https://github.com/buildkite/agent/pull/3480) (@moskyb)
+
+### Changed
+
+- Update docs for apply-if-changed information with agent minimum version [#3485](https://github.com/buildkite/agent/pull/3485) (@Damilola-obasa)
+
+### Internal
+
+- Use the go.mod tool block for more tools [#3481](https://github.com/buildkite/agent/pull/3481) (@DrJosh9000)
+- Update shellwords to v1.0.1, relax Go version directive [#3464](https://github.com/buildkite/agent/pull/3464) (@moskyb)
+- build(deps): bump the container-images group across 5 directories with 1 update [#3478](https://github.com/buildkite/agent/pull/3478) (@dependabot[bot])
+- Split Dependabot container updates [#3477](https://github.com/buildkite/agent/pull/3477) (@DrJosh9000)
+</details>
+
 ## [v6.41.4](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.3...v6.41.4) (2025-09-17)
 
 - Security fix: update secrets plugin to v2.7.0 [#1588](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1588) ([scadu](https://github.com/scadu))
