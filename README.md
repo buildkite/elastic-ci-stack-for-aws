@@ -284,6 +284,34 @@ The example script uses these environment variables:
 
 **Note**: This example uses ECR, but Kaniko works with any container registry. Adjust the authentication and destination URL accordingly for other registries like Docker Hub, GCR, or Azure Container Registry.
 
+### Verifying Signed Kaniko Images
+
+For enhanced security, you can verify the signature of the Kaniko image before using it. This ensures you're running the authentic, unmodified Kaniko executor.
+
+Add this verification step to your script before running Kaniko:
+
+```bash
+# Verify the Kaniko image signature with cosign (public key)
+cat > cosign.pub <<'EOF'
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9aAfAcgAxIFMTstJUv8l/AMqnSKw
+P+vLu3NnnBDHCfREQpV/AJuiZ1UtgGpFpHlJLCNPmFkzQTnfyN5idzNl6Q==
+-----END PUBLIC KEY-----
+EOF
+
+echo "Verifying signature of ${KANIKO_IMG} ..."
+docker run --rm -v "$PWD:/work" -w /work cgr.dev/chainguard/cosign \
+  verify -key cosign.pub "${KANIKO_IMG}"
+echo "Signature verified OK for ${KANIKO_IMG}"
+```
+
+This verification:
+- Uses the official Kaniko public key from their [GitHub repository](https://github.com/GoogleContainerTools/kaniko#verifying-signed-kaniko-images)
+- Ensures the Kaniko image hasn't been tampered with
+- Runs before your build process to catch any security issues early
+
+For alternative verification methods (like keyless verification with Chainguard images), see the [Kaniko documentation](https://github.com/GoogleContainerTools/kaniko#verifying-signed-kaniko-images).
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
