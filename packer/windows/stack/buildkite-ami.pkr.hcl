@@ -76,7 +76,7 @@ source "amazon-ebs" "elastic-ci-stack" {
   region          = var.region
   # Allow golden-base override
   source_ami     = var.base_ami_id
-  user_data_file = "scripts/ec2-userdata.ps1"
+  user_data_file = "../shared/scripts/ec2-userdata.ps1"
   winrm_insecure = true
   winrm_use_ssl  = true
   winrm_port     = 5986

@@ -115,6 +115,11 @@ build {
   }
 
   provisioner "file" {
+    destination = "/tmp/conf"
+    source      = "../shared/conf/"
+  }
+
+  provisioner "file" {
     destination = "/tmp/plugins"
     source      = "../../../plugins"
   }
@@ -138,6 +143,6 @@ build {
   }
 
   provisioner "shell" {
-    script = "scripts/cleanup.sh"
+    script = "../shared/scripts/cleanup.sh"
   }
 }
