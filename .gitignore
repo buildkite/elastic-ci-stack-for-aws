@@ -1,7 +1,6 @@
 build/
 packer*.output
 config.json
-!packer/*/conf/cloudwatch-agent/config.json
 vendor/
 node_modules/
 .bundle/
