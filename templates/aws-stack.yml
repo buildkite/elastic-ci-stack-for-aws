@@ -160,6 +160,7 @@ Metadata:
         Parameters:
         - EnableSecretsPlugin
         - EnableECRPlugin
+        - EnableECRCredentialHelper
         - EnableDockerLoginPlugin
 
 Parameters:
@@ -843,6 +844,14 @@ Parameters:
   EnableECRPlugin:
     Type: String
     Description: Enables ECR plugin for all pipelines.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
+  EnableECRCredentialHelper:
+    Type: String
+    Description: Enable Amazon ECR Credential Helper in ECR plugin for Docker authentication.
     AllowedValues:
       - "true"
       - "false"
@@ -1869,6 +1878,7 @@ Resources:
                   $Env:AWS_DEFAULT_REGION="${AWS::Region}"
                   $Env:SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}"
                   $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
+                  $Env:ECR_CREDENTIAL_HELPER_ENABLED="${EnableECRCredentialHelper}"
                   $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
                   $Env:AWS_REGION="${AWS::Region}"
                   $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
@@ -1962,6 +1972,7 @@ Resources:
                   AWS_DEFAULT_REGION="${AWS::Region}" \
                   SECRETS_PLUGIN_ENABLED="${EnableSecretsPlugin}" \
                   ECR_PLUGIN_ENABLED="${EnableECRPlugin}" \
+                  ECR_CREDENTIAL_HELPER_ENABLED="${EnableECRCredentialHelper}" \
                   DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}" \
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
