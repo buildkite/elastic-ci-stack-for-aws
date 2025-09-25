@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.41.6](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.5...v6.41.6) (2025-09-24)
+
+### Changed
+
+- Update buildkite-agent to v3.107.2 [#1601](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1601) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Documentation
+
+- CF template: Improve description clarity [#1568](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1568) ([scadu](https://github.com/scadu))
+- Update changelog for v6.41.5 release [#1596](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1596) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.107.2](https://github.com/buildkite/agent/tree/v3.107.2) (2025-09-24)
+
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.107.1...v3.107.2)
+
+### Fixed
+
+- Remove debugging log line [#3496](https://github.com/buildkite/agent/pull/3496) (@DrJosh9000)
+</details>
+
 ## [v6.41.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.4...v6.41.5) (2025-09-22)
 
 ### Changed
@@ -11,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Update buildkite-agent to v3.107.0 [#1591](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1591) ([renovate[bot]](https://github.com/apps/renovate))
 
 ### Internal
+
 - Update changelog for v6.41.4 release [#1589](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1589) ([scadu](https://github.com/scadu))
 - Temporarily remove build conditional for base AMI [#1595](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1595) ([scadu](https://github.com/scadu))
 - Fix: base AMI lookup [#1594](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1594) ([scadu](https://github.com/scadu))
