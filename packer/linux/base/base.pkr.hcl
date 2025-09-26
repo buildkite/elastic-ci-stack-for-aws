@@ -87,8 +87,14 @@ build {
   }
 
   provisioner "file" {
-    destination = "/tmp/conf"
+    destination = "/tmp/shared-conf"
     source      = "../shared/conf/"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo cp -r /tmp/shared-conf/* /tmp/conf/ 2>/dev/null || true"
+    ]
   }
 
   # Essential utilities & updates
