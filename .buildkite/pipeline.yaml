@@ -66,6 +66,7 @@ steps:
       AMI_PUBLIC: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    if_changed: "packer/windows/base/**"
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -138,6 +139,7 @@ steps:
       AMI_PUBLIC: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    if_changed: "packer/linux/base/**"
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -211,6 +213,7 @@ steps:
       AMI_PUBLIC: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    if_changed: "packer/linux/base/**"
     depends_on:
       - "linting"
       - "fixperms-tests"

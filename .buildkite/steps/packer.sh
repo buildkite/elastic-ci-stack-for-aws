@@ -8,12 +8,7 @@ fi
 
 os="${1:-linux}"
 arch="${2:-amd64}"
-variant="${3:-full}" # "full" (default) or "base"
-agent_binary="buildkite-agent-${os}-${arch}"
-
-if [[ "$os" == "windows" ]]; then
-  agent_binary+=".exe"
-fi
+variant="${3:-stack}" # "stack" (default) or "base"
 
 mkdir -p "build/"
 
@@ -22,15 +17,9 @@ timestamp=$(date -u +"%Y%m%d-%H%M%S")
 if [[ "${variant}" == "base" ]]; then
   packer_file="packer-base-${os}-${arch}-${timestamp}.output"
   local_output="packer-base-${os}-${arch}.output"
-else
-  packer_file="packer-${os}-${arch}-${timestamp}.output"
-  local_output="packer-${os}-${arch}.output"
-fi
-
-if [[ "${variant}" == "base" ]]; then
   make "packer-base-${os}-${arch}.output"
 else
-  # Try metadata first, then S3 fallback for base AMI ID
+  # Get base AMI ID from metadata (set by base build step) or S3 fallback
   base_ami_id="$(buildkite-agent meta-data get "${os}-base-${arch}-ami" || true)"
 
   if [[ -z "$base_ami_id" ]]; then
@@ -50,6 +39,8 @@ else
     exit 1
   fi
 
+  packer_file="packer-${os}-${arch}-${timestamp}.output"
+  local_output="packer-${os}-${arch}.output"
   make "packer-${os}-${arch}.output" BASE_AMI_ID="$base_ami_id"
 fi
 

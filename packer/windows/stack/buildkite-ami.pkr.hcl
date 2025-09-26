@@ -76,7 +76,7 @@ source "amazon-ebs" "elastic-ci-stack" {
   region          = var.region
   # Allow golden-base override
   source_ami     = var.base_ami_id
-  user_data_file = "scripts/ec2-userdata.ps1"
+  user_data_file = "../shared/scripts/ec2-userdata.ps1"
   winrm_insecure = true
   winrm_use_ssl  = true
   winrm_port     = 5986
@@ -115,11 +115,12 @@ build {
 
   provisioner "file" {
     destination = "C:/packer-temp"
-    source      = "../../plugins"
+    source      = "../../../plugins"
   }
 
   provisioner "powershell" {
     scripts = [
+      "scripts/configure-cloudwatch-agent.ps1",
       "scripts/install-buildkite-agent.ps1",
       "scripts/install-s3secrets-helper.ps1"
     ]
