@@ -80,3 +80,6 @@ sudo curl -L "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}
 sudo chmod +rx /usr/local/bin/goss
 sudo curl -L "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/dgoss" -o /usr/local/bin/dgoss
 sudo chmod +rx /usr/local/bin/dgoss
+
+echo "Adding authorized keys systemd units..."
+sudo cp /tmp/conf/ssh/systemd/* /etc/systemd/system

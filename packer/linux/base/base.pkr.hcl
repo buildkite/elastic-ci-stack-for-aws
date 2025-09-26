@@ -86,6 +86,10 @@ build {
     source      = "conf"
   }
 
+  provisioner "file" {
+    destination = "/tmp/conf"
+    source      = "../shared/conf/"
+  }
 
   # Essential utilities & updates
   provisioner "shell" {
@@ -109,6 +113,6 @@ build {
 
   # Clean up
   provisioner "shell" {
-    script = "scripts/cleanup.sh"
+    script = "../shared/scripts/cleanup.sh"
   }
 }

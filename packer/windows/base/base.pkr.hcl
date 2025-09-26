@@ -51,7 +51,7 @@ source "amazon-ebs" "buildkite-base" {
   instance_type   = var.instance_type
   region          = var.region
   source_ami      = data.amazon-ami.windows-server-2022.id
-  user_data_file  = "scripts/ec2-userdata.ps1"
+  user_data_file  = "../shared/scripts/ec2-userdata.ps1"
   winrm_insecure  = true
   winrm_use_ssl   = true
   winrm_port      = 5986
@@ -77,11 +77,6 @@ source "amazon-ebs" "buildkite-base" {
 
 build {
   sources = ["source.amazon-ebs.buildkite-base"]
-
-  provisioner "file" {
-    destination = "C:/packer-temp"
-    source      = "conf"
-  }
 
   provisioner "file" {
     destination = "C:/packer-temp"
