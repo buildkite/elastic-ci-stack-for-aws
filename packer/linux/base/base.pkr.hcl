@@ -87,7 +87,7 @@ build {
   }
 
   provisioner "file" {
-    destination = "/tmp/conf"
+    destination = "/tmp/conf/"
     source      = "../shared/conf/"
   }
 
