@@ -201,8 +201,6 @@ console.log("Hello from Kaniko on Buildkite Elastic CI Stack!");
 
 **Buildkite Step Script (.buildkite/steps/kaniko.sh):**
 ```bash
-#!/usr/bin/env bash
-set -Eeuo pipefail
 
 # ---- Required env from the step ----
 AWS_REGION="${AWS_REGION:?missing AWS_REGION}"
@@ -393,7 +391,7 @@ By default, AMIs are built as private. You can control AMI visibility and build 
 - `AMI_USERS` - A comma-separated list of AWS account IDs that should have access to private AMIs (ignored when `AMI_PUBLIC=true`).
 - `AWS_REGION` - The AWS region where AMIs should be built (defaults to `us-east-1`).
 
-```bash
+```bash 
 # Build private AMIs (default - recommended for security)
 make packer
 
