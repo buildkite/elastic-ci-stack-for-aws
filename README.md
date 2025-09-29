@@ -1,4 +1,3 @@
-<!-- shellcheck disable=SC1009,SC1072,SC1073 -->
 <h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=main)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack/builds/latest?branch=main)
