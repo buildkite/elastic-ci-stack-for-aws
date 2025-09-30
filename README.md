@@ -92,6 +92,60 @@ To enable resource limits with custom values, include these parameters in your C
 - Resource limits are disabled by default
 - Values can be specified as percentages or absolute values (for memory-related parameters)
 
+## Scheduled Scaling
+
+The Elastic CI Stack supports time-based scaling to automatically adjust the minimum number of instances based on your team's working hours. This feature helps optimize costs by scaling down during off-hours while allowing users the ability to proactively scale up capacity ahead of expected increasing capacity requirements.
+
+### Configuration Parameters
+
+| Parameter                | Description                                          | Default              |
+|--------------------------|------------------------------------------------------|----------------------|
+| `EnableScheduledScaling` | Enable scheduled scaling actions                     | `false`              |
+| `ScheduleTimezone`       | Timezone for scheduled actions                       | `UTC`                |
+| `ScaleUpSchedule`        | Cron expression for scaling up                       | `0 8 * * MON-FRI`    |
+| `ScaleUpMinSize`         | MinSize when scaling up                              | `1`                  |
+| `ScaleDownSchedule`      | Cron expression for scaling down                     | `0 18 * * MON-FRI`   |
+| `ScaleDownMinSize`       | MinSize when scaling down                            | `0`                  |
+
+### Example Configuration
+
+To enable scheduled scaling that maintains a minimum of 10 ASG instances during business hours (8 AM - 6 PM, Eastern Time) and 2 ASG instances during off-hours:
+
+```json
+{
+  "Parameters": {
+    "EnableScheduledScaling": "true",
+    "ScheduleTimezone": "America/New_York",
+    "ScaleUpSchedule": "0 8 * * MON-FRI",
+    "ScaleUpMinSize": "10",
+    "ScaleDownSchedule": "0 18 * * MON-FRI",
+    "ScaleDownMinSize": "2"
+  }
+}
+```
+
+### Schedule Format
+
+Scheduled scaling uses [AWS Auto Scaling cron expressions](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html#scheduled-scaling-cron) with the format:
+```
+minute hour day-of-month month day-of-week
+```
+
+Common examples:
+- `0 8 * * MON-FRI` - 8:00 AM on weekdays
+- `0 18 * * MON-FRI` - 6:00 PM on weekdays
+- `0 9 * * SAT` - 9:00 AM on Saturdays
+- `30 7 * * 1-5` - 7:30 AM Monday through Friday (using numbers)
+
+### Timezone Support
+
+The `ScheduleTimezone` parameter supports [IANA timezone names](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html#scheduled-scaling-timezone) such as:
+- `America/New_York` (Eastern Time)
+- `America/Los_Angeles` (Pacific Time)
+- `Europe/London` (Greenwich Mean Time)
+- `Asia/Tokyo` (Japan Standard Time)
+- `UTC` (Coordinated Universal Time)
+
 ## Development
 
 To get started with customizing your own stack, or contributing fixes and features:
@@ -114,19 +168,40 @@ AWS_PROFILE="some-profile" make create-stack
 aws-vault exec some-profile -- make create-stack
 ```
 
-If you need to build your own AMI (because you've changed something in the
-`packer` directory), run packer with AWS credentials in your shell environment:
+If you need to build your own AMIs (because you've changed something in the
+`packer` directory), run `make packer` with AWS credentials in your shell environment.
+
+The build process is now two steps:
+1.  **Base AMI:** A base AMI is created with the latest OS updates. This image is cached and only rebuilt when the underlying OS or configuration changes.
+2.  **Final AMI:** The final AMI is built on top of the base AMI, installing the Buildkite agent and other software. This makes final builds faster and more consistent.
+
+By default, AMIs are built as private. You can control AMI visibility and build location using these variables:
+
+- `AMI_PUBLIC` - Set to `true` to make AMIs publicly accessible to all AWS users, or `false` (default) for private AMIs.
+- `AMI_USERS` - A comma-separated list of AWS account IDs that should have access to private AMIs (ignored when `AMI_PUBLIC=true`).
+- `AWS_REGION` - The AWS region where AMIs should be built (defaults to `us-east-1`).
 
 ```bash
+# Build private AMIs (default - recommended for security)
 make packer
+
+# Build public AMIs (available to all AWS users)
+make packer AMI_PUBLIC=true
+
+# Build private AMIs with access for specific AWS accounts
+make packer AMI_USERS="123456789012,987654321098,555666777888"
+
+# Combined: private AMIs with specific account access in a different region
+make packer AMI_PUBLIC=false AMI_USERS="123456789012,987654321098" AWS_REGION=us-west-2
 ```
 
-This will boot and image three AWS EC2 instances in your account’s `us-east-1`
-default VPC:
+This will create AMIs for the following platforms in your account's `us-east-1` region (or the region specified by `AWS_REGION`):
 
 - Linux (64-bit x86)
 - Linux (64-bit Arm)
 - Windows (64-bit x86)
+
+**Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
 ## Support Policy
 

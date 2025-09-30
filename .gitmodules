@@ -1,7 +1,7 @@
 [submodule "plugins/secrets"]
 	path = plugins/secrets
 	url = https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks.git
-	branch = v2.1.6
+	branch = v2.6.0
 
 [submodule "plugins/ecr"]
 	path = plugins/ecr
