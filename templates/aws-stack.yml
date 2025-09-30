@@ -151,6 +151,16 @@ Metadata:
         - EnableDockerExperimental
 
       - Label:
+          default: Docker Networking Configuration
+        Parameters:
+        - DockerNetworkingProtocol
+        - DockerIPv4AddressPool1
+        - DockerIPv4AddressPool2
+        - DockerIPv6AddressPool
+        - DockerFixedCidrV4
+        - DockerFixedCidrV6
+
+      - Label:
           default: Docker Registry Configuration
         Parameters:
         - ECRAccessPolicy
@@ -835,6 +845,20 @@ Parameters:
     Type: String
     Description: IPv6 CIDR block for Docker default address pools in dualstack mode. Only applies to Linux instances, not Windows.
     Default: "2001:db8:2::/104"
+
+  DockerFixedCidrV4:
+    Type: String
+    Description: >
+      Optional IPv4 CIDR block for Docker's fixed-cidr option. Restricts the IP range Docker uses for container networking.
+      Leave empty to disable. Useful to prevent conflicts with external services like databases. Only applies to Linux instances, not Windows.
+    Default: ""
+
+  DockerFixedCidrV6:
+    Type: String
+    Description: >
+      IPv6 CIDR block for Docker's fixed-cidr-v6 option in dualstack mode. Restricts the IP range Docker uses for IPv6 container networking.
+      Only applies to Linux instances in dualstack mode, not Windows.
+    Default: "2001:db8:1::/64"
 
   EnableSecretsPlugin:
     Type: String
@@ -1942,6 +1966,8 @@ Resources:
                   DOCKER_IPV4_ADDRESS_POOL_1=${DockerIPv4AddressPool1} \
                   DOCKER_IPV4_ADDRESS_POOL_2=${DockerIPv4AddressPool2} \
                   DOCKER_IPV6_ADDRESS_POOL=${DockerIPv6AddressPool} \
+                  DOCKER_FIXED_CIDR_V4="${DockerFixedCidrV4}" \
+                  DOCKER_FIXED_CIDR_V6="${DockerFixedCidrV6}" \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                     /usr/local/bin/bk-configure-docker.sh
                   --==BOUNDARY==

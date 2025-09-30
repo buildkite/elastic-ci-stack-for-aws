@@ -62,6 +62,17 @@ if [[ "${DOCKER_NETWORKING_PROTOCOL}" == "ipv4" ]]; then
       '."default-address-pools"=[{"base":$pool1,"size":20},{"base":$pool2,"size":24}]' \
       /etc/docker/daemon.json
   )" >/etc/docker/daemon.json
+
+  # Configure fixed-cidr for IPv4 if provided
+  if [[ -n "${DOCKER_FIXED_CIDR_V4:-}" ]]; then
+    echo "Configuring Docker fixed-cidr (IPv4): ${DOCKER_FIXED_CIDR_V4}"
+    cat <<<"$(
+      jq \
+        --arg cidr "${DOCKER_FIXED_CIDR_V4}" \
+        '."fixed-cidr"=$cidr' \
+        /etc/docker/daemon.json
+    )" >/etc/docker/daemon.json
+  fi
 elif [[ "${DOCKER_NETWORKING_PROTOCOL}" == "dualstack" ]]; then
   # Using v6 inside containers requires DOCKER_EXPERIMENTAL. This is configured
   # further down
@@ -71,9 +82,21 @@ elif [[ "${DOCKER_NETWORKING_PROTOCOL}" == "dualstack" ]]; then
       --arg pool1 "${DOCKER_IPV4_ADDRESS_POOL_1:-172.17.0.0/12}" \
       --arg pool2 "${DOCKER_IPV4_ADDRESS_POOL_2:-192.168.0.0/16}" \
       --arg pool6 "${DOCKER_IPV6_ADDRESS_POOL:-2001:db8:2::/104}" \
-      '.ipv6=true | ."fixed-cidr-v6"="2001:db8:1::/64" | .ip6tables=true | ."default-address-pools"=[{"base":$pool1,"size":20},{"base":$pool2,"size":24},{"base":$pool6,"size":112}]' \
+      --arg cidrv6 "${DOCKER_FIXED_CIDR_V6:-2001:db8:1::/64}" \
+      '.ipv6=true | ."fixed-cidr-v6"=$cidrv6 | .ip6tables=true | ."default-address-pools"=[{"base":$pool1,"size":20},{"base":$pool2,"size":24},{"base":$pool6,"size":112}]' \
       /etc/docker/daemon.json
   )" >/etc/docker/daemon.json
+
+  # Configure fixed-cidr for IPv4 if provided (even in dualstack mode)
+  if [[ -n "${DOCKER_FIXED_CIDR_V4:-}" ]]; then
+    echo "Configuring Docker fixed-cidr (IPv4): ${DOCKER_FIXED_CIDR_V4}"
+    cat <<<"$(
+      jq \
+        --arg cidr "${DOCKER_FIXED_CIDR_V4}" \
+        '."fixed-cidr"=$cidr' \
+        /etc/docker/daemon.json
+    )" >/etc/docker/daemon.json
+  fi
 else
   # docker 25.0 doesn't support ipv6 only, so we don't support it either
   true
