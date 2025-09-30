@@ -192,13 +192,16 @@ Parameters:
 
   BuildkiteAgentTokenParameterStorePath:
     Description: >
-        Optional - Path to Buildkite agent token stored in AWS Systems Manager Parameter Store (e.g., '/buildkite/agent-token').
+        Optional - Path to Buildkite agent token stored in AWS Systems Manager Parameter Store.
+        Supports both parameter paths (e.g., '/buildkite/agent-token') and cross-account SSM parameter ARNs
+        (e.g., 'arn:aws:ssm:us-east-1:123456789012:parameter/buildkite/shared-token').
         If provided, this overrides the BuildkiteAgentToken field.
         Recommended for better security instead of hardcoding tokens in the template.
+        Use cross-account ARNs to access SSM parameters shared via AWS RAM.
     Type: String
     Default: ""
-    AllowedPattern: "^$|^/[a-zA-Z0-9_.\\-/]+$"
-    ConstraintDescription: "Expects a leading forward slash"
+    AllowedPattern: "^$|^/$|^/[a-zA-Z0-9_.\\-/]+$|^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:parameter/[a-zA-Z0-9_.\\-/]+$"
+    ConstraintDescription: "Expects a leading forward slash for parameter path or full SSM parameter ARN for cross-account access"
 
   BuildkiteAgentTokenParameterStoreKMSKey:
     Description: Optional - AWS KMS key ID used to encrypt the SSM parameter.
@@ -1189,6 +1192,10 @@ Conditions:
       !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ] ]
     CreateAgentTokenParameter:
       !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ]
+    IsParameterStorePathARN:
+      !And
+        - !Not [ !Equals [ !Ref BuildkiteAgentTokenParameterStorePath, "" ] ]
+        - !Equals [ !Select [ 0, !Split [ ":", !Ref BuildkiteAgentTokenParameterStorePath ] ], "arn" ]
 
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
@@ -1522,9 +1529,12 @@ Resources:
               - Effect: Allow
                 Action: ssm:GetParameter
                 Resource:
-                  !Sub
-                    - arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
-                    - ParameterPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
+                  !If
+                    - IsParameterStorePathARN
+                    - !Ref BuildkiteAgentTokenParameterStorePath
+                    - !Sub
+                        - arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
+                        - ParameterPath: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
