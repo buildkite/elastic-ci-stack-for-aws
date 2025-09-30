@@ -849,7 +849,8 @@ Parameters:
   DockerFixedCidrV4:
     Type: String
     Description: >
-      Optional IPv4 CIDR block for Docker's fixed-cidr option. Restricts the IP range Docker uses for container networking.
+      Optional IPv4 CIDR block for Docker's fixed-cidr option. Restricts the IP range Docker uses for container networking on the default bridge.
+      Must be a subset of the first pool in DockerIPv4AddressPool1 (Docker allocates docker0 from the first pool).
       Leave empty to disable. Useful to prevent conflicts with external services like databases. Only applies to Linux instances, not Windows.
     Default: ""
 
