@@ -300,7 +300,7 @@ tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
 cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
 signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
-verification-failure-behavior=${BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
+verification-failure-behavior=${BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 EOF
 
 if [[ -n "$BUILDKITE_AGENT_SIGNING_KEY_PATH" ]]; then
@@ -323,10 +323,6 @@ fi
 
 if [[ -n "$BUILDKITE_AGENT_SIGNING_KEY_ID" ]]; then
   echo "signing-jwks-key-id=$BUILDKITE_AGENT_SIGNING_KEY_ID" >>/etc/buildkite-agent/buildkite-agent.cfg
-fi
-
-if [[ -n "$BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR" ]]; then
-  echo "verification-failure-behavior=$BUILDKITE_AGENT_VERIFICATION_FAILURE_BEHAVIOR" >>/etc/buildkite-agent/buildkite-agent.cfg
 fi
 
 if [[ -n "$BUILDKITE_AGENT_VERIFICATION_KEY_PATH" ]]; then
