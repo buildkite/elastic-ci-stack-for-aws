@@ -835,16 +835,22 @@ Parameters:
     Type: String
     Description: Primary IPv4 CIDR block for Docker default address pools. Must not conflict with host network or VPC CIDR. Only applies to Linux instances, not Windows.
     Default: "172.17.0.0/12"
+    AllowedPattern: "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\/(?:[0-9]|[12][0-9]|3[0-2])$"
+    ConstraintDescription: "Must be a valid IPv4 CIDR block (e.g., 172.17.0.0/12)"
 
   DockerIPv4AddressPool2:
     Type: String
     Description: Secondary IPv4 CIDR block for Docker default address pools. Only applies to Linux instances, not Windows.
     Default: "192.168.0.0/16"
+    AllowedPattern: "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\/(?:[0-9]|[12][0-9]|3[0-2])$"
+    ConstraintDescription: "Must be a valid IPv4 CIDR block (e.g., 192.168.0.0/16)"
 
   DockerIPv6AddressPool:
     Type: String
     Description: IPv6 CIDR block for Docker default address pools in dualstack mode. Only applies to Linux instances, not Windows.
     Default: "2001:db8:2::/104"
+    AllowedPattern: "^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:))\\/(?:[0-9]|[1-9][0-9]|1[01][0-9]|12[0-8])$"
+    ConstraintDescription: "Must be a valid IPv6 CIDR block (e.g., 2001:db8:2::/104)"
 
   DockerFixedCidrV4:
     Type: String
@@ -853,6 +859,8 @@ Parameters:
       Must be a subset of the first pool in DockerIPv4AddressPool1 (Docker allocates docker0 from the first pool).
       Leave empty to disable. Useful to prevent conflicts with external services like databases. Only applies to Linux instances, not Windows.
     Default: ""
+    AllowedPattern: "^$|^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\/(?:[0-9]|[12][0-9]|3[0-2])$"
+    ConstraintDescription: "Must be empty or a valid IPv4 CIDR block (e.g., 172.17.1.0/24)"
 
   DockerFixedCidrV6:
     Type: String
@@ -860,6 +868,8 @@ Parameters:
       IPv6 CIDR block for Docker's fixed-cidr-v6 option in dualstack mode. Restricts the IP range Docker uses for IPv6 container networking.
       Only applies to Linux instances in dualstack mode, not Windows.
     Default: "2001:db8:1::/64"
+    AllowedPattern: "^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:))\\/(?:[0-9]|[1-9][0-9]|1[01][0-9]|12[0-8])$"
+    ConstraintDescription: "Must be a valid IPv6 CIDR block (e.g., 2001:db8:1::/64)"
 
   EnableSecretsPlugin:
     Type: String
