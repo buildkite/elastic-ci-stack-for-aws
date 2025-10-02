@@ -64,6 +64,7 @@ Metadata:
         - EC2LogRetentionDays
         - LogRetentionDays
         - BuildkiteAgentEnableGracefulShutdown
+        - LambdaArchitecture
 
       - Label:
           default: Network Configuration
@@ -1008,6 +1009,14 @@ Parameters:
       - "block"
       - "warn"
     Default: "block"
+
+  LambdaArchitecture:
+    Type: String
+    Description: CPU architecture for Lambda functions (x86_64 or arm64). arm64 provides better price-performance but requires compatible dependencies.
+    AllowedValues:
+      - "x86_64"
+      - "arm64"
+    Default: "x86_64"
 
 Rules:
   HasToken:
@@ -2266,6 +2275,8 @@ Resources:
       Handler: index.handler
       Role: !GetAtt AsgProcessSuspenderRole.Arn
       Runtime: 'python3.13'
+      Architectures:
+        - !Ref LambdaArchitecture
 
   AzRebalancingSuspender:
     Type: AWS::CloudFormation::CustomResource
@@ -2405,7 +2416,9 @@ Resources:
               logger.info(f"SSM command response: {response}")
       Handler: index.handler
       Role: !GetAtt StopBuildkiteAgentsRole.Arn
-      Runtime: "python3.12"
+      Runtime: "python3.13"
+      Architectures:
+        - !Ref LambdaArchitecture
 
   StopBuildkiteAgents:
     Type: AWS::CloudFormation::CustomResource
