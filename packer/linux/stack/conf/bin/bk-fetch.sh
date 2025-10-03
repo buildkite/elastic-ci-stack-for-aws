@@ -21,13 +21,9 @@ fetch_ssm_parameters() {
   # trim off ssm: prefix
   ssm_path="${ssm_path//ssm:/}"
 
-  #
-  # NOTE: The maximum number of parameters that can be retrieved is 25 to avoid throttling
-  # in the case of misconfigured SSM path with a large number of child parameters
   aws ssm get-parameters-by-path \
     --path "${ssm_path}" \
     --recursive \
-    --max-items 25 \
     --with-decryption \
     --query 'Parameters[*].{Name: Name, Value: Value}' --output json \
     | jq -r '.[] | [(.Name | split("/")[-1] | ascii_upcase), (["\"", .Value, "\""] | join(""))] | join("=")' \
@@ -37,14 +33,23 @@ fetch_ssm_parameters() {
 FROM="$1"
 TO="$2"
 
+# Fetch content from various URI schemes:
+# - s3://bucket/key: S3 object URI (uses AWS S3 API)
+# - ssm:/path/to/param: SSM parameter path (uses AWS SSM API)
+# - https://example.com/file: HTTPS URL (uses curl)
+# - file:///path/to/file: Local file path (uses curl)
+# - http://example.com/file: HTTP URL (uses curl)
 case "$FROM" in
 s3://*)
+  # S3 object URI - use AWS CLI to fetch
   exec aws s3 cp "$FROM" "$TO"
   ;;
 ssm:*)
+  # SSM parameter path - fetch parameters recursively
   fetch_ssm_parameters "${FROM}" "${TO}"
   ;;
 *)
+  # All other URIs (HTTPS, HTTP, file://) - use curl
   exec curl -Lfs -o "$TO" "$FROM"
   ;;
 esac
