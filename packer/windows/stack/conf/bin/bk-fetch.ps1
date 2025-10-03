@@ -20,19 +20,22 @@ ElseIf ($From -Like "ssm:*") {
   $SsmPath = $From -replace "^ssm:", ""
 
   # Get parameters from SSM
-  $Parameters = aws ssm get-parameters-by-path `
+  $AwsOutput = aws ssm get-parameters-by-path `
     --path $SsmPath `
     --recursive `
     --with-decryption `
     --query 'Parameters[*].{Name: Name, Value: Value}' `
-    --output json | ConvertFrom-Json
+    --output json
 
   If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
+  $Parameters = $AwsOutput | ConvertFrom-Json
 
   # Format as environment variables: KEY="value"
   $Parameters | ForEach-Object {
     $Name = ($_.Name -split "/")[-1].ToUpper()
-    $Value = $_.Value
+    # Escape backslashes first, then quotes (order matters!)
+    $Value = $_.Value -replace '\\', '\\' -replace '"', '\"'
     "$Name=`"$Value`""
   } | Out-File -FilePath $To -Encoding UTF8
 }
