@@ -555,13 +555,18 @@ Parameters:
     Default: "private"
 
   BootstrapScriptUrl:
-    Description: Optional - HTTPS or S3 URL for a script to run on each instance during boot.
+    Description: >
+      Optional - URI for a script to run on each instance during boot.
+      Supported URI schemes: S3 object URI (s3://bucket/key),
+      HTTPS URL (https://example.com/script.sh), or local file path (file:///path/to/script).
     Type: String
     Default: ""
 
   AgentEnvFileUrl:
     Description: >
-        Optional - HTTPS or S3 URL containing environment variables for the Buildkite agent process itself (not for builds).
+        Optional - URI containing environment variables for the Buildkite agent process itself (not for builds).
+        Supported URI schemes: S3 object URI (s3://bucket/key), SSM parameter path (ssm:/path/to/param),
+        HTTPS URL (https://example.com/script.sh), or local file path (file:///path/to/script).
         These variables configure agent behavior like proxy settings or debugging options.
         For build environment variables, use pipeline 'env' configuration instead.
     Type: String
