@@ -259,6 +259,7 @@ else
   BUILDKITE_AGENT_TIMESTAMPS_LINES="false"
   BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="false"
 fi
+
 echo Setting \$BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS to \$BUILDKITE_AGENT_TIMESTAMP_LINES
 echo "BUILDKITE_AGENT_TIMESTAMP_LINES is $BUILDKITE_AGENT_TIMESTAMPS_LINES"
 echo "BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS is $BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS"
@@ -299,8 +300,48 @@ tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
 cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
 signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
-verification-failure-behavior=${BUILDKITE_AGENT_SIGNING_FAILURE_BEHAVIOR}
+verification-failure-behavior=${BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 EOF
+
+if [[ -n "$BUILDKITE_AGENT_SIGNING_KEY_PATH" ]]; then
+  echo "Fetching signing key from ssm: $BUILDKITE_AGENT_SIGNING_KEY_PATH..."
+
+  keyfile=/etc/buildkite-agent/signing-key.json
+
+  aws ssm get-parameter \
+    --name "$BUILDKITE_AGENT_SIGNING_KEY_PATH" \
+    --with-decryption \
+    --query Parameter.Value \
+    --output text >"$keyfile"
+
+  echo "Setting ownership and permissions for $keyfile..."
+  chown root:buildkite-agent "$keyfile"
+  chmod 640 "$keyfile"
+
+  echo "signing-jwks-file=$keyfile" >>/etc/buildkite-agent/buildkite-agent.cfg
+fi
+
+if [[ -n "$BUILDKITE_AGENT_SIGNING_KEY_ID" ]]; then
+  echo "signing-jwks-key-id=$BUILDKITE_AGENT_SIGNING_KEY_ID" >>/etc/buildkite-agent/buildkite-agent.cfg
+fi
+
+if [[ -n "$BUILDKITE_AGENT_VERIFICATION_KEY_PATH" ]]; then
+  echo "Fetching verification key from ssm: $BUILDKITE_AGENT_VERIFICATION_KEY_PATH..."
+
+  keyfile=/etc/buildkite-agent/verification-key.json
+
+  aws ssm get-parameter \
+    --name "$BUILDKITE_AGENT_VERIFICATION_KEY_PATH" \
+    --with-decryption \
+    --query Parameter.Value \
+    --output text >"$keyfile"
+
+  echo "Setting ownership and permissions for $keyfile..."
+  chown root:buildkite-agent "$keyfile"
+  chmod 640 "$keyfile"
+
+  echo "verification-jwks-file=$keyfile" >>/etc/buildkite-agent/buildkite-agent.cfg
+fi
 
 if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
   echo "Fetching env file from ${BUILDKITE_ENV_FILE_URL}..."
