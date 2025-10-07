@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.42.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.6...v6.42.0) (2025-10-07)
+
+### Changed
+
+- Cleanup base AMI build logic by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1597
+- Fix missing refresh_authorized_keys.timer by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1604
+- Allow ECR Credential Helper to be disabled by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1600
+- Support cross-account SSM Parameter Store paths by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1605
+- Allow configurable Docker default bridge networks by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1608
+- Support arm64 arch for Lambda functions by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1606
+
+### Internal
+
+- Update golang Docker tag to v1.25 by @renovate[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1610
+- Updates to clarify `BootstrapScriptUrl` and `AgentEnvFileUrl` Stack params by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1611
+- Update changelog for v6.41.6 release [#1602](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1602) ([scadu](https://github.com/scadu))
+
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.6...v6.42.0)
+
 ## [v6.41.6](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.5...v6.41.6) (2025-09-24)
 
 ### Changed
