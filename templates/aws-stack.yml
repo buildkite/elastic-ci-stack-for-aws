@@ -921,7 +921,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "true"
+    Default: "false"
 
   EnableDockerLoginPlugin:
     Type: String
