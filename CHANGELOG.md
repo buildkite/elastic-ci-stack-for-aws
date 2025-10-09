@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.43.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.43.0) (2025-10-09)
+
+## Changed
+
+- Add signing parameters to cfn template by @moskyb in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1263
+
+## Fixed
+
+- Fix/disable EnableECRCredentialHelper parameter by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1614
+
+## Documentation
+
+- Update changelog for v6.42.0 release by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1612
+
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.42.0...v6.43.0)
+
 ## [v6.42.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.6...v6.42.0) (2025-10-07)
 
 ### Changed
