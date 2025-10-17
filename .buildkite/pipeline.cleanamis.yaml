@@ -35,7 +35,7 @@ steps:
             - organization_slug
             - organization_id
             - pipeline_slug
-            - branch_build
+            - build_branch
       - docker-compose#v5.10.0:
           run: ruby
           config: .buildkite/docker-compose.yml
