@@ -110,7 +110,7 @@ mount -t "$fs_type" -o "$mount_options" "$logicalname" "$devicemount"
 
 if [[ ! -f /etc/fstab.backup ]]; then
   echo Backing up /etc/fstab to /etc/fstab.backup...
-  cp -rP /etc/fstab /etc/fstab.backup
+  cp -P /etc/fstab /etc/fstab.backup
 
   fstab_line="$logicalname $devicemount    ${fs_type}  ${mount_options}  0 0"
   echo "Appending $fstab_line to /etc/fstab..."
