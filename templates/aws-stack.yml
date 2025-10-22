@@ -1932,7 +1932,7 @@ Resources:
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
                   $Env:BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}"
-                  $Env:BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}"
+                  $Env:BUILDKITE_S3_DEFAULT_REGION="${ArtifactsBucketRegion}"
                   $Env:BUILDKITE_S3_ACL="${ArtifactsS3ACL}"
                   $Env:BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
@@ -1975,10 +1975,6 @@ Resources:
                     - CreateSecretsBucket
                     - !Ref "AWS::Region"
                     - !Ref SecretsBucketRegion
-                  LocalArtifactsBucketRegion: !If
-                    - UseArtifactsBucket
-                    - !Ref ArtifactsBucketRegion
-                    - ""
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath
@@ -2024,7 +2020,7 @@ Resources:
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
                   BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}" \
-                  BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}" \
+                  BUILDKITE_S3_DEFAULT_REGION="${ArtifactsBucketRegion}" \
                   BUILDKITE_S3_ACL="${ArtifactsS3ACL}" \
                   BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
@@ -2080,10 +2076,6 @@ Resources:
                     - CreateSecretsBucket
                     - !Ref "AWS::Region"
                     - !Ref SecretsBucketRegion
-                  LocalArtifactsBucketRegion: !If
-                    - UseArtifactsBucket
-                    - !Ref ArtifactsBucketRegion
-                    - ""
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath
