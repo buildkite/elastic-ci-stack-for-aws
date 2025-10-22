@@ -1151,8 +1151,6 @@ Conditions:
 
     UseArtifactsBucket:
       !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
-    IsArtifactsBucketRegionEmpty:
-      !Equals [ !Ref ArtifactsBucketRegion, "" ]
 
     HasImageId:
       !Not [ !Equals [ !Ref ImageId, "" ] ]
@@ -1979,11 +1977,8 @@ Resources:
                     - !Ref SecretsBucketRegion
                   LocalArtifactsBucketRegion: !If
                     - UseArtifactsBucket
-                    - !If
-                      - IsArtifactsBucketRegionEmpty
-                      - !Ref "AWS::Region"
-                      - !Ref ArtifactsBucketRegion
-                    - !Ref "AWS::Region"
+                    - !Ref ArtifactsBucketRegion
+                    - ""
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath
@@ -2087,11 +2082,8 @@ Resources:
                     - !Ref SecretsBucketRegion
                   LocalArtifactsBucketRegion: !If
                     - UseArtifactsBucket
-                    - !If
-                      - IsArtifactsBucketRegionEmpty
-                      - !Ref "AWS::Region"
-                      - !Ref ArtifactsBucketRegion
-                    - !Ref "AWS::Region"
+                    - !Ref ArtifactsBucketRegion
+                    - ""
                   AgentTokenPath: !If
                     - UseCustomerManagedParameterPath
                     - !Ref BuildkiteAgentTokenParameterStorePath
