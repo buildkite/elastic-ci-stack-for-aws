@@ -62,6 +62,8 @@ sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent.service /etc/systemd/s
 echo "Adding cloud-init failure safety check..."
 sudo mkdir -p /etc/systemd/system/cloud-final.service.d/
 sudo cp /tmp/conf/buildkite-agent/systemd/cloud-final.service.d/10-power-off-on-failure.conf /etc/systemd/system/cloud-final.service.d/10-power-off-on-failure.conf
+sudo mkdir -p /etc/systemd/system/cloud-init.service.d/
+sudo cp /tmp/conf/buildkite-agent/systemd/cloud-init.service.d/10-power-off-on-failure.conf /etc/systemd/system/cloud-init.service.d/10-power-off-on-failure.conf
 
 echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully

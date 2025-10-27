@@ -11,20 +11,31 @@ on_error() {
   echo "${BASH_SOURCE[0]} errored with exit code ${exit_code} on line ${error_line}."
 
   if [[ $exit_code != 0 ]]; then
-    if ! aws autoscaling set-instance-health \
-      --instance-id "$INSTANCE_ID" \
-      --health-status Unhealthy; then
-      echo Failed to set instance health to unhealthy.
+    # Only try to set instance health if we have an instance ID
+    # (metadata service must be available for this to work)
+    if [[ -n "${INSTANCE_ID:-}" ]]; then
+      if ! aws autoscaling set-instance-health \
+        --instance-id "$INSTANCE_ID" \
+        --health-status Unhealthy; then
+        echo Failed to set instance health to unhealthy.
+      fi
+    else
+      echo "Skipping instance health check - INSTANCE_ID not available (metadata service may be unavailable)"
     fi
   fi
 
-  cfn-signal \
+  # Attempt to signal CloudFormation failure
+  # This may fail if metadata service is unavailable, but we try anyway
+  if ! cfn-signal \
     --region "$AWS_REGION" \
     --stack "$BUILDKITE_STACK_NAME" \
     --reason "Error on line $error_line: $(tail -n 1 /var/log/elastic-stack.log)" \
     --resource "AgentAutoScaleGroup" \
-    --exit-code "$exit_code"
+    --exit-code "$exit_code"; then
+    echo "Failed to send cfn-signal (this is expected if metadata service is unavailable)"
+  fi
 
+  # The OnFailure=poweroff.target in cloud-final.service.d will handle instance termination
   exit "$exit_code"
 }
 
@@ -43,9 +54,76 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 echo "Starting ${BASH_SOURCE[0]}..."
 
 # This needs to happen first so that the error reporting works
-token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --fail --silent --show-error --location http://169.254.169.254/latest/api/token)
-INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" --fail --silent --show-error --location http://169.254.169.254/latest/meta-data/instance-id)
-echo "Detected INSTANCE_ID=$INSTANCE_ID"
+# Fetch metadata with retry logic to handle transient metadata service failures
+fetch_metadata_with_retry() {
+  local max_attempts=5
+  local timeout=2
+  local wait_time=1
+  local max_wait=30
+  local attempt=1
+
+  echo "Fetching EC2 metadata with retry (max attempts: $max_attempts)..."
+
+  # Temporarily disable exit on error for retry logic
+  set +e
+
+  while [[ $attempt -le $max_attempts ]]; do
+    echo "Attempt $attempt of $max_attempts to fetch metadata..."
+
+    # Try to get the token
+    local token
+    token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+      --max-time "$timeout" \
+      --fail --silent --show-error \
+      --location http://169.254.169.254/latest/api/token 2>&1)
+    local token_result=$?
+
+    if [[ $token_result -eq 0 ]]; then
+      # Try to get the instance ID
+      INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" \
+        --max-time "$timeout" \
+        --fail --silent --show-error \
+        --location http://169.254.169.254/latest/meta-data/instance-id 2>&1)
+      local instance_id_result=$?
+
+      if [[ $instance_id_result -eq 0 ]]; then
+        echo "Successfully fetched metadata on attempt $attempt"
+        echo "Detected INSTANCE_ID=$INSTANCE_ID"
+        # Re-enable exit on error
+        set -e
+        return 0
+      else
+        echo "Failed to fetch instance ID: $INSTANCE_ID"
+      fi
+    else
+      echo "Failed to fetch metadata token: $token"
+    fi
+
+    if [[ $attempt -lt $max_attempts ]]; then
+      echo "Waiting ${wait_time}s before retry..."
+      sleep "$wait_time"
+      # Exponential backoff with cap at 30 seconds
+      wait_time=$((wait_time * 2))
+      if [[ $wait_time -gt $max_wait ]]; then
+        wait_time=$max_wait
+      fi
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  # Re-enable exit on error before returning failure
+  set -e
+
+  echo "ERROR: Failed to fetch EC2 metadata after $max_attempts attempts"
+  echo "This likely indicates the EC2 metadata service is unavailable or this instance has connectivity issues"
+
+  # Return failure - this will trigger the error trap and call on_error()
+  return 1
+}
+
+# Fetch metadata or fail (which triggers on_error and poweroff)
+fetch_metadata_with_retry
 
 # This script is run on every boot so that we can gracefully recover from hard failures (eg. kernel panics) during
 # any previous attempts. If a previous run is detected as started but not complete then we will fail this run and mark
