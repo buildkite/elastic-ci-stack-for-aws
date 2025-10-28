@@ -61,7 +61,6 @@ Metadata:
         - BuildkitePurgeBuildsOnDiskFull
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
-        - BuildkiteAgentScalerArchitecture
         - BuildkiteAgentScalerServerlessARN
         - BuildkiteAgentScalerVersion
         - EnableEC2LogRetentionPolicy
@@ -252,30 +251,19 @@ Parameters:
     Type: String
     Default: ""
 
-  BuildkiteAgentScalerArchitecture:
-    Description: >
-      CPU architecture for the buildkite-agent-scaler Lambda function.
-      This should typically match the LambdaArchitecture parameter.
-      arm64 provides better price-performance but x86-64 may have broader compatibility.
-    Type: String
-    AllowedValues:
-      - "amd64"
-      - "arm64"
-    Default: "amd64"
-
   BuildkiteAgentScalerServerlessARN:
     Description: >
       (Deprecated - no longer used) ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function.
-      The ARN is now automatically selected based on the BuildkiteAgentScalerArchitecture parameter.
+      The ARN is now automatically selected based on the LambdaArchitecture parameter.
       To use a custom scaler deployment, modify the AgentScalerARN mapping in the template.
     Type: String
     Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
   BuildkiteAgentScalerVersion:
-    Description: Version of the buildkite-agent-scaler to use.
+    Description: Version of the buildkite-agent-scaler to use. Supports test versions like "1.9.6-test-123".
     Type: String
-    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))$'
-    ConstraintDescription: "The agent scaler release must be 1.9.5 or newer."
+    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))(?:-[a-z0-9-]+)?$'
+    ConstraintDescription: "The agent scaler release must be 1.9.5 or newer. Test versions like '1.9.6-test-123' are supported."
     Default: "1.9.5"
 
   ScalerEnableExperimentalElasticCIMode:
@@ -1376,6 +1364,12 @@ Conditions:
     EnableScheduledScaling:
       !Equals [ !Ref EnableScheduledScaling, "true" ]
 
+    IsLambdaArchitectureArm64:
+      !Equals [ !Ref LambdaArchitecture, "arm64" ]
+
+    IsLambdaArchitectureX8664:
+      !Equals [ !Ref LambdaArchitecture, "x86_64" ]
+
 Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
@@ -1386,8 +1380,8 @@ Mappings:
     full                  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
 
   AgentScalerARN:
-    amd64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler' }
-    arm64: { ARN: 'arn:aws:serverlessrepo:us-east-1:097340723131:applications/buildkite-agent-scaler-arm64-test-lukasz' }
+    x86-64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler' }
+    arm64:  { ARN: 'arn:aws:serverlessrepo:us-east-1:097340723131:applications/buildkite-agent-scaler-arm64-test-lukasz' }
 
   # Generated from Makefile via build/mappings.yml
   AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
@@ -2505,7 +2499,10 @@ Resources:
     Condition: HasVariableSize
     Properties:
       Location:
-        ApplicationId: !FindInMap [ AgentScalerARN, !Ref BuildkiteAgentScalerArchitecture, ARN ]
+        ApplicationId: !FindInMap
+          - AgentScalerARN
+          - !If [ IsLambdaArchitectureArm64, "arm64", "x86-64" ]
+          - ARN
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
