@@ -2501,6 +2501,12 @@ Resources:
       ToPort: 22
       CidrIp: 0.0.0.0/0
 
+  # Note: Autoscaling and AutoscalingArm64 resources are identical except for the
+  # ApplicationId mapping key. This duplication is required because SAM Transform
+  # only supports !Ref and !FindInMap in ApplicationId (no nested !If). Both resources
+  # use LambdaArchitecture parameter via conditions to determine which is created.
+  # IMPORTANT: Keep Parameters in sync between both resources!
+
   Autoscaling:
     Type: AWS::Serverless::Application
     Condition: HasVariableSizeAndX8664
@@ -2511,7 +2517,7 @@ Resources:
           - "x86-64"
           - ARN
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
-      Parameters: &AutoscalingParameters
+      Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
         RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
@@ -2542,4 +2548,23 @@ Resources:
           - "arm64"
           - ARN
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
-      Parameters: *AutoscalingParameters
+      Parameters:
+        BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
+        BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
+        RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
+        AgentEndpoint: !Ref AgentEndpoint
+        BuildkiteQueue: !Ref BuildkiteQueue
+        AgentsPerInstance: !Ref AgentsPerInstance
+        MinSize: !Ref MinSize
+        MaxSize: !Ref MaxSize
+        InstanceBuffer: !Ref InstanceBuffer
+        AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
+        ScaleOutFactor: !Ref ScaleOutFactor
+        ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
+        ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
+        ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
+        EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
+        MinPollInterval: !Ref ScalerMinPollInterval
+        LogRetentionDays: !Ref LogRetentionDays
+        EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
+        DisableScaleIn: !Ref DisableScaleIn
