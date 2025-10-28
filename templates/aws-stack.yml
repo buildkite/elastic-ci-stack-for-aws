@@ -260,11 +260,18 @@ Parameters:
     Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
   BuildkiteAgentScalerVersion:
-    Description: Version of the buildkite-agent-scaler to use. Supports test versions like "1.9.6-test-123".
+    Description: Version of the buildkite-agent-scaler to use for x86_64 architecture. Supports test versions like "1.9.6-test-123".
     Type: String
     AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))(?:-[a-z0-9-]+)?$'
     ConstraintDescription: "The agent scaler release must be 1.9.5 or newer. Test versions like '1.9.6-test-123' are supported."
     Default: "1.9.5"
+
+  BuildkiteAgentScalerVersionArm64:
+    Description: Version of the buildkite-agent-scaler to use for arm64 architecture. Supports test versions like "1.9.6-test-123".
+    Type: String
+    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))(?:-[a-z0-9-]+)?$'
+    ConstraintDescription: "The agent scaler release must be 1.9.5 or newer. Test versions like '1.9.6-test-123' are supported."
+    Default: "1.9.6-test-1761658275"
 
   ScalerEnableExperimentalElasticCIMode:
     Description: >
@@ -2547,7 +2554,7 @@ Resources:
           - AgentScalerARN
           - "arm64"
           - ARN
-        SemanticVersion: !Ref BuildkiteAgentScalerVersion
+        SemanticVersion: !Ref BuildkiteAgentScalerVersionArm64
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
