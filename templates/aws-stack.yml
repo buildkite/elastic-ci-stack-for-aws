@@ -265,11 +265,9 @@ Parameters:
 
   BuildkiteAgentScalerServerlessARN:
     Description: >
-      ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function.
-      The scaler automatically manages Buildkite agent instances based on job queue demand.
-      By default, the ARN is automatically selected based on the BuildkiteAgentScalerArchitecture parameter.
-      Override this to use a custom scaler deployment.
-      Repository must be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
+      (Deprecated - no longer used) ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function.
+      The ARN is now automatically selected based on the BuildkiteAgentScalerArchitecture parameter.
+      To use a custom scaler deployment, modify the AgentScalerARN mapping in the template.
     Type: String
     Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
@@ -1377,9 +1375,6 @@ Conditions:
 
     EnableScheduledScaling:
       !Equals [ !Ref EnableScheduledScaling, "true" ]
-
-    UseDefaultScalerARN:
-      !Equals [ !Ref BuildkiteAgentScalerServerlessARN, "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler" ]
 
 Mappings:
   ECRManagedPolicy:
@@ -2510,10 +2505,7 @@ Resources:
     Condition: HasVariableSize
     Properties:
       Location:
-        ApplicationId: !If
-          - UseDefaultScalerARN
-          - !FindInMap [ AgentScalerARN, !Ref BuildkiteAgentScalerArchitecture, ARN ]
-          - !Ref BuildkiteAgentScalerServerlessARN
+        ApplicationId: !FindInMap [ AgentScalerARN, !Ref BuildkiteAgentScalerArchitecture, ARN ]
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
