@@ -1369,6 +1369,9 @@ Conditions:
     UseDefaultScalerARN:
       !Equals [ !Ref BuildkiteAgentScalerServerlessARN, "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler" ]
 
+    IsLambdaArchitectureArm64:
+      !Equals [ !Ref LambdaArchitecture, "arm64" ]
+
 Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
@@ -1377,10 +1380,6 @@ Mappings:
     poweruser             : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     poweruser-pullthrough : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full                  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
-
-  AgentScalerARN:
-    x86_64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler' }
-    arm64:  { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler-arm64' }
 
   # Generated from Makefile via build/mappings.yml
   AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
@@ -2500,7 +2499,10 @@ Resources:
       Location:
         ApplicationId: !If
           - UseDefaultScalerARN
-          - !FindInMap [ AgentScalerARN, !Ref LambdaArchitecture, ARN ]
+          - !If
+            - IsLambdaArchitectureArm64
+            - arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler-arm64
+            - arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler
           - !Ref BuildkiteAgentScalerServerlessARN
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
       Parameters:
