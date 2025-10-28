@@ -252,7 +252,12 @@ Parameters:
     Default: ""
 
   BuildkiteAgentScalerServerlessARN:
-    Description: ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function. The scaler automatically manages Buildkite agent instances based on job queue demand. Repository must be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
+    Description: >
+      ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function.
+      The scaler automatically manages Buildkite agent instances based on job queue demand.
+      By default, the ARN is automatically selected based on the LambdaArchitecture parameter (x86_64 or arm64).
+      Override this to use a custom scaler deployment.
+      Repository must be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
     Type: String
     Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
@@ -1361,6 +1366,9 @@ Conditions:
     EnableScheduledScaling:
       !Equals [ !Ref EnableScheduledScaling, "true" ]
 
+    UseDefaultScalerARN:
+      !Equals [ !Ref BuildkiteAgentScalerServerlessARN, "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler" ]
+
 Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
@@ -1369,6 +1377,10 @@ Mappings:
     poweruser             : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     poweruser-pullthrough : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full                  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
+
+  AgentScalerARN:
+    x86_64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler' }
+    arm64:  { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler-arm64' }
 
   # Generated from Makefile via build/mappings.yml
   AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
@@ -2486,7 +2498,10 @@ Resources:
     Condition: HasVariableSize
     Properties:
       Location:
-        ApplicationId: !Ref BuildkiteAgentScalerServerlessARN
+        ApplicationId: !If
+          - UseDefaultScalerARN
+          - !FindInMap [ AgentScalerARN, !Ref LambdaArchitecture, ARN ]
+          - !Ref BuildkiteAgentScalerServerlessARN
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
