@@ -1387,7 +1387,7 @@ Mappings:
 
   AgentScalerARN:
     amd64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler' }
-    arm64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler-arm64' }
+    arm64: { ARN: 'arn:aws:serverlessrepo:us-east-1:097340723131:applications/buildkite-agent-scaler-arm64-test-lukasz' }
 
   # Generated from Makefile via build/mappings.yml
   AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
