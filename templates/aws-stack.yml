@@ -1367,9 +1367,6 @@ Conditions:
     IsLambdaArchitectureArm64:
       !Equals [ !Ref LambdaArchitecture, "arm64" ]
 
-    IsLambdaArchitectureX8664:
-      !Equals [ !Ref LambdaArchitecture, "x86_64" ]
-
 Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
