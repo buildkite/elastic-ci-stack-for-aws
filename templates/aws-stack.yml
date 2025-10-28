@@ -1367,6 +1367,16 @@ Conditions:
     IsLambdaArchitectureArm64:
       !Equals [ !Ref LambdaArchitecture, "arm64" ]
 
+    HasVariableSizeAndArm64:
+      !And
+        - !Condition HasVariableSize
+        - !Condition IsLambdaArchitectureArm64
+
+    HasVariableSizeAndX8664:
+      !And
+        - !Condition HasVariableSize
+        - !Not [ !Condition IsLambdaArchitectureArm64 ]
+
 Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
@@ -2493,15 +2503,15 @@ Resources:
 
   Autoscaling:
     Type: AWS::Serverless::Application
-    Condition: HasVariableSize
+    Condition: HasVariableSizeAndX8664
     Properties:
       Location:
         ApplicationId: !FindInMap
           - AgentScalerARN
-          - !If [ IsLambdaArchitectureArm64, "arm64", "x86-64" ]
+          - "x86-64"
           - ARN
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
-      Parameters:
+      Parameters: &AutoscalingParameters
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
         RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
@@ -2521,3 +2531,15 @@ Resources:
         LogRetentionDays: !Ref LogRetentionDays
         EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
         DisableScaleIn: !Ref DisableScaleIn
+
+  AutoscalingArm64:
+    Type: AWS::Serverless::Application
+    Condition: HasVariableSizeAndArm64
+    Properties:
+      Location:
+        ApplicationId: !FindInMap
+          - AgentScalerARN
+          - "arm64"
+          - ARN
+        SemanticVersion: !Ref BuildkiteAgentScalerVersion
+      Parameters: *AutoscalingParameters
