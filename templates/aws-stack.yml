@@ -2544,7 +2544,6 @@ Resources:
         LogRetentionDays: !Ref LogRetentionDays
         EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
         DisableScaleIn: !Ref DisableScaleIn
-        Architecture: !Ref LambdaArchitecture
 
   AutoscalingArm64:
     Type: AWS::Serverless::Application
