@@ -271,7 +271,7 @@ Parameters:
     Type: String
     AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))(?:-[a-z0-9-]+)?$'
     ConstraintDescription: "The agent scaler release must be 1.9.5 or newer. Test versions like '1.9.6-test-123' are supported."
-    Default: "1.9.6-test-1761667627"
+    Default: "1.9.6-test-1761729788"
 
   ScalerEnableExperimentalElasticCIMode:
     Description: >
@@ -2544,6 +2544,7 @@ Resources:
         LogRetentionDays: !Ref LogRetentionDays
         EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
         DisableScaleIn: !Ref DisableScaleIn
+        Architecture: !Ref LambdaArchitecture
 
   AutoscalingArm64:
     Type: AWS::Serverless::Application
@@ -2575,3 +2576,4 @@ Resources:
         LogRetentionDays: !Ref LogRetentionDays
         EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
         DisableScaleIn: !Ref DisableScaleIn
+        Architecture: !Ref LambdaArchitecture
