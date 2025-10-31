@@ -114,6 +114,7 @@ $agent_metadata=@(
   "docker=${DOCKER_VERSION}"
   "stack=${Env:BUILDKITE_STACK_NAME}"
   "buildkite-aws-stack=${Env:BUILDKITE_STACK_VERSION}"
+  "stack_deployed_by=${Env:BUILDKITE_STACK_DEPLOYED_BY}"
 )
 
 If (Test-Path Env:BUILDKITE_AGENT_TAGS) {
@@ -200,7 +201,7 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
     --output text >"$keyfile"
 
   Write-Output "Setting permissions for $keyfile..."
-  # Remove inheritance and set explicit permissions: Administrators=FullControl, buildkite-agent=Read  
+  # Remove inheritance and set explicit permissions: Administrators=FullControl, buildkite-agent=Read
   icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "buildkite-agent:R"
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "verification-jwks-file=$keyfile"
 }
