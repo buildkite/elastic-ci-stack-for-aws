@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-AWS_CLI_LINUX_VERSION=2.28.15
+AWS_CLI_LINUX_VERSION=2.31.26
 
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
