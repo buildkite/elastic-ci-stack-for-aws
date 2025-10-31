@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.44.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.44.0) (2025-10-31)
+
+## Changed
+
+- chore: bump agent to v3.108.0 by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1613
+- chore(deps): bump golang.org/x/sys from 0.36.0 to 0.37.0 by @dependabot[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1616
+- Adding `stack_deployed_by` and updating README by @JoeColeman95 in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1622
+
+## Fixed
+
+- Fix typo'd claim by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1617
+- Fix failure scenarios when EC2 metadata service unavailable by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1620
+
+## Documentation
+
+- Update changelog for v6.43.0 release by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1615
+
 ## [v6.43.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.43.0) (2025-10-09)
 
 ## Changed
