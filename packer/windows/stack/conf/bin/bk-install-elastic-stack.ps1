@@ -114,7 +114,7 @@ $agent_metadata=@(
   "docker=${DOCKER_VERSION}"
   "stack=${Env:BUILDKITE_STACK_NAME}"
   "buildkite-aws-stack=${Env:BUILDKITE_STACK_VERSION}"
-  "stack_deployed_by=${Env:BUILDKITE_STACK_DEPLOYED_BY}"
+  "stack-deployed-by=${Env:BUILDKITE_STACK_DEPLOYED_BY}"
 )
 
 If (Test-Path Env:BUILDKITE_AGENT_TAGS) {
