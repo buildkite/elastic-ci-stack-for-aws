@@ -4,6 +4,9 @@
 
 ## Buildkite Elastic CI Stack for AWS
 
+> [!NOTE]
+> Prefer Terraform? See [terraform-buildkite-elastic-ci-stack-for-aws](https://github.com/buildkite/terraform-buildkite-elastic-ci-stack-for-aws)
+
 [Buildkite](https://buildkite.com/) provides a platform for running fast, secure, and scalable continuous integration pipelines on your own infrastructure.
 
 The Buildkite Elastic CI Stack for AWS gives you a private, autoscaling [Buildkite Agent](https://buildkite.com/docs/agent) cluster. Use it to parallelize large test suites across thousands of nodes, run tests and deployments for Linux or Windows based services and apps, or run AWS ops tasks.
