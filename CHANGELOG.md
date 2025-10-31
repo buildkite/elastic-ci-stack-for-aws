@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.44.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.44.0) (2025-10-31)
+
+## Changed
+
+- chore: bump agent to v3.108.0 by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1613
+- chore(deps): bump golang.org/x/sys from 0.36.0 to 0.37.0 by @dependabot[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1616
+- Adding `stack_deployed_by` and updating README by @JoeColeman95 in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1622
+
+## Fixed
+
+- Fix typo'd claim by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1617
+- Fix failure scenarios when EC2 metadata service unavailable by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1620
+
+## Documentation
+
+- Update changelog for v6.43.0 release by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1615
+
+
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.43.0...v6.44.0)
+
+<details>
+
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.108.0](https://github.com/buildkite/agent/tree/v3.108.0) (2025-10-02)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.107.2...v3.108.0)
+
+### Added
+- Ability to checkout subdirectories of Plugins [#3488](https://github.com/buildkite/agent/pull/3488) (@tomowatt)
+- Better env var for disabling if_changed [#3501](https://github.com/buildkite/agent/pull/3501) (@DrJosh9000)
+- Add plugins-always-clone-fresh to config, CLI start [#3429](https://github.com/buildkite/agent/pull/3429) (@petetomasik)
+
+### Fixed
+- Fix log collection stopping too early on SIGTERM in Kubernetes [#3500](https://github.com/buildkite/agent/pull/3500) (@scadu)
+- Update gopsutils to 4.25.8 [#3499](https://github.com/buildkite/agent/pull/3499) (@ladd)
+- Remove debugging log line [#3496](https://github.com/buildkite/agent/pull/3496) (@DrJosh9000)
+- Set e.checkoutRoot even if checkout phase is disabled [#3493](https://github.com/buildkite/agent/pull/3493) (@DrJosh9000)
+
+### Internal
+- Simplify secret tests [#3484](https://github.com/buildkite/agent/pull/3484) (@moskyb)
+
+### Dependency updates
+- build(deps): bump the container-images group across 5 directories with 1 update [#3505](https://github.com/buildkite/agent/pull/3505) (@dependabot[bot])
+- build(deps): bump github.com/DataDog/datadog-go/v5 from 5.6.0 to 5.8.0 [#3504](https://github.com/buildkite/agent/pull/3504) (@dependabot[bot])
+- build(deps): bump cloud.google.com/go/compute/metadata from 0.8.4 to 0.9.0 [#3506](https://github.com/buildkite/agent/pull/3506) (@dependabot[bot])
+- build(deps): bump the cloud-providers group with 5 updates [#3503](https://github.com/buildkite/agent/pull/3503) (@dependabot[bot])
+- build(deps): bump rexml from 3.3.9 to 3.4.2 [#3494](https://github.com/buildkite/agent/pull/3494) (@dependabot[bot])
+- build(deps): bump cloud.google.com/go/compute/metadata from 0.8.0 to 0.8.4 [#3489](https://github.com/buildkite/agent/pull/3489) (@dependabot[bot])
+- build(deps): bump the cloud-providers group across 1 directory with 3 updates [#3490](https://github.com/buildkite/agent/pull/3490) (@dependabot[bot])
+- build(deps): bump the container-images group across 4 directories with 1 update [#3491](https://github.com/buildkite/agent/pull/3491) (@dependabot[bot])
+- build(deps): bump the container-images group across 1 directory with 2 updates [#3492](https://github.com/buildkite/agent/pull/3492) (@dependabot[bot])
+</details>
+
 ## [v6.43.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.43.0) (2025-10-09)
 
 ## Changed
