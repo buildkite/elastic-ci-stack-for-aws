@@ -1930,7 +1930,7 @@ Resources:
 
                   $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
                   $Env:BUILDKITE_STACK_VERSION="%v"
-                  $Env:BUILDKITE_STACK_DEPLOYED_BY="CloudFormation"
+                  $Env:BUILDKITE_STACK_DEPLOYED_BY="cloudformation"
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
@@ -2026,7 +2026,7 @@ Resources:
                   #!/bin/bash -v
                   BUILDKITE_STACK_NAME="${AWS::StackName}" \
                   BUILDKITE_STACK_VERSION="%v" \
-                  BUILDKITE_STACK_DEPLOYED_BY="CloudFormation" \
+                  BUILDKITE_STACK_DEPLOYED_BY="cloudformation" \
                   BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}" \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
