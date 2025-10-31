@@ -265,7 +265,7 @@ agent_metadata=(
   "docker=${DOCKER_VERSION}"
   "stack=${BUILDKITE_STACK_NAME}"
   "buildkite-aws-stack=${BUILDKITE_STACK_VERSION}"
-  "stack_deployed_by=${BUILDKITE_STACK_DEPLOYED_BY}"
+  "stack-deployed-by=${BUILDKITE_STACK_DEPLOYED_BY}"
 )
 
 echo "Initial agent metadata: ${agent_metadata[*]-}"
