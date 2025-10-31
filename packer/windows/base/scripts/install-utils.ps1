@@ -1,7 +1,7 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$AWS_CLI_WINDOWS_VERSION = "2.28.15"
+$AWS_CLI_WINDOWS_VERSION = "2.31.26"
 $GIT_VERSION = "2.39.1"
 
 Write-Output "Installing chocolatey package manager"
