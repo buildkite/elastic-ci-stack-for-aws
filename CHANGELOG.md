@@ -4,23 +4,153 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.46.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.45.0...v6.46.0) (2025-11-04)
+
+## Changed
+
+- chore(deps): update buildkite-agent to v3.110.0 [#1632](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1632) ([renovate[bot]](https://github.com/apps/renovate))
+
+## Internal
+
+- chore: remove notes from Renovate's PR [#1633](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1633) ([scadu](https://github.com/scadu))
+- Fix Renovate custom manager for buildkite-agent [#1631](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1631) ([scadu](https://github.com/scadu))
+- chore(deps): update buildkite plugin docker-compose to v5.11.0 [#1626](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1626) ([renovate[bot]](https://github.com/apps/renovate))
+- chore: remove unused workflow file [#1628](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1628) ([mcncl](https://github.com/mcncl))
+
+<details>
+<summary>Agent Changelog</summary>
+
+### [`v3.110.0`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31100-2025-10-22)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.109.1...v3.110.0)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.109.1...v3.110.0)
+
+##### Added
+
+- Configurable chunks interval [#&#8203;3521](https://redirect.github.com/buildkite/agent/pull/3521) ([@&#8203;catkins](https://redirect.github.com/catkins))
+- Inject OpenTelemetry context to all child processes [#&#8203;3548](https://redirect.github.com/buildkite/agent/pull/3548) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+  - This is done using [environment variables](https://opentelemetry.io/docs/specs/otel/context/env-carriers/). This may interfere with existing OTel environment variables if they are manually added some other way.
+- Add --literal and --delimiter flags to artifact upload [#&#8203;3543](https://redirect.github.com/buildkite/agent/pull/3543) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Changed
+
+Various improvements and fixes to do with signal and cancel grace periods, and signal handling, most notably:
+
+- When cancelling a job, the timeout before sending a SIGKILL to the job has changed from cancel-grace-period to signal-grace-period (`--signal-grace-period-seconds` flag, `BUILDKITE_SIGNAL_GRACE_PERIOD_SECONDS` env var) to allow the agent some extra time to upload job logs and mark the job as finished. By default, signal-grace-period is 1 second shorter than cancel-grace-period. You may wish to increase cancel-grace-period accordingly.
+- When SIGQUIT is handled by the bootstrap, the exit code is now 131, and it no longer dumps a stacktrace.
+- The recently-added `--kubernetes-log-collection-grace-period` flag is now deprecated. Instead, use `--cancel-grace-period`.
+- When running the agent interactively, you can now Ctrl-C a third time to exit immediately.
+- In Kubernetes mode, the agent now begins shutting down on the first SIGTERM. The kubernetes-bootstrap now swallows SIGTERM with a logged message, and waits for the agent container to send an interrupt.
+- When the agent is cancelling jobs because it is stopping, all jobs start cancellation simultaneously. This allows the agent to exit sooner when multiple workers (`--spawn` flag) are used.
+  See [#&#8203;3549](https://redirect.github.com/buildkite/agent/pull/3549), [#&#8203;3547](https://redirect.github.com/buildkite/agent/pull/3547), [#&#8203;3534](https://redirect.github.com/buildkite/agent/pull/3534) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Fixed
+
+- Refresh checkout root file handle after checkout hook [#&#8203;3546](https://redirect.github.com/buildkite/agent/pull/3546) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+- Bump zzglob to v0.4.2 to fix uploading artifact paths containing `~` [#&#8203;3539](https://redirect.github.com/buildkite/agent/pull/3539) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Internal
+
+- Docs: Add examples for step update commands for priority and notify attributes [#&#8203;3532](https://redirect.github.com/buildkite/agent/pull/3532) ([@&#8203;tomowatt](https://redirect.github.com/tomowatt))
+- Docs: Update URLs in agent cfg comments [#&#8203;3536](https://redirect.github.com/buildkite/agent/pull/3536) ([@&#8203;petetomasik](https://redirect.github.com/petetomasik))
+
+##### Dependency updates
+
+- Upgrade Datadog-go to v5.8.1 to work around mod checksum issues [#&#8203;3538](https://redirect.github.com/buildkite/agent/pull/3538) ([@&#8203;dannyfallon](https://redirect.github.com/dannyfallon))
+- build(deps): bump the container-images group across 3 directories with 2 updates [#&#8203;3545](https://redirect.github.com/buildkite/agent/pull/3545) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump gopkg.in/DataDog/dd-trace-go.v1 from 1.74.6 to 1.74.7 [#&#8203;3544](https://redirect.github.com/buildkite/agent/pull/3544) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump github.com/gofrs/flock from 0.12.1 to 0.13.0 [#&#8203;3523](https://redirect.github.com/buildkite/agent/pull/3523) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump docker/library/golang from 1.24.8 to 1.24.9 in /.buildkite in the container-images group across 1 directory [#&#8203;3542](https://redirect.github.com/buildkite/agent/pull/3542) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the cloud-providers group across 1 directory with 6 updates [#&#8203;3541](https://redirect.github.com/buildkite/agent/pull/3541) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the container-images group across 3 directories with 1 update [#&#8203;3540](https://redirect.github.com/buildkite/agent/pull/3540) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the golang-x group with 5 updates [#&#8203;3525](https://redirect.github.com/buildkite/agent/pull/3525) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+
+### [`v3.109.1`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31100-2025-10-22)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.109.0...v3.109.1)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.109.1...v3.110.0)
+
+##### Added
+
+- Configurable chunks interval [#&#8203;3521](https://redirect.github.com/buildkite/agent/pull/3521) ([@&#8203;catkins](https://redirect.github.com/catkins))
+- Inject OpenTelemetry context to all child processes [#&#8203;3548](https://redirect.github.com/buildkite/agent/pull/3548) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+  - This is done using [environment variables](https://opentelemetry.io/docs/specs/otel/context/env-carriers/). This may interfere with existing OTel environment variables if they are manually added some other way.
+- Add --literal and --delimiter flags to artifact upload [#&#8203;3543](https://redirect.github.com/buildkite/agent/pull/3543) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Changed
+
+Various improvements and fixes to do with signal and cancel grace periods, and signal handling, most notably:
+
+- When cancelling a job, the timeout before sending a SIGKILL to the job has changed from cancel-grace-period to signal-grace-period (`--signal-grace-period-seconds` flag, `BUILDKITE_SIGNAL_GRACE_PERIOD_SECONDS` env var) to allow the agent some extra time to upload job logs and mark the job as finished. By default, signal-grace-period is 1 second shorter than cancel-grace-period. You may wish to increase cancel-grace-period accordingly.
+- When SIGQUIT is handled by the bootstrap, the exit code is now 131, and it no longer dumps a stacktrace.
+- The recently-added `--kubernetes-log-collection-grace-period` flag is now deprecated. Instead, use `--cancel-grace-period`.
+- When running the agent interactively, you can now Ctrl-C a third time to exit immediately.
+- In Kubernetes mode, the agent now begins shutting down on the first SIGTERM. The kubernetes-bootstrap now swallows SIGTERM with a logged message, and waits for the agent container to send an interrupt.
+- When the agent is cancelling jobs because it is stopping, all jobs start cancellation simultaneously. This allows the agent to exit sooner when multiple workers (`--spawn` flag) are used.
+  See [#&#8203;3549](https://redirect.github.com/buildkite/agent/pull/3549), [#&#8203;3547](https://redirect.github.com/buildkite/agent/pull/3547), [#&#8203;3534](https://redirect.github.com/buildkite/agent/pull/3534) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Fixed
+
+- Refresh checkout root file handle after checkout hook [#&#8203;3546](https://redirect.github.com/buildkite/agent/pull/3546) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+- Bump zzglob to v0.4.2 to fix uploading artifact paths containing `~` [#&#8203;3539](https://redirect.github.com/buildkite/agent/pull/3539) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Internal
+
+- Docs: Add examples for step update commands for priority and notify attributes [#&#8203;3532](https://redirect.github.com/buildkite/agent/pull/3532) ([@&#8203;tomowatt](https://redirect.github.com/tomowatt))
+- Docs: Update URLs in agent cfg comments [#&#8203;3536](https://redirect.github.com/buildkite/agent/pull/3536) ([@&#8203;petetomasik](https://redirect.github.com/petetomasik))
+
+##### Dependency updates
+
+- Upgrade Datadog-go to v5.8.1 to work around mod checksum issues [#&#8203;3538](https://redirect.github.com/buildkite/agent/pull/3538) ([@&#8203;dannyfallon](https://redirect.github.com/dannyfallon))
+- build(deps): bump the container-images group across 3 directories with 2 updates [#&#8203;3545](https://redirect.github.com/buildkite/agent/pull/3545) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump gopkg.in/DataDog/dd-trace-go.v1 from 1.74.6 to 1.74.7 [#&#8203;3544](https://redirect.github.com/buildkite/agent/pull/3544) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump github.com/gofrs/flock from 0.12.1 to 0.13.0 [#&#8203;3523](https://redirect.github.com/buildkite/agent/pull/3523) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump docker/library/golang from 1.24.8 to 1.24.9 in /.buildkite in the container-images group across 1 directory [#&#8203;3542](https://redirect.github.com/buildkite/agent/pull/3542) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the cloud-providers group across 1 directory with 6 updates [#&#8203;3541](https://redirect.github.com/buildkite/agent/pull/3541) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the container-images group across 3 directories with 1 update [#&#8203;3540](https://redirect.github.com/buildkite/agent/pull/3540) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the golang-x group with 5 updates [#&#8203;3525](https://redirect.github.com/buildkite/agent/pull/3525) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+
+### [`v3.109.0`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31091-2025-10-15)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.108.0...v3.109.0)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.109.0...v3.109.1)
+
+##### Fixed
+
+- Pass aws config to ec2 client for fetching tags [#&#8203;3529](https://redirect.github.com/buildkite/agent/pull/3529) ([@&#8203;migueleliasweb](https://redirect.github.com/migueleliasweb))
+- PS-1245: Fix artifact search output format escape sequence handling [#&#8203;3522](https://redirect.github.com/buildkite/agent/pull/3522) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+- Fix inconsistency in artifact search --format flag documentation [#&#8203;3520](https://redirect.github.com/buildkite/agent/pull/3520) ([@&#8203;ivannalisetska](https://redirect.github.com/ivannalisetska))
+
+</details>
+
+## [v6.45.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.44.0...v6.45.0) (2025-10-31)
+
+## Changed
+
+- chore(deps): update dependency go to v1.25.3 by @renovate[bot] in #1609
+- stack_deployed_by > stack-deployed-by by @JoeColeman95 in #1624
+- Bumping AWS CLI version to 2.31.26 by @JoeColeman95 in #1625
+- Update changelog for v6.44.0 release by @JoeColeman95 in #1623
+
 ## [v6.44.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.44.0) (2025-10-31)
 
 ## Changed
 
-- chore: bump agent to v3.108.0 by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1613
-- chore(deps): bump golang.org/x/sys from 0.36.0 to 0.37.0 by @dependabot[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1616
-- Adding `stack_deployed_by` and updating README by @JoeColeman95 in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1622
+- chore: bump agent to v3.108.0 by @mcncl in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1613>
+- chore(deps): bump golang.org/x/sys from 0.36.0 to 0.37.0 by @dependabot[bot] in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1616>
+- Adding `stack_deployed_by` and updating README by @JoeColeman95 in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1622>
 
 ## Fixed
 
-- Fix typo'd claim by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1617
-- Fix failure scenarios when EC2 metadata service unavailable by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1620
+- Fix typo'd claim by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1617>
+- Fix failure scenarios when EC2 metadata service unavailable by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1620>
 
 ## Documentation
 
-- Update changelog for v6.43.0 release by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1615
-
+- Update changelog for v6.43.0 release by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1615>
 
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.43.0...v6.44.0)
 
@@ -29,23 +159,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
   <summary><h3>Agent Changelog</h3></summary>
 
 ## [v3.108.0](https://github.com/buildkite/agent/tree/v3.108.0) (2025-10-02)
+
 [Full Changelog](https://github.com/buildkite/agent/compare/v3.107.2...v3.108.0)
 
 ### Added
+
 - Ability to checkout subdirectories of Plugins [#3488](https://github.com/buildkite/agent/pull/3488) (@tomowatt)
 - Better env var for disabling if_changed [#3501](https://github.com/buildkite/agent/pull/3501) (@DrJosh9000)
 - Add plugins-always-clone-fresh to config, CLI start [#3429](https://github.com/buildkite/agent/pull/3429) (@petetomasik)
 
 ### Fixed
+
 - Fix log collection stopping too early on SIGTERM in Kubernetes [#3500](https://github.com/buildkite/agent/pull/3500) (@scadu)
 - Update gopsutils to 4.25.8 [#3499](https://github.com/buildkite/agent/pull/3499) (@ladd)
 - Remove debugging log line [#3496](https://github.com/buildkite/agent/pull/3496) (@DrJosh9000)
 - Set e.checkoutRoot even if checkout phase is disabled [#3493](https://github.com/buildkite/agent/pull/3493) (@DrJosh9000)
 
 ### Internal
+
 - Simplify secret tests [#3484](https://github.com/buildkite/agent/pull/3484) (@moskyb)
 
 ### Dependency updates
+
 - build(deps): bump the container-images group across 5 directories with 1 update [#3505](https://github.com/buildkite/agent/pull/3505) (@dependabot[bot])
 - build(deps): bump github.com/DataDog/datadog-go/v5 from 5.6.0 to 5.8.0 [#3504](https://github.com/buildkite/agent/pull/3504) (@dependabot[bot])
 - build(deps): bump cloud.google.com/go/compute/metadata from 0.8.4 to 0.9.0 [#3506](https://github.com/buildkite/agent/pull/3506) (@dependabot[bot])
@@ -55,21 +190,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - build(deps): bump the cloud-providers group across 1 directory with 3 updates [#3490](https://github.com/buildkite/agent/pull/3490) (@dependabot[bot])
 - build(deps): bump the container-images group across 4 directories with 1 update [#3491](https://github.com/buildkite/agent/pull/3491) (@dependabot[bot])
 - build(deps): bump the container-images group across 1 directory with 2 updates [#3492](https://github.com/buildkite/agent/pull/3492) (@dependabot[bot])
+
 </details>
 
 ## [v6.43.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.43.0) (2025-10-09)
 
 ## Changed
 
-- Add signing parameters to cfn template by @moskyb in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1263
+- Add signing parameters to cfn template by @moskyb in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1263>
 
 ## Fixed
 
-- Fix/disable EnableECRCredentialHelper parameter by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1614
+- Fix/disable EnableECRCredentialHelper parameter by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1614>
 
 ## Documentation
 
-- Update changelog for v6.42.0 release by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1612
+- Update changelog for v6.42.0 release by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1612>
 
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.42.0...v6.43.0)
 
@@ -77,17 +213,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 
-- Cleanup base AMI build logic by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1597
-- Fix missing refresh_authorized_keys.timer by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1604
-- Allow ECR Credential Helper to be disabled by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1600
-- Support cross-account SSM Parameter Store paths by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1605
-- Allow configurable Docker default bridge networks by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1608
-- Support arm64 arch for Lambda functions by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1606
+- Cleanup base AMI build logic by @scadu in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1597>
+- Fix missing refresh_authorized_keys.timer by @scadu in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1604>
+- Allow ECR Credential Helper to be disabled by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1600>
+- Support cross-account SSM Parameter Store paths by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1605>
+- Allow configurable Docker default bridge networks by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1608>
+- Support arm64 arch for Lambda functions by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1606>
 
 ### Internal
 
-- Update golang Docker tag to v1.25 by @renovate[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1610
-- Updates to clarify `BootstrapScriptUrl` and `AgentEnvFileUrl` Stack params by @petetomasik in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1611
+- Update golang Docker tag to v1.25 by @renovate[bot] in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1610>
+- Updates to clarify `BootstrapScriptUrl` and `AgentEnvFileUrl` Stack params by @petetomasik in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1611>
 - Update changelog for v6.41.6 release [#1602](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1602) ([scadu](https://github.com/scadu))
 
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.6...v6.42.0)
@@ -113,6 +249,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Fixed
 
 - Remove debugging log line [#3496](https://github.com/buildkite/agent/pull/3496) (@DrJosh9000)
+
 </details>
 
 ## [v6.41.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.4...v6.41.5) (2025-09-22)
@@ -153,6 +290,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Update shellwords to v1.0.1, relax Go version directive [#3464](https://github.com/buildkite/agent/pull/3464) (@moskyb)
 - build(deps): bump the container-images group across 5 directories with 1 update [#3478](https://github.com/buildkite/agent/pull/3478) (@dependabot[bot])
 - Split Dependabot container updates [#3477](https://github.com/buildkite/agent/pull/3477) (@DrJosh9000)
+
 </details>
 
 ## [v6.41.4](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.3...v6.41.4) (2025-09-17)
@@ -180,6 +318,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Support upcoming `secrets` pipeline syntax (currently in private preview) [#3453](https://github.com/buildkite/agent/pull/3453) (@matthewborden)
 - Better plugin and hook path checks [#3445](https://github.com/buildkite/agent/pull/3445) (@DrJosh9000)
+
 </details>
 
 ## [v6.41.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.41.2) (2025-09-11)
@@ -221,6 +360,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add replacer fuzz test corpus to repo, with fix [#3448](https://github.com/buildkite/agent/pull/3448) (@DrJosh9000)
 - Re-add test race detection, and skip a known-racy test under the race regime [#3452](https://github.com/buildkite/agent/pull/3452) (@moskyb)
 - Dependancy updates: [#3463](https://github.com/buildkite/agent/pull/3463), [#3465](https://github.com/buildkite/agent/pull/3465), [#3462](https://github.com/buildkite/agent/pull/3462) ,[#3457](https://github.com/buildkite/agent/pull/3457), [#3460](https://github.com/buildkite/agent/pull/3460), [#3456](https://github.com/buildkite/agent/pull/3456), [#3454](https://github.com/buildkite/agent/pull/3454) (@dependabot[bot])
+
 </details>
 
 ## [v6.41.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.41.0...v6.41.1) (2025-09-08)
@@ -257,6 +397,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add disclosures/credits to PR template [#3433](https://github.com/buildkite/agent/pull/3433) (@DrJosh9000)
 - Fix code owners [#3422](https://github.com/buildkite/agent/pull/3422) (@zhming0)
 - Dependency updates [#3437](https://github.com/buildkite/agent/pull/3437), [#3438](https://github.com/buildkite/agent/pull/3438), [#3442](https://github.com/buildkite/agent/pull/3442), [#3441](https://github.com/buildkite/agent/pull/3441), [#3435](https://github.com/buildkite/agent/pull/3435), [#3425](https://github.com/buildkite/agent/pull/3425), [#3423](https://github.com/buildkite/agent/pull/3423), [#3426](https://github.com/buildkite/agent/pull/3426), [#3427](https://github.com/buildkite/agent/pull/3427), [#3424](https://github.com/buildkite/agent/pull/3424) (@dependabot[bot])
+
 </details>
 
 ## [v6.41.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.41.0) (2025-08-29)
@@ -311,6 +452,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - chore: move the tool.go to new tool dependency [#3409](https://github.com/buildkite/agent/pull/3409) (@wolfeidau)
 - Upgrade to go-pipeline v0.15.0 [#3408](https://github.com/buildkite/agent/pull/3408) (@DrJosh9000)
 - Only run tests if code has changed [#3407](https://github.com/buildkite/agent/pull/3407) (@DrJosh9000)
+
 </details>
 
 ## [v6.40.10](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.9...v6.40.10) (2025-08-13)
@@ -360,6 +502,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - chore: move the tool.go to new tool dependency [#3409](https://github.com/buildkite/agent/pull/3409) (@wolfeidau)
 - Upgrade to go-pipeline v0.15.0 [#3408](https://github.com/buildkite/agent/pull/3408) (@DrJosh9000)
 - Only run tests if code has changed [#3407](https://github.com/buildkite/agent/pull/3407) (@DrJosh9000)
+
 </details>
 
 ## [v6.40.9](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.8...v6.40.9) (2025-07-23)
@@ -419,6 +562,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - build(deps): bump google.golang.org/api from 0.240.0 to 0.241.0 in the cloud-providers group [#3389](https://github.com/buildkite/agent/pull/3389) (@dependabot[bot])
 - build(deps): bump the container-images group across 6 directories with 3 updates [#3390](https://github.com/buildkite/agent/pull/3390) (@dependabot[bot])
 - build(deps): bump gopkg.in/DataDog/dd-trace-go.v1 from 1.74.2 to 1.74.3 [#3388](https://github.com/buildkite/agent/pull/3388) (@dependabot[bot])
+
 </details>
 
 ## [v6.40.7](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.6...v6.40.7) (2025-07-11)
@@ -473,6 +617,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - build(deps): bump the container-images group across 6 directories with 2 updates [#3379](https://github.com/buildkite/agent/pull/3379) (@dependabot[bot])
 - build(deps): bump google.golang.org/api from 0.239.0 to 0.240.0 in the cloud-providers group [#3377](https://github.com/buildkite/agent/pull/3377) (@dependabot[bot])
 - build(deps): bump the container-images group across 7 directories with 3 updates [#3378](https://github.com/buildkite/agent/pull/3378) (@dependabot[bot])
+
 </details>
 
 ## [v6.40.6](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.40.5...v6.40.6) (2025-07-03)
@@ -694,24 +839,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Changed
 
-- Bump Docker buildx to v0.23.0 and Docker Compose to v2.35.1 by @orien in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1472
-- ⬆️ Bump Windows server to 2022 by @mcncl and @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1456
-- Bump golang.org/x/sys from 0.32.0 to 0.33.0 by @dependabot in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1478
+- Bump Docker buildx to v0.23.0 and Docker Compose to v2.35.1 by @orien in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1472>
+- ⬆️ Bump Windows server to 2022 by @mcncl and @scadu in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1456>
+- Bump golang.org/x/sys from 0.32.0 to 0.33.0 by @dependabot in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1478>
 
 ## [v6.37.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.36.0...v6.37.0) (2025-04-30)
 
 ### Added
 
-- Option to recursively copy AWS SSM parameters to an env file by @wolfeidau in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1455
-- More instance types by @ivannalisetska in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1465
-- `BuildkiteAgentSignalGracePeriod` parameter by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1468
+- Option to recursively copy AWS SSM parameters to an env file by @wolfeidau in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1455>
+- More instance types by @ivannalisetska in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1465>
+- `BuildkiteAgentSignalGracePeriod` parameter by @mcncl in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1468>
 
 ### Changed
 
-- Buildkite Agent v3.97.0, was v3.93.1 by @pda & @PriyaSudip in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1473 & https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1453
-- Go 1.23 by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1467
-  - Go 1.23.6 (just fixes) by @mcncl in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1469
-- Bump golang.org/x/sys from 0.30.0 to 0.32.0 by @dependabot in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1464
+- Buildkite Agent v3.97.0, was v3.93.1 by @pda & @PriyaSudip in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1473> & <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1453>
+- Go 1.23 by @mcncl in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1467>
+  - Go 1.23.6 (just fixes) by @mcncl in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1469>
+- Bump golang.org/x/sys from 0.30.0 to 0.32.0 by @dependabot in <https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1464>
 
 ## [v6.36.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.35.0...v6.36.0) (2025-03-10)
 
@@ -1066,6 +1211,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Shell package cleanup [#3068](https://github.com/buildkite/agent/pull/3068) (@DrJosh9000)
 - Remove .editorconfig [#3064](https://github.com/buildkite/agent/pull/3064) (@DrJosh9000)
 - Various dependency bumps: [#3066](https://github.com/buildkite/agent/pull/3066) [#3065](https://github.com/buildkite/agent/pull/3065) [#3067](https://github.com/buildkite/agent/pull/3067) (@dependabot[bot])
+
 </details>
 
 ## [v6.30.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.30.0) (2024-10-30)
@@ -2493,7 +2639,7 @@ Dependabot churn: [#2927](https://github.com/buildkite/agent/pull/2927), [#2928]
 - Remove AWS autoscaling in favor of buildkite-agent-scaler [#575](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/575) ([lox](https://github.com/lox)) [#588](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/588) ([jeremiahsnapp](https://github.com/jeremiahsnapp))
 - Multiple parameters! See below
 
-### Summary of parameter changes:
+### Summary of parameter changes
 
 The following parameters have been **removed** or **reworked**:
 
@@ -3022,6 +3168,7 @@ No changes from v4.0.0-rc3.
 ## 1.1.0 - 2016-09-09
 
 - ### Added
+
 - 📡 Buildkite Agent has been updated to the latest builds
 - 🐳 Docker has been upgraded to 1.12.1
 - 🐳 Docker Compose has been upgraded to 1.8.0
