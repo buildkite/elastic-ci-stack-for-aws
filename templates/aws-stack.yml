@@ -58,6 +58,7 @@ Metadata:
         - BuildkiteAgentCancelGracePeriod
         - BuildkiteAgentSignalGracePeriod
         - BuildkiteTerminateInstanceAfterJob
+        - BuildkiteTerminateInstanceOnDiskFull
         - BuildkitePurgeBuildsOnDiskFull
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
@@ -1958,6 +1959,8 @@ Resources:
                   $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
                   $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
                   $Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME="${BuildkiteAgentDisconnectAfterUptime}"
+                  $Env:BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL="${BuildkiteTerminateInstanceOnDiskFull}"
+                  $Env:BUILDKITE_PURGE_BUILDS_ON_DISK_FULL="${BuildkitePurgeBuildsOnDiskFull}"
                   $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
                   $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
                   $Env:AWS_DEFAULT_REGION="${AWS::Region}"
