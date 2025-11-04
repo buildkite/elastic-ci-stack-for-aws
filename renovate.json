@@ -33,13 +33,6 @@
       "commitMessageTopic": "buildkite-agent",
       "commitMessageExtra": "to v{{newVersion}}",
       "semanticCommitType": "chore",
-      "prBodyNotes": [
-        "This PR updates the buildkite-agent from v{{currentVersion}} to v{{newVersion}}.",
-        "",
-        "### Agent Release Notes",
-        "",
-        "See the [full release notes](https://github.com/buildkite/agent/releases/tag/v{{newVersion}}) for details about what's included in this update."
-      ],
       "labels": [
         "dependencies",
         "buildkite-agent"
