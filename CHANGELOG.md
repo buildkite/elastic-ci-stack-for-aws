@@ -17,6 +17,115 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - chore(deps): update buildkite plugin docker-compose to v5.11.0 [#1626](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1626) ([renovate[bot]](https://github.com/apps/renovate))
 - chore: remove unused workflow file [#1628](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1628) ([mcncl](https://github.com/mcncl))
 
+<details>
+<summary>Agent Changelog</summary>
+
+### [`v3.110.0`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31100-2025-10-22)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.109.1...v3.110.0)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.109.1...v3.110.0)
+
+##### Added
+
+- Configurable chunks interval [#&#8203;3521](https://redirect.github.com/buildkite/agent/pull/3521) ([@&#8203;catkins](https://redirect.github.com/catkins))
+- Inject OpenTelemetry context to all child processes [#&#8203;3548](https://redirect.github.com/buildkite/agent/pull/3548) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+  - This is done using [environment variables](https://opentelemetry.io/docs/specs/otel/context/env-carriers/). This may interfere with existing OTel environment variables if they are manually added some other way.
+- Add --literal and --delimiter flags to artifact upload [#&#8203;3543](https://redirect.github.com/buildkite/agent/pull/3543) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Changed
+
+Various improvements and fixes to do with signal and cancel grace periods, and signal handling, most notably:
+
+- When cancelling a job, the timeout before sending a SIGKILL to the job has changed from cancel-grace-period to signal-grace-period (`--signal-grace-period-seconds` flag, `BUILDKITE_SIGNAL_GRACE_PERIOD_SECONDS` env var) to allow the agent some extra time to upload job logs and mark the job as finished. By default, signal-grace-period is 1 second shorter than cancel-grace-period. You may wish to increase cancel-grace-period accordingly.
+- When SIGQUIT is handled by the bootstrap, the exit code is now 131, and it no longer dumps a stacktrace.
+- The recently-added `--kubernetes-log-collection-grace-period` flag is now deprecated. Instead, use `--cancel-grace-period`.
+- When running the agent interactively, you can now Ctrl-C a third time to exit immediately.
+- In Kubernetes mode, the agent now begins shutting down on the first SIGTERM. The kubernetes-bootstrap now swallows SIGTERM with a logged message, and waits for the agent container to send an interrupt.
+- When the agent is cancelling jobs because it is stopping, all jobs start cancellation simultaneously. This allows the agent to exit sooner when multiple workers (`--spawn` flag) are used.
+  See [#&#8203;3549](https://redirect.github.com/buildkite/agent/pull/3549), [#&#8203;3547](https://redirect.github.com/buildkite/agent/pull/3547), [#&#8203;3534](https://redirect.github.com/buildkite/agent/pull/3534) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Fixed
+
+- Refresh checkout root file handle after checkout hook [#&#8203;3546](https://redirect.github.com/buildkite/agent/pull/3546) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+- Bump zzglob to v0.4.2 to fix uploading artifact paths containing `~` [#&#8203;3539](https://redirect.github.com/buildkite/agent/pull/3539) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Internal
+
+- Docs: Add examples for step update commands for priority and notify attributes [#&#8203;3532](https://redirect.github.com/buildkite/agent/pull/3532) ([@&#8203;tomowatt](https://redirect.github.com/tomowatt))
+- Docs: Update URLs in agent cfg comments [#&#8203;3536](https://redirect.github.com/buildkite/agent/pull/3536) ([@&#8203;petetomasik](https://redirect.github.com/petetomasik))
+
+##### Dependency updates
+
+- Upgrade Datadog-go to v5.8.1 to work around mod checksum issues [#&#8203;3538](https://redirect.github.com/buildkite/agent/pull/3538) ([@&#8203;dannyfallon](https://redirect.github.com/dannyfallon))
+- build(deps): bump the container-images group across 3 directories with 2 updates [#&#8203;3545](https://redirect.github.com/buildkite/agent/pull/3545) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump gopkg.in/DataDog/dd-trace-go.v1 from 1.74.6 to 1.74.7 [#&#8203;3544](https://redirect.github.com/buildkite/agent/pull/3544) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump github.com/gofrs/flock from 0.12.1 to 0.13.0 [#&#8203;3523](https://redirect.github.com/buildkite/agent/pull/3523) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump docker/library/golang from 1.24.8 to 1.24.9 in /.buildkite in the container-images group across 1 directory [#&#8203;3542](https://redirect.github.com/buildkite/agent/pull/3542) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the cloud-providers group across 1 directory with 6 updates [#&#8203;3541](https://redirect.github.com/buildkite/agent/pull/3541) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the container-images group across 3 directories with 1 update [#&#8203;3540](https://redirect.github.com/buildkite/agent/pull/3540) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the golang-x group with 5 updates [#&#8203;3525](https://redirect.github.com/buildkite/agent/pull/3525) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+
+### [`v3.109.1`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31100-2025-10-22)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.109.0...v3.109.1)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.109.1...v3.110.0)
+
+##### Added
+
+- Configurable chunks interval [#&#8203;3521](https://redirect.github.com/buildkite/agent/pull/3521) ([@&#8203;catkins](https://redirect.github.com/catkins))
+- Inject OpenTelemetry context to all child processes [#&#8203;3548](https://redirect.github.com/buildkite/agent/pull/3548) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+  - This is done using [environment variables](https://opentelemetry.io/docs/specs/otel/context/env-carriers/). This may interfere with existing OTel environment variables if they are manually added some other way.
+- Add --literal and --delimiter flags to artifact upload [#&#8203;3543](https://redirect.github.com/buildkite/agent/pull/3543) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Changed
+
+Various improvements and fixes to do with signal and cancel grace periods, and signal handling, most notably:
+
+- When cancelling a job, the timeout before sending a SIGKILL to the job has changed from cancel-grace-period to signal-grace-period (`--signal-grace-period-seconds` flag, `BUILDKITE_SIGNAL_GRACE_PERIOD_SECONDS` env var) to allow the agent some extra time to upload job logs and mark the job as finished. By default, signal-grace-period is 1 second shorter than cancel-grace-period. You may wish to increase cancel-grace-period accordingly.
+- When SIGQUIT is handled by the bootstrap, the exit code is now 131, and it no longer dumps a stacktrace.
+- The recently-added `--kubernetes-log-collection-grace-period` flag is now deprecated. Instead, use `--cancel-grace-period`.
+- When running the agent interactively, you can now Ctrl-C a third time to exit immediately.
+- In Kubernetes mode, the agent now begins shutting down on the first SIGTERM. The kubernetes-bootstrap now swallows SIGTERM with a logged message, and waits for the agent container to send an interrupt.
+- When the agent is cancelling jobs because it is stopping, all jobs start cancellation simultaneously. This allows the agent to exit sooner when multiple workers (`--spawn` flag) are used.
+  See [#&#8203;3549](https://redirect.github.com/buildkite/agent/pull/3549), [#&#8203;3547](https://redirect.github.com/buildkite/agent/pull/3547), [#&#8203;3534](https://redirect.github.com/buildkite/agent/pull/3534) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Fixed
+
+- Refresh checkout root file handle after checkout hook [#&#8203;3546](https://redirect.github.com/buildkite/agent/pull/3546) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+- Bump zzglob to v0.4.2 to fix uploading artifact paths containing `~` [#&#8203;3539](https://redirect.github.com/buildkite/agent/pull/3539) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Internal
+
+- Docs: Add examples for step update commands for priority and notify attributes [#&#8203;3532](https://redirect.github.com/buildkite/agent/pull/3532) ([@&#8203;tomowatt](https://redirect.github.com/tomowatt))
+- Docs: Update URLs in agent cfg comments [#&#8203;3536](https://redirect.github.com/buildkite/agent/pull/3536) ([@&#8203;petetomasik](https://redirect.github.com/petetomasik))
+
+##### Dependency updates
+
+- Upgrade Datadog-go to v5.8.1 to work around mod checksum issues [#&#8203;3538](https://redirect.github.com/buildkite/agent/pull/3538) ([@&#8203;dannyfallon](https://redirect.github.com/dannyfallon))
+- build(deps): bump the container-images group across 3 directories with 2 updates [#&#8203;3545](https://redirect.github.com/buildkite/agent/pull/3545) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump gopkg.in/DataDog/dd-trace-go.v1 from 1.74.6 to 1.74.7 [#&#8203;3544](https://redirect.github.com/buildkite/agent/pull/3544) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump github.com/gofrs/flock from 0.12.1 to 0.13.0 [#&#8203;3523](https://redirect.github.com/buildkite/agent/pull/3523) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump docker/library/golang from 1.24.8 to 1.24.9 in /.buildkite in the container-images group across 1 directory [#&#8203;3542](https://redirect.github.com/buildkite/agent/pull/3542) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the cloud-providers group across 1 directory with 6 updates [#&#8203;3541](https://redirect.github.com/buildkite/agent/pull/3541) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the container-images group across 3 directories with 1 update [#&#8203;3540](https://redirect.github.com/buildkite/agent/pull/3540) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+- build(deps): bump the golang-x group with 5 updates [#&#8203;3525](https://redirect.github.com/buildkite/agent/pull/3525) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+
+### [`v3.109.0`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31091-2025-10-15)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.108.0...v3.109.0)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.109.0...v3.109.1)
+
+##### Fixed
+
+- Pass aws config to ec2 client for fetching tags [#&#8203;3529](https://redirect.github.com/buildkite/agent/pull/3529) ([@&#8203;migueleliasweb](https://redirect.github.com/migueleliasweb))
+- PS-1245: Fix artifact search output format escape sequence handling [#&#8203;3522](https://redirect.github.com/buildkite/agent/pull/3522) ([@&#8203;zhming0](https://redirect.github.com/zhming0))
+- Fix inconsistency in artifact search --format flag documentation [#&#8203;3520](https://redirect.github.com/buildkite/agent/pull/3520) ([@&#8203;ivannalisetska](https://redirect.github.com/ivannalisetska))
+
+</details>
+
 ## [v6.45.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.44.0...v6.45.0) (2025-10-31)
 
 ## Changed
