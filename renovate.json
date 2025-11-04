@@ -10,8 +10,8 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/^packer/linux/scripts/install-buildkite-agent\\.sh$/",
-        "/^packer/windows/scripts/install-buildkite-agent\\.ps1$/"
+        "/^packer/linux/stack/scripts/install-buildkite-agent\\.sh$/",
+        "/^packer/windows/stack/scripts/install-buildkite-agent\\.ps1$/"
       ],
       "matchStrings": [
         "AGENT_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)",
@@ -33,7 +33,13 @@
       "commitMessageTopic": "buildkite-agent",
       "commitMessageExtra": "to v{{newVersion}}",
       "semanticCommitType": "chore",
-      "prBodyTemplate": "This PR updates the buildkite-agent from v{{{currentValue}}} to v{{{newValue}}}.\n\n### Agent Release Notes\n\nSee the [full release notes](https://github.com/buildkite/agent/releases/tag/v{{{newValue}}}) for details about what's included in this update.\n\n{{{changelog}}}",
+      "prBodyNotes": [
+        "This PR updates the buildkite-agent from v{{currentVersion}} to v{{newVersion}}.",
+        "",
+        "### Agent Release Notes",
+        "",
+        "See the [full release notes](https://github.com/buildkite/agent/releases/tag/v{{newVersion}}) for details about what's included in this update."
+      ],
       "labels": [
         "dependencies",
         "buildkite-agent"
