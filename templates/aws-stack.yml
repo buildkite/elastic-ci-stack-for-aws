@@ -58,6 +58,7 @@ Metadata:
         - BuildkiteAgentCancelGracePeriod
         - BuildkiteAgentSignalGracePeriod
         - BuildkiteTerminateInstanceAfterJob
+        - BuildkiteAgentDisconnectAfterUptime
         - BuildkiteTerminateInstanceOnDiskFull
         - BuildkitePurgeBuildsOnDiskFull
         - BuildkiteAdditionalSudoPermissions
@@ -104,6 +105,8 @@ Metadata:
         - RootVolumeName
         - RootVolumeType
         - RootVolumeEncrypted
+        - RootVolumeIops
+        - RootVolumeThroughput
         - ManagedPolicyARNs
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
@@ -125,11 +128,14 @@ Metadata:
         - MinSize
         - MaxSize
         - InstanceBuffer
+        - DisableScaleIn
         - OnDemandBaseCapacity
         - OnDemandPercentage
         - SpotAllocationStrategy
         - ScaleOutFactor
+        - ScaleOutCooldownPeriod
         - ScaleInIdlePeriod
+        - ScaleInCooldownPeriod
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
