@@ -6,7 +6,7 @@
 export AWS_CLI_LINUX_VERSION="2.31.26"
 export SESSION_MANAGER_PLUGIN_VERSION="1.2.677.0"
 
-# Development Tools  
+# Development Tools
 export GIT_LFS_VERSION="3.4.0"
 export GOSS_VERSION="v0.3.23"
 
