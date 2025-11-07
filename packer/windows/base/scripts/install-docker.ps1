@@ -6,13 +6,14 @@ Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/
 .\install-docker-ce.ps1
 docker --version
 
-$docker_compose_version="2.35.1"
+# Source centralized version definitions
+. "$PSScriptRoot\..\..\shared\scripts\versions.ps1"
+
 Write-Output "Installing docker-compose..."
 choco install -y docker-compose --version $docker_compose_version
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Amazon ECR credential helper..."
-$ecr_cred_helper_version = "0.10.1"
 $ecr_cred_helper_url = "https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/$ecr_cred_helper_version/windows-amd64/docker-credential-ecr-login.exe"
 $docker_plugins_dir = "${env:ProgramFiles}\Docker"
 New-Item -ItemType Directory -Force -Path $docker_plugins_dir | Out-Null
