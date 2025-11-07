@@ -95,6 +95,7 @@ Metadata:
         - SecretsBucket
         - SecretsBucketRegion
         - SecretsBucketEncryption
+        - SecretsPluginSkipSSHKeyNotFoundWarning
         - ArtifactsBucket
         - ArtifactsBucketRegion
         - ArtifactsS3ACL
@@ -554,6 +555,14 @@ Parameters:
 
   SecretsBucketEncryption:
     Description: Indicates whether the SecretsBucket should enforce encryption at rest and in transit.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  SecretsPluginSkipSSHKeyNotFoundWarning:
+    Description: Optional - Skip warning when SSH key is not found in the secrets bucket.
     Type: String
     AllowedValues:
       - "true"
@@ -1941,6 +1950,7 @@ Resources:
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
+                  $Env:BUILDKITE_SECRETS_PLUGIN_SKIP_SSH_KEY_NOT_FOUND_WARNING="${SecretsPluginSkipSSHKeyNotFoundWarning}"
                   $Env:BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}"
                   $Env:BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}"
                   $Env:BUILDKITE_S3_ACL="${ArtifactsS3ACL}"
@@ -2039,6 +2049,7 @@ Resources:
                   BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}" \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
+                  BUILDKITE_SECRETS_PLUGIN_SKIP_SSH_KEY_NOT_FOUND_WARNING="${SecretsPluginSkipSSHKeyNotFoundWarning}" \
                   BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}" \
                   BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}" \
                   BUILDKITE_S3_ACL="${ArtifactsS3ACL}" \
