@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Source centralized version definitions
-# shellcheck source=packer/linux/shared/scripts/versions.sh
+# shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/../../shared/scripts/versions.sh"
 
 case $(uname -m) in
