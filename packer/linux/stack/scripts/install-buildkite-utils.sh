@@ -27,7 +27,7 @@ sudo chmod +x /usr/local/bin/s3secrets-helper
 echo "Installing lifecycled ${LIFECYCLED_VERSION}..."
 sudo touch /etc/lifecycled
 sudo curl -Lf -o /usr/bin/lifecycled \
-  https://github.com/buildkite/lifecycled/releases/download/${LIFECYCLED_VERSION}/lifecycled-linux-${ARCH}
+  "https://github.com/buildkite/lifecycled/releases/download/${LIFECYCLED_VERSION}/lifecycled-linux-${ARCH}"
 sudo chmod +x /usr/bin/lifecycled
 sudo curl -Lf -o /etc/systemd/system/lifecycled.service \
-  https://raw.githubusercontent.com/buildkite/lifecycled/${LIFECYCLED_VERSION}/init/systemd/lifecycled.unit
+  "https://raw.githubusercontent.com/buildkite/lifecycled/${LIFECYCLED_VERSION}/init/systemd/lifecycled.unit"

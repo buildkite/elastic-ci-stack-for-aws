@@ -70,8 +70,8 @@ popd
 
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
 pushd "$(mktemp -d)"
-curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSION}/git-lfs-linux-${ARCH}-v${GIT_LFS_VERSION}.tar.gz | tar xz
-sudo git-lfs-${GIT_LFS_VERSION}/install.sh
+curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v"${GIT_LFS_VERSION}"/git-lfs-linux-"${ARCH}"-v"${GIT_LFS_VERSION}".tar.gz | tar xz
+sudo git-lfs-"${GIT_LFS_VERSION}"/install.sh
 popd
 
 # See https://github.com/goss-org/goss/releases for release versions
