@@ -73,6 +73,8 @@ curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSIO
 sudo git-lfs-${GIT_LFS_VERSION}/install.sh
 popd
 
+#TEST
+
 # See https://github.com/goss-org/goss/releases for release versions
 GOSS_VERSION=v0.3.23
 echo "Installing goss $GOSS_VERSION for system validation..."
