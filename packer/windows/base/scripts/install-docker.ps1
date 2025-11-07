@@ -7,7 +7,7 @@ Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/
 docker --version
 
 # Source centralized version definitions
-. "$PSScriptRoot\..\..\shared\scripts\versions.ps1"
+. "C:\Windows\Temp\versions.ps1"
 
 Write-Output "Installing docker-compose..."
 choco install -y docker-compose --version $docker_compose_version

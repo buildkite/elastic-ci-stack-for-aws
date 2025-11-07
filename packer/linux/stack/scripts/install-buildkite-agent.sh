@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Source centralized version definitions
 # shellcheck disable=SC1091
-source "$(dirname "${BASH_SOURCE[0]}")/../../shared/scripts/versions.sh"
+source "/tmp/versions.sh"
 
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;

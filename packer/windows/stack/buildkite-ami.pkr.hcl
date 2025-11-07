@@ -118,6 +118,11 @@ build {
     source      = "../../../plugins"
   }
 
+  provisioner "file" {
+    destination = "C:/Windows/Temp/"
+    source      = "../shared/scripts/versions.ps1"
+  }
+
   provisioner "powershell" {
     scripts = [
       "scripts/configure-cloudwatch-agent.ps1",

@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 
 # Source centralized version definitions
-. "$PSScriptRoot\..\..\shared\scripts\versions.ps1"
+. "C:\Windows\Temp\versions.ps1"
 
 # https://docs.aws.amazon.com/systems-manager/latest/userguide/plugin-version-history.html
 

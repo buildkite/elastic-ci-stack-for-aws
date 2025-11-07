@@ -91,6 +91,11 @@ build {
     source      = "../shared/conf/"
   }
 
+  provisioner "file" {
+    destination = "/tmp/"
+    source      = "../shared/scripts/versions.sh"
+  }
+
   # Essential utilities & updates
   provisioner "shell" {
     script = "scripts/install-utils.sh"

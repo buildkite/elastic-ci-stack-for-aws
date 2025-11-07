@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 
 # Source centralized version definitions
-. "$PSScriptRoot\..\..\shared\scripts\versions.ps1"
+. "C:\Windows\Temp\versions.ps1"
 
 Write-Output "Creating bin dir..."
 if (-not (Test-Path C:\buildkite-agent\bin)) { New-Item -ItemType Directory -Path C:\buildkite-agent\bin -Force }

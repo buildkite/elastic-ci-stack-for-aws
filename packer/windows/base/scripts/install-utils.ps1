@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 
 # Source centralized version definitions
-. "$PSScriptRoot\..\..\shared\scripts\versions.ps1"
+. "C:\Windows\Temp\versions.ps1"
 
 Write-Output "Installing chocolatey package manager"
 Set-ExecutionPolicy Bypass -Scope Process -Force
