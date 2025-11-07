@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
-AWS_CLI_LINUX_VERSION=2.31.26
+# Source centralized version definitions
+# shellcheck disable=SC1091
+source "/tmp/versions.sh"
 
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
@@ -66,15 +68,13 @@ unzip -qq awscliv2.zip
 sudo ./aws/install
 popd
 
-GIT_LFS_VERSION=3.4.0
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
 pushd "$(mktemp -d)"
-curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSION}/git-lfs-linux-${ARCH}-v${GIT_LFS_VERSION}.tar.gz | tar xz
-sudo git-lfs-${GIT_LFS_VERSION}/install.sh
+curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v"${GIT_LFS_VERSION}"/git-lfs-linux-"${ARCH}"-v"${GIT_LFS_VERSION}".tar.gz | tar xz
+sudo git-lfs-"${GIT_LFS_VERSION}"/install.sh
 popd
 
 # See https://github.com/goss-org/goss/releases for release versions
-GOSS_VERSION=v0.3.23
 echo "Installing goss $GOSS_VERSION for system validation..."
 sudo curl -L "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/goss-linux-${ARCH}" -o /usr/local/bin/goss
 sudo chmod +rx /usr/local/bin/goss

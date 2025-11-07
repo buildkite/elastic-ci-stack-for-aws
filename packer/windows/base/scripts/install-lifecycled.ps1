@@ -1,7 +1,8 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$lifecycled_version = "v3.3.0"
+# Source centralized version definitions
+. "C:\Windows\Temp\versions.ps1"
 
 Write-Output "Installing lifecycled ${lifecycled_version}..."
 

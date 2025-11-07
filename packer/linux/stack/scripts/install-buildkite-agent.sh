@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Source centralized version definitions
+# shellcheck disable=SC1091
+source "/tmp/versions.sh"
+
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
 aarch64) ARCH=arm64 ;;
@@ -15,7 +19,6 @@ sudo mkdir -p /var/lib/buildkite-agent/.aws
 sudo cp /tmp/conf/aws/config /var/lib/buildkite-agent/.aws/config
 sudo chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.aws
 
-AGENT_VERSION=3.111.0
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
   "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"

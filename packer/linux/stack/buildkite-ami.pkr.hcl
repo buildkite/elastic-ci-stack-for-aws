@@ -129,6 +129,10 @@ build {
     source      = "../../../build"
   }
 
+  provisioner "file" {
+    destination = "/tmp/"
+    source      = "../shared/scripts/versions.sh"
+  }
 
   provisioner "shell" {
     script = "scripts/configure-cloudwatch-agent.sh"

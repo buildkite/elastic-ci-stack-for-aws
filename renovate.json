@@ -9,16 +9,124 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/^packer/linux/stack/scripts/install-buildkite-agent\\.sh$/",
-        "/^packer/windows/stack/scripts/install-buildkite-agent\\.ps1$/"
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$",
+        "^packer/windows/shared/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
-        "AGENT_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "export AGENT_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
         "\\$AGENT_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "buildkite/agent",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$",
+        "^packer/windows/shared/scripts/versions\\.ps1$"
+      ],
+      "matchStrings": [
+        "export SESSION_MANAGER_PLUGIN_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+\\.\\d+)\"",
+        "\\$SESSION_MANAGER_PLUGIN_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "aws/session-manager-plugin",
+      "versioningTemplate": "loose"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$",
+        "^packer/windows/shared/scripts/versions\\.ps1$"
+      ],
+      "matchStrings": [
+        "export AWS_CLI_LINUX_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
+        "\\$AWS_CLI_WINDOWS_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "aws/aws-cli",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$",
+        "^packer/windows/shared/scripts/versions\\.ps1$"
+      ],
+      "matchStrings": [
+        "export GIT_LFS_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
+        "\\$GIT_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "git-lfs/git-lfs",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$"
+      ],
+      "matchStrings": [
+        "export GOSS_VERSION=\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "goss-org/goss",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$",
+        "^packer/windows/shared/scripts/versions\\.ps1$"
+      ],
+      "matchStrings": [
+        "export DOCKER_COMPOSE_V2_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
+        "\\$docker_compose_version = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "docker/compose",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$"
+      ],
+      "matchStrings": [
+        "export DOCKER_BUILDX_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "docker/buildx",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$",
+        "^packer/windows/shared/scripts/versions\\.ps1$"
+      ],
+      "matchStrings": [
+        "export LIFECYCLED_VERSION=\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
+        "\\$lifecycled_version = \"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "buildkite/lifecycled",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/shared/scripts/versions\\.sh$",
+        "^packer/windows/shared/scripts/versions\\.ps1$"
+      ],
+      "matchStrings": [
+        "export S3_SECRETS_HELPER_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
+        "\\$S3_SECRETS_HELPER_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "buildkite/elastic-ci-stack-s3-secrets-hooks",
       "versioningTemplate": "semver"
     }
   ],
@@ -37,6 +145,54 @@
         "dependencies",
         "buildkite-agent"
       ]
+    },
+    {
+      "matchPackageNames": [
+        "aws/session-manager-plugin"
+      ],
+      "commitMessageTopic": "session-manager-plugin",
+      "commitMessageExtra": "to v{{newVersion}}",
+      "semanticCommitType": "chore",
+      "labels": [
+        "dependencies",
+        "aws-tools"
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "aws/aws-cli"
+      ],
+      "allowedVersions": "^2",
+      "commitMessageTopic": "aws-cli",
+      "commitMessageExtra": "to v{{newVersion}}",
+      "semanticCommitType": "chore",
+      "labels": [
+        "dependencies",
+        "aws-tools"
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "git-lfs/git-lfs",
+        "goss-org/goss",
+        "docker/compose",
+        "docker/buildx",
+        "buildkite/lifecycled",
+        "buildkite/elastic-ci-stack-s3-secrets-hooks"
+      ],
+      "commitMessageTopic": "{{depName}}",
+      "commitMessageExtra": "to v{{newVersion}}",
+      "semanticCommitType": "chore",
+      "labels": [
+        "dependencies",
+        "tools"
+      ]
+    },
+    {
+      "description": "Global stable releases configuration",
+      "matchManagers": ["custom.regex"],
+      "ignoreUnstable": true,
+      "respectLatest": true
     }
   ]
 }
