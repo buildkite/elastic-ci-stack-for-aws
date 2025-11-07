@@ -1,7 +1,8 @@
 #!/bin/bash
 set -eu -o pipefail
 
-SESSION_MANAGER_PLUGIN_VERSION=1.2.677.0
+# Source centralized version definitions
+source "$(dirname "${BASH_SOURCE[0]}")/../../shared/scripts/versions.sh"
 
 MACHINE="$(uname -m)"
 

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Source centralized version definitions
+source "$(dirname "${BASH_SOURCE[0]}")/../../shared/scripts/versions.sh"
+
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
 aarch64) ARCH=arm64 ;;
@@ -15,13 +18,11 @@ echo "Installing fix-buildkite-agent-builds-permissions..."
 sudo chmod +x "/tmp/build/fix-perms-linux-${ARCH}"
 sudo mv "/tmp/build/fix-perms-linux-${ARCH}" /usr/bin/fix-buildkite-agent-builds-permissions
 
-S3_SECRETS_HELPER_VERSION=2.7.0
 echo "Downloading s3-secrets-helper ${S3_SECRETS_HELPER_VERSION}..."
 sudo curl -Lsf -o /usr/local/bin/s3secrets-helper \
   "https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/releases/download/v${S3_SECRETS_HELPER_VERSION}/s3secrets-helper-linux-${ARCH}"
 sudo chmod +x /usr/local/bin/s3secrets-helper
 
-LIFECYCLED_VERSION=v3.3.0
 echo "Installing lifecycled ${LIFECYCLED_VERSION}..."
 sudo touch /etc/lifecycled
 sudo curl -Lf -o /usr/bin/lifecycled \
