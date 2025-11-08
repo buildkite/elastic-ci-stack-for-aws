@@ -15,4 +15,4 @@ $ecr_cred_helper_version = "0.10.1"
 # Buildkite Tools
 $AGENT_VERSION = "3.111.0"
 $S3_SECRETS_HELPER_VERSION = "2.7.0"
-$lifecycled_version = "v3.3.0"
+$lifecycled_version = "v3.4.0"
