@@ -8,7 +8,7 @@ export SESSION_MANAGER_PLUGIN_VERSION="1.2.677.0"
 
 # Development Tools
 export GIT_LFS_VERSION="3.4.0"
-export GOSS_VERSION="v0.3.23"
+export GOSS_VERSION="v0.4.9"
 
 # Container Tools
 export DOCKER_COMPOSE_V2_VERSION="2.38.2"
