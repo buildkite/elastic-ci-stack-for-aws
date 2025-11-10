@@ -1,3 +1,4 @@
+# Pipeline: https://buildkite.com/buildkite/elastic-stack-for-aws-ami-cleaner
 steps:
   - name: ":broom: Delete AMIs ({{matrix}})"
     command: .buildkite/steps/clean-old-amis
