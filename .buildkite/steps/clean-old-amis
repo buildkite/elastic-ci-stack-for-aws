@@ -89,8 +89,22 @@ all_images.each do |image|
   puts "ID: #{image.image_id}, Name: #{image.name}, Created: #{image.creation_date}, Last Launched: #{image.last_launched_time}, Public: #{image.public}, Version Tag; #{get_stack_version_from_tags(image)}"
 
   if get_stack_version_from_tags(image)
-    puts "- keep (publicly released version)\n\n"
-    next
+    if image.public
+      puts "- keep (publicly released version)\n\n"
+      next
+    end
+
+    # If we made it here, the image is Private. If it's shared with any other
+    # accounts, keep it. If not, proceed with other checks.
+    launch_permission_attr = client.describe_image_attribute({
+      attribute: "launchPermission",
+      image_id: image.image_id,
+    }).to_h
+
+    if launch_permission_attr[:launch_permissions].any?
+      puts "- keep (released version, shared with other AWS accounts)\n\n"
+      next
+    end
   end
 
   if DateTime.parse(image.creation_date).to_time >= one_year_ago
