@@ -41,3 +41,4 @@ steps:
           run: ruby
           config: .buildkite/docker-compose.yml
           propagate-aws-auth-tokens: true
+          mount-buildkite-agent: true
