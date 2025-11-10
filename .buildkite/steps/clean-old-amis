@@ -79,7 +79,7 @@ end
 
 one_year_ago = Time.now - (60 * 60 * 24 * 365)
 deleted_counter = 0
-  
+
 # Time to get down to business.
 #
 # Loop over each elastic stack AMI, skip over any that we want to keep, and anything else we can deregister
@@ -89,17 +89,28 @@ all_images.each do |image|
   puts "ID: #{image.image_id}, Name: #{image.name}, Created: #{image.creation_date}, Last Launched: #{image.last_launched_time}, Public: #{image.public}, Version Tag; #{get_stack_version_from_tags(image)}"
 
   if get_stack_version_from_tags(image)
-    puts "- keep (released version)"
-  elsif DateTime.parse(image.creation_date).to_time >= one_year_ago
-    puts "- keep (created recently)"
-  elsif image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
-    puts "- keep (launched recently)"
-  elsif deleted_counter >= MAX_DELETIONS
-    puts "- deletion candidate, but we've reached MAX_DELETIONS (#{MAX_DELETIONS})"
-  else
-    deregister_image(client, image, dry_run)
-    deleted_counter += 1
+    puts "- keep (publicly released version)\n\n"
+    next
   end
+
+  if DateTime.parse(image.creation_date).to_time >= one_year_ago
+    puts "- keep (created recently)\n\n"
+    next
+  end
+
+  if image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
+    puts "- keep (launched recently)\n\n"
+    next
+  end
+
+  if deleted_counter >= MAX_DELETIONS
+    puts "- deletion candidate, but we've reached MAX_DELETIONS (#{MAX_DELETIONS})\n\n"
+    next
+  end
+
+  deregister_image(client, image, dry_run)
+  deleted_counter += 1
+
   puts
   puts
 
