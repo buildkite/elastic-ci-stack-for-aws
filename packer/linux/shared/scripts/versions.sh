@@ -12,7 +12,7 @@ export GOSS_VERSION="v0.3.23"
 
 # Container Tools
 export DOCKER_COMPOSE_V2_VERSION="2.38.2"
-export DOCKER_BUILDX_VERSION="0.26.1"
+export DOCKER_BUILDX_VERSION="0.29.1"
 
 # Buildkite Tools
 export AGENT_VERSION="3.111.0"
