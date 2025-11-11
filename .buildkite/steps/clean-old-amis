@@ -132,7 +132,7 @@ all_images.each do |image|
     next
   end
 
-  if deleted_counter >= MAX_DELETIONS
+  if counters[:deleted] >= MAX_DELETIONS
     counters[:eligible_for_deletion] += 1
     puts "- deletion candidate, but we've reached MAX_DELETIONS (#{MAX_DELETIONS})\n\n"
     next
