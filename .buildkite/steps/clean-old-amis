@@ -156,6 +156,13 @@ summary = %Q[## #{operation} complete for `#{region}`
 
 puts summary
 
+buildkite_agent_bin = nil
+
 if system("command -v buildkite-agent")
-  `buildkite-agent annotate --context sweep-#{region} --style info '#{summary}'`
+  buildkite_agent_bin = 'buildkite-agent'
+elsif File.exist?('/usr/bin/buildkite-agent')
+  # If buildkite-agent is mounted in by the docker-compose plugin, this is where it will be.
+  buildkite_agent_bin = '/usr/bin/buildkite-agent'
 end
+
+`#{buildkite_agent_bin} annotate --context sweep-#{region} --style info '#{summary}'` unless buildkite_agent_bin.nil?
