@@ -46,12 +46,20 @@ aws logs describe-log-groups \
   --output text \
   | xargs -n1 -t -I% aws logs delete-log-group --log-group-name "%"
 
-echo "--- Deleting old cloudformation stacks"
+echo "--- Deleting old cloudformation stacks for test stacks"
 aws cloudformation describe-stacks \
   --output text \
   --query "$(printf 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date")" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-[[:digit:]]+|buildkite-elastic-ci-stack-service-role-[[:digit:]]+' \
+  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-[[:digit:]]+' \
+  | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
+
+echo "--- Deleting old cloudformation stacks for test stack service roles"
+aws cloudformation describe-stacks \
+  --output text \
+  --query "$(printf 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date")" \
+  | xargs -n1 \
+  | grep -E 'buildkite-elastic-ci-stack-service-role-[[:digit:]]+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
 
 echo "--- Deleting old packer builders"
