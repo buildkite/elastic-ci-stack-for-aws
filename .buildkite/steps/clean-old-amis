@@ -78,8 +78,17 @@ def deregister_image(client, image, dry_run)
 end
 
 one_year_ago = Time.now - (60 * 60 * 24 * 365)
-deleted_counter = 0
-  
+
+counters = {
+  deleted: 0,
+  checked: 0,
+  public: 0,
+  shared: 0,
+  created_recently: 0,
+  launched_recently: 0,
+  eligible_for_deletion: 0,
+}
+
 # Time to get down to business.
 #
 # Loop over each elastic stack AMI, skip over any that we want to keep, and anything else we can deregister
@@ -88,21 +97,72 @@ deleted_counter = 0
 all_images.each do |image|
   puts "ID: #{image.image_id}, Name: #{image.name}, Created: #{image.creation_date}, Last Launched: #{image.last_launched_time}, Public: #{image.public}, Version Tag; #{get_stack_version_from_tags(image)}"
 
+  counters[:checked] += 1
+
   if get_stack_version_from_tags(image)
-    puts "- keep (released version)"
-  elsif DateTime.parse(image.creation_date).to_time >= one_year_ago
-    puts "- keep (created recently)"
-  elsif image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
-    puts "- keep (launched recently)"
-  elsif deleted_counter >= MAX_DELETIONS
-    puts "- deletion candidate, but we've reached MAX_DELETIONS (#{MAX_DELETIONS})"
-  else
-    deregister_image(client, image, dry_run)
-    deleted_counter += 1
+    if image.public
+      counters[:public] += 1
+      puts "- keep (publicly released version)\n\n"
+      next
+    end
+
+    # If we made it here, the image is Private. If it's shared with any other
+    # accounts, keep it. If not, proceed with other checks.
+    launch_permission_attr = client.describe_image_attribute({
+      attribute: "launchPermission",
+      image_id: image.image_id,
+    }).to_h
+
+    if launch_permission_attr[:launch_permissions].any?
+      counters[:shared] += 1
+      puts "- keep (released version, shared with other AWS accounts)\n\n"
+      next
+    end
   end
+
+  if DateTime.parse(image.creation_date).to_time >= one_year_ago
+    counters[:created_recently] += 1
+    puts "- keep (created recently)\n\n"
+    next
+  end
+
+  if image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
+    counters[:launched_recently] += 1
+    puts "- keep (launched recently)\n\n"
+    next
+  end
+
+  if counters[:deleted] >= MAX_DELETIONS
+    counters[:eligible_for_deletion] += 1
+    puts "- deletion candidate, but we've reached MAX_DELETIONS (#{MAX_DELETIONS})\n\n"
+    next
+  end
+
+  deregister_image(client, image, dry_run)
+  counters[:deleted] += 1
+
   puts
   puts
 
 end
 
-puts "COMPLETE: #{all_images.size} AMIs checked, #{deleted_counter} deregistered"
+operation = (dry_run ? "Dry run" : "Cleanup")
+summary = %Q[## #{operation} complete for `#{region}`
+
+| Checked | Deregistered | Eligible for deregistration | Shared publicly | Shared privately | Created recently | Launched recently |
+|:-------:|:------------:|:---------------------------:|:---------------:|:----------------:|:----------------:|:-----------------:|
+| #{counters[:checked]} | #{counters[:deleted]} | #{counters[:eligible_for_deletion]} | #{counters[:public]} | #{counters[:shared]} | #{counters[:created_recently]} | #{counters[:launched_recently]} |
+]
+
+puts summary
+
+buildkite_agent_bin = nil
+
+if system("command -v buildkite-agent")
+  buildkite_agent_bin = 'buildkite-agent'
+elsif File.exist?('/usr/bin/buildkite-agent')
+  # If buildkite-agent is mounted in by the docker-compose plugin, this is where it will be.
+  buildkite_agent_bin = '/usr/bin/buildkite-agent'
+end
+
+`#{buildkite_agent_bin} annotate --context sweep-#{region} --style info '#{summary}'` unless buildkite_agent_bin.nil?
