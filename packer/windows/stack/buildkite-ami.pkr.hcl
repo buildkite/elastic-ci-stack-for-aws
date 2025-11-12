@@ -120,7 +120,7 @@ build {
 
   provisioner "file" {
     destination = "C:/Windows/Temp/"
-    source      = "../shared/scripts/versions.ps1"
+    source      = "../base/scripts/versions.ps1"
   }
 
   provisioner "powershell" {

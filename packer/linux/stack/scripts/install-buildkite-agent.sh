@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Source centralized version definitions
-# shellcheck disable=SC1091
-source "/tmp/versions.sh"
+AGENT_VERSION="3.111.0"
 
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;

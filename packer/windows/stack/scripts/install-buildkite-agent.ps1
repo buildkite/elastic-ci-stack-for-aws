@@ -1,8 +1,8 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-# Source centralized version definitions
-. "C:\Windows\Temp\versions.ps1"
+
+$AGENT_VERSION = "3.111.0"
 
 Write-Output "Creating bin dir..."
 if (-not (Test-Path C:\buildkite-agent\bin)) { New-Item -ItemType Directory -Path C:\buildkite-agent\bin -Force }
