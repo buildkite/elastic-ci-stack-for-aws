@@ -3,10 +3,6 @@ set -euo pipefail
 
 AGENT_VERSION="3.112.0"
 
-# Source centralized version definitions
-# shellcheck disable=SC1091
-source "/tmp/versions.sh"
-
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
 aarch64) ARCH=arm64 ;;
