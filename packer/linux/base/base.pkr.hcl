@@ -93,7 +93,7 @@ build {
 
   provisioner "file" {
     destination = "/tmp/"
-    source      = "../shared/scripts/versions.sh"
+    source      = "scripts/versions.sh"
   }
 
   # Essential utilities & updates

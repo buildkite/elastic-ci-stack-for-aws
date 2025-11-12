@@ -24,8 +24,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$",
-        "^packer/windows/shared/scripts/versions\\.ps1$"
+        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
         "export SESSION_MANAGER_PLUGIN_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+\\.\\d+)\"",
@@ -38,8 +38,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$",
-        "^packer/windows/shared/scripts/versions\\.ps1$"
+        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
         "export AWS_CLI_LINUX_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
@@ -52,8 +52,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$",
-        "^packer/windows/shared/scripts/versions\\.ps1$"
+        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
         "export GIT_LFS_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
@@ -66,7 +66,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$"
+        "^packer/linux/stack/scripts/versions\\.sh$"
       ],
       "matchStrings": [
         "export GOSS_VERSION=\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
@@ -78,8 +78,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$",
-        "^packer/windows/shared/scripts/versions\\.ps1$"
+        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
         "export DOCKER_COMPOSE_V2_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
@@ -92,7 +92,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$"
+        "^packer/linux/stack/scripts/versions\\.sh$"
       ],
       "matchStrings": [
         "export DOCKER_BUILDX_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
@@ -104,8 +104,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$",
-        "^packer/windows/shared/scripts/versions\\.ps1$"
+        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
         "export LIFECYCLED_VERSION=\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
@@ -118,8 +118,8 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$",
-        "^packer/windows/shared/scripts/versions\\.ps1$"
+        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
         "export S3_SECRETS_HELPER_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
