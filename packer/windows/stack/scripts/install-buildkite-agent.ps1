@@ -1,6 +1,8 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
+$AGENT_VERSION = "3.111.0"
+
 # Source centralized version definitions
 . "C:\Windows\Temp\versions.ps1"
 

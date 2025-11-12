@@ -10,11 +10,11 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/shared/scripts/versions\\.sh$",
-        "^packer/windows/shared/scripts/versions\\.ps1$"
+        "^packer/linux/stack/scripts/install-buildkite-agent\\.sh$",
+        "^packer/windows/stack/scripts/install-buildkite-agent\\.ps1$"
       ],
       "matchStrings": [
-        "export AGENT_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
+        "AGENT_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
         "\\$AGENT_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
       "datasourceTemplate": "github-releases",

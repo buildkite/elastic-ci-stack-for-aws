@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+AGENT_VERSION="3.111.0"
+
 # Source centralized version definitions
 # shellcheck disable=SC1091
 source "/tmp/versions.sh"
