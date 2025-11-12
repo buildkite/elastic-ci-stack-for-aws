@@ -260,16 +260,19 @@ Parameters:
     Default: ""
 
   BuildkiteAgentScalerServerlessARN:
-    Description: ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function. The scaler automatically manages Buildkite agent instances based on job queue demand. Repository must be public or shared with your AWS account. See https://aws.amazon.com/serverless/serverlessrepo/.
+    Description: >
+      (Deprecated - no longer used) ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function.
+      The ARN is now automatically selected based on the LambdaArchitecture parameter.
+      To use a custom scaler deployment, modify the AgentScalerARN mapping in the template.
     Type: String
     Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
   BuildkiteAgentScalerVersion:
     Description: Version of the buildkite-agent-scaler to use.
     Type: String
-    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[5-9]|[1-9]\d+)))$'
-    ConstraintDescription: "The agent scaler release must be 1.9.5 or newer."
-    Default: "1.9.5"
+    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[8-9]|[1-9]\d+)))$'
+    ConstraintDescription: "The agent scaler release must be 1.9.8 or newer."
+    Default: "1.9.8"
 
   ScalerEnableExperimentalElasticCIMode:
     Description: >
@@ -1377,6 +1380,19 @@ Conditions:
     EnableScheduledScaling:
       !Equals [ !Ref EnableScheduledScaling, "true" ]
 
+    IsLambdaArchitectureArm64:
+      !Equals [ !Ref LambdaArchitecture, "arm64" ]
+
+    HasVariableSizeAndArm64:
+      !And
+        - !Condition HasVariableSize
+        - !Condition IsLambdaArchitectureArm64
+
+    HasVariableSizeAndX8664:
+      !And
+        - !Condition HasVariableSize
+        - !Not [ !Condition IsLambdaArchitectureArm64 ]
+
 Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
@@ -1385,6 +1401,10 @@ Mappings:
     poweruser             : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     poweruser-pullthrough : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser' }
     full                  : { Policy: 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess' }
+
+  AgentScalerARN:
+    x86-64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler' }
+    arm64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler-arm64' }
 
   # Generated from Makefile via build/mappings.yml
   AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
@@ -2503,12 +2523,52 @@ Resources:
       ToPort: 22
       CidrIp: 0.0.0.0/0
 
+  # Note: Autoscaling and AutoscalingArm64 resources are identical except for the
+  # ApplicationId mapping key. This duplication is required because SAM Transform
+  # only supports !Ref and !FindInMap in ApplicationId (no nested !If). Both resources
+  # use LambdaArchitecture parameter via conditions to determine which is created.
+  # IMPORTANT: Keep Parameters in sync between both resources!
+
   Autoscaling:
     Type: AWS::Serverless::Application
-    Condition: HasVariableSize
+    Condition: HasVariableSizeAndX8664
     Properties:
       Location:
-        ApplicationId: !Ref BuildkiteAgentScalerServerlessARN
+        ApplicationId: !FindInMap
+          - AgentScalerARN
+          - "x86-64"
+          - ARN
+        SemanticVersion: !Ref BuildkiteAgentScalerVersion
+      Parameters:
+        BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
+        BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
+        RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
+        AgentEndpoint: !Ref AgentEndpoint
+        BuildkiteQueue: !Ref BuildkiteQueue
+        AgentsPerInstance: !Ref AgentsPerInstance
+        MinSize: !Ref MinSize
+        MaxSize: !Ref MaxSize
+        InstanceBuffer: !Ref InstanceBuffer
+        AgentAutoScaleGroup: !Ref AgentAutoScaleGroup
+        ScaleOutFactor: !Ref ScaleOutFactor
+        ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
+        ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
+        ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
+        EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
+        MinPollInterval: !Ref ScalerMinPollInterval
+        LogRetentionDays: !Ref LogRetentionDays
+        EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
+        DisableScaleIn: !Ref DisableScaleIn
+
+  AutoscalingArm64:
+    Type: AWS::Serverless::Application
+    Condition: HasVariableSizeAndArm64
+    Properties:
+      Location:
+        ApplicationId: !FindInMap
+          - AgentScalerARN
+          - "arm64"
+          - ARN
         SemanticVersion: !Ref BuildkiteAgentScalerVersion
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]

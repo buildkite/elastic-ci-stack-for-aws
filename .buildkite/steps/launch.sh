@@ -35,6 +35,12 @@ if [[ "$arch" == "arm64" ]]; then
   enable_instance_storage="true"
 fi
 
+# Map arch to Lambda architecture naming (amd64 -> x86_64)
+lambda_arch="${arch}"
+if [[ "$arch" == "amd64" ]]; then
+  lambda_arch="x86_64"
+fi
+
 cat <<EOF >config.json
 [
   {
@@ -104,6 +110,10 @@ cat <<EOF >config.json
   {
     "ParameterKey": "BuildkiteAdditionalSudoPermissions",
     "ParameterValue": "/usr/local/bin/goss"
+  },
+  {
+    "ParameterKey": "LambdaArchitecture",
+    "ParameterValue": "${lambda_arch}"
   }
 ]
 EOF
