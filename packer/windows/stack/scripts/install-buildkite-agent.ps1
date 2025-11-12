@@ -1,6 +1,7 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
+
 $AGENT_VERSION = "3.111.0"
 
 Write-Output "Creating bin dir..."
