@@ -131,7 +131,7 @@ build {
 
   provisioner "file" {
     destination = "/tmp/"
-    source      = "../shared/scripts/versions.sh"
+    source      = "../base/scripts/versions.sh"
   }
 
   provisioner "shell" {
