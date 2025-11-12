@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.47.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.46.0...v6.47.0) (2025-11-12)
+
+### Fixed
+
+* fix(aws-stack): add BuildkiteTerminateInstanceOnDiskFull to ParameterGroups and Windows env [#1635](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1635) ([ivannalisetska](https://github.com/ivannalisetska))
+* Add missing params to ParameterGroups [#1637](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1637) ([petetomasik](https://github.com/petetomasik))
+
+### Added
+
+* Add support for arm64 buildkite-agent-scaler [#1653](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1653) ([scadu](https://github.com/scadu))
+* Add new param for S3 secrets plugin [#1638](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1638) ([petetomasik](https://github.com/petetomasik))
+
+### Internal
+
+* Move versioning and update renovate config [#1654](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1654) ([JoeColeman95](https://github.com/JoeColeman95))
+* Separate cleanup of CFn stacks & service roles [#1650](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1650) ([lucaswilric](https://github.com/lucaswilric))
+* Missed a usage when renaming 'deleted_counter' [#1651](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1651) ([lucaswilric](https://github.com/lucaswilric))
+* Deregister old, private AMIs - unless they are shared with other AWS accounts [#1648](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1648) ([lucaswilric](https://github.com/lucaswilric))
+* Add centralized version management with Renovate automation [#1639](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1639) ([JoeColeman95](https://github.com/JoeColeman95))
+* chore(deps): update buildkite-agent to v3.111.0 [#1636](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1636) ([renovate[bot]](https://github.com/apps/renovate))
+* Update changelog for v6.46.0 release [#1634](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1634) ([scadu](https://github.com/scadu))
+
+### Dependencies
+
+* chore(deps): bump golang.org/x/sys from 0.37.0 to 0.38.0 [#1649](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1649) ([dependabot[bot]](https://github.com/apps/dependabot))
+* chore(deps): update dependency go to v1.25.4 [#1641](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1641) ([renovate[bot]](https://github.com/apps/renovate))
+* chore(deps): update docker/compose to v2.40.3 [#1644](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1644) ([renovate[bot]](https://github.com/apps/renovate))
+* chore(deps): update session-manager-plugin to v1.2.707.0 [#1642](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1642) ([renovate[bot]](https://github.com/apps/renovate))
+* chore(deps): update goss-org/goss to v0.4.9 [#1645](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1645) ([renovate[bot]](https://github.com/apps/renovate))
+* chore(deps): update docker/buildx to v0.29.1 [#1647](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1647) ([renovate[bot]](https://github.com/apps/renovate))
+* Update aws-cli to v2.31.32 [#1640](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1640) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite/lifecycled to v3.4.0 [#1646](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1646) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite plugin docker-compose to v5.12.0 [#1643](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1643) ([renovate[bot]](https://github.com/apps/renovate))
+
 ## [v6.46.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.45.0...v6.46.0) (2025-11-04)
 
 ## Changed
