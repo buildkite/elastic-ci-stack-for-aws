@@ -83,6 +83,11 @@ build {
     source      = "scripts"
   }
 
+  provisioner "file" {
+    destination = "C:/Windows/Temp/"
+    source      = "../shared/scripts/versions.ps1"
+  }
+
   provisioner "powershell" {
     scripts = [
       "scripts/install-utils.ps1",

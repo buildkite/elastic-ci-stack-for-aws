@@ -1,8 +1,8 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-$AWS_CLI_WINDOWS_VERSION = "2.28.15"
-$GIT_VERSION = "2.39.1"
+# Source centralized version definitions
+. "C:\Windows\Temp\versions.ps1"
 
 Write-Output "Installing chocolatey package manager"
 Set-ExecutionPolicy Bypass -Scope Process -Force

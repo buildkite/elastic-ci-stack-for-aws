@@ -58,6 +58,8 @@ Metadata:
         - BuildkiteAgentCancelGracePeriod
         - BuildkiteAgentSignalGracePeriod
         - BuildkiteTerminateInstanceAfterJob
+        - BuildkiteAgentDisconnectAfterUptime
+        - BuildkiteTerminateInstanceOnDiskFull
         - BuildkitePurgeBuildsOnDiskFull
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
@@ -93,6 +95,7 @@ Metadata:
         - SecretsBucket
         - SecretsBucketRegion
         - SecretsBucketEncryption
+        - SecretsPluginSkipSSHKeyNotFoundWarning
         - ArtifactsBucket
         - ArtifactsBucketRegion
         - ArtifactsS3ACL
@@ -103,6 +106,8 @@ Metadata:
         - RootVolumeName
         - RootVolumeType
         - RootVolumeEncrypted
+        - RootVolumeIops
+        - RootVolumeThroughput
         - ManagedPolicyARNs
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
@@ -124,11 +129,14 @@ Metadata:
         - MinSize
         - MaxSize
         - InstanceBuffer
+        - DisableScaleIn
         - OnDemandBaseCapacity
         - OnDemandPercentage
         - SpotAllocationStrategy
         - ScaleOutFactor
+        - ScaleOutCooldownPeriod
         - ScaleInIdlePeriod
+        - ScaleInCooldownPeriod
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
@@ -550,6 +558,14 @@ Parameters:
 
   SecretsBucketEncryption:
     Description: Indicates whether the SecretsBucket should enforce encryption at rest and in transit.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  SecretsPluginSkipSSHKeyNotFoundWarning:
+    Description: Optional - Skip warning when SSH key is not found in the secrets bucket.
     Type: String
     AllowedValues:
       - "true"
@@ -1950,9 +1966,11 @@ Resources:
 
                   $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
                   $Env:BUILDKITE_STACK_VERSION="%v"
+                  $Env:BUILDKITE_STACK_DEPLOYED_BY="cloudformation"
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
+                  $Env:BUILDKITE_SECRETS_PLUGIN_SKIP_SSH_KEY_NOT_FOUND_WARNING="${SecretsPluginSkipSSHKeyNotFoundWarning}"
                   $Env:BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}"
                   $Env:BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}"
                   $Env:BUILDKITE_S3_ACL="${ArtifactsS3ACL}"
@@ -1977,6 +1995,8 @@ Resources:
                   $Env:BUILDKITE_ECR_POLICY="${ECRAccessPolicy}"
                   $Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB="${BuildkiteTerminateInstanceAfterJob}"
                   $Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME="${BuildkiteAgentDisconnectAfterUptime}"
+                  $Env:BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL="${BuildkiteTerminateInstanceOnDiskFull}"
+                  $Env:BUILDKITE_PURGE_BUILDS_ON_DISK_FULL="${BuildkitePurgeBuildsOnDiskFull}"
                   $Env:BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS="${BuildkiteAdditionalSudoPermissions}"
                   $Env:BUILDKITE_WINDOWS_ADMINISTRATOR="${BuildkiteWindowsAdministrator}"
                   $Env:AWS_DEFAULT_REGION="${AWS::Region}"
@@ -2045,9 +2065,11 @@ Resources:
                   #!/bin/bash -v
                   BUILDKITE_STACK_NAME="${AWS::StackName}" \
                   BUILDKITE_STACK_VERSION="%v" \
+                  BUILDKITE_STACK_DEPLOYED_BY="cloudformation" \
                   BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}" \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
+                  BUILDKITE_SECRETS_PLUGIN_SKIP_SSH_KEY_NOT_FOUND_WARNING="${SecretsPluginSkipSSHKeyNotFoundWarning}" \
                   BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}" \
                   BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}" \
                   BUILDKITE_S3_ACL="${ArtifactsS3ACL}" \

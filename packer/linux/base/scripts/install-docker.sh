@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOCKER_COMPOSE_V2_VERSION=2.38.2
-DOCKER_BUILDX_VERSION=0.26.1
+# Source centralized version definitions
+# shellcheck disable=SC1091
+source "/tmp/versions.sh"
 MACHINE=$(uname -m)
 
 echo Installing docker...
