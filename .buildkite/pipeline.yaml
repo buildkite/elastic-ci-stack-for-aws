@@ -85,7 +85,7 @@ steps:
     if: build.source != "schedule"
     if_changed:
       - "packer/windows/stack/**"
-      - "packer/windows/base/scripts/versions.ps1"
+      - "packer/windows/base/**"
       - "plugins/**"
     depends_on:
       - "packer-base-windows-amd64"
@@ -114,6 +114,11 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/windows/stack/**"
+      - "packer/windows/base/**"
+      - "plugins/**"
+      - "templates/**"
     depends_on:
       - "ensure-ami-windows-amd64"
       - "deploy-service-role-stack"
@@ -133,6 +138,11 @@ steps:
       stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/windows/stack/**"
+      - "packer/windows/base/**"
+      - "plugins/**"
+      - "templates/**"
     depends_on:
       - "launch-windows-amd64"
 
@@ -143,6 +153,11 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/windows/stack/**"
+      - "packer/windows/base/**"
+      - "plugins/**"
+      - "templates/**"
     depends_on:
       - "test-windows-amd64"
     plugins:
@@ -176,7 +191,7 @@ steps:
     if_changed:
       - "packer/linux/stack/**"
       - "packer/linux/shared/**"
-      - "packer/linux/base/scripts/versions.sh"
+      - "packer/linux/base/**"
       - "plugins/**"
       - "build/**"
     depends_on:
@@ -207,6 +222,13 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "ensure-ami-linux-amd64"
       - "deploy-service-role-stack"
@@ -226,6 +248,13 @@ steps:
       stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "launch-linux-amd64"
 
@@ -236,6 +265,13 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "test-linux-amd64"
     plugins:
@@ -269,7 +305,7 @@ steps:
     if_changed:
       - "packer/linux/stack/**"
       - "packer/linux/shared/**"
-      - "packer/linux/base/scripts/versions.sh"
+      - "packer/linux/base/**"
       - "plugins/**"
       - "build/**"
     depends_on:
@@ -299,6 +335,13 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "ensure-ami-linux-arm64"
       - "deploy-service-role-stack"
@@ -318,6 +361,13 @@ steps:
       stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "launch-linux-arm64"
 
@@ -328,6 +378,13 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "test-linux-arm64"
     plugins:
