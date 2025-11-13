@@ -46,6 +46,15 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     command: .buildkite/steps/deploy-service-role-stack.sh
     if: build.source != "schedule"
+    if_changed:
+      - "packer/windows/stack/**"
+      - "packer/windows/base/**"
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -396,6 +405,15 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed:
+      - "packer/windows/stack/**"
+      - "packer/windows/base/**"
+      - "packer/linux/stack/**"
+      - "packer/linux/shared/**"
+      - "packer/linux/base/**"
+      - "plugins/**"
+      - "build/**"
+      - "templates/**"
     depends_on:
       - "delete-windows-amd64"
       - "delete-linux-amd64"
