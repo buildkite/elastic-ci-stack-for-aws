@@ -28,6 +28,12 @@ if [ "${BUILDKITE_DOCKER_EXPERIMENTAL:-false}" = "true" ]; then
   cat <<<"$(jq '.experimental="enabled"' "${DOCKER_CONFIG}/config.json")" >"${DOCKER_CONFIG}/config.json"
 fi
 
+if [[ "${DOCKER_PRUNE_ON:-emergency}" == "pre-job" ]]; then
+  echo "Cleaning up old docker resources"
+  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
+  docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
+fi
+
 echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION)"
 
 echo "Checking docker"
@@ -41,8 +47,11 @@ fi
 
 echo "Checking disk space"
 if ! /usr/local/bin/bk-check-disk-space.sh; then
-  echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL:-4h}"
-  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
+  if [[ "${DOCKER_PRUNE_ON:-emergency}" != "disabled" ]]; then
+    echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL:-4h}"
+    docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
+    docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
+  fi
 
   echo "Checking disk space again"
   # Capture disk space output for potential error logging
