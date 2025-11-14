@@ -109,6 +109,7 @@ Metadata:
         - RootVolumeIops
         - RootVolumeThroughput
         - ManagedPolicyARNs
+        - InstanceRoleARN
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
         - InstanceRoleTags
@@ -818,12 +819,12 @@ Parameters:
 
   InstanceRoleName:
     Type: String
-    Description: Optional - A name for the IAM Role attached to the Instance Profile.
+    Description: Optional - A name for the IAM Role attached to the Instance Profile when creating a new role. Ignored when InstanceRoleARN is provided.
     Default: ""
 
   InstanceRolePermissionsBoundaryARN:
     Type: String
-    Description: Optional - The ARN of the policy used to set the permissions boundary for the role.
+    Description: Optional - The ARN of the policy used to set the permissions boundary for the role when creating a new role. Ignored when InstanceRoleARN is provided.
     Default: ""
 
   InstanceRoleTags:
@@ -831,9 +832,20 @@ Parameters:
       Optional - Comma-separated key=value pairs for instance IAM role tags (up to 5 tags).
       Example: 'Environment=production,Team=platform,Purpose=ci'.
       Note: Keys and values cannot contain '=' characters.
+      Only applied when creating a new role, ignored when InstanceRoleARN is provided.
     Type: String
     Default: ""
     AllowedPattern: "^$|^[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*(,[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*){0,4}$"
+
+  InstanceRoleARN:
+    Type: String
+    Description: >
+      Optional - ARN of an existing IAM role to attach to instances instead of creating a new role.
+      When specified, the stack will not create any IAM roles or policies, and will use this role instead.
+      The role must have all necessary permissions for Buildkite agents to function correctly.
+      This is useful when you want to share a single IAM role across multiple queues/stacks.
+    Default: ""
+    AllowedPattern: "^$|^arn:aws:iam::[0-9]+:role/.+$"
 
   InstanceOperatingSystem:
     Type: String
@@ -1121,7 +1133,10 @@ Outputs:
       Name: !Sub '${AWS::StackName}-AutoScalingGroupName'
 
   InstanceRoleName:
-    Value: !Ref IAMRole
+    Value: !If
+      - UseCustomIAMRole
+      - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+      - !Ref IAMRole
     Export:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
 
@@ -1144,6 +1159,12 @@ Conditions:
 
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
+
+    UseCustomIAMRole:
+      !Not [ !Equals [ !Ref InstanceRoleARN, "" ] ]
+
+    CreateIAMRole:
+      !Equals [ !Ref InstanceRoleARN, "" ]
 
     SetInstanceRolePermissionsBoundaryARN:
       !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
@@ -1542,10 +1563,15 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
-      Roles: [ !Ref IAMRole ]
+      Roles:
+        - !If
+          - UseCustomIAMRole
+          - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+          - !Ref IAMRole
 
   IAMRole:
     Type: AWS::IAM::Role
+    Condition: CreateIAMRole
     Properties:
       RoleName: !If [ SetInstanceRoleName, !Ref InstanceRoleName, !Sub "${AWS::StackName}-Role" ]
       PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
@@ -1671,6 +1697,7 @@ Resources:
 
   IAMPolicies:
     Type: AWS::IAM::Policy
+    Condition: CreateIAMRole
     Properties:
       PolicyName: InstancePolicy
       PolicyDocument:
