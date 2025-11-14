@@ -2,8 +2,8 @@
 
 set -eu -o pipefail
 
-if [[ "${DOCKER_PRUNE_ON:-emergency}" == "post-job" ]]; then
-  echo "~~~ :docker: Cleaning up old docker resources"
+if [[ "${DOCKER_PRUNE_ON:-disabled}" == "post-job" ]]; then
+  echo "~~~ :docker: Cleaning up old docker resources (post-job)"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
   docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
 fi

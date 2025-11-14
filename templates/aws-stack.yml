@@ -983,14 +983,12 @@ Parameters:
       Controls how Docker garbage collection runs to free disk space.
       'pre-job' runs cleanup before each job starts.
       'post-job' runs cleanup after each job finishes.
-      'emergency' only runs cleanup when disk space is critically low (Linux only).
       'disabled' will skip Docker pruning entirely.
     AllowedValues:
       - "pre-job"
       - "post-job"
-      - "emergency"
       - "disabled"
-    Default: "emergency"
+    Default: "disabled"
 
   EnableInstanceStorage:
     Type: String
