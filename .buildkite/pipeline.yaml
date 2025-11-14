@@ -63,7 +63,7 @@ steps:
     command: ".buildkite/steps/packer.sh windows amd64 base"
     timeout_in_minutes: 40
     env:
-      AMI_PUBLIC: true
+      AMI_PUBLIC: false
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if_changed: "packer/windows/base/**"
@@ -136,7 +136,7 @@ steps:
     command: ".buildkite/steps/packer.sh linux amd64 base"
     timeout_in_minutes: 40
     env:
-      AMI_PUBLIC: true
+      AMI_PUBLIC: false
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if_changed: "packer/linux/base/**"
@@ -210,7 +210,7 @@ steps:
     command: ".buildkite/steps/packer.sh linux arm64 base"
     timeout_in_minutes: 40
     env:
-      AMI_PUBLIC: true
+      AMI_PUBLIC: false
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if_changed: "packer/linux/base/**"
