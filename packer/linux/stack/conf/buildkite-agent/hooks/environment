@@ -29,7 +29,7 @@ if [ "${BUILDKITE_DOCKER_EXPERIMENTAL:-false}" = "true" ]; then
 fi
 
 if [[ "${DOCKER_PRUNE_ON:-disabled}" == "pre-job" ]]; then
-  echo "Cleaning up old docker resources"
+  echo "~~~ :broom: Pruning docker resources"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
   docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
 fi

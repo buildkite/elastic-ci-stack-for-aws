@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 if [[ "${DOCKER_PRUNE_ON:-disabled}" == "post-job" ]]; then
-  echo "~~~ :docker: Cleaning up old docker resources"
+  echo "~~~ :broom: Pruning docker resources"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
   docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
 fi
