@@ -980,13 +980,16 @@ Parameters:
   DockerPruneOn:
     Type: String
     Description: >
-      Controls how Docker garbage collection runs to free disk space.
-      'pre-job' runs cleanup before each job starts.
-      'post-job' runs cleanup after each job finishes.
-      'disabled' will skip Docker pruning entirely.
+      Controls when Docker garbage collection runs to free disk space.
+      'pre-job' - Cleanup before each job starts, plus emergency cleanup on low disk.
+      'post-job' - Cleanup after each job finishes, plus emergency cleanup on low disk.
+      'emergency' - Only runs cleanup when disk space is critically low (Linux only).
+      'disabled' - Disables Docker build pruning. (Image pruning is still performed on disk full)
+      Emergency cleanup runs for all modes except 'disabled'.
     AllowedValues:
       - "pre-job"
       - "post-job"
+      - "emergency"
       - "disabled"
     Default: "disabled"
 

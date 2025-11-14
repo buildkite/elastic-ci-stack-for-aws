@@ -49,7 +49,11 @@ echo "Checking disk space"
 if ! /usr/local/bin/bk-check-disk-space.sh; then
   echo "Cleaning up docker resources older than ${DOCKER_PRUNE_UNTIL:-4h}"
   docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
-  docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
+
+  if [[ "${DOCKER_PRUNE_ON:-disabled}" != "disabled" ]]; then
+    echo "Also running builder prune as DockerPruneOn is set to '${DOCKER_PRUNE_ON}'"
+    docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}"
+  fi
 
   echo "Checking disk space again"
   # Capture disk space output for potential error logging
