@@ -220,6 +220,8 @@ packer-base-linux-amd64.output: $(PACKER_LINUX_BASE_FILES)
 			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_LIST)' \
 			base.pkr.hcl | tee $@
 
 # Build base AMI for linux arm64
@@ -241,6 +243,8 @@ packer-base-linux-arm64.output: $(PACKER_LINUX_BASE_FILES)
 			-var 'instance_type=$(ARM64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_LIST)' \
 			base.pkr.hcl | tee $@
 
 # Build base AMI for windows amd64
@@ -262,6 +266,8 @@ packer-base-windows-amd64.output: $(PACKER_WINDOWS_BASE_FILES)
 			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_LIST)' \
 			base.pkr.hcl | tee $@
 
 # -----------------------------------------
