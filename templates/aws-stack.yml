@@ -2173,7 +2173,6 @@ Resources:
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn:
-      - IAMPolicies
       - VpcComplete
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
