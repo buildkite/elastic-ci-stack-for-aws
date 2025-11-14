@@ -32,6 +32,18 @@ variable "is_released" {
   default = false
 }
 
+variable "ami_public" {
+  type        = bool
+  description = "Whether to make the AMI publicly available to all AWS users. Defaults to false for security."
+  default     = false
+}
+
+variable "ami_users" {
+  type        = list(string)
+  description = "List of AWS account IDs that should have access to the AMI when ami_public is false."
+  default     = []
+}
+
 # Latest Windows Server 2022 AMI
 data "amazon-ami" "windows-server-2022" {
   filters = {
@@ -45,7 +57,8 @@ data "amazon-ami" "windows-server-2022" {
 
 source "amazon-ebs" "buildkite-base" {
   ami_description = "Buildkite Golden Base (Windows Server 2022 w/ docker)"
-  ami_groups      = ["all"]
+  ami_groups      = var.ami_public ? ["all"] : []
+  ami_users       = var.ami_public ? [] : var.ami_users
   ami_name        = "buildkite-base-windows-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
