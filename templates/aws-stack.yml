@@ -844,8 +844,9 @@ Parameters:
       When specified, the stack will not create any IAM roles or policies, and will use this role instead.
       The role must have all necessary permissions for Buildkite agents to function correctly.
       This is useful when you want to share a single IAM role across multiple queues/stacks.
+      Supports roles with custom paths up to 10 levels deep.
     Default: ""
-    AllowedPattern: "^$|^arn:aws:iam::[0-9]+:role/.+$"
+    AllowedPattern: "^$|^arn:aws:iam::[0-9]+:role/.*$"
 
   InstanceOperatingSystem:
     Type: String
@@ -1135,7 +1136,37 @@ Outputs:
   InstanceRoleName:
     Value: !If
       - UseCustomIAMRole
-      - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+      - !If
+        - RolePathIndex11Empty
+        - !If
+          - RolePathIndex10Empty
+          - !If
+            - RolePathIndex9Empty
+            - !If
+              - RolePathIndex8Empty
+              - !If
+                - RolePathIndex7Empty
+                - !If
+                  - RolePathIndex6Empty
+                  - !If
+                    - RolePathIndex5Empty
+                    - !If
+                      - RolePathIndex4Empty
+                      - !If
+                        - RolePathIndex3Empty
+                        - !If
+                          - RolePathIndex2Empty
+                          - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+                          - !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ]
+                        - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
+                      - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
+                    - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
+                  - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
+                - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
+              - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
+            - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
+          - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
+        - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
       - !Ref IAMRole
     Export:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
@@ -1165,6 +1196,37 @@ Conditions:
 
     CreateIAMRole:
       !Equals [ !Ref InstanceRoleARN, "" ]
+
+    # Support up to 10 levels of custom paths in IAM role ARNs
+    RolePathIndex11Empty:
+      !Equals [ !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex10Empty:
+      !Equals [ !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex9Empty:
+      !Equals [ !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex8Empty:
+      !Equals [ !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex7Empty:
+      !Equals [ !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex6Empty:
+      !Equals [ !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex5Empty:
+      !Equals [ !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex4Empty:
+      !Equals [ !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex3Empty:
+      !Equals [ !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+
+    RolePathIndex2Empty:
+      !Equals [ !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
 
     SetInstanceRolePermissionsBoundaryARN:
       !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
@@ -1566,7 +1628,37 @@ Resources:
       Roles:
         - !If
           - UseCustomIAMRole
-          - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+          - !If
+            - RolePathIndex11Empty
+            - !If
+              - RolePathIndex10Empty
+              - !If
+                - RolePathIndex9Empty
+                - !If
+                  - RolePathIndex8Empty
+                  - !If
+                    - RolePathIndex7Empty
+                    - !If
+                      - RolePathIndex6Empty
+                      - !If
+                        - RolePathIndex5Empty
+                        - !If
+                          - RolePathIndex4Empty
+                          - !If
+                            - RolePathIndex3Empty
+                            - !If
+                              - RolePathIndex2Empty
+                              - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+                              - !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ]
+                            - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
+                          - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
+                        - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
+                      - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
+                    - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
+                  - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
+                - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
+              - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
+            - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
           - !Ref IAMRole
 
   IAMRole:
