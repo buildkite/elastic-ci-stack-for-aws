@@ -1139,36 +1139,36 @@ Outputs:
     Value: !If
       - UseCustomIAMRole
       - !If
-        - RolePathIndex11Empty
+        - HasCustomRolePath
         - !If
-          - RolePathIndex10Empty
+          - RolePathIndex11Empty
           - !If
-            - RolePathIndex9Empty
+            - RolePathIndex10Empty
             - !If
-              - RolePathIndex8Empty
+              - RolePathIndex9Empty
               - !If
-                - RolePathIndex7Empty
+                - RolePathIndex8Empty
                 - !If
-                  - RolePathIndex6Empty
+                  - RolePathIndex7Empty
                   - !If
-                    - RolePathIndex5Empty
+                    - RolePathIndex6Empty
                     - !If
-                      - RolePathIndex4Empty
+                      - RolePathIndex5Empty
                       - !If
-                        - RolePathIndex3Empty
+                        - RolePathIndex4Empty
                         - !If
-                          - RolePathIndex2Empty
-                          - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+                          - RolePathIndex3Empty
                           - !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ]
-                        - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
-                      - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
-                    - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
-                  - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
-                - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
-              - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
-            - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
-          - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
-        - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
+                          - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
+                        - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
+                      - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
+                    - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
+                  - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
+                - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
+              - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
+            - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
+          - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
+        - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
       - !Ref IAMRole
     Export:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
@@ -1201,34 +1201,37 @@ Conditions:
 
     # Support up to 10 levels of custom paths in IAM role ARNs
     RolePathIndex11Empty:
-      !Equals [ !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 11, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex10Empty:
-      !Equals [ !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 10, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex9Empty:
-      !Equals [ !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 9, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex8Empty:
-      !Equals [ !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 8, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex7Empty:
-      !Equals [ !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 7, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex6Empty:
-      !Equals [ !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 6, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex5Empty:
-      !Equals [ !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 5, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex4Empty:
-      !Equals [ !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 4, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex3Empty:
-      !Equals [ !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 3, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
 
     RolePathIndex2Empty:
-      !Equals [ !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ], "" ]
+      !Equals [ !Select [ 2, !Split [ "/", !If [ UseCustomIAMRole, !Ref InstanceRoleARN, "////////////" ] ] ], "" ]
+
+    HasCustomRolePath:
+      !Not [ !Condition RolePathIndex2Empty ]
 
     SetInstanceRolePermissionsBoundaryARN:
       !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
@@ -1631,36 +1634,36 @@ Resources:
         - !If
           - UseCustomIAMRole
           - !If
-            - RolePathIndex11Empty
+            - HasCustomRolePath
             - !If
-              - RolePathIndex10Empty
+              - RolePathIndex11Empty
               - !If
-                - RolePathIndex9Empty
+                - RolePathIndex10Empty
                 - !If
-                  - RolePathIndex8Empty
+                  - RolePathIndex9Empty
                   - !If
-                    - RolePathIndex7Empty
+                    - RolePathIndex8Empty
                     - !If
-                      - RolePathIndex6Empty
+                      - RolePathIndex7Empty
                       - !If
-                        - RolePathIndex5Empty
+                        - RolePathIndex6Empty
                         - !If
-                          - RolePathIndex4Empty
+                          - RolePathIndex5Empty
                           - !If
-                            - RolePathIndex3Empty
+                            - RolePathIndex4Empty
                             - !If
-                              - RolePathIndex2Empty
-                              - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+                              - RolePathIndex3Empty
                               - !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ]
-                            - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
-                          - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
-                        - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
-                      - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
-                    - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
-                  - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
-                - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
-              - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
-            - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
+                              - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
+                            - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
+                          - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
+                        - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
+                      - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
+                    - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
+                  - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
+                - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
+              - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
+            - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
           - !Ref IAMRole
 
   IAMRole:
