@@ -845,6 +845,8 @@ Parameters:
       The role must have all necessary permissions for Buildkite agents to function correctly.
       This is useful when you want to share a single IAM role across multiple queues/stacks.
       Supports roles with custom paths up to 10 levels deep.
+      See https://buildkite.com/docs/agent/v3/aws/elastic-ci-stack/ec2-linux-and-windows/managing-elastic-ci-stack#using-custom-iam-roles
+      for required permissions and configuration examples.
     Default: ""
     AllowedPattern: "^$|^arn:aws:iam::[0-9]+:role/.*$"
 
