@@ -50,6 +50,7 @@ x-if-changed:
     - "packer/linux/base/**"
     - "plugins/**"
     - "build/**"
+    - "templates/**"
 
 steps:
   - group: ":lint-roller: Linting"
