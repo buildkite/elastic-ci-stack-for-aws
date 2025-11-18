@@ -156,7 +156,7 @@ steps:
     if: build.source != "schedule"
     if_changed: *if_changed_test_windows
     depends_on:
-      - "packer-windows-amd64"
+      - "packer-base-windows-amd64"
       - "linting"
       - "fixperms-tests"
     plugins:
@@ -247,7 +247,7 @@ steps:
     if: build.source != "schedule"
     if_changed: *if_changed_test_linux
     depends_on:
-      - "packer-linux-amd64"
+      - "packer-base-linux-amd64"
       - "linting"
       - "fixperms-tests"
     plugins:
@@ -339,7 +339,7 @@ steps:
     if: build.source != "schedule"
     if_changed: *if_changed_test_linux
     depends_on:
-      - "packer-linux-arm64"
+      - "packer-base-linux-arm64"
       - "linting"
       - "fixperms-tests"
     plugins:
