@@ -130,6 +130,7 @@ Metadata:
         - MaxSize
         - InstanceBuffer
         - DisableScaleIn
+        - InstanceScaleInProtection
         - OnDemandBaseCapacity
         - OnDemandPercentage
         - SpotAllocationStrategy
@@ -286,6 +287,14 @@ Parameters:
 
   DisableScaleIn:
     Description: Whether the desired count should ever be decreased on the Auto Scaling group. When set to "true" (default), the scaler will not reduce the Auto Scaling group's desired capacity, and instances are expected to self-terminate when idle.
+    Type: String
+    AllowedValues:
+        - "true"
+        - "false"
+    Default: "true"
+
+  InstanceScaleInProtection:
+    Description: Whether new instances launched by the Auto Scaling group should have scale-in protection enabled. When set to "true" (default), instances cannot be terminated by scale-in actions and must self-terminate when idle. Set to "false" to allow CloudFormation and the ASG to terminate instances directly.
     Type: String
     AllowedValues:
         - "true"
@@ -2273,7 +2282,7 @@ Resources:
       TerminationPolicies:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
-      NewInstancesProtectedFromScaleIn: true
+      NewInstancesProtectedFromScaleIn: !Ref InstanceScaleInProtection
     CreationPolicy:
       ResourceSignal:
         Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, PT5M ], !Ref InstanceCreationTimeout ]
