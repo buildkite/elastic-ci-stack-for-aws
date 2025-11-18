@@ -15,29 +15,6 @@ secrets_logging_bucket=$(aws cloudformation describe-stacks \
   --query "Stacks[0].Outputs[?OutputKey=='ManagedSecretsLoggingBucket'].OutputValue" \
   --output text)
 
-echo "--- Removing scale-in protection from instances"
-
-asg_name=$(aws autoscaling describe-auto-scaling-groups \
-  --no-cli-pager \
-  --query "AutoScalingGroups[?Tags[?Key=='aws:cloudformation:stack-name' && Value=='${stack_name}']].AutoScalingGroupName" \
-  --output text)
-
-instance_ids=$(aws autoscaling describe-auto-scaling-groups \
-  --no-cli-pager \
-  --auto-scaling-group-names "${asg_name}" \
-  --query 'AutoScalingGroups[0].Instances[*].InstanceId' \
-  --output text)
-
-if [ -n "$instance_ids" ]; then
-  for instance_id in $instance_ids; do
-    echo "Removing scale-in protection from ${instance_id}"
-    aws autoscaling set-instance-protection \
-      --instance-ids "$instance_id" \
-      --auto-scaling-group-name "${asg_name}" \
-      --no-protected-from-scale-in || true
-  done
-fi
-
 echo "--- Deleting stack $stack_name"
 aws cloudformation delete-stack --stack-name "$stack_name"
 aws cloudformation wait stack-delete-complete --stack-name "$stack_name"
