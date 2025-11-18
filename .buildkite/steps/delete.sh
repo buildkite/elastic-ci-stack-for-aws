@@ -17,11 +17,9 @@ secrets_logging_bucket=$(aws cloudformation describe-stacks \
 
 echo "--- Removing scale-in protection from instances"
 
-asg_name=$(aws cloudformation describe-stack-resources \
+asg_name=$(aws autoscaling describe-auto-scaling-groups \
   --no-cli-pager \
-  --stack-name "${stack_name}" \
-  --logical-resource-id AgentAutoScaleGroup \
-  --query 'StackResources[0].PhysicalResourceId' \
+  --query "AutoScalingGroups[?Tags[?Key=='aws:cloudformation:stack-name' && Value=='${stack_name}']].AutoScalingGroupName" \
   --output text)
 
 instance_ids=$(aws autoscaling describe-auto-scaling-groups \
