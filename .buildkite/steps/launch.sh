@@ -122,7 +122,6 @@ cat <<EOF >config.json
 ]
 EOF
 
-
 echo "--- Building templates"
 make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 
