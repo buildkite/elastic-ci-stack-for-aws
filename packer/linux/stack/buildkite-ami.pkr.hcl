@@ -150,4 +150,3 @@ build {
     script = "../shared/scripts/cleanup.sh"
   }
 }
-
