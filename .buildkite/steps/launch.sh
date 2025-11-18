@@ -104,6 +104,14 @@ cat <<EOF >config.json
     "ParameterValue": "60"
   },
   {
+    "ParameterKey": "DisableScaleIn",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey": "InstanceScaleInProtection",
+    "ParameterValue": "false"
+  },
+  {
     "ParameterKey": "EnableInstanceStorage",
     "ParameterValue": "${enable_instance_storage:-false}"
   },
