@@ -114,6 +114,10 @@ cat <<EOF >config.json
   {
     "ParameterKey": "LambdaArchitecture",
     "ParameterValue": "${lambda_arch}"
+  },
+  {
+    "ParameterKey": "DisableScaleIn",
+    "ParameterValue": "false"
   }
 ]
 EOF
