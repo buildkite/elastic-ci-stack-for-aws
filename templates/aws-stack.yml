@@ -109,6 +109,7 @@ Metadata:
         - RootVolumeIops
         - RootVolumeThroughput
         - ManagedPolicyARNs
+        - InstanceRoleARN
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
         - InstanceRoleTags
@@ -827,12 +828,12 @@ Parameters:
 
   InstanceRoleName:
     Type: String
-    Description: Optional - A name for the IAM Role attached to the Instance Profile.
+    Description: Optional - A name for the IAM Role attached to the Instance Profile when creating a new role. Ignored when InstanceRoleARN is provided.
     Default: ""
 
   InstanceRolePermissionsBoundaryARN:
     Type: String
-    Description: Optional - The ARN of the policy used to set the permissions boundary for the role.
+    Description: Optional - The ARN of the policy used to set the permissions boundary for the role when creating a new role. Ignored when InstanceRoleARN is provided.
     Default: ""
 
   InstanceRoleTags:
@@ -840,9 +841,23 @@ Parameters:
       Optional - Comma-separated key=value pairs for instance IAM role tags (up to 5 tags).
       Example: 'Environment=production,Team=platform,Purpose=ci'.
       Note: Keys and values cannot contain '=' characters.
+      Only applied when creating a new role, ignored when InstanceRoleARN is provided.
     Type: String
     Default: ""
     AllowedPattern: "^$|^[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*(,[\\w\\s_.:/+\\-@]+=[\\w\\s_.:/+\\-@]*){0,4}$"
+
+  InstanceRoleARN:
+    Type: String
+    Description: >
+      Optional - ARN of an existing IAM role to attach to instances instead of creating a new role.
+      When specified, the stack will not create any IAM roles or policies, and will use this role instead.
+      The role must have all necessary permissions for Buildkite agents to function correctly.
+      This is useful when you want to share a single IAM role across multiple queues/stacks.
+      Supports roles with custom paths up to 10 levels deep.
+      See https://buildkite.com/docs/agent/v3/aws/elastic-ci-stack/ec2-linux-and-windows/managing-elastic-ci-stack#using-custom-iam-roles
+      for required permissions and configuration examples.
+    Default: ""
+    AllowedPattern: "^$|^arn:aws:iam::[0-9]+:role/.*$"
 
   InstanceOperatingSystem:
     Type: String
@@ -1130,7 +1145,40 @@ Outputs:
       Name: !Sub '${AWS::StackName}-AutoScalingGroupName'
 
   InstanceRoleName:
-    Value: !Ref IAMRole
+    Value: !If
+      - UseCustomIAMRole
+      - !If
+        - HasCustomRolePath
+        - !If
+          - RolePathIndex11Empty
+          - !If
+            - RolePathIndex10Empty
+            - !If
+              - RolePathIndex9Empty
+              - !If
+                - RolePathIndex8Empty
+                - !If
+                  - RolePathIndex7Empty
+                  - !If
+                    - RolePathIndex6Empty
+                    - !If
+                      - RolePathIndex5Empty
+                      - !If
+                        - RolePathIndex4Empty
+                        - !If
+                          - RolePathIndex3Empty
+                          - !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ]
+                          - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
+                        - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
+                      - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
+                    - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
+                  - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
+                - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
+              - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
+            - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
+          - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
+        - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+      - !Ref IAMRole
     Export:
       Name: !Sub '${AWS::StackName}-InstanceRoleName'
 
@@ -1153,6 +1201,47 @@ Conditions:
 
     SetInstanceRoleName:
       !Not [ !Equals [ !Ref InstanceRoleName, "" ] ]
+
+    UseCustomIAMRole:
+      !Not [ !Equals [ !Ref InstanceRoleARN, "" ] ]
+
+    CreateIAMRole:
+      !Equals [ !Ref InstanceRoleARN, "" ]
+
+    # Support up to 10 levels of custom paths in IAM role ARNs
+    # Pad the ARN with empty segments to ensure we always have at least 12 elements after split
+    RolePathIndex11Empty:
+      !Equals [ !Select [ 11, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex10Empty:
+      !Equals [ !Select [ 10, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex9Empty:
+      !Equals [ !Select [ 9, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex8Empty:
+      !Equals [ !Select [ 8, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex7Empty:
+      !Equals [ !Select [ 7, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex6Empty:
+      !Equals [ !Select [ 6, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex5Empty:
+      !Equals [ !Select [ 5, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex4Empty:
+      !Equals [ !Select [ 4, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex3Empty:
+      !Equals [ !Select [ 3, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    RolePathIndex2Empty:
+      !Equals [ !Select [ 2, !Split [ "/", !Sub [ "${ARN}///////////", { ARN: !Ref InstanceRoleARN } ] ] ], "" ]
+
+    HasCustomRolePath:
+      !Not [ !Condition RolePathIndex2Empty ]
 
     SetInstanceRolePermissionsBoundaryARN:
       !Not [ !Equals [ !Ref InstanceRolePermissionsBoundaryARN, "" ] ]
@@ -1551,10 +1640,45 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
-      Roles: [ !Ref IAMRole ]
+      Roles:
+        - !If
+          - UseCustomIAMRole
+          - !If
+            - HasCustomRolePath
+            - !If
+              - RolePathIndex11Empty
+              - !If
+                - RolePathIndex10Empty
+                - !If
+                  - RolePathIndex9Empty
+                  - !If
+                    - RolePathIndex8Empty
+                    - !If
+                      - RolePathIndex7Empty
+                      - !If
+                        - RolePathIndex6Empty
+                        - !If
+                          - RolePathIndex5Empty
+                          - !If
+                            - RolePathIndex4Empty
+                            - !If
+                              - RolePathIndex3Empty
+                              - !Select [ 2, !Split [ "/", !Ref InstanceRoleARN ] ]
+                              - !Select [ 3, !Split [ "/", !Ref InstanceRoleARN ] ]
+                            - !Select [ 4, !Split [ "/", !Ref InstanceRoleARN ] ]
+                          - !Select [ 5, !Split [ "/", !Ref InstanceRoleARN ] ]
+                        - !Select [ 6, !Split [ "/", !Ref InstanceRoleARN ] ]
+                      - !Select [ 7, !Split [ "/", !Ref InstanceRoleARN ] ]
+                    - !Select [ 8, !Split [ "/", !Ref InstanceRoleARN ] ]
+                  - !Select [ 9, !Split [ "/", !Ref InstanceRoleARN ] ]
+                - !Select [ 10, !Split [ "/", !Ref InstanceRoleARN ] ]
+              - !Select [ 11, !Split [ "/", !Ref InstanceRoleARN ] ]
+            - !Select [ 1, !Split [ "/", !Ref InstanceRoleARN ] ]
+          - !Ref IAMRole
 
   IAMRole:
     Type: AWS::IAM::Role
+    Condition: CreateIAMRole
     Properties:
       RoleName: !If [ SetInstanceRoleName, !Ref InstanceRoleName, !Sub "${AWS::StackName}-Role" ]
       PermissionsBoundary: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, !Ref "AWS::NoValue" ]
@@ -1680,6 +1804,7 @@ Resources:
 
   IAMPolicies:
     Type: AWS::IAM::Policy
+    Condition: CreateIAMRole
     Properties:
       PolicyName: InstancePolicy
       PolicyDocument:
@@ -2155,7 +2280,6 @@ Resources:
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn:
-      - IAMPolicies
       - VpcComplete
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
