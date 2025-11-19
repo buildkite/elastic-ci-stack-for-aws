@@ -1644,7 +1644,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          CidrIp: 10.0.0.0/16
+          CidrIp: !GetAtt Vpc.CidrBlock
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-vpc-endpoints'
