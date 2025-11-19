@@ -76,6 +76,7 @@ Resources:
                 "ec2:DescribeSecurityGroups",
                 "ec2:DescribeSubnets",
                 "ec2:DescribeVpcs",
+                "ec2:DescribeVpcEndpoints",
                 "ec2:CreateTags"
               ],
               "Resource": "*"
@@ -149,6 +150,15 @@ Resources:
                 "ec2:DeleteVpc"
               ],
               "Resource": "arn:aws:ec2:*:*:vpc/*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ec2:CreateVpcEndpoint",
+                "ec2:DeleteVpcEndpoints",
+                "ec2:ModifyVpcEndpoint"
+              ],
+              "Resource": "arn:aws:ec2:*:*:vpc-endpoint/*"
             },
             {
               "Effect": "Allow",
