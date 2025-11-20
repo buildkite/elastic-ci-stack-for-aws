@@ -17,3 +17,4 @@ If your changes affect the public API, please highlight them at the top of the r
 
 - [ ] My changes affect the public API (variable renames, new stack parameters, etc)
   - [ ] I have added a note at the top of the release notes highlighting the API changes
+- [ ] Any changes to external libraries (agent, scaler function, etc) have been flagged in release notes
