@@ -2557,6 +2557,10 @@ Resources:
     UpdatePolicy:
       AutoScalingReplacingUpdate:
         WillReplace: true
+    Tags:
+      - Key: BuildkiteQueue
+        PropagateAtLaunch: false
+        Value: !Ref BuildkiteQueue
 
   ScheduledScaleUpAction:
     Condition: EnableScheduledScaling
