@@ -2550,6 +2550,13 @@ Resources:
         - OldestLaunchConfiguration
         - ClosestToNextInstanceHour
       NewInstancesProtectedFromScaleIn: !Ref InstanceScaleInProtection
+        Tags:
+          - Key: BuildkiteQueue
+            PropagateAtLaunch: false
+            Value: !Ref BuildkiteQueue
+          - Key: AgentsPerInstance
+            PropagateAtLaunch: false
+            Value: !Ref AgentsPerInstance
     CreationPolicy:
       ResourceSignal:
         Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, PT5M ], !Ref InstanceCreationTimeout ]
@@ -2557,13 +2564,6 @@ Resources:
     UpdatePolicy:
       AutoScalingReplacingUpdate:
         WillReplace: true
-    Tags:
-      - Key: BuildkiteQueue
-        PropagateAtLaunch: false
-        Value: !Ref BuildkiteQueue
-      - Key: AgentsPerInstance
-        PropagateAtLaunch: false
-        Value: !Ref AgentsPerInstance
 
   ScheduledScaleUpAction:
     Condition: EnableScheduledScaling
