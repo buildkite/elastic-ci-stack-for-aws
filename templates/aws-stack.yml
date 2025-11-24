@@ -79,6 +79,7 @@ Metadata:
         - AvailabilityZones
         - SecurityGroupIds
         - AssociatePublicIpAddress
+        - EnableVpcEndpoints
 
       - Label:
           default: Instance Configuration
@@ -892,6 +893,18 @@ Parameters:
       - "false"
     Default: "true"
 
+  EnableVpcEndpoints:
+    Type: String
+    Description: >
+      Enable VPC endpoints for AWS services (S3, ECR, SSM, Secrets Manager, KMS).
+      Only available when the stack creates a new VPC (VpcId parameter is empty).
+      Interface endpoints incur hourly charges per availability zone. S3 uses a gateway endpoint which is free.
+      Reduces internet traffic, improves security, and lowers data transfer costs for AWS service communication.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
   DockerNetworkingProtocol:
     Type: String
     Description: >
@@ -1212,6 +1225,11 @@ Outputs:
 Conditions:
     CreateVpcResources:
       !Equals [ !Ref VpcId, "" ]
+
+    EnableVpcEndpoints:
+      !And
+        - !Equals [ !Ref EnableVpcEndpoints, "true" ]
+        - !Condition CreateVpcResources
 
     CreateSecurityGroup:
       !Equals [ !Ref SecurityGroupIds, "" ]
@@ -1540,6 +1558,8 @@ Resources:
     Condition: CreateVpcResources
     Properties:
       CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
       InstanceTenancy: default
       Tags:
         - Key: Name
@@ -1640,6 +1660,129 @@ Resources:
       Subnet0RouteCheck: !If [ CreateVpcResources, !Ref Subnet0Routes, !Ref "AWS::NoValue" ]
       Subnet1RouteCheck: !If [ CreateVpcResources, !Ref Subnet1Routes, !Ref "AWS::NoValue" ]
       RouteDefaultCheck: !If [ CreateVpcResources, !Ref RouteDefault, !Ref "AWS::NoValue" ]
+
+  VpcEndpointsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: EnableVpcEndpoints
+    Properties:
+      GroupDescription: Security group for VPC endpoints
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !GetAtt Vpc.CidrBlock
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-vpc-endpoints'
+
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Gateway
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      RouteTableIds:
+        - !Ref Routes
+
+  EcrApiEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api'
+      SubnetIds:
+        - !Ref Subnet0
+        - !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref VpcEndpointsSecurityGroup
+      PrivateDnsEnabled: true
+
+  EcrDkrEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr'
+      SubnetIds:
+        - !Ref Subnet0
+        - !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref VpcEndpointsSecurityGroup
+      PrivateDnsEnabled: true
+
+  SsmEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      SubnetIds:
+        - !Ref Subnet0
+        - !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref VpcEndpointsSecurityGroup
+      PrivateDnsEnabled: true
+
+  SsmMessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      SubnetIds:
+        - !Ref Subnet0
+        - !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref VpcEndpointsSecurityGroup
+      PrivateDnsEnabled: true
+
+  Ec2MessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      SubnetIds:
+        - !Ref Subnet0
+        - !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref VpcEndpointsSecurityGroup
+      PrivateDnsEnabled: true
+
+  SecretsManagerEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.secretsmanager'
+      SubnetIds:
+        - !Ref Subnet0
+        - !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref VpcEndpointsSecurityGroup
+      PrivateDnsEnabled: true
+
+  KmsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: EnableVpcEndpoints
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.kms'
+      SubnetIds:
+        - !Ref Subnet0
+        - !Ref Subnet1
+      SecurityGroupIds:
+        - !Ref VpcEndpointsSecurityGroup
+      PrivateDnsEnabled: true
 
   BuildkiteAgentTokenParameter:
     Type: AWS::SSM::Parameter

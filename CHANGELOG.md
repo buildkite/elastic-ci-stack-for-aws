@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.48.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.47.0...v6.48.0) (2025-11-19)
+
+### Changed
+
+* Update buildkite-agent to v3.113.0 [#1662](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1662) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Added
+
+* Add option to create VPC endpoints [#1665](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1665) ([scadu](https://github.com/scadu))
+* Custom Instance Roles [#1660](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1660) ([JoeColeman95](https://github.com/JoeColeman95))
+* Add InstanceScaleInProtection parameter to stack [#1666](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1666) ([JoeColeman95](https://github.com/JoeColeman95))
+
+
+### Internal
+* Actually make base images private [#1658](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1658) ([scadu](https://github.com/scadu))
+* Make base AMI private [#1657](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1657) ([scadu](https://github.com/scadu))
+* Revert "Don't rebuild Stack AMI when not needed" [#1669](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1669) ([scadu](https://github.com/scadu))
+* Fix: skip publish when only templates change [#1664](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1664) ([scadu](https://github.com/scadu))
+* Fix Stack AMI builds [#1663](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1663) ([scadu](https://github.com/scadu))
+* Don't rebuild Stack AMI when not needed [#1661](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1661) ([scadu](https://github.com/scadu))
+* Update changelog for upcoming release v6.47.0 [#1655](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1655) ([scadu](https://github.com/scadu))
+
+<details>
+<summary>Agent Changelog</summary>
+
+### [`v3.113.0`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31130-2025-11-18)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.112.0...v3.113.0)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.112.0...v3.113.0)
+
+##### Added
+
+* Add Prometheus /metrics handler and some basic metrics [#&#8203;3576](https://redirect.github.com/buildkite/agent/pull/3576) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Fixed
+
+* Fix the pipeline upload --reject-secrets flag not rejecting secrets [#&#8203;3580](https://redirect.github.com/buildkite/agent/pull/3580) ([@&#8203;moskyb](https://redirect.github.com/moskyb))
+* Fix idle tracking for agents that never received jobs [#&#8203;3579](https://redirect.github.com/buildkite/agent/pull/3579) ([@&#8203;scadu](https://redirect.github.com/scadu))
+
+##### Internal
+
+* Clarify agent idlemonitor states in comment [#&#8203;3582](https://redirect.github.com/buildkite/agent/pull/3582) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+* Put secret scan error into exit message [#&#8203;3581](https://redirect.github.com/buildkite/agent/pull/3581) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Dependency updates
+
+* build(deps): bump the golang-x group with 3 updates [#&#8203;3583](https://redirect.github.com/buildkite/agent/pull/3583) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+* build(deps): bump the cloud-providers group with 7 updates [#&#8203;3584](https://redirect.github.com/buildkite/agent/pull/3584) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+
+### [`v3.112.0`](https://redirect.github.com/buildkite/agent/blob/HEAD/CHANGELOG.md#v31130-2025-11-18)
+
+[Compare Source](https://redirect.github.com/buildkite/agent/compare/v3.111.0...v3.112.0)
+
+[Full Changelog](https://redirect.github.com/buildkite/agent/compare/v3.112.0...v3.113.0)
+
+##### Added
+
+* Add Prometheus /metrics handler and some basic metrics [#&#8203;3576](https://redirect.github.com/buildkite/agent/pull/3576) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Fixed
+
+* Fix the pipeline upload --reject-secrets flag not rejecting secrets [#&#8203;3580](https://redirect.github.com/buildkite/agent/pull/3580) ([@&#8203;moskyb](https://redirect.github.com/moskyb))
+* Fix idle tracking for agents that never received jobs [#&#8203;3579](https://redirect.github.com/buildkite/agent/pull/3579) ([@&#8203;scadu](https://redirect.github.com/scadu))
+
+##### Internal
+
+* Clarify agent idlemonitor states in comment [#&#8203;3582](https://redirect.github.com/buildkite/agent/pull/3582) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+* Put secret scan error into exit message [#&#8203;3581](https://redirect.github.com/buildkite/agent/pull/3581) ([@&#8203;DrJosh9000](https://redirect.github.com/DrJosh9000))
+
+##### Dependency updates
+
+* build(deps): bump the golang-x group with 3 updates [#&#8203;3583](https://redirect.github.com/buildkite/agent/pull/3583) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+* build(deps): bump the cloud-providers group with 7 updates [#&#8203;3584](https://redirect.github.com/buildkite/agent/pull/3584) ([@&#8203;dependabot](https://redirect.github.com/dependabot)\[bot])
+
+</details>
+
 ## [v6.47.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.46.0...v6.47.0) (2025-11-12)
 
 ### Fixed
