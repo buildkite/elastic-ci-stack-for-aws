@@ -93,6 +93,7 @@ def cfn_template_amis(version)
 end
 
 one_year_ago = Time.now - (60 * 60 * 24 * 365)
+six_months_ago = Time.now - (60 * 60 * 24 * 184) # Jul+Aug+Sep+Oct+Nov+Dec = 184 days
 
 counters = {
   deleted: 0,
@@ -116,15 +117,15 @@ all_images.each do |image|
 
   counters[:checked] += 1
 
-  if image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
-    counters[:launched_recently] += 1
-    puts "- keep (launched recently)\n\n"
-    next
-  end
-
   if DateTime.parse(image.creation_date).to_time >= one_year_ago
     counters[:created_recently] += 1
     puts "- keep (created recently)\n\n"
+    next
+  end
+
+  if image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
+    counters[:launched_recently] += 1
+    puts "- keep (launched recently)\n\n"
     next
   end
 
@@ -173,9 +174,11 @@ end
 operation = (dry_run ? "Dry run" : "Cleanup")
 summary = %Q[## #{operation} complete for `#{Region}`
 
-| Checked | Deregistered | Eligible for deregistration | Shared publicly | Shared privately | Created recently | Launched recently |
+NB: This table lists the *primary* reason for deciding to keep an image. If there are multiple reasons (e.g. public AND created recently), only the first one is counted here.
+
+| Checked | Deregistered | Eligible for deregistration | Created recently | Launched recently | Shared publicly | Shared privately |
 |:-------:|:------------:|:---------------------------:|:---------------:|:----------------:|:----------------:|:-----------------:|
-| #{counters[:checked]} | #{counters[:deleted]} | #{counters[:eligible_for_deletion]} | #{counters[:public]} | #{counters[:shared]} | #{counters[:created_recently]} | #{counters[:launched_recently]} |
+| #{counters[:checked]} | #{counters[:deleted]} | #{counters[:eligible_for_deletion]} | #{counters[:created_recently]} | #{counters[:launched_recently]} | #{counters[:public]} | #{counters[:shared]} |
 ]
 
 puts summary
