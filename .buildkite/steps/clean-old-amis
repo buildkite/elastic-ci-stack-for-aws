@@ -21,12 +21,12 @@ end
 
 MAX_DELETIONS = 100
 
-region = ARGV[0] || ENV["AWS_REGION"]
+Region = ARGV[0] || ENV["AWS_REGION"]
 dry_run = ENV["DRY_RUN"]
 
-die("region not found") if region.nil? || region == ""
+die("region not found") if Region.nil? || Region == ""
 
-client = Aws::EC2::Client.new(region: region)
+client = Aws::EC2::Client.new(region: Region)
 
 # Fetch all AMIs that we own in the current region
 res = client.describe_images(owners: ["self"], include_deprecated: true)
@@ -89,7 +89,7 @@ def cfn_template_amis(version)
   # JSON is a strict subset of YAML, so we can parse either as YAML!
   cfn = YAML.load(`curl #{template_url}`, permitted_classes: [Date])
 
-  @cfn_template_amis[version] = cfn['Mappings']['AWSRegion2AMI'][region].values
+  @cfn_template_amis[version] = cfn['Mappings']['AWSRegion2AMI'][Region].values
 end
 
 one_year_ago = Time.now - (60 * 60 * 24 * 365)
@@ -171,7 +171,7 @@ all_images.each do |image|
 end
 
 operation = (dry_run ? "Dry run" : "Cleanup")
-summary = %Q[## #{operation} complete for `#{region}`
+summary = %Q[## #{operation} complete for `#{Region}`
 
 | Checked | Deregistered | Eligible for deregistration | Shared publicly | Shared privately | Created recently | Launched recently |
 |:-------:|:------------:|:---------------------------:|:---------------:|:----------------:|:----------------:|:-----------------:|
@@ -189,4 +189,4 @@ elsif File.exist?('/usr/bin/buildkite-agent')
   buildkite_agent_bin = '/usr/bin/buildkite-agent'
 end
 
-`#{buildkite_agent_bin} annotate --context sweep-#{region} --style info '#{summary}'` unless buildkite_agent_bin.nil?
+`#{buildkite_agent_bin} annotate --context sweep-#{Region} --style info '#{summary}'` unless buildkite_agent_bin.nil?
