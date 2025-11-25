@@ -2,6 +2,7 @@
 
 require "bundler/inline"
 require "date"
+require "yaml"
 
 gemfile do
   source "https://rubygems.org"
@@ -45,16 +46,15 @@ all_images.select! { |image|
 # We'd like to process the images oldest to newest
 all_images.sort_by! { |image| image.creation_date }
 
-# Each AMI *can* be used in multiple elastic stack releases. It's rare, but it happens. This will extract one
-# of the versions - if any - from the tags. Enough to confirm this image is one we published in Cloud Formation
-# templates on githib.com and customers might be using it
-def get_stack_version_from_tags(image)
-  image.tags.each do |tag|
-    if tag.key.start_with?("Version:")
-      return tag.key[/^Version:(.+)$/, 1]
-    end
-  end
-  nil
+# Each AMI *can* be used in multiple elastic stack releases. It's rare, but it
+# happens. This will extract the versions - if any - from the tags. If we find
+# some, we look up the templates for those versions, and verify that this AMI
+# is used there. If it is, customers might be using it, so we should keep it.
+#
+# If it's not, then we will fall through to our other checks for age, etc.
+#
+def get_stack_versions_from_tags(image)
+  image.tags.select { |t| t.key.start_with?("Version:") }.map { |t| t.key[/^Version:(.+)$/, 1] }
 end
 
 # If we only deregister the AMI then we'll be left with orphaned snapshots and keep paying for storage. This
@@ -77,6 +77,21 @@ def deregister_image(client, image, dry_run)
   end
 end
 
+# version => [ami_id]
+@cfn_template_amis = {}
+
+def cfn_template_amis(version)
+  return @cfn_template_amis[version] if @cfn_template_amis.has_key?(version)
+
+  ext = (version[1].to_i < 4 ? 'json' : 'yml')
+  template_url = "https://buildkite-aws-stack.s3.us-east-1.amazonaws.com/#{version}/aws-stack.#{ext}"
+
+  # JSON is a strict subset of YAML, so we can parse either as YAML!
+  cfn = YAML.load(`curl #{template_url}`, permitted_classes: [Date])
+
+  @cfn_template_amis[version] = cfn['Mappings']['AWSRegion2AMI'][region].values
+end
+
 one_year_ago = Time.now - (60 * 60 * 24 * 365)
 
 counters = {
@@ -95,15 +110,36 @@ counters = {
 # and save some money
 
 all_images.each do |image|
-  puts "ID: #{image.image_id}, Name: #{image.name}, Created: #{image.creation_date}, Last Launched: #{image.last_launched_time}, Public: #{image.public}, Version Tag; #{get_stack_version_from_tags(image)}"
+  versions = get_stack_versions_from_tags(image)
+
+  puts "ID: #{image.image_id}, Name: #{image.name}, Created: #{image.creation_date}, Last Launched: #{image.last_launched_time}, Public: #{image.public}, Version Tags: #{versions}"
 
   counters[:checked] += 1
 
-  if get_stack_version_from_tags(image)
+  if DateTime.parse(image.creation_date).to_time >= one_year_ago
+    counters[:created_recently] += 1
+    puts "- keep (created recently)\n\n"
+    next
+  end
+
+  if image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
+    counters[:launched_recently] += 1
+    puts "- keep (launched recently)\n\n"
+    next
+  end
+
+  if versions.any?
     if image.public
-      counters[:public] += 1
-      puts "- keep (publicly released version)\n\n"
-      next
+      # The IsReleased and Version:* tags are not reliable indicators of whether an image is actually
+      # referred to by CloudFormation templates.
+      #
+      # So we verify those that claim to be referred to by the public CloudFormation templates.
+      #
+      if versions.any? { |v| cfn_template_amis(v).include?(image.image_id) }
+        counters[:public] += 1
+        puts "- keep (publicly released version)\n\n"
+        next
+      end
     end
 
     # If we made it here, the image is Private. If it's shared with any other
@@ -118,18 +154,6 @@ all_images.each do |image|
       puts "- keep (released version, shared with other AWS accounts)\n\n"
       next
     end
-  end
-
-  if DateTime.parse(image.creation_date).to_time >= one_year_ago
-    counters[:created_recently] += 1
-    puts "- keep (created recently)\n\n"
-    next
-  end
-
-  if image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
-    counters[:launched_recently] += 1
-    puts "- keep (launched recently)\n\n"
-    next
   end
 
   if counters[:deleted] >= MAX_DELETIONS
