@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.49.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.48.0...v6.49.0) (2025-11-25)
+
+### Changed
+* Update buildkite-agent to v3.114.0 [#1677](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1677) ([renovate[bot]](https://github.com/apps/renovate))
+* Update ecr plugin to v2.11.0 [#1672](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1672) ([petetomasik](https://github.com/petetomasik))
+
+### Added
+* Add BuildkiteQueue and AgentsPerInstance tags to Agent Autoscaling groups [#1675](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1675) ([fd-jonathanlinn](https://github.com/fd-jonathanlinn))
+
+### Internal
+* chore: add a pr template [#1674](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1674) ([mcncl](https://github.com/mcncl))
+* Update changelog for upcoming release v6.48.0 [#1670](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1670) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.114.0](https://github.com/buildkite/agent/tree/v3.114.0) (2025-11-25)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.113.0...v3.114.0)
+
+### Added
+- feat: add agent metadata to OTEL trace attributes [#3587](https://github.com/buildkite/agent/pull/3587) (@pyrocat101)
+
+### Fixed
+- Fix for the agent sometimes failing to disconnect properly when exiting - agent pool: Send error after disconnecting [#3596](https://github.com/buildkite/agent/pull/3596) (@DrJosh9000)
+
+### Internal
+- internal/redact: Add another test with minor cleanup [#3591](https://github.com/buildkite/agent/pull/3591) (@DrJosh9000)
+- Run gofumpt as part of CI [#3589](https://github.com/buildkite/agent/pull/3589) (@moskyb)
+
+### Dependency updates
+- build(deps): bump the cloud-providers group with 7 updates [#3593](https://github.com/buildkite/agent/pull/3593) (@dependabot[bot])
+- build(deps): bump the container-images group across 5 directories with 1 update [#3594](https://github.com/buildkite/agent/pull/3594) (@dependabot[bot])
+- build(deps): bump the container-images group across 1 directory with 2 updates [#3595](https://github.com/buildkite/agent/pull/3595) (@dependabot[bot])
+- build(deps): bump golang.org/x/crypto from 0.44.0 to 0.45.0 [#3590](https://github.com/buildkite/agent/pull/3590) (@dependabot[bot])
+
+</details>
+
+
 ## [v6.48.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.47.0...v6.48.0) (2025-11-19)
 
 ### Changed

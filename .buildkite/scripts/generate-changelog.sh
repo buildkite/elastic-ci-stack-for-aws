@@ -17,12 +17,12 @@ echo "--- Generating changelog from ${PREVIOUS_TAG} to ${RELEASE_VERSION}"
 CHANGELOG_BODY=$(ghch --format=markdown --from="$PREVIOUS_TAG" --next-version="$RELEASE_VERSION")
 
 # 3. Check for Buildkite Agent updates
-AGENT_INSTALL_SCRIPT_LINUX="packer/linux/scripts/install-buildkite-agent.sh"
-AGENT_INSTALL_SCRIPT_WINDOWS="packer/windows/scripts/install-buildkite-agent.ps1"
+AGENT_INSTALL_SCRIPT_LINUX="packer/linux/stack/scripts/install-buildkite-agent.sh"
+AGENT_INSTALL_SCRIPT_WINDOWS="packer/windows/stack/scripts/install-buildkite-agent.ps1"
 
 if git diff --name-only "$PREVIOUS_TAG..HEAD" -- "$AGENT_INSTALL_SCRIPT_LINUX" "$AGENT_INSTALL_SCRIPT_WINDOWS" | grep -q "."; then
   echo "--- Buildkite Agent version has changed. Fetching agent release notes."
-  AGENT_VERSION=$(grep "AGENT_VERSION=" "$AGENT_INSTALL_SCRIPT_LINUX" | cut -d'=' -f2)
+  AGENT_VERSION=$(grep "AGENT_VERSION=" "$AGENT_INSTALL_SCRIPT_LINUX" | cut -d'=' -f2 | tr -d '"')
   AGENT_RELEASE_NOTES=$(gh release view "v${AGENT_VERSION}" --repo "buildkite/agent" --json body -q .body)
   AGENT_CHANGELOG_DETAILS="<details>\n  <summary><h3>Agent Changelog</h3></summary>\n\n${AGENT_RELEASE_NOTES}\n</details>"
   CHANGELOG_BODY+="\n\n${AGENT_CHANGELOG_DETAILS}"
