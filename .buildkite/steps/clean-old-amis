@@ -116,15 +116,15 @@ all_images.each do |image|
 
   counters[:checked] += 1
 
-  if DateTime.parse(image.creation_date).to_time >= one_year_ago
-    counters[:created_recently] += 1
-    puts "- keep (created recently)\n\n"
-    next
-  end
-
   if image.last_launched_time && DateTime.parse(image.last_launched_time).to_time >= one_year_ago
     counters[:launched_recently] += 1
     puts "- keep (launched recently)\n\n"
+    next
+  end
+
+  if DateTime.parse(image.creation_date).to_time >= one_year_ago
+    counters[:created_recently] += 1
+    puts "- keep (created recently)\n\n"
     next
   end
 
@@ -140,19 +140,19 @@ all_images.each do |image|
         puts "- keep (publicly released version)\n\n"
         next
       end
-    end
+    else
+      # If we made it here, the image is Private. If it's shared with any other
+      # accounts, keep it. If not, proceed with other checks.
+      launch_permission_attr = client.describe_image_attribute({
+        attribute: "launchPermission",
+        image_id: image.image_id,
+      }).to_h
 
-    # If we made it here, the image is Private. If it's shared with any other
-    # accounts, keep it. If not, proceed with other checks.
-    launch_permission_attr = client.describe_image_attribute({
-      attribute: "launchPermission",
-      image_id: image.image_id,
-    }).to_h
-
-    if launch_permission_attr[:launch_permissions].any?
-      counters[:shared] += 1
-      puts "- keep (released version, shared with other AWS accounts)\n\n"
-      next
+      if launch_permission_attr[:launch_permissions].any? { |lp|  }
+        counters[:shared] += 1
+        puts "- keep (released version, shared with other AWS accounts)\n\n"
+        next
+      end
     end
   end
 
