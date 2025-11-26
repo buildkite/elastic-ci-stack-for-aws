@@ -4,7 +4,10 @@ set -euo pipefail
 DISK_MIN_AVAILABLE=${DISK_MIN_AVAILABLE:-5242880} # 5GB
 DISK_MIN_INODES=${DISK_MIN_INODES:-250000}        # docker needs lots
 
-DOCKER_DIR="$(jq -r '."data-root" // "/var/lib/docker"' /etc/docker/daemon.json)"
+DOCKER_DIR="$(jq -r '."data-root" // "/var/lib/docker"' /etc/docker/daemon.json || true)"
+if [[ -z "$DOCKER_DIR" ]]; then
+  DOCKER_DIR="/var/lib/docker"
+fi
 
 disk_avail=$(df -k --output=avail "$DOCKER_DIR" | tail -n1)
 
