@@ -40,7 +40,6 @@ if [[ "${DOCKER_PRUNE_ON:-environment}" == "pre-exit" || "${DOCKER_PRUNE_ON:-env
   fi
 fi
 
-
 # clean up our temporary docker config
 if [[ -n "${BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY:-}" && -d "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY" ]]; then
   rm -rf "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
