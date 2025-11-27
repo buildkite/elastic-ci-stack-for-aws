@@ -39,15 +39,13 @@ if ! docker ps; then
   exit 1
 fi
 
-if [[ "${DOCKER_PRUNE_ON:-environment}" == "environment" || "${DOCKER_PRUNE_ON:-environment}" == "both" ]]; then
-  echo "Checking disk space"
-  if ! /usr/local/bin/bk-check-disk-space.sh; then
-    echo "~~~ :broom: Pruning docker resources"
-    docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
+echo "Checking disk space"
+if ! /usr/local/bin/bk-check-disk-space.sh; then
+  echo "~~~ :broom: Pruning docker resources"
+  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
 
-    if [[ "${DOCKER_BUILDER_PRUNE_ENABLED:-false}" == "true" ]]; then
-      docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
-    fi
+  if [[ "${DOCKER_BUILDER_PRUNE_ENABLED:-false}" == "true" ]]; then
+    docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
   fi
 
   echo "Checking disk space again"

@@ -1014,18 +1014,16 @@ Parameters:
     AllowedPattern: "^(\\d+[smhd])+$"
     ConstraintDescription: "Must be a duration string like '30m', '4h', '1h30m', or '7d'. Valid units: s (seconds), m (minutes), h (hours), d (days)."
 
-  DockerPruneOn:
+  DockerPrunePostJob:
     Type: String
     Description: >
-      Controls when Docker garbage collection runs to free disk space when disk space is low.
-      'environment' - Cleanup in the environment hook (before job starts).
-      'pre-exit' - Cleanup in the pre-exit hook (after job finishes).
-      'both' - Cleanup in both environment and pre-exit hooks.
+      Controls whether Docker garbage collection also runs after jobs complete.
+      Docker GC always runs before jobs when disk space is low.
+      When enabled, GC also runs after jobs to clean up resources generated during job execution.
     AllowedValues:
-      - "environment"
-      - "pre-exit"
-      - "both"
-    Default: "environment"
+      - "true"
+      - "false"
+    Default: "false"
 
   DockerBuilderPruneEnabled:
     Type: String
@@ -2364,7 +2362,7 @@ Resources:
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
                   DOCKER_PRUNE_UNTIL=${DockerPruneUntil} \
-                  DOCKER_PRUNE_ON=${DockerPruneOn} \
+                  DOCKER_PRUNE_POST_JOB=${DockerPrunePostJob} \
                   DOCKER_BUILDER_PRUNE_ENABLED=${DockerBuilderPruneEnabled} \
                   DOCKER_NETWORKING_PROTOCOL=${DockerNetworkingProtocol} \
                   DOCKER_IPV4_ADDRESS_POOL_1=${DockerIPv4AddressPool1} \
@@ -2421,7 +2419,7 @@ Resources:
                   DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}" \
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
                   DOCKER_PRUNE_UNTIL="${DockerPruneUntil}" \
-                  DOCKER_PRUNE_ON="${DockerPruneOn}" \
+                  DOCKER_PRUNE_POST_JOB="${DockerPrunePostJob}" \
                   DOCKER_BUILDER_PRUNE_ENABLED="${DockerBuilderPruneEnabled}" \
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   AWS_REGION="${AWS::Region}" \
