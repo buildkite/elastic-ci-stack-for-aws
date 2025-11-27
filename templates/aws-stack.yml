@@ -1017,18 +1017,25 @@ Parameters:
   DockerPruneOn:
     Type: String
     Description: >
-      Controls when Docker garbage collection runs to free disk space.
-      'pre-job' - Cleanup before each job starts, plus emergency cleanup on low disk.
-      'post-job' - Cleanup after each job finishes, plus emergency cleanup on low disk.
-      'emergency' - Only runs cleanup when disk space is critically low (Linux only).
-      'disabled' - Disables Docker build pruning. (Image pruning is still performed on disk full)
-      Emergency cleanup runs for all modes except 'disabled'.
+      Controls when Docker garbage collection runs to free disk space when disk space is low.
+      'environment' - Cleanup in the environment hook (before job starts).
+      'pre-exit' - Cleanup in the pre-exit hook (after job finishes).
+      'both' - Cleanup in both environment and pre-exit hooks.
     AllowedValues:
-      - "pre-job"
-      - "post-job"
-      - "emergency"
-      - "disabled"
-    Default: "disabled"
+      - "environment"
+      - "pre-exit"
+      - "both"
+    Default: "environment"
+
+  DockerBuilderPruneEnabled:
+    Type: String
+    Description: >
+      Controls whether Docker builder cache is pruned during garbage collection.
+      When enabled, Docker builder cache will run after Docker image pruning.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   EnableInstanceStorage:
     Type: String
@@ -2267,6 +2274,7 @@ Resources:
                   $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
                   $Env:DOCKER_PRUNE_UNTIL="${DockerPruneUntil}"
                   $Env:DOCKER_PRUNE_ON="${DockerPruneOn}"
+                  $Env:DOCKER_BUILDER_PRUNE_ENABLED="${DockerBuilderPruneEnabled}"
                   $Env:DOCKER_NETWORKING_PROTOCOL="${DockerNetworkingProtocol}"
                   powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 
@@ -2360,6 +2368,7 @@ Resources:
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
                   DOCKER_PRUNE_UNTIL=${DockerPruneUntil} \
                   DOCKER_PRUNE_ON=${DockerPruneOn} \
+                  DOCKER_BUILDER_PRUNE_ENABLED=${DockerBuilderPruneEnabled} \
                   DOCKER_NETWORKING_PROTOCOL=${DockerNetworkingProtocol} \
                   DOCKER_IPV4_ADDRESS_POOL_1=${DockerIPv4AddressPool1} \
                   DOCKER_IPV4_ADDRESS_POOL_2=${DockerIPv4AddressPool2} \
@@ -2416,6 +2425,7 @@ Resources:
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
                   DOCKER_PRUNE_UNTIL="${DockerPruneUntil}" \
                   DOCKER_PRUNE_ON="${DockerPruneOn}" \
+                  DOCKER_BUILDER_PRUNE_ENABLED="${DockerBuilderPruneEnabled}" \
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   AWS_REGION="${AWS::Region}" \
                   ENABLE_RESOURCE_LIMITS="${ExperimentalEnableResourceLimits}" \
