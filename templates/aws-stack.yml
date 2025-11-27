@@ -2272,9 +2272,6 @@ Resources:
                   <powershell>
                   $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
                   $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
-                  $Env:DOCKER_PRUNE_UNTIL="${DockerPruneUntil}"
-                  $Env:DOCKER_PRUNE_ON="${DockerPruneOn}"
-                  $Env:DOCKER_BUILDER_PRUNE_ENABLED="${DockerBuilderPruneEnabled}"
                   $Env:DOCKER_NETWORKING_PROTOCOL="${DockerNetworkingProtocol}"
                   powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 

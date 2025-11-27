@@ -2,12 +2,6 @@
 
 set -eu -o pipefail
 
-if [[ "${DOCKER_PRUNE_ON:-disabled}" == "post-job" ]]; then
-  echo "~~~ :broom: Pruning docker resources"
-  docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
-  docker builder prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
-fi
-
 # clean up our temporary docker config
 if [[ -n "${BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY:-}" && -d "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY" ]]; then
   rm -rf "$BUILDKITE_DOCKER_CONFIG_TEMP_DIRECTORY"
