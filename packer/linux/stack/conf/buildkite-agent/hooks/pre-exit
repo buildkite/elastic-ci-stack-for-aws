@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-if [[ "${DOCKER_PRUNE_POST_JOB:-false}" == "true" ]]; then
+if [[ "${ENABLE_PRE_EXIT_DISK_CLEANUP:-false}" == "true" ]]; then
   echo "Checking disk space"
   if ! /usr/local/bin/bk-check-disk-space.sh; then
     echo "~~~ :broom: Pruning docker resources"
