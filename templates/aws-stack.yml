@@ -2313,6 +2313,7 @@ Resources:
                   $Env:ECR_PLUGIN_ENABLED="${EnableECRPlugin}"
                   $Env:ECR_CREDENTIAL_HELPER_ENABLED="${EnableECRCredentialHelper}"
                   $Env:DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}"
+                  $Env:DOCKER_PRUNE_UNTIL="${DockerPruneUntil}"
                   $Env:AWS_REGION="${AWS::Region}"
                   $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
                   $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
