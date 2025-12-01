@@ -5,7 +5,7 @@ if [[ $EUID -eq 0 ]]; then
   exec >>/var/log/elastic-stack.log 2>&1 # Logs to elastic-stack.log
 fi
 
-DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-1h}
+DOCKER_PRUNE_UNTIL=${DOCKER_PRUNE_UNTIL:-4h}
 
 mark_instance_unhealthy() {
   # cancel any running buildkite builds

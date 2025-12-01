@@ -1003,6 +1003,38 @@ Parameters:
       - "false"
     Default: "false"
 
+  DockerPruneUntil:
+    Type: String
+    Description: >
+      Retention period for Docker images and build cache during garbage collection.
+      Docker will delete resources older than this threshold, keeping resources created within this timeframe.
+      Accepts duration strings like '30m' (30 minutes), '4h' (4 hours), '1h30m' (1.5 hours), '7d' (7 days).
+      Default 4h means resources older than 4 hours will be pruned.
+    Default: "4h"
+    AllowedPattern: "^(\\d+[smhd])+$"
+    ConstraintDescription: "Must be a duration string like '30m', '4h', '1h30m', or '7d'. Valid units: s (seconds), m (minutes), h (hours), d (days)."
+
+  EnablePreExitDiskCleanup:
+    Type: String
+    Description: >
+      Controls whether disk space check also runs in the pre-exit hook after jobs complete.
+      Disk cleanup always runs in the environment hook when disk space is low.
+      When enabled, the same check also runs in the pre-exit hook to reclaim resources generated during job execution.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  DockerBuilderPruneEnabled:
+    Type: String
+    Description: >
+      Controls whether Docker builder cache is pruned during garbage collection.
+      When enabled, Docker builder cache will run after Docker image pruning.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
   EnableInstanceStorage:
     Type: String
     Description: >
@@ -2329,6 +2361,9 @@ Resources:
                   #!/bin/bash -v
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
+                  DOCKER_PRUNE_UNTIL=${DockerPruneUntil} \
+                  ENABLE_PRE_EXIT_DISK_CLEANUP=${EnablePreExitDiskCleanup} \
+                  DOCKER_BUILDER_PRUNE_ENABLED=${DockerBuilderPruneEnabled} \
                   DOCKER_NETWORKING_PROTOCOL=${DockerNetworkingProtocol} \
                   DOCKER_IPV4_ADDRESS_POOL_1=${DockerIPv4AddressPool1} \
                   DOCKER_IPV4_ADDRESS_POOL_2=${DockerIPv4AddressPool2} \
@@ -2383,6 +2418,9 @@ Resources:
                   ECR_CREDENTIAL_HELPER_ENABLED="${EnableECRCredentialHelper}" \
                   DOCKER_LOGIN_PLUGIN_ENABLED="${EnableDockerLoginPlugin}" \
                   DOCKER_EXPERIMENTAL="${EnableDockerExperimental}" \
+                  DOCKER_PRUNE_UNTIL="${DockerPruneUntil}" \
+                  ENABLE_PRE_EXIT_DISK_CLEANUP="${EnablePreExitDiskCleanup}" \
+                  DOCKER_BUILDER_PRUNE_ENABLED="${DockerBuilderPruneEnabled}" \
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   AWS_REGION="${AWS::Region}" \
                   ENABLE_RESOURCE_LIMITS="${ExperimentalEnableResourceLimits}" \
