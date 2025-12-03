@@ -1,5 +1,88 @@
 dag: true
 
+x-if-changed-patterns:
+  - &if_changed_base_linux
+    include:
+      - "packer/linux/base/**"
+      - "packer/linux/shared/**"
+      - ".buildkite/steps/packer.sh"
+      - "Makefile"
+
+  - &if_changed_base_windows
+    include:
+      - "packer/windows/base/**"
+      - "packer/windows/shared/**"
+      - ".buildkite/steps/packer.sh"
+      - "Makefile"
+
+  - &if_changed_stack_linux
+    include:
+      - "packer/linux/**"
+      - "plugins/**"
+      - ".buildkite/steps/packer.sh"
+      - "Makefile"
+      - "internal/**"
+      - "goss.yaml"
+    exclude:
+      - "**/*.md"
+      - "**/README*"
+
+  - &if_changed_stack_windows
+    include:
+      - "packer/windows/**"
+      - "plugins/**"
+      - ".buildkite/steps/packer.sh"
+      - "Makefile"
+      - "internal/**"
+    exclude:
+      - "**/*.md"
+      - "**/README*"
+
+  - &if_changed_launch_test_delete_linux
+    include:
+      - "packer/linux/**"
+      - "plugins/**"
+      - ".buildkite/steps/packer.sh"
+      - ".buildkite/steps/launch.sh"
+      - "templates/**"
+      - "Makefile"
+      - "internal/**"
+      - "goss.yaml"
+    exclude:
+      - "**/*.md"
+      - "**/README*"
+
+  - &if_changed_launch_test_delete_windows
+    include:
+      - "packer/windows/**"
+      - "plugins/**"
+      - ".buildkite/steps/packer.sh"
+      - ".buildkite/steps/launch.sh"
+      - "templates/**"
+      - "Makefile"
+      - "internal/**"
+    exclude:
+      - "**/*.md"
+      - "**/README*"
+
+  - &if_changed_deploy_service_role
+    include:
+      - "packer/**"
+      - "plugins/**"
+      - ".buildkite/steps/packer.sh"
+      - ".buildkite/steps/launch.sh"
+      - ".buildkite/steps/delete.sh"
+      - ".buildkite/steps/deploy-service-role-stack.sh"
+      - "templates/**"
+      - "Makefile"
+      - "internal/**"
+      - "goss.yaml"
+    exclude:
+      - "**/*.md"
+      - "**/README*"
+
+
+
 steps:
   - group: ":lint-roller: Linting"
     key: linting
@@ -46,6 +129,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     command: .buildkite/steps/deploy-service-role-stack.sh
     if: build.source != "schedule"
+    if_changed: *if_changed_deploy_service_role
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -66,7 +150,7 @@ steps:
       AMI_PUBLIC: false
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: "packer/windows/base/**"
+    if_changed: *if_changed_base_windows
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -83,6 +167,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_stack_windows
     depends_on:
       - "packer-base-windows-amd64"
       - "linting"
@@ -92,11 +177,14 @@ steps:
 
   - id: "launch-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Launch"
-    command: .buildkite/steps/launch.sh windows amd64
+    command:
+      - .buildkite/steps/ensure_ami_metadata.py windows amd64
+      - .buildkite/steps/launch.sh windows amd64
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_windows
     depends_on:
       - "packer-windows-amd64"
       - "deploy-service-role-stack"
@@ -116,6 +204,7 @@ steps:
       stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_windows
     depends_on:
       - "launch-windows-amd64"
 
@@ -126,6 +215,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_windows
     depends_on:
       - "test-windows-amd64"
     plugins:
@@ -139,7 +229,7 @@ steps:
       AMI_PUBLIC: false
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: "packer/linux/base/**"
+    if_changed: *if_changed_base_linux
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -156,6 +246,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-base-linux-amd64"
       - "linting"
@@ -165,12 +256,15 @@ steps:
 
   - id: "launch-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Launch"
-    command: .buildkite/steps/launch.sh linux
+    command:
+      - .buildkite/steps/ensure_ami_metadata.py linux amd64
+      - .buildkite/steps/launch.sh linux
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "packer-linux-amd64"
       - "deploy-service-role-stack"
@@ -190,6 +284,7 @@ steps:
       stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "launch-linux-amd64"
 
@@ -200,6 +295,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "test-linux-amd64"
     plugins:
@@ -213,7 +309,7 @@ steps:
       AMI_PUBLIC: false
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: "packer/linux/base/**"
+    if_changed: *if_changed_base_linux
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -230,6 +326,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-base-linux-arm64"
       - "linting"
@@ -239,11 +336,14 @@ steps:
 
   - id: "launch-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Launch"
-    command: .buildkite/steps/launch.sh linux arm64
+    command:
+      - .buildkite/steps/ensure_ami_metadata.py linux arm64
+      - .buildkite/steps/launch.sh linux arm64
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "packer-linux-arm64"
       - "deploy-service-role-stack"
@@ -263,6 +363,7 @@ steps:
       stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "launch-linux-arm64"
 
@@ -273,6 +374,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "test-linux-arm64"
     plugins:
@@ -284,6 +386,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_deploy_service_role
     depends_on:
       - "delete-windows-amd64"
       - "delete-linux-amd64"
@@ -298,6 +401,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/mappings.yml"
     if: build.source != "schedule"
+    if_changed: *if_changed_deploy_service_role
     depends_on:
       - "test-linux-amd64"
       - "test-linux-arm64"
@@ -315,6 +419,7 @@ steps:
     concurrency_method: eager
     artifact_paths: "build/*.yml"
     if: build.source != "schedule"
+    if_changed: *if_changed_deploy_service_role
     depends_on: "copy-ami"
     plugins:
       - *aws_role_plugin
@@ -325,6 +430,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
+    if_changed: *if_changed_deploy_service_role
     depends_on: "publish"
     plugins:
       - *aws_role_plugin
