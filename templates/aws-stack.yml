@@ -109,6 +109,7 @@ Metadata:
         - RootVolumeIops
         - RootVolumeThroughput
         - ManagedPolicyARNs
+        - ScalerManagedPolicyARNs
         - InstanceRoleARN
         - InstanceRoleName
         - InstanceRolePermissionsBoundaryARN
@@ -805,6 +806,11 @@ Parameters:
   ManagedPolicyARNs:
     Type: CommaDelimitedList
     Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the instance role.
+    Default: ""
+
+  ScalerManagedPolicyARNs:
+    Type: CommaDelimitedList
+    Description: Optional - Comma separated list of managed IAM policy ARNs to attach to the autoscaling Lambda execution role.
     Default: ""
 
   IMDSv2Tokens:
@@ -2855,6 +2861,7 @@ Resources:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
         RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
+        ManagedPolicyARNs: !Join [ ',', !Ref ScalerManagedPolicyARNs ]
         AgentEndpoint: !Ref AgentEndpoint
         BuildkiteQueue: !Ref BuildkiteQueue
         AgentsPerInstance: !Ref AgentsPerInstance
@@ -2886,6 +2893,7 @@ Resources:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
         RolePermissionsBoundaryARN: !If [ SetInstanceRolePermissionsBoundaryARN, !Ref InstanceRolePermissionsBoundaryARN, "" ]
+        ManagedPolicyARNs: !Join [ ',', !Ref ScalerManagedPolicyARNs ]
         AgentEndpoint: !Ref AgentEndpoint
         BuildkiteQueue: !Ref BuildkiteQueue
         AgentsPerInstance: !Ref AgentsPerInstance
