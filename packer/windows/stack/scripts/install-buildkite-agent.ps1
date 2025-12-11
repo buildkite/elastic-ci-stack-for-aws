@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 
 
-$AGENT_VERSION = "3.114.1"
+$AGENT_VERSION = "3.115.0"
 
 Write-Output "Creating bin dir..."
 if (-not (Test-Path C:\buildkite-agent\bin)) { New-Item -ItemType Directory -Path C:\buildkite-agent\bin -Force }
