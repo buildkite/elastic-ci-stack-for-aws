@@ -61,6 +61,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 </details>
 
+## [v6.50.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.49.0...v6.50.0) (2025-11-26)
+
+### Changed
+* Handle missing Docker config in disk space check by @JoeColeman95 in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1679
+
+### Internal
+* Update changelog for the v6.49.0 release by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1678
 
 ## [v6.49.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.48.0...v6.49.0) (2025-11-25)
 
