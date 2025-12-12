@@ -396,7 +396,11 @@ steps:
 
   - id: "copy-ami"
     name: ":cloudformation: 🚚 🌎"
-    command: .buildkite/steps/copy.sh
+    command:
+      - .buildkite/steps/ensure_ami_metadata.py linux amd64
+      - .buildkite/steps/ensure_ami_metadata.py linux arm64
+      - .buildkite/steps/ensure_ami_metadata.py windows amd64
+      - .buildkite/steps/copy.sh
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/mappings.yml"
