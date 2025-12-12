@@ -24,7 +24,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/linux/base/scripts/versions\\.sh$",
         "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
@@ -38,7 +38,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/linux/base/scripts/versions\\.sh$",
         "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
@@ -52,7 +52,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/linux/base/scripts/versions\\.sh$",
         "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
@@ -66,7 +66,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$"
+        "^packer/linux/base/scripts/versions\\.sh$"
       ],
       "matchStrings": [
         "export GOSS_VERSION=\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
@@ -78,7 +78,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/linux/base/scripts/versions\\.sh$",
         "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
@@ -92,7 +92,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$"
+        "^packer/linux/base/scripts/versions\\.sh$"
       ],
       "matchStrings": [
         "export DOCKER_BUILDX_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
@@ -104,7 +104,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/linux/base/scripts/versions\\.sh$",
         "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
@@ -118,7 +118,7 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/stack/scripts/versions\\.sh$",
+        "^packer/linux/base/scripts/versions\\.sh$",
         "^packer/windows/stack/scripts/versions\\.ps1$"
       ],
       "matchStrings": [
