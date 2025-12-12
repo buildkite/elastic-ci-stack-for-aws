@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.51.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.50.0...v6.51.0) (2025-12-12)
+
+### Changed
+* Update buildkite/lifecycled to v3.5.0 [#1687](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1687) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite-agent to v3.115.1 [#1685](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1685) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite-agent to v3.115.0 [#1684](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1684) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite-agent to v3.114.1 [#1682](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1682) ([renovate[bot]](https://github.com/apps/renovate))
+* chore(deps): update buildkite plugin docker-compose to v5.12.1 [#1680](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1680) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Added
+* Add configurable Docker garbage collection [#1659](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1659) ([JoeColeman95](https://github.com/JoeColeman95))
+
+### Internal
+* fix: ensure AMI metadata is set for copy step when builds are skipped [#1689](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1689) ([scadu](https://github.com/scadu))
+* Fix versions.ps1 matching in Renovate config [#1688](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1688) ([scadu](https://github.com/scadu))
+* Fix Renovate for tooling using versions.{sh,ps1} scripts [#1686](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1686) ([scadu](https://github.com/scadu))
+* Do not rebuild Stack AMI when not needed [#1681](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1681) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.115.1](https://github.com/buildkite/agent/tree/v3.115.1) (2025-12-12)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.115.0...v3.115.1)
+
+### Fixes
+- PS-1491: Fix double retry issue for k8s mode bootstrap [#3628](https://github.com/buildkite/agent/pull/3628) (@zhming0)
+
+### Internal
+- PB-1023: remove old kubernetes bootstrap setup [#3629](https://github.com/buildkite/agent/pull/3629) (@zhming0)
+- chore(deps): update zstash to v0.6.0 and update progress callback [#3630](https://github.com/buildkite/agent/pull/3630) (@wolfeidau)
+- feat: add support for concurrent save and restore operations [#3627](https://github.com/buildkite/agent/pull/3627) (@wolfeidau)
+
+## [v3.115.0](https://github.com/buildkite/agent/tree/v3.115.0) (2025-12-10)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.114.1...v3.115.0)
+
+### Added
+- `--changed-files-path` for pipeline upload, which allows users to specify a list of files changed for `if_changed` computation [#3620](https://github.com/buildkite/agent/pull/3620) (@pyrocat101)
+
+### Fixes
+- Further fixes to custom bucket artifact uploads/downloads [#3615](https://github.com/buildkite/agent/pull/3615) (@moskyb)
+
+## Internal
+- Dependabot updates [#3618](https://github.com/buildkite/agent/pull/3618) [#3619](https://github.com/buildkite/agent/pull/3619) [#3622](https://github.com/buildkite/agent/pull/3622) [#3623](https://github.com/buildkite/agent/pull/3623) [#3621](https://github.com/buildkite/agent/pull/3621) (@dependabot[bot])
+
+## [v3.114.1](https://github.com/buildkite/agent/tree/v3.114.1) (2025-12-05)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.114.0...v3.114.1)
+
+### Fixed
+- Fix issue where artifacts uploaded to customer-managed s3 buckets could not be downloaded [#3607](https://github.com/buildkite/agent/pull/3607) (@moskyb)
+
+### Internal
+- Add an end-to-end testing framework! [#3611](https://github.com/buildkite/agent/pull/3611) [#3610](https://github.com/buildkite/agent/pull/3610) [#3609](https://github.com/buildkite/agent/pull/3609) [#3608](https://github.com/buildkite/agent/pull/3608) [#3606](https://github.com/buildkite/agent/pull/3606) [#3604](https://github.com/buildkite/agent/pull/3604) [#3599](https://github.com/buildkite/agent/pull/3599) (@DrJosh9000)
+- Dependency updates [#3601](https://github.com/buildkite/agent/pull/3601) [#3600](https://github.com/buildkite/agent/pull/3600) (@dependabot[bot])
+- Update MIME types [#3603](https://github.com/buildkite/agent/pull/3603) (@DrJosh9000)
+
+</details>
+
+## [v6.50.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.49.0...v6.50.0) (2025-11-26)
+
+### Changed
+* Handle missing Docker config in disk space check by @JoeColeman95 in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1679
+
+### Internal
+* Update changelog for the v6.49.0 release by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1678
+
 ## [v6.49.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.48.0...v6.49.0) (2025-11-25)
 
 ### Changed
