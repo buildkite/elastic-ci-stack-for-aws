@@ -139,6 +139,7 @@
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "buildkite/buildkite-agent-scaler",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
       "versioningTemplate": "semver"
     }
   ],
