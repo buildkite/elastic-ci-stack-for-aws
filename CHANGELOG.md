@@ -1047,7 +1047,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - [#3298](https://github.com/buildkite/agent/pull/3298), [#3300](https://github.com/buildkite/agent/pull/3300), [#3301](https://github.com/buildkite/agent/pull/3301), [#3299](https://github.com/buildkite/agent/pull/3299), [#3287](https://github.com/buildkite/agent/pull/3287), [#3290](https://github.com/buildkite/agent/pull/3290), [#3291](https://github.com/buildkite/agent/pull/3291) (@dependabot[bot])
 
-<details>
+</details>
 
 ## [v6.38.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.37.0...v6.38.0) (2025-05-13)
 
