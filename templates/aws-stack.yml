@@ -64,7 +64,6 @@ Metadata:
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
         - BuildkiteAgentScalerServerlessARN
-        - BuildkiteAgentScalerVersion
         - EnableEC2LogRetentionPolicy
         - EC2LogRetentionDays
         - LogRetentionDays
@@ -270,17 +269,9 @@ Parameters:
     Type: String
     Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
 
-  BuildkiteAgentScalerVersion:
-    Description: Version of the buildkite-agent-scaler to use.
-    Type: String
-    AllowedPattern: '^(?:(?:[2-9]|[1-9]\d+)\.\d+\.\d+|1\.(?:[1-9]\d+\.\d+|9\.(?:[8-9]|[1-9]\d+)))$'
-    ConstraintDescription: "The agent scaler release must be 1.9.8 or newer."
-    Default: "1.9.8"
-
   ScalerEnableExperimentalElasticCIMode:
     Description: >
         Experimental - Enable the Elastic CI Mode with enhanced features like graceful termination and dangling instance detection.
-        Available since BuildkiteAgentScalerVersion 1.9.3
     Type: String
     AllowedValues:
         - "true"
@@ -2859,7 +2850,7 @@ Resources:
           - AgentScalerARN
           - "x86-64"
           - ARN
-        SemanticVersion: !Ref BuildkiteAgentScalerVersion
+        SemanticVersion: 1.10.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -2890,7 +2881,7 @@ Resources:
           - AgentScalerARN
           - "arm64"
           - ARN
-        SemanticVersion: !Ref BuildkiteAgentScalerVersion
+        SemanticVersion: 1.10.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]

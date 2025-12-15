@@ -128,6 +128,19 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "buildkite/elastic-ci-stack-s3-secrets-hooks",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^templates/aws-stack\\.yml$"
+      ],
+      "matchStrings": [
+        "SemanticVersion: (?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "buildkite/buildkite-agent-scaler",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
@@ -178,7 +191,8 @@
         "docker/compose",
         "docker/buildx",
         "buildkite/lifecycled",
-        "buildkite/elastic-ci-stack-s3-secrets-hooks"
+        "buildkite/elastic-ci-stack-s3-secrets-hooks",
+        "buildkite/buildkite-agent-scaler"
       ],
       "commitMessageTopic": "{{depName}}",
       "commitMessageExtra": "to v{{newVersion}}",
