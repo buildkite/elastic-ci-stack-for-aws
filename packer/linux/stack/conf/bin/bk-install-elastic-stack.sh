@@ -26,13 +26,17 @@ on_error() {
 
   # Attempt to signal CloudFormation failure
   # This may fail if metadata service is unavailable, but we try anyway
-  if ! cfn-signal \
-    --region "$AWS_REGION" \
-    --stack "$BUILDKITE_STACK_NAME" \
-    --reason "Error on line $error_line: $(tail -n 1 /var/log/elastic-stack.log)" \
-    --resource "AgentAutoScaleGroup" \
-    --exit-code "$exit_code"; then
-    echo "Failed to send cfn-signal (this is expected if metadata service is unavailable)"
+  if [[ "${BUILDKITE_STACK_DEPLOYED_BY:-}" == "cloudformation" ]]; then
+    if ! cfn-signal \
+      --region "$AWS_REGION" \
+      --stack "$BUILDKITE_STACK_NAME" \
+      --reason "Error on line $error_line: $(tail -n 1 /var/log/elastic-stack.log)" \
+      --resource "AgentAutoScaleGroup" \
+      --exit-code "$exit_code"; then
+      echo "Failed to send cfn-signal (this is expected if metadata service is unavailable)"
+    fi
+  else
+    echo "Skipping cfn-signal (not deployed by CloudFormation)"
   fi
 
   # The OnFailure=poweroff.target in cloud-final.service.d will handle instance termination
@@ -582,14 +586,18 @@ else
   echo "EC2 log retention not set, using CloudWatch agent defaults (never expire)"
 fi
 
-echo Signaling success to CloudFormation...
-# This will fail if the stack has already completed, for instance if there is a min size
-# of 1 and this is the 2nd instance. This is ok, so we just ignore the error
-cfn-signal \
-  --region "$AWS_REGION" \
-  --stack "$BUILDKITE_STACK_NAME" \
-  --resource "AgentAutoScaleGroup" \
-  --exit-code 0 || echo Signal failed
+if [[ "${BUILDKITE_STACK_DEPLOYED_BY:-}" == "cloudformation" ]]; then
+  echo Signaling success to CloudFormation...
+  # This will fail if the stack has already completed, for instance if there is a min size
+  # of 1 and this is the 2nd instance. This is ok, so we just ignore the error
+  cfn-signal \
+    --region "$AWS_REGION" \
+    --stack "$BUILDKITE_STACK_NAME" \
+    --resource "AgentAutoScaleGroup" \
+    --exit-code 0 || echo Signal failed
+else
+  echo "Skipping cfn-signal (not deployed by CloudFormation)"
+fi
 
 # Record bootstrap as complete (this should be the last step in this file)
 echo "Completed" >"$STATUS_FILE"
