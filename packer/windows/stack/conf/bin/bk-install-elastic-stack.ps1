@@ -16,12 +16,16 @@ function on_error {
     --instance-id "$instance_id" `
     --health-status Unhealthy
 
-  cfn-signal `
-    --region "$Env:AWS_REGION" `
-    --stack "$Env:BUILDKITE_STACK_NAME" `
-    --reason "Error on line ${errorLine}: $errorMessage" `
-    --resource "AgentAutoScaleGroup" `
-    --exit-code 1
+  if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
+    cfn-signal `
+      --region "$Env:AWS_REGION" `
+      --stack "$Env:BUILDKITE_STACK_NAME" `
+      --reason "Error on line ${errorLine}: $errorMessage" `
+      --resource "AgentAutoScaleGroup" `
+      --exit-code 1
+  } else {
+    Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
+  }
 }
 
 trap {on_error}
@@ -388,14 +392,19 @@ if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "t
 Set-PSDebug -Trace 2
 
 # let the stack know that this host has been initialized successfully
-cfn-signal `
-  --region "$Env:AWS_REGION" `
-  --stack "$Env:BUILDKITE_STACK_NAME" `
-  --resource "AgentAutoScaleGroup" `
-  --exit-code 0 ; if (-not $?) {
-    # This will fail if the stack has already completed, for instance if there is a min size
-    # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
-    Write-Output "Signal failed"
-  }
+if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
+  Write-Output "Signaling success to CloudFormation..."
+  cfn-signal `
+    --region "$Env:AWS_REGION" `
+    --stack "$Env:BUILDKITE_STACK_NAME" `
+    --resource "AgentAutoScaleGroup" `
+    --exit-code 0 ; if (-not $?) {
+      # This will fail if the stack has already completed, for instance if there is a min size
+      # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
+      Write-Output "Signal failed"
+    }
+} else {
+  Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
+}
 
 Set-PSDebug -Off
