@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 * Bump golang.org/x/sys from 0.38.0 to 0.39.0 [#1693](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1693) ([dependabot[bot]](https://github.com/apps/dependabot))
 
 ### Internal
-* Close <details> tag in 6.39.0 CHANGELOG.md entry [#1692](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1692) ([huonw](https://github.com/huonw))
+* Close `<details>` tag in 6.39.0 CHANGELOG.md entry [#1692](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1692) ([huonw](https://github.com/huonw))
 * Update changelog for release v6.51.0 [#1690](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1690) ([scadu](https://github.com/scadu))
 
 <details>
