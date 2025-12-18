@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.52.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.51.0...v6.52.0) (2025-12-18)
+
+### Changes
+* Remove support for BuildkiteAgentScalerVersion attribute [#1691](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1691) ([scadu](https://github.com/scadu))
+* Update buildkite-agent to v3.115.2 [#1695](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1695) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Fixed
+* fix: Signal CloudFormation only if deployed by CloudFormation [#1694](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1694) ([JoeColeman95](https://github.com/JoeColeman95))
+
+### Dependency updates
+* Bump golang.org/x/sys from 0.38.0 to 0.39.0 [#1693](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1693) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+### Internal
+* Close `<details>` tag in 6.39.0 CHANGELOG.md entry [#1692](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1692) ([huonw](https://github.com/huonw))
+* Update changelog for release v6.51.0 [#1690](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1690) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.115.2](https://github.com/buildkite/agent/tree/v3.115.2) (2025-12-18)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.115.1...v3.115.2)
+
+### Fixed
+- Try to avoid overriding BUILDKITE_PLUGINS_ALWAYS_CLONE_FRESH with false [#3644](https://github.com/buildkite/agent/pull/3644) (@DrJosh9000)
+- SUP-5826: Remove experiment from 'env' command [#3635](https://github.com/buildkite/agent/pull/3635) (@Mykematt)
+
+### Internal
+- Nested-loop jitter structure for log processing [#3645](https://github.com/buildkite/agent/pull/3645) (@DrJosh9000)
+- Add E2E test for Azure Blob storage [#3642](https://github.com/buildkite/agent/pull/3642) (@DrJosh9000)
+- PB-1007: add e2e test for gcs artifact upload/download [#3633](https://github.com/buildkite/agent/pull/3633) (@zhming0)
+- PB-1025: improve e2e test DevEX [#3634](https://github.com/buildkite/agent/pull/3634) (@zhming0)
+
+### Dependency updates
+- chore(deps): bump zstash to v0.7.0 [#3632](https://github.com/buildkite/agent/pull/3632) (@wolfeidau)
+- build(deps): bump the cloud-providers group with 2 updates [#3638](https://github.com/buildkite/agent/pull/3638) (@dependabot[bot])
+- build(deps): bump the otel group with 5 updates [#3637](https://github.com/buildkite/agent/pull/3637) (@dependabot[bot])
+- build(deps): bump github.com/DataDog/datadog-go/v5 from 5.8.1 to 5.8.2 [#3639](https://github.com/buildkite/agent/pull/3639) (@dependabot[bot])
+- build(deps): bump the container-images group across 5 directories with 1 update [#3640](https://github.com/buildkite/agent/pull/3640) (@dependabot[bot])
+- build(deps): bump docker/library/golang from `cf1272d` to `54528d1` in /.buildkite in the container-images group across 1 directory [#3641](https://github.com/buildkite/agent/pull/3641) (@dependabot[bot])
+</details>
+
+
 ## [v6.51.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.50.0...v6.51.0) (2025-12-12)
 
 ### Changed
