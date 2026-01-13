@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.53.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.52.0...v6.53.0) (2026-01-13)
+
+* Update buildkite-agent to v3.115.4 [#1699](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1699) ([renovate[bot]](https://github.com/apps/renovate))
+* Bump golang.org/x/sys from 0.39.0 to 0.40.0 [#1698](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1698) ([dependabot[bot]](https://github.com/apps/dependabot))
+* Update buildkite-agent to v3.115.3 [#1697](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1697) ([renovate[bot]](https://github.com/apps/renovate))
+* Update changelog for upcoming release [#1696](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1696) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.115.4](https://github.com/buildkite/agent/tree/v3.115.4) (2026-01-13)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.115.3...v3.115.4)
+
+### Changed
+
+- Fallback to `/usr/bin/env bash`, when `/bin/bash` does not exist [#3661](https://github.com/buildkite/agent/pull/3661) (@sundbry), [#3667](https://github.com/buildkite/agent/pull/3667) (@zhming0)
+
+### Internal
+- Bump various container base image version. [#3669](https://github.com/buildkite/agent/pull/3669), [#3668](https://github.com/buildkite/agent/pull/3668),  [#3667](https://github.com/buildkite/agent/pull/3667) (@dependabot[bot])
+</details>
+
+
 ## [v6.52.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.51.0...v6.52.0) (2025-12-18)
 
 ### Changes
