@@ -75,6 +75,7 @@ sudo cp /tmp/conf/buildkite-agent/scripts/check-agent-health /usr/local/bin/chec
 sudo chmod +x /usr/local/bin/check-agent-health
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent-health-check.service /etc/systemd/system/buildkite-agent-health-check.service
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent-health-check.timer /etc/systemd/system/buildkite-agent-health-check.timer
+sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent-health-check-onfailure.service /etc/systemd/system/buildkite-agent-health-check-onfailure.service
 sudo systemctl enable buildkite-agent-health-check.timer
 
 echo "Copying built-in plugins..."

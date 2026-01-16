@@ -4,7 +4,7 @@ Documentation=https://buildkite.com/agent
 After=syslog.target
 After=network.target
 After=docker.service
-OnFailure=buildkite-agent-health-check.service
+OnFailure=buildkite-agent-health-check-onfailure.service
 
 [Service]
 Type=simple

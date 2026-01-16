@@ -3,14 +3,21 @@ set -euo pipefail
 
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') check-agent-health: $*"; }
 
-log "Starting health check..."
+skip_uptime_check=false
+if [[ "${1:-}" == "--skip-uptime-check" ]]; then
+  skip_uptime_check=true
+fi
 
-min_uptime=${BUILDKITE_AGENT_HEALTH_CHECK_MIN_UPTIME:-600}
-uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
+log "starting health check..."
 
-if [[ $uptime_seconds -lt $min_uptime ]]; then
-  log "uptime ${uptime_seconds}s < ${min_uptime}s, skipping (boot grace period)"
-  exit 0
+if [[ "$skip_uptime_check" == "false" ]]; then
+  min_uptime=${BUILDKITE_AGENT_HEALTH_CHECK_MIN_UPTIME:-600}
+  uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
+
+  if [[ $uptime_seconds -lt $min_uptime ]]; then
+    log "uptime ${uptime_seconds}s < ${min_uptime}s, skipping (boot grace period)"
+    exit 0
+  fi
 fi
 
 if pgrep -qf "terminate-instance"; then
