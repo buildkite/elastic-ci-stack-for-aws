@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+exec >>/var/log/elastic-stack.log 2>&1
+
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') check-agent-health: $*"; }
 
 skip_uptime_check=false
