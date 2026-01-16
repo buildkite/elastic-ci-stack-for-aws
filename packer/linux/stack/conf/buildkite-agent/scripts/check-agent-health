@@ -1,0 +1,39 @@
+#!/bin/bash
+set -euo pipefail
+
+log() { echo "$(date '+%Y-%m-%d %H:%M:%S') check-agent-health: $*"; }
+
+log "Starting health check..."
+
+min_uptime=${BUILDKITE_AGENT_HEALTH_CHECK_MIN_UPTIME:-600}
+uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
+
+if [[ $uptime_seconds -lt $min_uptime ]]; then
+  log "uptime ${uptime_seconds}s < ${min_uptime}s, skipping (boot grace period)"
+  exit 0
+fi
+
+if pgrep -qf "terminate-instance"; then
+  log "terminate-instance already running, skipping"
+  exit 0
+fi
+
+agent_state=$(systemctl show buildkite-agent --property=ActiveState --value 2>/dev/null || echo "unknown")
+
+if [[ "$agent_state" == "active" ]]; then
+  log "agent is active, health check passed"
+  exit 0
+fi
+
+log "agent not active (state: ${agent_state}), marking instance unhealthy"
+
+token=$(curl -fsSX PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" "http://169.254.169.254/latest/api/token")
+instance_id=$(curl -fsS -H "X-aws-ec2-metadata-token: $token" "http://169.254.169.254/latest/meta-data/instance-id")
+region=$(curl -fsS -H "X-aws-ec2-metadata-token: $token" "http://169.254.169.254/latest/meta-data/placement/region")
+
+aws autoscaling set-instance-health \
+  --instance-id "${instance_id}" \
+  --region "${region}" \
+  --health-status Unhealthy
+
+log "instance marked unhealthy"

@@ -1,0 +1,7 @@
+[Unit]
+Description=Health check for buildkite-agent to detect zombie instances
+Wants=buildkite-agent-health-check.timer
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/check-agent-health

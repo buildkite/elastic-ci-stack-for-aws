@@ -70,6 +70,13 @@ echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully
 sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
 
+echo "Adding agent health check timer..."
+sudo cp /tmp/conf/buildkite-agent/scripts/check-agent-health /usr/local/bin/check-agent-health
+sudo chmod +x /usr/local/bin/check-agent-health
+sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent-health-check.service /etc/systemd/system/buildkite-agent-health-check.service
+sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent-health-check.timer /etc/systemd/system/buildkite-agent-health-check.timer
+sudo systemctl enable buildkite-agent-health-check.timer
+
 echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
 sudo cp -a /tmp/plugins/* /usr/local/buildkite-aws-stack/plugins/
