@@ -28,6 +28,12 @@ sudo dnf install -yq \
   python \
   python-pip \
   python-setuptools \
+  python3.11 \
+  python3.11-pip \
+  python3.12 \
+  python3.12-pip \
+  python3.13 \
+  python3.13-pip \
   unzip \
   wget \
   zip
