@@ -5,21 +5,14 @@ exec >>/var/log/elastic-stack.log 2>&1
 
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') check-agent-health: $*"; }
 
-skip_uptime_check=false
-if [[ "${1:-}" == "--skip-uptime-check" ]]; then
-  skip_uptime_check=true
-fi
-
 log "starting health check..."
 
-if [[ "$skip_uptime_check" == "false" ]]; then
-  min_uptime=${BUILDKITE_AGENT_HEALTH_CHECK_MIN_UPTIME:-600}
-  uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
+min_uptime=${BUILDKITE_AGENT_HEALTH_CHECK_MIN_UPTIME:-600}
+uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
 
-  if [[ $uptime_seconds -lt $min_uptime ]]; then
-    log "uptime ${uptime_seconds}s < ${min_uptime}s, skipping (boot grace period)"
-    exit 0
-  fi
+if [[ $uptime_seconds -lt $min_uptime ]]; then
+  log "uptime ${uptime_seconds}s < ${min_uptime}s, skipping (boot grace period)"
+  exit 0
 fi
 
 if pgrep -qf "terminate-instance"; then
@@ -27,22 +20,45 @@ if pgrep -qf "terminate-instance"; then
   exit 0
 fi
 
+mark_unhealthy() {
+  log "marking instance unhealthy..."
+  token=$(curl -fsSX PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" "http://169.254.169.254/latest/api/token")
+  instance_id=$(curl -fsS -H "X-aws-ec2-metadata-token: $token" "http://169.254.169.254/latest/meta-data/instance-id")
+  region=$(curl -fsS -H "X-aws-ec2-metadata-token: $token" "http://169.254.169.254/latest/meta-data/placement/region")
+
+  aws autoscaling set-instance-health \
+    --instance-id "${instance_id}" \
+    --region "${region}" \
+    --health-status Unhealthy
+
+  log "instance marked unhealthy"
+}
+
+# First check if buildkite-agent.service is running
 agent_state=$(systemctl show buildkite-agent --property=ActiveState --value 2>/dev/null || echo "unknown")
 
-if [[ "$agent_state" == "active" ]]; then
-  log "agent is active, health check passed"
+if [[ "$agent_state" != "active" ]]; then
+  log "agent not active (state: ${agent_state})"
+  mark_unhealthy
   exit 0
 fi
 
-log "agent not active (state: ${agent_state}), marking instance unhealthy"
+# Agent process is running, now check if it's actually healthy via its HTTP endpoint
+# The /agent/1 endpoint returns 500 if heartbeat failed
+agents_per_instance=${BUILDKITE_AGENTS_PER_INSTANCE:-1}
+unhealthy_workers=0
 
-token=$(curl -fsSX PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" "http://169.254.169.254/latest/api/token")
-instance_id=$(curl -fsS -H "X-aws-ec2-metadata-token: $token" "http://169.254.169.254/latest/meta-data/instance-id")
-region=$(curl -fsS -H "X-aws-ec2-metadata-token: $token" "http://169.254.169.254/latest/meta-data/placement/region")
+for ((i = 1; i <= agents_per_instance; i++)); do
+  if ! curl -fsS --max-time 5 "http://127.0.0.1:9191/agent/${i}" >/dev/null 2>&1; then
+    log "worker ${i} health check failed"
+    ((unhealthy_workers++))
+  fi
+done
 
-aws autoscaling set-instance-health \
-  --instance-id "${instance_id}" \
-  --region "${region}" \
-  --health-status Unhealthy
+if [[ $unhealthy_workers -eq "$agents_per_instance" ]]; then
+  log "all ${agents_per_instance} workers unhealthy"
+  mark_unhealthy
+  exit 0
+fi
 
-log "instance marked unhealthy"
+log "health check passed (${unhealthy_workers}/${agents_per_instance} workers unhealthy)"

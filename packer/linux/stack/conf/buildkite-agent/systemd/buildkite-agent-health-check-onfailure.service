@@ -1,6 +1,0 @@
-[Unit]
-Description=Health check for buildkite-agent triggered by service failure
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/check-agent-health --skip-uptime-check

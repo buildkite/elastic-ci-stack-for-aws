@@ -388,6 +388,7 @@ cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
 signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
+health-check-addr=127.0.0.1:9191
 EOF
 
 if [[ -n "$BUILDKITE_AGENT_SIGNING_KEY_PATH" ]]; then
