@@ -61,4 +61,4 @@ if [[ $unhealthy_workers -eq "$agents_per_instance" ]]; then
   exit 0
 fi
 
-log "health check passed (${unhealthy_workers}/${agents_per_instance} workers unhealthy)"
+log "health check passed ($((agents_per_instance - unhealthy_workers))/${agents_per_instance} workers healthy)"
