@@ -7,7 +7,7 @@ log() { echo "$(date '+%Y-%m-%d %H:%M:%S') check-agent-health: $*"; }
 
 log "starting health check..."
 
-min_uptime=${BUILDKITE_AGENT_HEALTH_CHECK_MIN_UPTIME:-600}
+min_uptime=${BUILDKITE_AGENT_HEALTH_CHECK_MIN_UPTIME:-60}
 uptime_seconds=$(awk '{print int($1)}' /proc/uptime)
 
 if [[ $uptime_seconds -lt $min_uptime ]]; then

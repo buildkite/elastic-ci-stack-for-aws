@@ -2,9 +2,9 @@
 Description=Periodic health check for buildkite-agent to detect zombie instances
 
 [Timer]
-OnBootSec=1h
-OnUnitActiveSec=1h
-RandomizedDelaySec=5m
+OnBootSec=5m
+OnUnitActiveSec=5m
+RandomizedDelaySec=1m
 
 [Install]
 WantedBy=timers.target
