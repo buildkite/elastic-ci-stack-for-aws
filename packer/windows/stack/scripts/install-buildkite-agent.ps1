@@ -42,6 +42,7 @@ Copy-Item -Path C:\packer-temp\conf\bin\bk-* -Destination C:\buildkite-agent\bin
 Write-Output "Adding termination scripts..."
 Copy-Item -Path C:\packer-temp\conf\buildkite-agent\scripts\terminate-instance.ps1 -Destination C:\buildkite-agent\bin
 Copy-Item -Path C:\packer-temp\conf\buildkite-agent\scripts\stop-agent-gracefully.ps1 -Destination C:\buildkite-agent\bin
+Copy-Item -Path C:\packer-temp\conf\buildkite-agent\scripts\check-agent-health.ps1 -Destination C:\buildkite-agent\bin
 
 Write-Output "Copying built-in plugins..."
 if (-not (Test-Path "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins")) { New-Item -ItemType Directory -Path "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins" -Force }

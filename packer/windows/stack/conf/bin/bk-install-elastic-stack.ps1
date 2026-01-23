@@ -170,6 +170,7 @@ disconnect-after-uptime=${Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
 tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
 signing-aws-kms-key=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${Env:BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
+health-check-addr=127.0.0.1:9191
 "@
 $OFS=" "
 
@@ -355,6 +356,12 @@ nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Restart-Service buildkite-agent
+
+Write-Output "Setting up agent health check scheduled task..."
+$HealthCheckAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File C:\buildkite-agent\bin\check-agent-health.ps1"
+$HealthCheckTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddHours(1) -RepetitionInterval (New-TimeSpan -Hours 1)
+$HealthCheckSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+Register-ScheduledTask -TaskName "BuildkiteAgentHealthCheck" -Action $HealthCheckAction -Trigger $HealthCheckTrigger -Settings $HealthCheckSettings -User "SYSTEM" -RunLevel Highest -Force
 
 Write-Output "Configuring CloudWatch agent log retention..."
 if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "true") {
