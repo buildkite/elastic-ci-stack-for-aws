@@ -360,8 +360,10 @@ Restart-Service buildkite-agent
 Write-Output "Setting up agent health check scheduled task..."
 $HealthCheckAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File C:\buildkite-agent\bin\check-agent-health.ps1"
 $HealthCheckTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddHours(1) -RepetitionInterval (New-TimeSpan -Hours 1)
-$HealthCheckSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
-Register-ScheduledTask -TaskName "BuildkiteAgentHealthCheck" -Action $HealthCheckAction -Trigger $HealthCheckTrigger -Settings $HealthCheckSettings -User "SYSTEM" -RunLevel Highest -Force
+$HealthCheckSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
+# https://learn.microsoft.com/en-us/windows/win32/services/networkservice-account
+$HealthCheckPrincipal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\NETWORK SERVICE" -LogonType ServiceAccount
+Register-ScheduledTask -TaskName "BuildkiteAgentHealthCheck" -Action $HealthCheckAction -Trigger $HealthCheckTrigger -Settings $HealthCheckSettings -Principal $HealthCheckPrincipal -Force
 
 Write-Output "Configuring CloudWatch agent log retention..."
 if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "true") {
