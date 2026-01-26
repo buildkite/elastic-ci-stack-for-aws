@@ -358,7 +358,7 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 Restart-Service buildkite-agent
 
 Write-Output "Setting up agent health check scheduled task..."
-$HealthCheckAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File C:\buildkite-agent\bin\check-agent-health.ps1"
+$HealthCheckAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -Command `"&{ `$Env:BUILDKITE_AGENTS_PER_INSTANCE='$($Env:BUILDKITE_AGENTS_PER_INSTANCE)'; & 'C:\buildkite-agent\bin\check-agent-health.ps1' }`""
 $HealthCheckTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddHours(1) -RepetitionInterval (New-TimeSpan -Hours 1)
 $HealthCheckSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
 # https://learn.microsoft.com/en-us/windows/win32/services/networkservice-account
