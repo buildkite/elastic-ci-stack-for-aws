@@ -30,11 +30,11 @@ if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
       echo "Disk space sufficient after build purge. Continuing."
       exit 0
     else
-      echo "Disk health checks failed after build purge. Terminating agent." >&2
+      echo "Insufficient disk space remaining after build purge." >&2
       exit 1
     fi
   else
-    echo "Disk health checks failed. Build purge not enabled. Terminating agent." >&2
+    echo "Insufficient disk space. Build purge not enabled." >&2
     exit 1
   fi
 fi

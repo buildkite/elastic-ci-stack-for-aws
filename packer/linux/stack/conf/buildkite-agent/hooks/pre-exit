@@ -5,7 +5,7 @@ set -eu -o pipefail
 if [[ "${ENABLE_PRE_EXIT_DISK_CLEANUP:-false}" == "true" ]]; then
   echo "Checking disk space"
   if ! /usr/local/bin/bk-check-disk-space.sh; then
-    echo "~~~ :broom: Pruning docker resources"
+    echo "~~~ :broom: Pruning docker resources to free disk space"
     docker image prune --all --force --filter "until=${DOCKER_PRUNE_UNTIL:-4h}" || true
 
     if [[ "${DOCKER_BUILDER_PRUNE_ENABLED:-false}" == "true" ]]; then
@@ -15,7 +15,7 @@ if [[ "${ENABLE_PRE_EXIT_DISK_CLEANUP:-false}" == "true" ]]; then
     echo "Checking disk space again"
     # Capture disk space output for potential error logging
     if ! disk_check_output=$(/usr/local/bin/bk-check-disk-space.sh 2>&1); then
-      echo "--- :warning: Disk health checks failed."
+      echo "--- :warning: Insufficient disk space after cleanup."
       echo "${disk_check_output}"
 
       # Check if instance termination is enabled (default: false for backward compatibility)
