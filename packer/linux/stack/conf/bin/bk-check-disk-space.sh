@@ -24,6 +24,10 @@ if [[ $disk_avail -lt $DISK_MIN_AVAILABLE ]]; then
     # Extract the agent-specific directory to avoid disrupting other agents on the same instance
     AGENT_ORG_PIPELINE_DIR="${BUILDKITE_BUILD_CHECKOUT_PATH#"${BUILDKITE_BUILD_PATH}/"}"
     AGENT_DIR="${AGENT_ORG_PIPELINE_DIR%%/*}"
+    if [[ -z "${AGENT_DIR}" ]]; then
+      echo "Unable to determine agent-specific build directory. Skipping purge to avoid deleting other agents' builds." >&2
+      exit 1
+    fi
     AGENT_BUILD_DIR="${BUILDKITE_BUILD_PATH}/${AGENT_DIR}"
 
     echo "Purging builds in ${AGENT_BUILD_DIR}"
