@@ -49,6 +49,12 @@ variable "ami_users" {
   default     = []
 }
 
+variable "iam_instance_profile" {
+  type        = string
+  description = "IAM instance profile to attach to the build instance (needed for ECR access during image pre-pull)"
+  default     = "applied_dev"
+}
+
 data "amazon-ami" "al2023" {
   filters = {
     architecture        = var.arch
@@ -62,7 +68,6 @@ data "amazon-ami" "al2023" {
 
 source "amazon-ebs" "elastic-ci-stack-ami" {
   ami_description                           = "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
-  ami_groups                                = var.ami_public ? ["all"] : []
   ami_users                                 = var.ami_public ? [] : var.ami_users
   ami_name                                  = "buildkite-stack-linux-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type                             = var.instance_type
@@ -71,6 +76,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   ssh_username                              = "ec2-user"
   ssh_clear_authorized_keys                 = true
   temporary_security_group_source_public_ip = true
+  iam_instance_profile                      = var.iam_instance_profile != "" ? var.iam_instance_profile : null
 
   metadata_options {
     http_endpoint = "enabled"
@@ -82,7 +88,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   launch_block_device_mappings {
     volume_type           = "gp3"
     device_name           = "/dev/xvda"
-    volume_size           = 10
+    volume_size           = 60 # 55GB for docker images, 5GB for other files
     delete_on_termination = true
   }
 
