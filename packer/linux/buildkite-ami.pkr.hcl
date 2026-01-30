@@ -49,12 +49,6 @@ variable "ami_users" {
   default     = []
 }
 
-variable "iam_instance_profile" {
-  type        = string
-  description = "IAM instance profile for the Packer build instance (needed for ECR access to pre-pull images)"
-  default     = ""
-}
-
 data "amazon-ami" "al2023" {
   filters = {
     architecture        = var.arch
@@ -77,7 +71,6 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   ssh_username                              = "ec2-user"
   ssh_clear_authorized_keys                 = true
   temporary_security_group_source_public_ip = true
-  iam_instance_profile                      = var.iam_instance_profile != "" ? var.iam_instance_profile : null
 
   metadata_options {
     http_endpoint = "enabled"
