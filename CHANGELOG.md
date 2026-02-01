@@ -4,11 +4,50 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.54.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.53.0...v6.54.0) (2026-01-29)
+
+### Changes
+* Update buildkite-agent to v3.116.0 [#1705](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1705) ([renovate[bot]](https://github.com/apps/renovate))
+* Update log messages during disk space checks/cleanup ops [#1704](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1704) ([petetomasik](https://github.com/petetomasik))
+* Install additional python3.x versions [#1702](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1702) ([petetomasik](https://github.com/petetomasik))
+
+### Internal
+* Update changelog to v6.53.0 [#1700](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1700) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.116.0](https://github.com/buildkite/agent/tree/v3.116.0) (2026-01-28)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.115.4...v3.116.0)
+
+### Added
+- Support checkout skipping in agent [#3672](https://github.com/buildkite/agent/pull/3672) (@mcncl)
+- Add default BoolFlag, BoolTFlag values to descriptions [#3678](https://github.com/buildkite/agent/pull/3678) (@petetomasik)
+
+### Fixed
+- Exit with non-zero status if ping or heartbeat fail unrecoverably [#3687](https://github.com/buildkite/agent/pull/3687) (@DrJosh9000)
+- Repeated plugins run correct number of times with always-clone-fresh [#3684](https://github.com/buildkite/agent/pull/3684) (@DrJosh9000)
+- Fix nil pointer dereference in meta-data get on API timeout [#3682](https://github.com/buildkite/agent/pull/3682) (@lox)
+
+### Changed
+- In k8s mode, write BUILDKITE_ENV_FILE to /workspace [#3683](https://github.com/buildkite/agent/pull/3683) (@zhming0)
+
+### Internal
+- Refactor plugin config -> envar generation [#3655](https://github.com/buildkite/agent/pull/3655) (@moskyb)
+- Dependabot updates: [#3656](https://github.com/buildkite/agent/pull/3656), [#3654](https://github.com/buildkite/agent/pull/3654), [#3662](https://github.com/buildkite/agent/pull/3662), [#3673](https://github.com/buildkite/agent/pull/3673), [#3675](https://github.com/buildkite/agent/pull/3675), [#3680](https://github.com/buildkite/agent/pull/3680), [#3681](https://github.com/buildkite/agent/pull/3681) (@dependabot[bot])
+
+</details>
+
+
 ## [v6.53.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.52.0...v6.53.0) (2026-01-13)
 
+### Changes
 * Update buildkite-agent to v3.115.4 [#1699](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1699) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Dependency updates
 * Bump golang.org/x/sys from 0.39.0 to 0.40.0 [#1698](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1698) ([dependabot[bot]](https://github.com/apps/dependabot))
-* Update buildkite-agent to v3.115.3 [#1697](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1697) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Internal
 * Update changelog for upcoming release [#1696](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1696) ([scadu](https://github.com/scadu))
 
 <details>
