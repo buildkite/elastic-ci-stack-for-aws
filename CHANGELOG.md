@@ -12,11 +12,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Dependency updates
 * Update session-manager-plugin to v1.2.764.0 [#1709](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1709) ([renovate[bot]](https://github.com/apps/renovate))
-* Update changelog for release v6.54.0 [#1706](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1706) ([scadu](https://github.com/scadu))
 * Update dependency go to v1.25.6 [#1708](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1708) ([renovate[bot]](https://github.com/apps/renovate))
 
 ### Fixed
 * Fix disk cleanup for multi-agent instances [#1707](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1707) ([petetomasik](https://github.com/petetomasik))
+
+### Internal
+* Update changelog for release v6.54.0 [#1706](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1706) ([scadu](https://github.com/scadu))
 
 <details>
   <summary><h3>Agent Changelog</h3></summary>
