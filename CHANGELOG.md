@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.55.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.54.0...v6.55.0) (2026-02-04)
+
+### Changes
+* Update buildkite-agent to v3.117.0 [#1710](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1710) ([renovate[bot]](https://github.com/apps/renovate))
+* SUP-2919: Add ScalerManagedPolicyARNs parameter for Lambda execution role [#1683](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1683) ([Mykematt](https://github.com/Mykematt))
+
+### Dependency updates
+* Update session-manager-plugin to v1.2.764.0 [#1709](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1709) ([renovate[bot]](https://github.com/apps/renovate))
+* Update dependency go to v1.25.6 [#1708](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1708) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Fixed
+* Fix disk cleanup for multi-agent instances [#1707](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1707) ([petetomasik](https://github.com/petetomasik))
+
+### Internal
+* Update changelog for release v6.54.0 [#1706](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1706) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.117.0](https://github.com/buildkite/agent/tree/v3.117.0) (2026-02-04)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.116.0...v3.117.0)
+
+### Added
+- Flag to fetch the diff-base before diffing for `if_changed` [#3689](https://github.com/buildkite/agent/pull/3689) (@DrJosh9000)
+
+### Fixed
+- Continue heartbeats while job is stopping [#3694](https://github.com/buildkite/agent/pull/3694) (@DrJosh9000)
+
+### Internal
+- Make `bucket-url` optional for cache commands [#3690](https://github.com/buildkite/agent/pull/3690) (@mitchbne)
+</details>
+
+
 ## [v6.54.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.53.0...v6.54.0) (2026-01-29)
 
 ### Changes
