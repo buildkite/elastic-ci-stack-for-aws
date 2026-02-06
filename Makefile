@@ -24,6 +24,11 @@ BUILDKITE_PIPELINE_DEFAULT_BRANCH ?= main
 AMI_PUBLIC ?= false
 AMI_USERS ?=
 
+# IAM instance profile for Packer build instance (needed for ECR access during image pre-pull)
+# Can use any IAM instance profile that has access to the ECR repositories being pre-pulled
+# ex. buildkite-cloud-sil-stack-IAMInstanceProfile-FS7GbYn1Jmg8
+IAM_INSTANCE_PROFILE ?= 
+
 # Convert comma-separated AMI_USERS to JSON array format
 AMI_USERS_LIST = $(if $(AMI_USERS),[$(shell echo '$(AMI_USERS)' | $(SED) 's/[[:space:]]//g' | $(SED) 's/[^,][^,]*/"&"/g')],[])
 
@@ -118,6 +123,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-amd64
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
+			-var 'iam_instance_profile=$(IAM_INSTANCE_PROFILE)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -155,6 +161,8 @@ packer-linux-arm64.output: $(PACKER_LINUX_FILES) build/fix-perms-linux-arm64
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_LINUX)' \
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
+			-var 'iam_instance_profile=$(IAM_INSTANCE_PROFILE)' \
+			-var 'iam_instance_profile=$(IAM_INSTANCE_PROFILE)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
