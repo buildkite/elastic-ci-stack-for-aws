@@ -443,7 +443,7 @@ chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 if [[ -n "$BUILDKITE_AUTHORIZED_USERS_URL" ]]; then
   echo Writing authorized user fetching script...
   cat <<-EOF | tee /usr/local/bin/refresh_authorized_keys
-		#!/bin/bash
+		#!/usr/bin/env bash
 		/usr/local/bin/bk-fetch.sh "$BUILDKITE_AUTHORIZED_USERS_URL" /tmp/authorized_keys
 		mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
 		chmod 600 /home/ec2-user/.ssh/authorized_keys
