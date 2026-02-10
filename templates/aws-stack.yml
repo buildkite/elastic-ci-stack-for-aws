@@ -2725,6 +2725,7 @@ Resources:
                   - "ssm:SendCommand"
                 Resource:
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunPowerShellScript
         - PolicyName: StopBuildkiteInstances
           PolicyDocument:
             Version: 2012-10-17
@@ -2856,7 +2857,7 @@ Resources:
           - AgentScalerARN
           - "x86-64"
           - ARN
-        SemanticVersion: 1.10.1
+        SemanticVersion: 1.11.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -2888,7 +2889,7 @@ Resources:
           - AgentScalerARN
           - "arm64"
           - ARN
-        SemanticVersion: 1.10.1
+        SemanticVersion: 1.11.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
