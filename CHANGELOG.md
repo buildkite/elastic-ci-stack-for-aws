@@ -12,7 +12,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Internal
 * Add changelog for v6.55.0 [#1711](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1711) ([scadu](https://github.com/scadu))
 
-
 ## [v6.55.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.54.0...v6.55.0) (2026-02-04)
 
 ### Changes
