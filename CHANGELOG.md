@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.56.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.55.0...v6.56.0) (2026-02-10)
+
+### Changes
+* Bump agent scaler to v1.11.0 [#1714](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1714) ([scadu](https://github.com/scadu)) - this version includes support for detecting dangling instances on Windows
+
+### Internal
+* Add changelog for v6.55.0 [#1711](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1711) ([scadu](https://github.com/scadu))
+
 ## [v6.55.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.54.0...v6.55.0) (2026-02-04)
 
 ### Changes
