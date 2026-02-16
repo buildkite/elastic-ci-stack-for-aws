@@ -12,6 +12,16 @@ PACKER_WINDOWS_STACK_FILES = $(exec find packer/windows/stack)
 # Allow passing an existing golden base AMI into packer via `BASE_AMI_ID` env var
 override BASE_AMI_ID ?=
 
+base_ami_from_output = $(shell \
+  if [ -f $(1) ]; then \
+    $(SED) -nE 's/^.*AMI: (ami-[a-z0-9]+).*$$/\1/p' $(1) | tail -n 1; \
+  fi \
+)
+
+BASE_AMI_ID_LINUX_AMD64 ?= $(call base_ami_from_output,packer-base-linux-amd64.output)
+BASE_AMI_ID_LINUX_ARM64 ?= $(call base_ami_from_output,packer-base-linux-arm64.output)
+BASE_AMI_ID_WINDOWS_AMD64 ?= $(call base_ami_from_output,packer-base-windows-amd64.output)
+
 GO_VERSION ?= 1.24.0
 
 FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
@@ -107,7 +117,7 @@ build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
-packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64
+packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 packer-base-linux-amd64.output
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -127,7 +137,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
-			-var 'base_ami_id=$(BASE_AMI_ID)' \
+			-var 'base_ami_id=$(if $(BASE_AMI_ID),$(BASE_AMI_ID),$(BASE_AMI_ID_LINUX_AMD64))' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -143,7 +153,7 @@ print-agent-versions:
 	@echo Windows: $(CURRENT_AGENT_VERSION_WINDOWS)
 
 # Build linuxarm64 packer image
-packer-linux-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64
+packer-linux-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 packer-base-linux-arm64.output
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -165,7 +175,7 @@ packer-linux-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_LINUX)' \
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
-			-var 'base_ami_id=$(BASE_AMI_ID)' \
+			-var 'base_ami_id=$(if $(BASE_AMI_ID),$(BASE_AMI_ID),$(BASE_AMI_ID_LINUX_ARM64))' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
@@ -173,7 +183,7 @@ build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build windows packer image
-packer-windows-amd64.output: $(PACKER_WINDOWS_STACK_FILES)
+packer-windows-amd64.output: $(PACKER_WINDOWS_STACK_FILES) packer-base-windows-amd64.output
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_WINDOWS)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -195,7 +205,7 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_STACK_FILES)
 			-var 'agent_version=$(CURRENT_AGENT_VERSION_WINDOWS)' \
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
-			-var 'base_ami_id=$(BASE_AMI_ID)' \
+			-var 'base_ami_id=$(if $(BASE_AMI_ID),$(BASE_AMI_ID),$(BASE_AMI_ID_WINDOWS_AMD64))' \
 			buildkite-ami.pkr.hcl | tee $@
 
 # -----------------------------------------
