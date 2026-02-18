@@ -295,6 +295,7 @@ Resources:
                 "autoscaling:DescribeAutoScalingInstances",
                 "autoscaling:DescribeLifecycleHooks",
                 "autoscaling:SetDesiredCapacity",
+                "autoscaling:SetInstanceHealth",
                 "autoscaling:PutLifecycleHook",
                 "autoscaling:DeleteLifecycleHook",
                 "autoscaling:SetInstanceProtection",

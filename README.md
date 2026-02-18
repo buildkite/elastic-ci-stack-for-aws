@@ -204,6 +204,20 @@ This will create AMIs for the following platforms in your account's `us-east-1` 
 - Linux (64-bit Arm)
 - Windows (64-bit x86)
 
+If you only need Linux AMIs, invoke the specific targets to skip the Windows build:
+
+```bash
+# Linux amd64 (x86_64)
+make packer-base-linux-amd64.output packer-linux-amd64.output
+
+# Linux arm64
+make packer-base-linux-arm64.output packer-linux-arm64.output
+
+# Both Linux architectures
+make packer-base-linux-amd64.output packer-linux-amd64.output \
+     packer-base-linux-arm64.output packer-linux-arm64.output
+```
+
 **Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
 ## Support Policy

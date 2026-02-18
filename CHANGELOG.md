@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.57.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.56.0...v6.57.0) (2026-02-17)
+
+### Changed
+* Update buildkite-agent to v3.118.0 [#1717](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1717) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Fixed
+* Fix: add helper to pass down base AMI IDs [#1716](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1716) ([scadu](https://github.com/scadu))
+
+### Internal
+* Add changelog entry for the v6.56.0 release [#1715](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1715) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.118.0](https://github.com/buildkite/agent/compare/v3.117.0...v3.118.0) (2026-02-16)
+
+### Added
+* Add new `buildkite-agent job update` command to update job timeouts [#3707](https://github.com/buildkite/agent/pull/3707) ([matthewborden](https://github.com/matthewborden))
+* Enable setting BUILDKITE_GIT_SUBMODULE with Environment Variables [#3677](https://github.com/buildkite/agent/pull/3677) ([tomowatt](https://github.com/tomowatt))
+
+### Fixed
+* chore: Modified mktemp command for tarball extraction on macOS VMs [#3698](https://github.com/buildkite/agent/pull/3698) ([chrisnavar](https://github.com/chrisnavar))
+
+### Internal
+* Add public preview description to env BUILDKITE_PULL_REQUEST_USING_MERGE_REFSPEC [#3699](https://github.com/buildkite/agent/pull/3699) ([SorchaAbel](https://github.com/SorchaAbel))
+</details>
+
+
+## [v6.56.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.55.0...v6.56.0) (2026-02-10)
+
+### Changes
+* Bump agent scaler to v1.11.0 [#1714](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1714) ([scadu](https://github.com/scadu)) - this version includes support for detecting dangling instances on Windows
+
+### Internal
+* Add changelog for v6.55.0 [#1711](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1711) ([scadu](https://github.com/scadu))
+
 ## [v6.55.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.54.0...v6.55.0) (2026-02-04)
 
 ### Changes
