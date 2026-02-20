@@ -167,6 +167,8 @@ shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 disconnect-after-uptime=${Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
+cancel-grace-period=${Env:BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
+signal-grace-period-seconds=${Env:BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
 tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
 signing-aws-kms-key=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${Env:BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
@@ -345,12 +347,76 @@ If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Pat
 nssm set buildkite-agent AppEnvironmentExtra +BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
+# buildkite-agent runs as an NSSM-managed service:
+#   SCM -> nssm.exe (service process) -> buildkite-agent.exe (child process)
+#
+# So Stop-Service/sc stop/nssm stop all send SERVICE_CONTROL_STOP to NSSM.
+# NSSM then runs Stop/Pre hooks, stop methods (console/window/thread/kill),
+# and finally Exit/Post hooks.
+#
+# NSSM code references (pinned commit):
+# - Stop control handling + Stop/Pre hook:
+#   https://git.nssm.cc/nssm/nssm/src/dee49fc1a0804f06687299b8e9612a3fce1c5e9a/service.cpp#L1740-L1772
+# - Stop method order + hard-kill fallback:
+#   https://git.nssm.cc/nssm/nssm/src/dee49fc1a0804f06687299b8e9612a3fce1c5e9a/process.cpp#L212-L243
+# - Console signal implementation (GenerateConsoleCtrlEvent CTRL_C_EVENT):
+#   https://git.nssm.cc/nssm/nssm/src/dee49fc1a0804f06687299b8e9612a3fce1c5e9a/process.cpp#L253-L306
+# - Hook model (Stop/Pre valid, no Stop/Post):
+#   https://git.nssm.cc/nssm/nssm/src/dee49fc1a0804f06687299b8e9612a3fce1c5e9a/hook.cpp#L101-L149
+#
+# Docs references:
+# - https://nssm.cc/usage ("Service shutdown")
+# - https://git.nssm.cc/nssm/nssm/src/dee49fc1a0804f06687299b8e9612a3fce1c5e9a/README.txt#L216-L275
+# - https://git.nssm.cc/nssm/nssm/src/dee49fc1a0804f06687299b8e9612a3fce1c5e9a/README.txt#L501-L522
+#
+# Configure NSSM shutdown to prefer graceful drains for buildkite-agent.
+# Keep a high default stop timeout for drain behavior. If cancel grace period
+# is configured higher, use that value instead.
+# 3600000 ms = 1h
+$nssmStopMethodConsoleTimeoutMs = 3600000
+$configuredCancelGracePeriodSeconds = 0
+if ([int]::TryParse($Env:BUILDKITE_AGENT_CANCEL_GRACE_PERIOD, [ref]$configuredCancelGracePeriodSeconds)) {
+  $configuredCancelGracePeriodMs = $configuredCancelGracePeriodSeconds * 1000
+  if ($configuredCancelGracePeriodMs -gt $nssmStopMethodConsoleTimeoutMs) {
+    $nssmStopMethodConsoleTimeoutMs = $configuredCancelGracePeriodMs
+  }
+}
+
+# AppNoConsole=0 keeps a console attached to the managed process so NSSM can
+# send console control events (Control-C / Control-Break) during shutdown.
+nssm set buildkite-agent AppNoConsole 0
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
+# AppStopMethodSkip is a bitmask of stop methods to skip:
+#   1 = skip console control event
+#   2 = skip WM_CLOSE
+#   4 = skip WM_QUIT
+#   8 = skip TerminateProcess fallback
+# Value 6 (2+4) means we keep console + hard-kill fallback, but skip
+# WM_CLOSE/WM_QUIT paths that are less relevant for the agent.
+nssm set buildkite-agent AppStopMethodSkip 6
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
+# AppStopMethodConsole is how long NSSM waits after sending the console control
+# event before moving to the next stop stage. Longer timeout allows running jobs
+# to finish and the agent to disconnect cleanly.
+nssm set buildkite-agent AppStopMethodConsole $nssmStopMethodConsoleTimeoutMs
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
+# AppStopMethodWindow/AppStopMethodThreads are explicit 0ms because we skip
+# those stages via AppStopMethodSkip=6.
+nssm set buildkite-agent AppStopMethodWindow 0
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+nssm set buildkite-agent AppStopMethodThreads 0
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+
 nssm set buildkite-agent AppExit Default Restart
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 nssm set buildkite-agent AppRestartDelay 10000
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
+# There is no Stop/Post hook in NSSM; Exit/Post runs after process exit.
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 

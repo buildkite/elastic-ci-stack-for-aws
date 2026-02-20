@@ -2291,6 +2291,8 @@ Resources:
                   $Env:BUILDKITE_AGENT_SIGNING_KEY_ID="${BuildkiteAgentSigningKeyID}"
                   $Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH="${BuildkiteAgentVerificationKeySSMParameter}"
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
+                  $Env:BUILDKITE_AGENT_CANCEL_GRACE_PERIOD="${BuildkiteAgentCancelGracePeriod}"
+                  $Env:BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS="${BuildkiteAgentSignalGracePeriod}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
                   $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}"
                   $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
