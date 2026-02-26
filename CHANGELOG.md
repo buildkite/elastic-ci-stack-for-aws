@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.58.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.57.0...v6.58.0) (2026-02-26)
+
+### Changed
+* Update buildkite-agent to v3.118.1 [#1720](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1720) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Fixed
+* Fix: Add shebang to refresh_authorized_keys script [#1713](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1713) ([rl-io](https://github.com/rl-io))
+
+### Internal
+* Update changelog for v6.57.0 [#1718](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1718) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.118.1](https://github.com/buildkite/agent/tree/v3.118.1) (2026-02-25)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.118.0...v3.118.1)
+
+### Changed
+- Add retry logic to secret getting [#3706](https://github.com/buildkite/agent/pull/3706) (@mcncl)
+
+#### Internal
+- Test experiment documentation [#3719](https://github.com/buildkite/agent/pull/3719) (@moskyb)
+</details>
+
+
 ## [v6.57.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.56.0...v6.57.0) (2026-02-17)
 
 ### Changed
