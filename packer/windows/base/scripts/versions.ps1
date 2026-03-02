@@ -13,5 +13,5 @@ $docker_compose_version = "2.40.3"
 $ecr_cred_helper_version = "0.10.1"
 
 # Buildkite Tools
-$S3_SECRETS_HELPER_VERSION = "2.7.0"
+$S3_SECRETS_HELPER_VERSION = "2.8.0"
 $lifecycled_version = "v3.5.0"
