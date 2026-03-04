@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.58.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.0...v6.58.1) (2026-03-04)
+
+### Changed
+* Update buildkite-agent to v3.119.1 [#1726](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1726) ([renovate[bot]](https://github.com/apps/renovate))
+* Update dependency go to v1.26.0 [#1724](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1724) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite/elastic-ci-stack-s3-secrets-hooks to v2.8.0 [#1723](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1723) ([renovate[bot]](https://github.com/apps/renovate))
+* Update aws-cli to v2.34.0 [#1722](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1722) ([renovate[bot]](https://github.com/apps/renovate))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.119.1](https://github.com/buildkite/agent/tree/v3.119.1) (2026-03-04)
+
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.119.0...v3.119.1)
+
+### Fixed
+
+- Validate ping mode flag, tweak log levels [#3734](https://github.com/buildkite/agent/pull/3734) (@DrJosh9000)
+- Default ping-mode to ping-only for now [#3733](https://github.com/buildkite/agent/pull/3733) (@moskyb)
+</details>
+
+## [v6.58.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.57.0...v6.58.0) (2026-02-26)
+
+### Changed
+* Update buildkite-agent to v3.118.1 [#1720](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1720) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Fixed
+* Fix: Add shebang to refresh_authorized_keys script [#1713](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1713) ([rl-io](https://github.com/rl-io))
+
+### Internal
+* Update changelog for v6.57.0 [#1718](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1718) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.118.1](https://github.com/buildkite/agent/tree/v3.118.1) (2026-02-25)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.118.0...v3.118.1)
+
+### Changed
+- Add retry logic to secret getting [#3706](https://github.com/buildkite/agent/pull/3706) (@mcncl)
+
+#### Internal
+- Test experiment documentation [#3719](https://github.com/buildkite/agent/pull/3719) (@moskyb)
+</details>
+
 ## [v6.57.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.56.0...v6.57.0) (2026-02-17)
 
 ### Changed
