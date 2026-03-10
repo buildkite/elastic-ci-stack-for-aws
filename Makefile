@@ -22,7 +22,7 @@ BASE_AMI_ID_LINUX_AMD64 ?= $(call base_ami_from_output,packer-base-linux-amd64.o
 BASE_AMI_ID_LINUX_ARM64 ?= $(call base_ami_from_output,packer-base-linux-arm64.output)
 BASE_AMI_ID_WINDOWS_AMD64 ?= $(call base_ami_from_output,packer-base-windows-amd64.output)
 
-GO_VERSION ?= 1.24.0
+GO_VERSION ?= 1.26.1
 
 FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
 
