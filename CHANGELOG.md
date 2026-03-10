@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.58.2](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.1...v6.58.2) (2026-03-10)
+
+### Changed
+* Update buildkite-agent to v3.119.2 [#1731](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1731) ([renovate[bot]](https://github.com/apps/renovate))
+* Update Go version to 1.26.1 for fixperms binary [#1734](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1734) ([scadu](https://github.com/scadu))
+* Update buildkite/buildkite-agent-scaler to v1.11.2 [#1732](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1732) ([renovate[bot]](https://github.com/apps/renovate))
+* Update dependency go to v1.26.1 [#1733](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1733) ([renovate[bot]](https://github.com/apps/renovate))
+* Bump golang.org/x/sys from 0.41.0 to 0.42.0 [#1730](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1730) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+### Internal
+* Bump changelog for v6.58.1 [#1727](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1727) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.119.2](https://github.com/buildkite/agent/tree/v3.119.2) (2026-03-09)
+
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.119.1...v3.119.2)
+
+### Added
+
+- Generate a warning when cache is specified on self-hosted jobs [#3743](https://github.com/buildkite/agent/pull/3743) (@CerealBoy)
+
+### Internal
+
+- chore: add mise config for go and golangci-lint [#3739](https://github.com/buildkite/agent/pull/3739) (@lox)
+</details>
+
+
 ## [v6.58.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.0...v6.58.1) (2026-03-04)
 
 ### Changed
