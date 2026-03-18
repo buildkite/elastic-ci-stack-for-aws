@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.58.4](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.3...v6.58.4) (2026-03-18)
+
+### Changed
+
+* Update buildkite-agent to v3.120.1 [#1739](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1739) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Internal
+* Add release notes for 6.58.3 [#1738](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1738) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.120.1](https://github.com/buildkite/agent/tree/v3.120.1) (2026-03-17)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.120.0...v3.120.1)
+
+> [!TIP] 
+> 🎉 ✨  **Streaming job dispatch (Public Preview):** Version 3.120.0 adds opt-in support for a new streaming connection between agents and Buildkite, significantly reducing job acceptance latency for self-hosted agents. To try it, start your agent with `--endpoint https://agent-edge.buildkite.com/v3`, for example:
+>
+>     buildkite-agent start --endpoint https://agent-edge.buildkite.com/v3
+>
+> You may alternatively use the environment variable `BUILDKITE_AGENT_ENDPOINT` or edit your `buildkite-agent.cfg` to contain `endpoint=https://agent-edge.buildkite.com/v3`.
+>
+> This capability is in public preview and will become the default in a future release. If you have any feedback or run into issues, please reach out to support@buildkite.com.
+
+### Fixed
+- Adds `API_KEY` values to the redacted list [#3761](https://github.com/buildkite/agent/pull/3761) (@mcncl)
+- fix: Support []string fields in ReadFromEnvironment [#3767](https://github.com/buildkite/agent/pull/3767) (@DrJosh9000)
+
+### Internal
+- Trigger docs-draft-writer pipeline on merge to main [#3760](https://github.com/buildkite/agent/pull/3760) (@omehegan)
+
+### Dependency updates
+- build(deps): bump the container-images group across 1 directory with 2 updates [#3764](https://github.com/buildkite/agent/pull/3764) (@dependabot[bot])
+- build(deps): bump the container-images group across 5 directories with 2 updates [#3766](https://github.com/buildkite/agent/pull/3766) (@dependabot[bot])
+- build(deps): bump the golang-x group with 3 updates [#3762](https://github.com/buildkite/agent/pull/3762) (@dependabot[bot])
+- build(deps): bump the cloud-providers group with 8 updates [#3765](https://github.com/buildkite/agent/pull/3765) (@dependabot[bot])
+</details>
+
+
 ## [v6.58.3](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.2...v6.58.3) (2026-03-16)
 
 ### Changed
