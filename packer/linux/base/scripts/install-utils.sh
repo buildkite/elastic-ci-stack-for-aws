@@ -34,6 +34,8 @@ sudo dnf install -yq \
   python3.12-pip \
   python3.13 \
   python3.13-pip \
+  python3.14 \
+  python3.14-pip \
   unzip \
   wget \
   zip
