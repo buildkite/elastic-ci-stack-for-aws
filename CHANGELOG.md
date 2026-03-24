@@ -8,6 +8,46 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 
+* Disable me-south-1 region [#1747](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1747) ([scadu](https://github.com/scadu))
+* Update buildkite-agent to v3.120.3 [#1745](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1745) ([renovate[bot]](https://github.com/apps/renovate))
+* Update buildkite-agent to v3.120.2 [#1743](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1743) ([renovate[bot]](https://github.com/apps/renovate))
+* add python3.14 variants [#1742](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1742) ([mcncl](https://github.com/mcncl))
+
+### Internal
+* Update changelog with v6.58.4 release [#1740](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1740) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.120.3](https://github.com/buildkite/agent/tree/v3.120.3) (2026-03-24)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.120.2...v3.120.3)
+
+> [!TIP] 
+> 🎉 ✨  **Streaming job dispatch (Public Preview):** Version 3.120.0 adds opt-in support for a new streaming connection between agents and Buildkite, significantly reducing job acceptance latency for self-hosted agents. To try it, start your agent with `--endpoint https://agent-edge.buildkite.com/v3`, for example:
+>
+>     buildkite-agent start --endpoint https://agent-edge.buildkite.com/v3
+>
+> You may alternatively use the environment variable `BUILDKITE_AGENT_ENDPOINT` or edit your `buildkite-agent.cfg` to contain `endpoint=https://agent-edge.buildkite.com/v3`.
+>
+> This capability is in public preview and will become the default in a future release. If you have any feedback or run into issues, please reach out to support@buildkite.com.
+
+### Fixed
+- A-1020: make connect.CodeInternal error recoverable for pings stream [#3780](https://github.com/buildkite/agent/pull/3780) (@zhming0)
+
+### Internal
+- Update/clarify supported Windows versions [#3776](https://github.com/buildkite/agent/pull/3776) (@petetomasik)
+
+### Dependency updates
+- build(deps): bump the cloud-providers group with 2 updates [#3777](https://github.com/buildkite/agent/pull/3777) (@dependabot[bot])
+- build(deps): bump the container-images group across 5 directories with 1 update [#3778](https://github.com/buildkite/agent/pull/3778) (@dependabot[bot])
+- build(deps): bump the container-images group across 1 directory with 2 updates [#3779](https://github.com/buildkite/agent/pull/3779) (@dependabot[bot])
+</details>
+
+
+## [v6.58.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.4...v6.58.5) (2026-03-24)
+
+### Changed
+
 * Update buildkite-agent to v3.120.3 [#1745](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1745) ([renovate[bot]](https://github.com/apps/renovate))
 * Update buildkite-agent to v3.120.2 [#1743](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1743) ([renovate[bot]](https://github.com/apps/renovate))
 * add python3.14 variants [#1742](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1742) ([mcncl](https://github.com/mcncl))
