@@ -98,7 +98,7 @@ ALL_REGIONS=(
   eu-south-1
   eu-west-3
   eu-north-1
-  me-south-1
+  # me-south-1 – me-south-1 and me-central-1 are now (March 24, 2026) affected by military conflicts in the Middle East. me-south-1 is affected by the drone attack – https://web.archive.org/web/20260324134102/https://www.heise.de/en/news/AWS-New-disruptions-at-data-centers-in-Bahrain-after-drone-activity-11222079.html. Check https://status.aws.amazon.com/rss/multipleservices-me-south-1.rss for the current status.
   sa-east-1
 )
 
