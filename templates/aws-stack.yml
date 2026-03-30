@@ -106,6 +106,7 @@ Metadata:
         - RootVolumeName
         - RootVolumeType
         - RootVolumeEncrypted
+        - RootVolumeDeleteOnTermination
         - RootVolumeIops
         - RootVolumeThroughput
         - ManagedPolicyARNs
@@ -787,6 +788,14 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  RootVolumeDeleteOnTermination:
+    Description: Whether to delete the root EBS volume when the instance is terminated.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
 
   SecurityGroupIds:
     Type: String
@@ -2238,6 +2247,7 @@ Resources:
                 VolumeSize: !Ref RootVolumeSize
                 VolumeType: !Ref RootVolumeType
                 Encrypted: !Ref RootVolumeEncrypted
+                DeleteOnTermination: !Ref RootVolumeDeleteOnTermination
                 Throughput: !If [ IsRootVolumeIsGp3, !Ref RootVolumeThroughput, !Ref "AWS::NoValue" ]
                 Iops: !If [ IsRootVolumeIsIo1OrIo2OrGp3, !Ref RootVolumeIops, !Ref "AWS::NoValue" ]
           CreditSpecification: !If

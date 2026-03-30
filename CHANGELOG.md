@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## Unreleased
+
+### Added
+
+* Add `RootVolumeDeleteOnTermination` parameter to control root EBS volume deletion on instance termination [#1749](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1749) ([petetomasik](https://github.com/petetomasik))
+
 ## [v6.58.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.4...v6.58.5) (2026-03-24)
 
 ### Changed
