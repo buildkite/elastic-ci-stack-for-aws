@@ -4,11 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
-## Unreleased
+## [v6.58.6](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.5...v6.58.6) (2026-03-31)
+
+### Changed
+* Update buildkite-agent to v3.121.0 [#1750](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1750) ([renovate[bot]](https://github.com/apps/renovate))
 
 ### Added
+* Add param to explicitly set DeleteOnTermination [#1749](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1749) ([petetomasik](https://github.com/petetomasik))
 
-* Add `RootVolumeDeleteOnTermination` parameter to control root EBS volume deletion on instance termination [#1749](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1749) ([petetomasik](https://github.com/petetomasik))
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.121.0](https://github.com/buildkite/agent/tree/v3.121.0) (2026-03-25)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.120.3...v3.121.0)
+
+> [!TIP]
+> In order to make Git Mirrors more reliable, checkouts using a mirror can now be *dissociated* from the mirror. This approach still avoids fetching objects from the remote if they are present the mirror, but stores a copy of the objects in the checkout, preventing the checkout from becoming corrupted through entirely normal operation of the mirror.
+> To opt into this behaviour set the flag `--git-mirror-checkout-mode=dissociate` or agent environment variable `BUILDKITE_GIT_MIRROR_CHECKOUT_MODE=dissociate`.
+
+### Added
+- Add GCP KMS Signing [#3660](https://github.com/buildkite/agent/pull/3660) (@tomowatt)
+- Support for dissociated clones of git mirrors [#3775](https://github.com/buildkite/agent/pull/3775), [#3788](https://github.com/buildkite/agent/pull/3788) (@DrJosh9000)
+- Add `--subject-claim` flag to `oidc request-token` [#3784](https://github.com/buildkite/agent/pull/3784) (@zero51)
+
+### Changed
+- Job logger trace correlation [#3782](https://github.com/buildkite/agent/pull/3782) (@aapzu)
+</details>
 
 ## [v6.58.5](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.4...v6.58.5) (2026-03-24)
 
