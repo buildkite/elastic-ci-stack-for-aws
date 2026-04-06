@@ -176,7 +176,7 @@ $OFS=" "
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
   Write-Output "Fetching signing key from ssm: $Env:BUILDKITE_AGENT_SIGNING_KEY_PATH..."
 
-  $keyfile=C:\buildkite-agent\signing-key.json
+  $keyfile="C:\buildkite-agent\signing-key.json"
 
   aws ssm get-parameter `
     --name "$Env:BUILDKITE_AGENT_SIGNING_KEY_PATH" `
@@ -198,7 +198,7 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_ID)) {
 if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
   Write-Output "Fetching verification key from ssm: $Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH..."
 
-  $keyfile=C:\buildkite-agent\verification-key.json
+  $keyfile="C:\buildkite-agent\verification-key.json"
 
   aws ssm get-parameter `
     --name "$Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH" `
