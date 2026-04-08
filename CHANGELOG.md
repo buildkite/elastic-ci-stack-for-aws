@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [6.60.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.59.0...6.60.0) (2026-04-08)
+
+* Windows: fix UTF-16 BOM in JWKS file and icacls grants [#1756](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1756) ([royxu6](https://github.com/royxu6))
+
+
 ## [v6.59.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.6...v6.59.0) (2026-04-06)
 
 ### Changed
