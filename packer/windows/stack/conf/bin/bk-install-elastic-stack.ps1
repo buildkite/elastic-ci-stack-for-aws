@@ -178,15 +178,14 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
 
   $keyfile="C:\buildkite-agent\signing-key.json"
 
-  aws ssm get-parameter `
+  # Write as UTF-8 no-BOM; `> $keyfile` would use Out-File's PS 5.1 default
+  # (UTF-16LE+BOM) which the agent's Go JSON parser rejects.
+  $signingJwks = aws ssm get-parameter `
     --name "$Env:BUILDKITE_AGENT_SIGNING_KEY_PATH" `
     --with-decryption `
     --query Parameter.Value `
-    --output text >"$keyfile"
-
-  Write-Output "Setting permissions for $keyfile..."
-  # Remove inheritance and set explicit permissions: Administrators=FullControl, buildkite-agent=Read
-  icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "buildkite-agent:R"
+    --output text
+  [System.IO.File]::WriteAllText($keyfile, $signingJwks, (New-Object System.Text.UTF8Encoding $false))
 
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-file=$keyfile"
 }
@@ -200,15 +199,14 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
 
   $keyfile="C:\buildkite-agent\verification-key.json"
 
-  aws ssm get-parameter `
+  # Write as UTF-8 no-BOM; see note in signing-key block above.
+  $verificationJwks = aws ssm get-parameter `
     --name "$Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH" `
     --with-decryption `
     --query Parameter.Value `
-    --output text >"$keyfile"
+    --output text
+  [System.IO.File]::WriteAllText($keyfile, $verificationJwks, (New-Object System.Text.UTF8Encoding $false))
 
-  Write-Output "Setting permissions for $keyfile..."
-  # Remove inheritance and set explicit permissions: Administrators=FullControl, buildkite-agent=Read
-  icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "buildkite-agent:R"
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "verification-jwks-file=$keyfile"
 }
 
@@ -305,6 +303,18 @@ New-LocalUser -Name $UserName -PasswordNeverExpires -Password ($Password | Conve
 
 If ($Env:BUILDKITE_WINDOWS_ADMINISTRATOR -eq "true") {
   Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
+}
+
+# Set JWKS key file permissions now that the buildkite-agent user exists
+If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
+  $keyfile = "C:\buildkite-agent\signing-key.json"
+  Write-Output "Setting permissions for $keyfile..."
+  icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "${UserName}:R"
+}
+If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
+  $keyfile = "C:\buildkite-agent\verification-key.json"
+  Write-Output "Setting permissions for $keyfile..."
+  icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "${UserName}:R"
 }
 
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
