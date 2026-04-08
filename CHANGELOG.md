@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.59.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.6...v6.59.0) (2026-04-06)
+
+### Changed
+* Fix quoting on keyfile in buildkite windows stack [#1754](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1754) ([royxu6](https://github.com/royxu6))
+
+### Internal
+* Update changelog with v6.58.6 [#1751](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1751) ([scadu](https://github.com/scadu))
+* Update aws-cli to v2.34.21 [#1752](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1752) ([renovate[bot]](https://github.com/apps/renovate))
+* Update session-manager-plugin to v1.2.792.0 [#1753](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1753) ([renovate[bot]](https://github.com/apps/renovate))
+
 ## [v6.58.6](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.58.5...v6.58.6) (2026-03-31)
 
 ### Changed
