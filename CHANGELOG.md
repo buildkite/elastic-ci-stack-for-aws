@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.61.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.60.0...v6.61.0) (2026-04-09)
+
+### Changed
+* Set agent-edge as default agent endpoint [#1761](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1761) ([scadu](https://github.com/scadu))
+* Update buildkite-agent to v3.122.0 [#1760](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1760) ([renovate[bot]](https://github.com/apps/renovate))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.122.0](https://github.com/buildkite/agent/tree/v3.122.0) (2026-04-09)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.121.1...v3.122.0)
+
+> [!TIP] 
+> 🎉 ✨  **[Streaming job dispatch](https://buildkite.com/docs/agent/self-hosted/configure/job-dispatch#streaming-job-dispatch) (General Availability):** Starting this version, Agent's default endpoint has been changed to `https://agent-edge.buildkite.com/v3`, we expect this to vastly accelerate job acceptance latency. 
+
+### Changed
+- Streaming Job Dispatch is now enabled by default: the default agent API endpoint has been changed from `https://agent.buildkite.com/v3` to `https://agent-edge.buildkite.com/v3` [#3808](https://github.com/buildkite/agent/pull/3808) (@zhming0)
+</details>
+
+
 ## [v6.60.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.59.0...v6.60.0) (2026-04-08)
 
 ### Changed
