@@ -96,7 +96,7 @@ set_always         "BUILDKITE_S3_DEFAULT_REGION" "$Env:BUILDKITE_S3_DEFAULT_REGI
 set_always         "BUILDKITE_S3_ACL" "$Env:BUILDKITE_S3_ACL"
 set_unless_present "AWS_DEFAULT_REGION" "$Env:AWS_REGION"
 set_unless_present "AWS_REGION" "$Env:AWS_REGION"
-set_unless_present "BUILDKITE_AGENT_ENDPOINT" "https://agent.buildkite.com/v3"
+set_unless_present "BUILDKITE_AGENT_ENDPOINT" "https://agent-edge.buildkite.com/v3"
 "@
 
 If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
