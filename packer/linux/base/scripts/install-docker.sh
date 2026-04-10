@@ -6,8 +6,9 @@ set -euo pipefail
 source "/tmp/versions.sh"
 MACHINE=$(uname -m)
 
-echo Installing docker...
-sudo dnf install -yq docker
+echo "Installing Docker ${DOCKER_VERSION} from official Docker repository..."
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf install -yq "docker-ce-${DOCKER_VERSION}" "docker-ce-cli-${DOCKER_VERSION}" containerd.io
 sudo systemctl enable --now docker
 
 echo Add ec2-user to docker group.

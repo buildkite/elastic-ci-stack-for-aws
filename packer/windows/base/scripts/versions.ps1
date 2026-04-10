@@ -9,7 +9,7 @@ $SESSION_MANAGER_PLUGIN_VERSION = "1.2.792.0"
 $GIT_VERSION = "2.39.1"
 
 # Container Tools
-$docker_compose_version = "2.40.3"
+$docker_compose_version = "5.1.2"
 $ecr_cred_helper_version = "0.10.1"
 
 # Buildkite Tools
