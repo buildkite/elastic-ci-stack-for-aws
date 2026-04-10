@@ -779,7 +779,7 @@ Parameters:
   RootVolumeIops:
     Description: If the `RootVolumeType` is gp3, io1, or io2, the number of IOPS to provision for the root volume.
     Type: Number
-    Default: 1000
+    Default: 3000
 
   RootVolumeEncrypted:
     Description: Indicates whether the EBS volume is encrypted.
