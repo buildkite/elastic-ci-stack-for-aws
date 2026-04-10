@@ -4,7 +4,6 @@ set -euo pipefail
 # Source centralized version definitions
 # shellcheck disable=SC1091
 source "/tmp/versions.sh"
-MACHINE=$(uname -m)
 
 echo "Installing Docker ${DOCKER_VERSION} from official Docker repository..."
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
