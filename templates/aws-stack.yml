@@ -96,6 +96,8 @@ Metadata:
         - SecretsBucketRegion
         - SecretsBucketEncryption
         - SecretsPluginSkipSSHKeyNotFoundWarning
+        - CacheBucket
+        - CacheBucketRegion
         - ArtifactsBucket
         - ArtifactsBucketRegion
         - ArtifactsS3ACL
@@ -575,6 +577,19 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+
+  CacheBucket:
+    Description: >
+      Name of an existing S3 bucket to use for build caching (dependency caches, Bazel remote cache, etc).
+      A managed cache bucket is created by default. Set this to use your own bucket instead.
+      The bucket is available to builds as BUILDKITE_CACHE_S3_BUCKET and configured as the agent's S3 cache backend.
+    Type: String
+    Default: ""
+
+  CacheBucketRegion:
+    Description: Region for the CacheBucket. If blank the stack's region is used.
+    Type: String
+    Default: ""
 
   ArtifactsBucket:
     Description: Optional - Name of an existing S3 bucket for build artifact storage.
@@ -1184,6 +1199,12 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-ManagedSecretsLoggingBucket'
 
+  CacheBucket:
+    Value:
+      !If [ CreateCacheBucket, !Ref ManagedCacheBucket, !Ref CacheBucket ]
+    Export:
+      Name: !Sub '${AWS::StackName}-CacheBucket'
+
   PipelineSigningKMSKey:
     Value:
       !If [ CreatePipelineSigningKMSKey, !Ref PipelineSigningKMSKey, "none" ]
@@ -1321,6 +1342,15 @@ Conditions:
 
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", !Ref AvailabilityZones ], "" ]  ]
+
+    UseSpecifiedCacheBucket:
+      !Not [ !Equals [ !Ref CacheBucket, "" ] ]
+
+    CreateCacheBucket:
+      !Equals [ !Ref CacheBucket, "" ]
+
+    IsCacheBucketRegionEmpty:
+      !Equals [ !Ref CacheBucketRegion, "" ]
 
     UseArtifactsBucket:
       !Not [ !Equals [ !Ref ArtifactsBucket, "" ] ]
@@ -2035,6 +2065,21 @@ Resources:
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}"
             - !Ref "AWS::NoValue"
+          - Sid: CacheBucket
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub
+                - "arn:aws:s3:::${Bucket}/*"
+                - Bucket: !If [ CreateCacheBucket, !Ref ManagedCacheBucket, !Ref CacheBucket ]
+              - !Sub
+                - "arn:aws:s3:::${Bucket}"
+                - Bucket: !If [ CreateCacheBucket, !Ref ManagedCacheBucket, !Ref CacheBucket ]
           - Effect: Allow
             Action:
               - autoscaling:DescribeAutoScalingInstances
@@ -2192,6 +2237,53 @@ Resources:
             Bool:
               'aws:SecureTransport': false
 
+  ManagedCacheBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateCacheBucket
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireCacheObjects
+            Status: Enabled
+            ExpirationInDays: 30
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      Tags:
+        - !If
+          - UseCostAllocationTags
+          - Key: !Ref CostAllocationTagName
+            Value: !Ref CostAllocationTagValue
+          - !Ref "AWS::NoValue"
+
+  ManagedCacheBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: CreateCacheBucket
+    Properties:
+      Bucket: !Ref ManagedCacheBucket
+      PolicyDocument:
+        Id: ManagedCacheBucketPolicy
+        Version: "2012-10-17"
+        Statement:
+        - Sid: AllowSSLRequestsOnly
+          Effect: Deny
+          Principal: '*'
+          Action: 's3:*'
+          Resource:
+          - !GetAtt 'ManagedCacheBucket.Arn'
+          - !Sub '${ManagedCacheBucket.Arn}/*'
+          Condition:
+            Bool:
+              'aws:SecureTransport': false
+
   ImageIdParameterStack:
     Type: AWS::CloudFormation::Stack
     Condition: HasImageIdParameter
@@ -2300,6 +2392,8 @@ Resources:
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
                   $Env:BUILDKITE_SECRETS_PLUGIN_SKIP_SSH_KEY_NOT_FOUND_WARNING="${SecretsPluginSkipSSHKeyNotFoundWarning}"
+                  $Env:BUILDKITE_CACHE_S3_BUCKET="${LocalCacheBucket}"
+                  $Env:BUILDKITE_CACHE_S3_REGION="${LocalCacheBucketRegion}"
                   $Env:BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}"
                   $Env:BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}"
                   $Env:BUILDKITE_S3_ACL="${ArtifactsS3ACL}"
@@ -2338,7 +2432,18 @@ Resources:
                   $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
-                - LocalSecretsBucket: !If
+                - LocalCacheBucket: !If
+                    - CreateCacheBucket
+                    - !Ref ManagedCacheBucket
+                    - !Ref CacheBucket
+                  LocalCacheBucketRegion: !If
+                    - CreateCacheBucket
+                    - !Ref "AWS::Region"
+                    - !If
+                      - IsCacheBucketRegionEmpty
+                      - !Ref "AWS::Region"
+                      - !Ref CacheBucketRegion
+                  LocalSecretsBucket: !If
                     - CreateSecretsBucket
                     - !Ref ManagedSecretsBucket
                     - !Ref SecretsBucket
@@ -2402,6 +2507,8 @@ Resources:
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
                   BUILDKITE_SECRETS_PLUGIN_SKIP_SSH_KEY_NOT_FOUND_WARNING="${SecretsPluginSkipSSHKeyNotFoundWarning}" \
+                  BUILDKITE_CACHE_S3_BUCKET="${LocalCacheBucket}" \
+                  BUILDKITE_CACHE_S3_REGION="${LocalCacheBucketRegion}" \
                   BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}" \
                   BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}" \
                   BUILDKITE_S3_ACL="${ArtifactsS3ACL}" \
@@ -2454,7 +2561,18 @@ Resources:
                   EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
-                - LocalSecretsBucket: !If
+                - LocalCacheBucket: !If
+                    - CreateCacheBucket
+                    - !Ref ManagedCacheBucket
+                    - !Ref CacheBucket
+                  LocalCacheBucketRegion: !If
+                    - CreateCacheBucket
+                    - !Ref "AWS::Region"
+                    - !If
+                      - IsCacheBucketRegionEmpty
+                      - !Ref "AWS::Region"
+                      - !Ref CacheBucketRegion
+                  LocalSecretsBucket: !If
                     - CreateSecretsBucket
                     - !Ref ManagedSecretsBucket
                     - !Ref SecretsBucket
