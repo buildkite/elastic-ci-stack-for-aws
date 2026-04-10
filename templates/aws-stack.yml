@@ -2234,11 +2234,6 @@ Resources:
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
-      LifecycleConfiguration:
-        Rules:
-          - Id: ExpireCacheObjects
-            Status: Enabled
-            ExpirationInDays: 30
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
