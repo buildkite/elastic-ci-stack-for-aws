@@ -231,6 +231,8 @@ set_always         "DOCKER_PRUNE_UNTIL" "$DOCKER_PRUNE_UNTIL"
 set_always         "DOCKER_BUILDER_PRUNE_ENABLED" "$DOCKER_BUILDER_PRUNE_ENABLED"
 set_always         "DOCKER_VERSION" "$DOCKER_VERSION"
 set_always         "PLUGINS_ENABLED" "${PLUGINS_ENABLED[*]-}"
+set_always         "BUILDKITE_CACHE_S3_BUCKET" "$BUILDKITE_CACHE_S3_BUCKET"
+set_always         "BUILDKITE_CACHE_S3_REGION" "$BUILDKITE_CACHE_S3_REGION"
 set_always         "BUILDKITE_ARTIFACTS_BUCKET" "$BUILDKITE_ARTIFACTS_BUCKET"
 set_always         "BUILDKITE_S3_DEFAULT_REGION" "$BUILDKITE_S3_DEFAULT_REGION"
 set_always         "BUILDKITE_S3_ACL" "$BUILDKITE_S3_ACL"
@@ -376,6 +378,8 @@ hooks-path=/etc/buildkite-agent/hooks
 build-path=${BUILDKITE_AGENT_BUILD_PATH}
 plugins-path=/var/lib/buildkite-agent/plugins
 git-mirrors-path="${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+cache-s3-bucket-name="${BUILDKITE_CACHE_S3_BUCKET}"
+cache-s3-region="${BUILDKITE_CACHE_S3_REGION}"
 experiment="${BUILDKITE_AGENT_EXPERIMENTS}"
 priority=%n
 spawn=${BUILDKITE_AGENTS_PER_INSTANCE}
