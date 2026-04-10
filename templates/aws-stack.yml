@@ -256,7 +256,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   BuildkiteAgentExperiments:
     Description: >
@@ -340,7 +340,7 @@ Parameters:
   ScaleOutCooldownPeriod:
     Description: Cooldown period in seconds before allowing another scale-out event. Prevents rapid scaling and reduces costs from frequent instance launches.
     Type: Number
-    Default: 300
+    Default: 60
 
   ScaleInCooldownPeriod:
     Description: Cooldown period in seconds before allowing another scale-in event. Longer periods prevent premature termination when job queues fluctuate.
@@ -349,7 +349,7 @@ Parameters:
 
   EnableEC2LogRetentionPolicy:
     Type: String
-    Default: "false"
+    Default: "true"
     AllowedValues: ["true", "false"]
     Description: >
       Enable automatic deletion of old EC2 logs to reduce CloudWatch storage costs.
@@ -377,7 +377,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   BuildkiteAgentTracingBackend:
     Description: Optional - The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing.
@@ -427,7 +427,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   BuildkiteTerminateInstanceOnDiskFull:
     Description: Set to 'true' to terminate the instance when disk space is critically low (default is to exit job with code 1).
@@ -568,7 +568,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   SecretsPluginSkipSSHKeyNotFoundWarning:
     Description: Optional - Skip warning when SSH key is not found in the secrets bucket.
@@ -802,7 +802,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   RootVolumeDeleteOnTermination:
     Description: Whether to delete the root EBS volume when the instance is terminated.
@@ -846,7 +846,7 @@ Parameters:
     AllowedValues:
       - optional
       - required
-    Default: "optional"
+    Default: "required"
 
   InstanceRoleName:
     Type: String
@@ -1044,7 +1044,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   DockerBuilderPruneEnabled:
     Type: String
@@ -1054,7 +1054,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   EnableInstanceStorage:
     Type: String
@@ -1102,7 +1102,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   EnableDetailedMonitoring:
     Type: String
