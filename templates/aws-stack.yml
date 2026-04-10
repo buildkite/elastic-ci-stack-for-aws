@@ -63,7 +63,6 @@ Metadata:
         - BuildkitePurgeBuildsOnDiskFull
         - BuildkiteAdditionalSudoPermissions
         - BuildkiteWindowsAdministrator
-        - BuildkiteAgentScalerServerlessARN
         - EnableEC2LogRetentionPolicy
         - EC2LogRetentionDays
         - LogRetentionDays
@@ -147,7 +146,7 @@ Metadata:
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
         - ScalerMinPollInterval
-        - ScalerEnableExperimentalElasticCIMode
+        - ScalerEnableElasticCIMode
         - EnableScheduledScaling
         - ScheduleTimezone
         - ScaleUpSchedule
@@ -265,22 +264,14 @@ Parameters:
     Type: String
     Default: ""
 
-  BuildkiteAgentScalerServerlessARN:
+  ScalerEnableElasticCIMode:
     Description: >
-      (Deprecated - no longer used) ARN of the Serverless Application Repository that hosts the buildkite-agent-scaler Lambda function.
-      The ARN is now automatically selected based on the LambdaArchitecture parameter.
-      To use a custom scaler deployment, modify the AgentScalerARN mapping in the template.
-    Type: String
-    Default: "arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler"
-
-  ScalerEnableExperimentalElasticCIMode:
-    Description: >
-        Experimental - Enable the Elastic CI Mode with enhanced features like graceful termination and dangling instance detection.
+        Enable Elastic CI Mode with enhanced features like graceful termination and dangling instance detection.
     Type: String
     AllowedValues:
         - "true"
         - "false"
-    Default: "false"
+    Default: "true"
 
   DisableScaleIn:
     Description: Whether the desired count should ever be decreased on the Auto Scaling group. When set to "true" (default), the scaler will not reduce the Auto Scaling group's desired capacity, and instances are expected to self-terminate when idle.
@@ -547,7 +538,7 @@ Parameters:
       Number of Buildkite agents to start on each EC2 instance.
       NOTE: If an agent crashes or is terminated, it won't be automatically restarted, leaving fewer active agents on that instance.
       The ScaleInIdlePeriod parameter controls when the entire instance terminates (when all agents are idle), not individual agent restarts.
-      Consider enabling ScalerEnableExperimentalElasticCIMode for better agent management, or use fewer agents per instance with more instances for high availability.
+      Consider enabling ScalerEnableElasticCIMode for better agent management, or use fewer agents per instance with more instances for high availability.
     Type: Number
     Default: 1
     MinValue: 1
@@ -902,7 +893,7 @@ Parameters:
       - poweruser
       - poweruser-pullthrough
       - full
-    Default: "none"
+    Default: "readonly"
 
   AssociatePublicIpAddress:
     Type: String
@@ -998,7 +989,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
-    Default: "false"
+    Default: "true"
 
   EnableDockerLoginPlugin:
     Type: String
@@ -3018,7 +3009,7 @@ Resources:
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
-        EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
+        EnableElasticCIMode: !Ref ScalerEnableElasticCIMode
         DisableScaleIn: !Ref DisableScaleIn
 
   AutoscalingArm64:
@@ -3050,5 +3041,5 @@ Resources:
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
-        EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
+        EnableElasticCIMode: !Ref ScalerEnableElasticCIMode
         DisableScaleIn: !Ref DisableScaleIn
