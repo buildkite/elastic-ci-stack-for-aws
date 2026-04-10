@@ -8,6 +8,7 @@ MACHINE=$(uname -m)
 
 echo "Installing Docker ${DOCKER_VERSION} from official Docker repository..."
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo sed -i 's/$releasever/9/g' /etc/yum.repos.d/docker-ce.repo
 sudo dnf install -yq "docker-ce-${DOCKER_VERSION}" "docker-ce-cli-${DOCKER_VERSION}" containerd.io
 sudo systemctl enable --now docker
 
@@ -23,25 +24,13 @@ sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
 sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
 sudo chmod +x /usr/local/bin/docker-*
 
-echo "Installing docker buildx..."
-DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins
-sudo mkdir -p "${DOCKER_CLI_DIR}"
-
-DOCKER_COMPOSE_V2_ARCH="${MACHINE}"
-case "${MACHINE}" in
-x86_64) BUILDX_ARCH="amd64" ;;
-aarch64) BUILDX_ARCH="arm64" ;;
-esac
-
-sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-buildx" "https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.linux-${BUILDX_ARCH}"
-sudo chmod +x "${DOCKER_CLI_DIR}/docker-buildx"
+echo "Verifying Docker components..."
+docker --version
 docker buildx version
-
-sudo curl --location --fail --silent --output "${DOCKER_CLI_DIR}/docker-compose" "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_V2_VERSION}/docker-compose-linux-${DOCKER_COMPOSE_V2_ARCH}"
-sudo chmod +x "${DOCKER_CLI_DIR}/docker-compose"
 docker compose version
 
-echo "Making docker compose v2 compatible w/ docker-compose v1..."
+echo "Making docker compose compatible w/ docker-compose v1..."
+DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins
 sudo ln -s "${DOCKER_CLI_DIR}/docker-compose" /usr/bin/docker-compose
 sudo cp /tmp/conf/bin/docker-compose /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose

@@ -10,10 +10,8 @@ export SESSION_MANAGER_PLUGIN_VERSION="1.2.792.0"
 export GIT_LFS_VERSION="3.4.0"
 export GOSS_VERSION="v0.4.9"
 
-# Container Tools
+# Container Tools (buildx and compose are installed as Docker repo dependencies)
 export DOCKER_VERSION="29.4.0"
-export DOCKER_COMPOSE_V2_VERSION="5.1.2"
-export DOCKER_BUILDX_VERSION="0.33.0"
 
 # Buildkite Tools
 export S3_SECRETS_HELPER_VERSION="2.8.0"
