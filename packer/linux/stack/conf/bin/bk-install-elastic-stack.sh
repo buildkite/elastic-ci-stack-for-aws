@@ -356,7 +356,7 @@ seed_git_mirrors_from_bundles() {
       continue
     fi
 
-    if ! git clone --mirror "${bundle_path}" "${mirror_path}"; then
+    if ! GIT_CURL_VERBOSE=0 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_PARAMETERS="core.fsck=false gc.auto=0" GIT_LFS_SKIP_SMUDGE=1 git clone --mirror --quiet "${bundle_path}" "${mirror_path}"; then
       echo "WARNING: Failed to seed git mirror ${mirror_path} from ${bundle_uri}."
       rm -f "${bundle_path}"
       rm -rf "${mirror_path}"
