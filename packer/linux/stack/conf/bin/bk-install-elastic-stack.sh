@@ -282,6 +282,92 @@ if [[ -n "${BUILDKITE_AGENT_TAGS:-}" ]]; then
 fi
 echo "Agent metadata after splitting commas: ${agent_metadata[*]-}"
 
+seed_git_mirrors_from_bundles() {
+  local bundle_bucket_path
+  local list_output
+  local list_status
+  local bundle_count
+  local temp_dir
+
+  if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" != "true" ]]; then
+    return 0
+  fi
+
+  if [[ -z "${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET:-}" ]]; then
+    echo No git mirror bundle bucket configured.
+    return 0
+  fi
+
+  bundle_bucket_path="s3://${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET}/git-mirror-bundles/"
+  temp_dir=$(mktemp -d)
+
+  echo "Seeding git mirrors from ${bundle_bucket_path}..."
+
+  set +e
+  list_output=$(aws s3 ls "${bundle_bucket_path}" --recursive 2>&1)
+  list_status=$?
+  set -e
+
+  if [[ ${list_status} -ne 0 ]]; then
+    echo "WARNING: Failed to list git mirror bundles from ${bundle_bucket_path}: ${list_output}"
+    rm -rf "${temp_dir}"
+    return 0
+  fi
+
+  bundle_count=0
+  while read -r _ _ _ bundle_key; do
+    local bundle_name
+    local bundle_path
+    local bundle_uri
+    local mirror_path
+    local mirror_name
+
+    [[ -n "${bundle_key:-}" ]] || continue
+    [[ "${bundle_key}" == *.bundle ]] || continue
+
+    bundle_count=$((bundle_count + 1))
+    bundle_name=$(basename "${bundle_key}")
+    mirror_name=${bundle_name%.bundle}
+    mirror_path="${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${mirror_name}"
+    bundle_uri="s3://${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET}/${bundle_key}"
+    bundle_path="${temp_dir}/${bundle_name}"
+
+    if [[ -e "${mirror_path}" ]]; then
+      echo "Git mirror ${mirror_path} already exists, skipping ${bundle_uri}."
+      continue
+    fi
+
+    echo "Seeding git mirror ${mirror_path} from ${bundle_uri}..."
+    if ! aws s3 cp "${bundle_uri}" "${bundle_path}"; then
+      echo "WARNING: Failed to download git mirror bundle ${bundle_uri}."
+      rm -f "${bundle_path}"
+      continue
+    fi
+
+    if ! git clone --mirror "${bundle_path}" "${mirror_path}"; then
+      echo "WARNING: Failed to seed git mirror ${mirror_path} from ${bundle_uri}."
+      rm -f "${bundle_path}"
+      rm -rf "${mirror_path}"
+      continue
+    fi
+
+    if ! chown -R buildkite-agent: "${mirror_path}"; then
+      echo "WARNING: Failed to set ownership for seeded git mirror ${mirror_path}."
+      rm -f "${bundle_path}"
+      rm -rf "${mirror_path}"
+      continue
+    fi
+
+    rm -f "${bundle_path}"
+  done <<<"${list_output}"
+
+  rm -rf "${temp_dir}"
+
+  if [[ ${bundle_count} -eq 0 ]]; then
+    echo "No git mirror bundles found in ${bundle_bucket_path}."
+  fi
+}
+
 # Enable git-mirrors if a git mirrors path is provided
 BUILDKITE_AGENT_GIT_MIRRORS_PATH=""
 if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
@@ -311,6 +397,8 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
 
   echo Setting ownership of git-mirrors directory to buildkite-agent...
   chown buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
+
+  seed_git_mirrors_from_bundles
 else
   echo git-mirrors disabled.
 fi

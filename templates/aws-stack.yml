@@ -54,6 +54,7 @@ Metadata:
         - BuildkiteAgentTimestampLines
         - BuildkiteAgentExperiments
         - BuildkiteAgentEnableGitMirrors
+        - GitMirrorBundleBucket
         - BuildkiteAgentTracingBackend
         - BuildkiteAgentCancelGracePeriod
         - BuildkiteAgentSignalGracePeriod
@@ -1089,6 +1090,14 @@ Parameters:
       - "false"
     Default: "false"
 
+  GitMirrorBundleBucket:
+    Type: String
+    Description: >
+      Optional S3 bucket name containing git bundles for pre-seeding git mirrors.
+      Requires BuildkiteAgentEnableGitMirrors=true. Bundles must be stored under
+      the git-mirror-bundles/ prefix.
+    Default: ""
+
   EnableDetailedMonitoring:
     Type: String
     Description: Enable detailed EC2 monitoring.
@@ -1318,6 +1327,11 @@ Conditions:
 
     HasSecretsBucket:
       !Or [ !Condition CreateSecretsBucket, !Condition UseSpecifiedSecretsBucket ]
+
+    HasGitMirrorBundleBucket:
+      !And
+        - !Equals [ !Ref BuildkiteAgentEnableGitMirrors, "true" ]
+        - !Not [ !Equals [ !Ref GitMirrorBundleBucket, "" ] ]
 
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", !Ref AvailabilityZones ], "" ]  ]
@@ -2035,6 +2049,27 @@ Resources:
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}"
             - !Ref "AWS::NoValue"
+          - !If
+            - HasGitMirrorBundleBucket
+            - Sid: GitMirrorBundlesBucket
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: !Sub "arn:aws:s3:::${GitMirrorBundleBucket}/git-mirror-bundles/*"
+            - !Ref "AWS::NoValue"
+          - !If
+            - HasGitMirrorBundleBucket
+            - Sid: GitMirrorBundlesBucketList
+              Effect: Allow
+              Action:
+                - s3:ListBucket
+              Resource: !Sub "arn:aws:s3:::${GitMirrorBundleBucket}"
+              Condition:
+                StringLike:
+                  s3:prefix:
+                    - git-mirror-bundles/
+                    - git-mirror-bundles/*
+            - !Ref "AWS::NoValue"
           - Effect: Allow
             Action:
               - autoscaling:DescribeAutoScalingInstances
@@ -2316,6 +2351,7 @@ Resources:
                   $Env:BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}"
                   $Env:BUILDKITE_QUEUE="${BuildkiteQueue}"
                   $Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}"
+                  $Env:BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET="${GitMirrorBundleBucket}"
                   $Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}"
                   $Env:BUILDKITE_AGENT_SIGNING_KMS_KEY="${PipelineSigningKMSKey}"
                   $Env:BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR="${PipelineSigningVerificationFailureBehavior}"
@@ -2422,6 +2458,7 @@ Resources:
                   BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR="${PipelineSigningVerificationFailureBehavior}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}" \
+                  BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET="${GitMirrorBundleBucket}" \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
                   BUILDKITE_ENV_FILE_URL=${AgentEnvFileUrl} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
