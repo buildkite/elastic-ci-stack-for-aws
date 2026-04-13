@@ -1,2 +1,8 @@
 [default]
 cli_pager=
+
+s3 =
+    max_concurrent_requests = 30
+    multipart_chunksize     = 16MB
+    max_queue_size          = 1000
+    multipart_threshold     = 64MB
