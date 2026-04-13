@@ -2054,8 +2054,10 @@ Resources:
             - Sid: GitMirrorBundlesBucket
               Effect: Allow
               Action:
-                - s3:GetObject
-                - s3:PutObject
+                 - s3:GetObject
+                 - s3:PutObject
+                 - s3:AbortMultipartUpload
+                 - s3:ListMultipartUploadParts
               Resource: !Sub "arn:aws:s3:::${GitMirrorBundleBucket}/git-mirror-bundles/*"
             - !Ref "AWS::NoValue"
           - !If
