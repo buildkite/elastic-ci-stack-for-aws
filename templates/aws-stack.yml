@@ -2055,6 +2055,7 @@ Resources:
               Effect: Allow
               Action:
                 - s3:GetObject
+                - s3:PutObject
               Resource: !Sub "arn:aws:s3:::${GitMirrorBundleBucket}/git-mirror-bundles/*"
             - !Ref "AWS::NoValue"
           - !If
