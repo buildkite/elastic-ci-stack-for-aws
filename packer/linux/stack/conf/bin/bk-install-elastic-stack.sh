@@ -288,6 +288,15 @@ seed_git_mirrors_from_bundles() {
   local list_status
   local bundle_count
   local temp_dir
+  local aws_max_attempts
+  local -a aws_s3_args
+
+  # Keep bundle seeding from blocking bootstrap when S3 is unreachable.
+  aws_max_attempts=2
+  aws_s3_args=(
+    --cli-connect-timeout 10
+    --cli-read-timeout 30
+  )
 
   if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" != "true" ]]; then
     return 0
@@ -299,12 +308,14 @@ seed_git_mirrors_from_bundles() {
   fi
 
   bundle_bucket_path="s3://${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET}/git-mirror-bundles/"
-  temp_dir=$(mktemp -d)
+  temp_dir=$(mktemp -d \
+    "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.bundle-seed.XXXXXX")
 
   echo "Seeding git mirrors from ${bundle_bucket_path}..."
 
   set +e
-  list_output=$(aws s3 ls "${bundle_bucket_path}" --recursive 2>&1)
+  list_output=$(AWS_MAX_ATTEMPTS="${aws_max_attempts}" \
+    aws "${aws_s3_args[@]}" s3 ls "${bundle_bucket_path}" --recursive 2>&1)
   list_status=$?
   set -e
 
@@ -338,7 +349,8 @@ seed_git_mirrors_from_bundles() {
     fi
 
     echo "Seeding git mirror ${mirror_path} from ${bundle_uri}..."
-    if ! aws s3 cp "${bundle_uri}" "${bundle_path}"; then
+    if ! AWS_MAX_ATTEMPTS="${aws_max_attempts}" \
+      aws "${aws_s3_args[@]}" s3 cp "${bundle_uri}" "${bundle_path}"; then
       echo "WARNING: Failed to download git mirror bundle ${bundle_uri}."
       rm -f "${bundle_path}"
       continue
