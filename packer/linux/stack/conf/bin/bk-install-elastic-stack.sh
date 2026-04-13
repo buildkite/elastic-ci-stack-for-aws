@@ -363,6 +363,23 @@ seed_git_mirrors_from_bundles() {
       continue
     fi
 
+    # Set the real remote URL so the agent doesn't detect a URL change
+    # (which triggers an expensive fsck + gc while holding the mirror lock).
+    local url_sidecar_uri="s3://${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET}/git-mirror-bundles/${mirror_name}.url"
+    local url_sidecar_path="${temp_dir}/${mirror_name}.url"
+    if AWS_MAX_ATTEMPTS="${aws_max_attempts}" \
+      aws "${aws_s3_args[@]}" s3 cp "${url_sidecar_uri}" "${url_sidecar_path}" 2>/dev/null; then
+      local real_url
+      real_url=$(cat "${url_sidecar_path}")
+      if [[ -n "${real_url}" ]]; then
+        echo "Setting mirror origin to ${real_url}"
+        git --git-dir "${mirror_path}" remote set-url origin "${real_url}"
+      fi
+      rm -f "${url_sidecar_path}"
+    else
+      echo "WARNING: No .url sidecar found for ${mirror_name}, mirror origin will be the bundle path."
+    fi
+
     if ! chown -R buildkite-agent: "${mirror_path}"; then
       echo "WARNING: Failed to set ownership for seeded git mirror ${mirror_path}."
       rm -f "${bundle_path}"
