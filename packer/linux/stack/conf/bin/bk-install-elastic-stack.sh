@@ -373,9 +373,7 @@ seed_git_mirrors_from_bundles() {
       real_url=$(cat "${url_sidecar_path}")
       if [[ -n "${real_url}" ]]; then
         echo "Setting mirror origin to ${real_url}"
-        if ! git --git-dir "${mirror_path}" remote set-url origin "${real_url}"; then
-          echo "WARNING: Failed to set mirror origin to ${real_url}"
-        fi
+        git --git-dir "${mirror_path}" remote set-url origin "${real_url}"
       fi
       rm -f "${url_sidecar_path}"
     else
@@ -429,6 +427,7 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
   echo Setting ownership of git-mirrors directory to buildkite-agent...
   chown buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
 
+  seed_git_mirrors_from_bundles
 else
   echo git-mirrors disabled.
 fi
@@ -678,16 +677,6 @@ systemctl daemon-reload
 
 echo Starting buildkite-agent...
 systemctl enable --now buildkite-agent
-
-# Seed git mirrors in the background so it doesn't block the CFN signal.
-# The agent can start accepting jobs immediately; seeding will finish later.
-if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]] \
-  && [[ -n "${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET:-}" ]]; then
-  echo "Starting background git mirror seeding..."
-  seed_git_mirrors_from_bundles &>/var/log/buildkite-agent-seeding.log &
-  echo "Background git mirror seeding PID: $!"
-  echo $! >/var/run/buildkite-seeding.pid
-fi
 
 echo Configuring CloudWatch agent log retention...
 if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
