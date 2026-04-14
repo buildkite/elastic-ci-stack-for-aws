@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.62.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.61.0...v6.62.0) (2026-04-14)
+
+### Changed
+* Update buildkite-agent to v3.123.0 [#1765](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1765) ([renovate[bot]](https://github.com/apps/renovate))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.123.0](https://github.com/buildkite/agent/tree/v3.123.0) (2026-04-14)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.122.0...v3.123.0)
+
+### Added
+- Add zip archive support for plugins [#3713](https://github.com/buildkite/agent/pull/3713) (@adnowakodbx1)
+- Support PowerShell 7 [#3759](https://github.com/buildkite/agent/pull/3759) (@markmssd)
+- Allow K8s container start timeout to be configured [#3820](https://github.com/buildkite/agent/pull/3820) (@zhming0)
+- Make checkout retry attempt configurable, increasing default retry [#3822](https://github.com/buildkite/agent/pull/3822) (@zhming0)
+
+### Fixed
+- Fix incorrect check in TestAnnotateMaxBodySize, clean up assert [#3810](https://github.com/buildkite/agent/pull/3810) (@DrJosh9000)
+- Compile badChars regexp once [#3811](https://github.com/buildkite/agent/pull/3811) (@DrJosh9000)
+- Refactor ArtifactBatchCreator to use iterator [#3812](https://github.com/buildkite/agent/pull/3812) (@zhming0)
+
+### Internal
+- Release script [#3806](https://github.com/buildkite/agent/pull/3806) (@swebb)
+- Dependabot updates: [#3813](https://github.com/buildkite/agent/pull/3813) (@dependabot[bot])
+</details>
+
+
 ## [v6.61.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.60.0...v6.61.0) (2026-04-09)
 
 ### Changed
