@@ -327,44 +327,84 @@ seed_git_mirrors_from_bundles() {
 
   bundle_count=0
   while read -r _ _ _ bundle_key; do
-    local bundle_name
-    local bundle_path
-    local bundle_uri
     local mirror_path
     local mirror_name
+    local file_ext
 
     [[ -n "${bundle_key:-}" ]] || continue
-    [[ "${bundle_key}" == *.bundle ]] || continue
+
+    # Support .tar (fast: pre-built bare repo, no index-pack) and
+    # .bundle
+    if [[ "${bundle_key}" == *.tar ]]; then
+      file_ext="tar"
+    elif [[ "${bundle_key}" == *.bundle ]]; then
+      file_ext="bundle"
+    else
+      continue
+    fi
 
     bundle_count=$((bundle_count + 1))
-    bundle_name=$(basename "${bundle_key}")
-    mirror_name=${bundle_name%.bundle}
+    local file_name
+    file_name=$(basename "${bundle_key}")
+    mirror_name=${file_name%."${file_ext}"}
     mirror_path="${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${mirror_name}"
-    bundle_uri="s3://${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET}/${bundle_key}"
-    bundle_path="${temp_dir}/${bundle_name}"
+    local file_uri="s3://${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET}/${bundle_key}"
 
     if [[ -e "${mirror_path}" ]]; then
-      echo "Git mirror ${mirror_path} already exists, skipping ${bundle_uri}."
+      echo "Git mirror ${mirror_path} already exists, skipping ${file_uri}."
       continue
     fi
 
-    echo "Seeding git mirror ${mirror_path} from ${bundle_uri}..."
-    if ! AWS_MAX_ATTEMPTS="${aws_max_attempts}" \
-      aws "${aws_s3_args[@]}" s3 cp "${bundle_uri}" "${bundle_path}"; then
-      echo "WARNING: Failed to download git mirror bundle ${bundle_uri}."
-      rm -f "${bundle_path}"
-      continue
-    fi
+    echo "Seeding git mirror ${mirror_path} from ${file_uri}..."
 
-    if ! GIT_CURL_VERBOSE=0 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_PARAMETERS="'core.fsck=false' 'gc.auto=0'" GIT_LFS_SKIP_SMUDGE=1 git clone --bare --quiet "${bundle_path}" "${mirror_path}"; then
-      echo "WARNING: Failed to seed git mirror ${mirror_path} from ${bundle_uri}."
+    if [[ "${file_ext}" == "tar" ]]; then
+      # Tar of bare repo - stream from S3 and extract directly.
+      # No git index-pack / delta resolution needed, just a file copy.
+      # Extract to temp dir first, then atomically move into place.
+      local temp_mirror="${temp_dir}/${mirror_name}"
+      if ! (
+        set -o pipefail
+        AWS_MAX_ATTEMPTS="${aws_max_attempts}" \
+          aws "${aws_s3_args[@]}" s3 cp "${file_uri}" - \
+          | tar xf - -C "${temp_dir}"
+      ); then
+        echo "WARNING: Failed to download/extract git mirror tar ${file_uri}."
+        rm -rf "${temp_mirror}"
+        continue
+      fi
+
+      if ! mv "${temp_mirror}" "${mirror_path}"; then
+        echo "WARNING: Failed to install extracted mirror to ${mirror_path}."
+        rm -rf "${temp_mirror}"
+        continue
+      fi
+    else
+      # bundle path: download then git clone --bare (runs index-pack)
+      local bundle_path="${temp_dir}/${file_name}"
+      if ! AWS_MAX_ATTEMPTS="${aws_max_attempts}" \
+        aws "${aws_s3_args[@]}" s3 cp "${file_uri}" "${bundle_path}"; then
+        echo "WARNING: Failed to download git mirror bundle ${file_uri}."
+        rm -f "${bundle_path}"
+        continue
+      fi
+
+      if ! GIT_CURL_VERBOSE=0 GIT_TERMINAL_PROMPT=0 \
+        GIT_CONFIG_PARAMETERS="'core.fsck=false' 'gc.auto=0' 'pack.threads=4' 'core.deltaBaseCacheLimit=2g'" \
+        GIT_LFS_SKIP_SMUDGE=1 \
+        git clone --bare --quiet "${bundle_path}" "${mirror_path}"; then
+        echo "WARNING: Failed to seed git mirror ${mirror_path} from ${file_uri}."
+        rm -f "${bundle_path}"
+        rm -rf "${mirror_path}"
+        continue
+      fi
+
       rm -f "${bundle_path}"
-      rm -rf "${mirror_path}"
-      continue
     fi
 
     # Set the real remote URL so the agent doesn't detect a URL change
     # (which triggers an expensive fsck + gc while holding the mirror lock).
+    # For .tar mirrors the URL is already baked in, but the sidecar
+    # serves as a safety net (e.g. repo URL changed since tar was created).
     local url_sidecar_uri="s3://${BUILDKITE_GIT_MIRROR_BUNDLE_BUCKET}/git-mirror-bundles/${mirror_name}.url"
     local url_sidecar_path="${temp_dir}/${mirror_name}.url"
     if AWS_MAX_ATTEMPTS="${aws_max_attempts}" \
@@ -382,18 +422,15 @@ seed_git_mirrors_from_bundles() {
 
     if ! chown -R buildkite-agent: "${mirror_path}"; then
       echo "WARNING: Failed to set ownership for seeded git mirror ${mirror_path}."
-      rm -f "${bundle_path}"
       rm -rf "${mirror_path}"
       continue
     fi
-
-    rm -f "${bundle_path}"
   done <<<"${list_output}"
 
   rm -rf "${temp_dir}"
 
   if [[ ${bundle_count} -eq 0 ]]; then
-    echo "No git mirror bundles found in ${bundle_bucket_path}."
+    echo "No git mirror seeds (.tar or .bundle) found in ${bundle_bucket_path}."
   fi
 }
 
