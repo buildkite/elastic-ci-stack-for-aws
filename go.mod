@@ -6,5 +6,5 @@ toolchain go1.26.1
 
 require (
 	github.com/google/go-cmp v0.7.0
-	golang.org/x/sys v0.42.0
+	golang.org/x/sys v0.43.0
 )
