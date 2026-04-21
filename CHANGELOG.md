@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.62.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.62.0...v6.62.1) (2026-04-17)
+
+### Changed
+* Update buildkite-agent to v3.123.1 [#1767](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1767) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Dependency updates
+* Bump golang.org/x/sys from 0.42.0 to 0.43.0 [#1764](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1764) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.123.1](https://github.com/buildkite/agent/tree/v3.123.1) (2026-04-17)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.123.0...v3.123.1)
+
+### Fixed
+- Fix `--glob-resolve-follow-symlinks` regression [#3828](https://github.com/buildkite/agent/pull/3828) (@zhming0)
+- Prevent snapshot logic if command phase isn't included [#3825](https://github.com/buildkite/agent/pull/3825) (@DrJosh9000)
+- Per-agent snapshot clones for git mirrors [#3789](https://github.com/buildkite/agent/pull/3789) (@DrJosh9000)
+
+### Internal
+- E2E test coverage for bulk artifacts upload/download [#3824](https://github.com/buildkite/agent/pull/3824) (@zhming0)
+- Dependabot updates: [#3816](https://github.com/buildkite/agent/pull/3816), [#3817](https://github.com/buildkite/agent/pull/3817), [#3818](https://github.com/buildkite/agent/pull/3818), [#3819](https://github.com/buildkite/agent/pull/3819) (@dependabot[bot])
+</details>
+
+
 ## [v6.62.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.61.0...v6.62.0) (2026-04-14)
 
 ### Changed
