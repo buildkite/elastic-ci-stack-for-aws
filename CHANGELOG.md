@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.64.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.63.0...v6.64.0) (2026-05-04)
+
+### Changed
+* Update buildkite-agent to v3.125.0 [#1776](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1776) ([renovate[bot]](https://github.com/apps/renovate))
+* Update aws-cli to v2.34.41 [#1774](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1774) ([renovate[bot]](https://github.com/apps/renovate))
+* Update go toolchain directive to v1.26.2 [#1775](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1775) ([renovate[bot]](https://github.com/apps/renovate))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.125.0](https://github.com/buildkite/agent/tree/v3.125.0) (2026-05-04)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.124.0...v3.125.0)
+
+### Added
+- Multipart S3 download for faster artifact downloads [#3875](https://github.com/buildkite/agent/pull/3875) (@buildkate)
+- New `--fail-on-missing-tags` flag (and `BUILDKITE_AGENT_FAIL_ON_MISSING_TAGS` env var) to exit the agent on startup if a configured cloud tag source (EC2/ECS/GCP) returns no tags [#3801](https://github.com/buildkite/agent/pull/3801) (@omehegan)
+- Automatic tracing for CLI subcommands (e.g. `artifact upload`, `pipeline upload`) when `BUILDKITE_TRACING_BACKEND=opentelemetry` and a `TRACEPARENT` is present [#3866](https://github.com/buildkite/agent/pull/3866) (@ss1909)
+- Register `application/zstd` MIME type for `.zst` artifact uploads [#3864](https://github.com/buildkite/agent/pull/3864) (@ladd)
+
+### Fixed
+- Preserve literal percent sequences in JSON job logs (previously rewritten by Go format-string handling) [#3877](https://github.com/buildkite/agent/pull/3877) (@friel-openai)
+
+### Internal
+- Remove Bazel from the agent build [#3873](https://github.com/buildkite/agent/pull/3873) (@moskyb)
+- Rename `logger.Logger` methods to end in `f` (e.g. `Debugf`, `Infof`) [#3878](https://github.com/buildkite/agent/pull/3878) [#3881](https://github.com/buildkite/agent/pull/3881) (@DrJosh9000, @buildkate)
+- Separate OTel provider provisioning from span generation [#3880](https://github.com/buildkite/agent/pull/3880) (@ss1909)
+- Only log the first stream connection to reduce log noise [#3872](https://github.com/buildkite/agent/pull/3872) (@moskyb)
+- Remove and prevent use of assert libraries (testify) [#3858](https://github.com/buildkite/agent/pull/3858) (@DrJosh9000)
+- Bump go-pipeline to v0.17.0 [#3865](https://github.com/buildkite/agent/pull/3865) (@CerealBoy)
+</details>
+
+
 ## [v6.62.1](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.62.0...v6.62.1) (2026-04-17)
 
 ### Changed
