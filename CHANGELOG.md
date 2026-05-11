@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.65.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.64.0...v6.65.0) (2026-05-08)
+
+### Changed
+* Update buildkite-agent to v3.126.0 [#1778](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1778) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Dependency updates
+* Update go toolchain directive to v1.26.3 [#1779](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1779) ([renovate[bot]](https://github.com/apps/renovate))
+
+### Internal
+* Add changelog for v6.63.0 [#1772](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1772) ([scadu](https://github.com/scadu))
+* Add release notes for v6.64.0 [#1777](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1777) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## [v3.126.0](https://github.com/buildkite/agent/tree/v3.126.0) (2026-05-07)
+[Full Changelog](https://github.com/buildkite/agent/compare/v3.125.0...v3.126.0)
+
+### Added
+- Add `priority` and `queue` labels to the Prometheus job-start/end counters, plus a new `jobsRunning` gauge with the same labels [#3900](https://github.com/buildkite/agent/pull/3900) (@buildkate)
+
+### Changed
+- Document `BUILDKITE_S3_PROFILE` in `buildkite-agent artifact upload --help` [#3869](https://github.com/buildkite/agent/pull/3869) (@mastermanas805)
+
+### Internal
+- Remove `omitempty` JSON tags from `api.Job` (the struct is only ever unmarshalled from API responses, so the tags had no effect) [#3902](https://github.com/buildkite/agent/pull/3902) (@buildkate)
+- Dependabot updates: [#3847](https://github.com/buildkite/agent/pull/3847), [#3860](https://github.com/buildkite/agent/pull/3860), [#3879](https://github.com/buildkite/agent/pull/3879), [#3885](https://github.com/buildkite/agent/pull/3885), [#3886](https://github.com/buildkite/agent/pull/3886), [#3888](https://github.com/buildkite/agent/pull/3888), [#3890](https://github.com/buildkite/agent/pull/3890), [#3891](https://github.com/buildkite/agent/pull/3891), [#3895](https://github.com/buildkite/agent/pull/3895) (@dependabot[bot])
+</details>
+
+
 ## [v6.64.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.63.0...v6.64.0) (2026-05-04)
 
 ### Changed
