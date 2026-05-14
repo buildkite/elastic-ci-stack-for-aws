@@ -1003,7 +1003,7 @@ Resources:
     Condition: HasVariableSize
     Properties:
       LogGroupName: !Join ["/", ["/aws/lambda", !Ref AutoscalingFunction]]
-      RetentionInDays: 1
+      RetentionInDays: 365
 
   AutoscalingFunction:
     Type: AWS::Lambda::Function
