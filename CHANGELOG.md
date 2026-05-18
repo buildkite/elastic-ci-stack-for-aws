@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## Unreleased
+
+### Added
+* Public API: add `NestedVirtualizationEnabled` stack parameter for `c8i`, `m8i`, `r8i`, and their flex variants
+
 ## [v6.65.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.64.0...v6.65.0) (2026-05-08)
 
 ### Changed

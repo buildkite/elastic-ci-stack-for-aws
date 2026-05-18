@@ -88,6 +88,7 @@ Metadata:
         - InstanceOperatingSystem
         - InstanceTypes
         - CpuCredits
+        - NestedVirtualizationEnabled
         - EnableInstanceStorage
         - MountTmpfsAtTmp
         - AgentsPerInstance
@@ -656,6 +657,18 @@ Parameters:
       - standard
       - unlimited
     Default: "unlimited"
+
+  NestedVirtualizationEnabled:
+    Description: >
+        Enable nested virtualization on supported EC2 instance types. Sets
+        CpuOptions.NestedVirtualization=enabled on the agent launch template.
+        Supported on c8i, m8i, r8i, and their flex variants. If enabled, all
+        values in InstanceTypes must be from supported families or launches fail.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
 
   MaxSize:
     Description: Maximum number of instances. Controls cost ceiling and prevents runaway scaling.
@@ -1532,6 +1545,9 @@ Conditions:
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t3a" ]
         - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceTypes ] ], "t4g" ]
 
+    UseNestedVirtualization:
+      !Equals [ !Ref NestedVirtualizationEnabled, "true" ]
+
     UseStackNameForInstanceName:
       !Equals [ !Ref InstanceName, "" ]
 
@@ -2253,6 +2269,10 @@ Resources:
           CreditSpecification: !If
             - UsingBurstableInstances
             - CpuCredits: !Ref CpuCredits
+            - !Ref "AWS::NoValue"
+          CpuOptions: !If
+            - UseNestedVirtualization
+            - NestedVirtualization: enabled
             - !Ref "AWS::NoValue"
           TagSpecifications:
             - ResourceType: instance
