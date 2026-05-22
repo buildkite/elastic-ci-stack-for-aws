@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.66.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.65.0...v6.66.0) (2026-05-22)
+
+### Changed
+* Bump golang.org/x/sys from 0.43.0 to 0.44.0 by @dependabot[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1783
+
+### Dependency updates
+* Bump golang.org/x/sys from 0.43.0 to 0.44.0 by @dependabot[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1783
+
+### Internal
+* Add changelog for v6.65.0 by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1781
+
 ## [v6.65.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.64.0...v6.65.0) (2026-05-08)
 
 ### Changed
