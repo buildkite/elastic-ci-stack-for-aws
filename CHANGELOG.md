@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.66.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.66.1) (2026-05-26)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.0...v6.66.1)
+
+### Changed
+- Update buildkite-agent to v3.127.1 [#1789](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1789) (@renovate[bot])
+
+### Internal
+- Fix changelog formatting [#1787](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1787) (@scadu)
+- Update CHANGELOG for version v6.66.0 [#1786](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1786) (@JoeColeman95)
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at afebd3773003d6b3f9ad2d0f66e2b51e0d867bc9 -->
+
+## What's Changed
+### 🔒 Security
+* fix: remove eval from install.sh by @DrJosh9000 in https://github.com/buildkite/agent/pull/3940
+### 🐛 Fixed
+* fix: resume after job dispatch drops job by @DrJosh9000 in https://github.com/buildkite/agent/pull/3930
+* fix: Stop sending file paths on context cancellation by @DrJosh9000 in https://github.com/buildkite/agent/pull/3933
+* fix: nil deref if HTTP/2 is disabled by @DrJosh9000 in https://github.com/buildkite/agent/pull/3935
+* Fix error variable shadowing causing incorrect OTEL spans in hooks by @calebfroese in https://github.com/buildkite/agent/pull/3932
+* fix: Always restore process umask by @DrJosh9000 in https://github.com/buildkite/agent/pull/3939
+* fix: k8s bootstrap: swap env var precedence, with specific overrides by @DrJosh9000 in https://github.com/buildkite/agent/pull/3944
+### 🏠 Internal
+* A-1214 part 4: allow a special release label by @zhming0 in https://github.com/buildkite/agent/pull/3921
+* internal: [TE-5828] Add bktec plan step to collect commit metadata on agent builds by @gchan in https://github.com/buildkite/agent/pull/3924
+* internal: Bump test-engine-client to v2.5.1 and unify bktec call sites by @gchan in https://github.com/buildkite/agent/pull/3925
+* Update versioned brew formula based on version being released by @DrJosh9000 in https://github.com/buildkite/agent/pull/3934
+* fix: record temporary homeDir for later cleanup by @DrJosh9000 in https://github.com/buildkite/agent/pull/3942
+* chore: Add comments rationalising authless world-accessible socket by @DrJosh9000 in https://github.com/buildkite/agent/pull/3943
+* build(deps): bump the cloud-providers group across 1 directory with 8 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3950
+* build(deps): bump github.com/go-chi/chi/v5 from 5.2.5 to 5.3.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/3946
+* build(deps): bump github.com/buildkite/go-pipeline from 0.17.0 to 0.17.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/3947
+* build(deps): bump the golang-x group across 1 directory with 3 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3945
+* build(deps): bump connectrpc.com/connect from 1.19.2 to 1.20.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/3948
+* build(deps): bump the container-images group across 4 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/3949
+* build(deps): bump github.com/buildkite/go-buildkite/v4 from 4.21.0 to 4.22.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/3915
+* build(deps): bump the container-images group across 2 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/3951
+* build(deps): bump the container-images group across 2 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/3952
+
+## New Contributors
+* @gchan made their first contribution in https://github.com/buildkite/agent/pull/3924
+* @calebfroese made their first contribution in https://github.com/buildkite/agent/pull/3932
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.127.0...v3.127.1
+</details>
+
+
 ## [v6.66.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.65.0...v6.66.0) (2026-05-13)
 
 * Update buildkite-agent to v3.127.0 [#1784](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1784) ([renovate[bot]](https://github.com/apps/renovate))
