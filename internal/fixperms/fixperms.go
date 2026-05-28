@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/buildkite/elastic-ci-stack-for-aws/v6/internal/fixperms/fixer"
+	"golang.org/x/sys/unix"
 )
 
 // Files that are created by Docker containers end up with strange user and
@@ -55,6 +56,21 @@ const (
 )
 
 func main() {
+	// Raise NOFILE to the hard limit; the parallel walk holds
+	// ~parallelism × tree-depth open FDs.
+	var rl unix.Rlimit
+	if err := unix.Getrlimit(unix.RLIMIT_NOFILE, &rl); err != nil {
+		fmt.Fprintf(os.Stderr, "fix-perms: getrlimit(NOFILE) failed: %v\n", err)
+	} else if rl.Max > rl.Cur {
+		orig := rl.Cur
+		rl.Cur = rl.Max
+		if err := unix.Setrlimit(unix.RLIMIT_NOFILE, &rl); err != nil {
+			fmt.Fprintf(os.Stderr, "fix-perms: setrlimit(NOFILE, %d) failed: %v\n", rl.Max, err)
+		} else {
+			fmt.Fprintf(os.Stderr, "fix-perms: raised NOFILE soft limit %d -> %d\n", orig, rl.Cur)
+		}
+	}
+
 	msg, code := fixer.Main(os.Args, buildsDir, username)
 	if code != 0 {
 		fmt.Fprintln(os.Stderr, msg)
