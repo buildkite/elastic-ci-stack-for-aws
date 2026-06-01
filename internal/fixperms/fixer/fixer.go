@@ -1,4 +1,4 @@
-//go:buid linux
+//go:build linux
 
 package fixer
 
