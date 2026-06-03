@@ -56,9 +56,13 @@ variable "iam_instance_profile" {
 }
 
 data "amazon-ami" "al2023" {
+  # Pin to the AL2023 kernel-6.12 minimal image line. The fleet is validated on
+  # the 6.12 kernel; newer base images have moved to kernel6.18, which would be
+  # an unvalidated jump and breaks SocketCAN module install. most_recent still
+  # picks the latest (already security-patched) 6.12 base within this line.
   filters = {
     architecture        = var.arch
-    name                = "al2023-ami-minimal-*"
+    name                = "al2023-ami-minimal-*-kernel-6.12-*"
     virtualization-type = "hvm"
   }
   most_recent = true
