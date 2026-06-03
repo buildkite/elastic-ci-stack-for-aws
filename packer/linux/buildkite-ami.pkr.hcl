@@ -130,6 +130,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "scripts/install-kernel.sh"
+  }
+
+  provisioner "shell" {
     script = "scripts/install-cloudwatch-agent.sh"
   }
 
