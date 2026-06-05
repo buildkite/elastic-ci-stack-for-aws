@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.66.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.66.2) (2026-06-05)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.1...v6.66.2)
+
+### Changed
+- Update buildkite-agent to v3.127.2 [#1794](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1794) (@renovate[bot])
+- Bump golang.org/x/sys from 0.44.0 to 0.45.0 [#1788](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1788) (@dependabot[bot])
+- Update session-manager-plugin to v1.2.814.0 [#1793](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1793) (@renovate[bot])
+- Update aws-cli to v2.34.58 [#1792](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1792) (@renovate[bot])
+- Improve fix-perms with parallelism and progress output [#1791](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1791) (@JoeColeman95)
+
+### Internal
+- Add changelog for upcoming v6.66.1 release [#1790](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1790) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at b656ddd75f74adaf1c196f9f9b92e864f3a05cb7 -->
+
+## What's Changed
+### ✨ Added
+* PF-9591-traceset added  end-to-end W3C tracestate propagation to the agent by @SorchaAbel in https://github.com/buildkite/agent/pull/3958
+* feat: Configure artifact upload concurrency by @lox in https://github.com/buildkite/agent/pull/3976
+### 🐛 Fixed
+* Retry git checkout when per-attempt timeout fires by @scadu in https://github.com/buildkite/agent/pull/3962
+### 🏠 Internal
+* fix: missing \ in release-homebrew.sh by @DrJosh9000 in https://github.com/buildkite/agent/pull/3955
+* A-1270 part 1: move zstash into agent repo by @zhming0 in https://github.com/buildkite/agent/pull/3953
+* A-1270 part 2: merge zstash with cache package by @zhming0 in https://github.com/buildkite/agent/pull/3956
+* A-1270 part 3: refactor cache package tighten seperation of concern by @zhming0 in https://github.com/buildkite/agent/pull/3959
+* internal: Add comments about env files by @DrJosh9000 in https://github.com/buildkite/agent/pull/3957
+* A-1270 part 4: consolidate cache and agent API layer by @zhming0 in https://github.com/buildkite/agent/pull/3960
+* A-1270 part 5: rename Cache -> Cache Entry by @zhming0 in https://github.com/buildkite/agent/pull/3961
+* Release oldstable from v3, edge from v4 by @DrJosh9000 in https://github.com/buildkite/agent/pull/3931
+* A-1320 retry cache commands by @buildkate in https://github.com/buildkite/agent/pull/3963
+* Enable release pipeline for v... branches by @DrJosh9000 in https://github.com/buildkite/agent/pull/3964
+* refactor(cache): rename Save/Restore to RunSave/RunRestore by @buildkate in https://github.com/buildkite/agent/pull/3965
+* Replaces docs redirects for v2/v3 by @karensawrey in https://github.com/buildkite/agent/pull/3969
+
+## New Contributors
+* @quinn-diesel made their first contribution in https://github.com/buildkite/agent/pull/3980
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.127.1...v3.127.2
+</details>
+
+
 ## [v6.66.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.66.1) (2026-05-26)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.0...v6.66.1)
 
