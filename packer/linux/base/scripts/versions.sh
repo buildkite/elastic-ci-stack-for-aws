@@ -11,7 +11,7 @@ export GIT_LFS_VERSION="3.7.1"
 export GOSS_VERSION="v0.4.9"
 
 # Container Tools
-export DOCKER_COMPOSE_V2_VERSION="2.40.3"
+export DOCKER_COMPOSE_V2_VERSION="5.1.4"
 export DOCKER_BUILDX_VERSION="0.34.1"
 
 # Buildkite Tools
