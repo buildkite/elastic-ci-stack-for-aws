@@ -52,12 +52,10 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "^packer/linux/base/scripts/versions\\.sh$",
-        "^packer/windows/base/scripts/versions\\.ps1$"
+        "^packer/linux/base/scripts/versions\\.sh$"
       ],
       "matchStrings": [
-        "export GIT_LFS_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
-        "\\$GIT_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+        "export GIT_LFS_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "git-lfs/git-lfs",
