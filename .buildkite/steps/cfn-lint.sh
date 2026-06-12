@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "--- Installing cfn-lint"
-pip install -q cfn-lint==1.51.4
+python3.12 -m pip install -q cfn-lint==1.51.4
 
 echo "--- Running cfn-lint on templates in templates/"
 # cfn-lint will scan all *.json, *.yaml, *.yml, *.template files in the directory and subdirectories.
