@@ -11,7 +11,7 @@ services:
     command: go test -v ./...
 
   ruby:
-    image: ruby:3.4
+    image: ruby:4.0
     working_dir: /work
     environment:
       - DRY_RUN
