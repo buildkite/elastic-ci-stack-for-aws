@@ -11,7 +11,9 @@ KERNEL_MAJOR=$(echo "$KERNEL_VERSION" | cut -d. -f1,2)
 
 echo "Detected kernel version: $KERNEL_VERSION (major: $KERNEL_MAJOR)"
 
-if [[ "$KERNEL_MAJOR" == "6.12" ]]; then
+if [[ "$KERNEL_MAJOR" == "6.18" ]]; then
+  sudo dnf install -y kernel6.18-modules-extra kernel6.18-headers kernel6.18-devel
+elif [[ "$KERNEL_MAJOR" == "6.12" ]]; then
   # AL2023 with kernel 6.12 uses kernel6.12-* packages
   sudo dnf install -y kernel6.12-modules-extra kernel6.12-headers kernel6.12-devel
 elif [[ "$KERNEL_MAJOR" == "6.1" ]]; then
