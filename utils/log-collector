@@ -218,7 +218,7 @@ collect_lambda() {
 
 collect_lambdas() {
   local functions fn
-  functions=$(find_lambdas | tr '\t' '\n' | sort -u)
+  functions=$(find_lambdas | tr '\t' '\n' | sort -u) || true
 
   if [[ -z "$functions" ]]; then
     record_error "No Lambda functions found in stack $stackName"
