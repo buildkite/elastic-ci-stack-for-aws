@@ -282,17 +282,19 @@ Provide Buildkite with logs from CloudWatch Logs:
 
 ### Collect logs via script
 
-Use [`utils/log-collector`](utils/log-collector) to collect CloudWatch logs from your stack and bundle them into a `.tar.gz` for support.
+[`utils/log-collector`](utils/log-collector) pulls your stack's CloudWatch logs into a tarball you can send to support.
 
 ```bash
-# Lambda + ASG logs
+# Lambda and ASG logs
 ./utils/log-collector -s my-stack-name
 
-# Also include a specific instance's logs
+# Add a specific instance's logs too
 ./utils/log-collector -s my-stack-name -i i-0123456789abcdef0
 ```
 
-The script requires the AWS CLI configured with credentials for the account the stack runs in. Run with `-h` for all options.
+You'll need the AWS CLI set up with credentials for the account the stack runs in. It only reads (CloudFormation, Lambda, CloudWatch Logs and Auto Scaling), so a read-only role is fine. Run it with `-h` for the other flags.
+
+If a source has no logs you'll get a `.EMPTY` file instead of a `.log`, and a failed one leaves a `.ERROR` file. Whatever went wrong is also listed in `COLLECTION-ERRORS.txt`.
 
 You can also visit our [Forum](https://forum.buildkite.community) and post a question in the [Elastic CI Stack for AWS](https://forum.buildkite.community/c/elastic-ci-stack-for-aws/) section!
 
