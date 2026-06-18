@@ -119,6 +119,10 @@ last_error() {
   tr -s '[:space:]' ' ' <"$errFile" 2>/dev/null | sed 's/^ //; s/ $//' || true
 }
 
+missing_log_group() {
+  [[ "$1" == *ResourceNotFoundException* ]]
+}
+
 compute_start_time() {
   if date --version >/dev/null 2>&1; then
     date --date="${days} days ago" "+%s000"
@@ -130,7 +134,7 @@ compute_start_time() {
 collect_instance() {
   echo "Collecting logs for instance $instanceId..."
   local name safe file err
-  for name in buildkite-agent system lifecycled docker-daemon cloud-init cloud-init/output cfn-init elastic-stack auth; do
+  for name in buildkite-agent system lifecycled docker-daemon cloud-init cloud-init/output cfn-init elastic-stack auth EC2Launch/UserdataExecution; do
     safe="${name//\//-}"
     file="$dir/$safe-$instanceId.log"
     if ! aws_cli logs filter-log-events \
@@ -140,8 +144,12 @@ collect_instance() {
       --query "events[].[timestamp,message]" \
       --output "$outputFormat" >"$file" 2>"$errFile"; then
       err=$(last_error)
-      record_error "Failed to read /buildkite/$name for $instanceId: $err"
-      mark_failed "$safe-$instanceId.log" "Collection failed for /buildkite/$name: $err"
+      if missing_log_group "$err"; then
+        mark_empty "$safe-$instanceId.log" "Log group /buildkite/$name does not exist for $instanceId"
+      else
+        record_error "Failed to read /buildkite/$name for $instanceId: $err"
+        mark_failed "$safe-$instanceId.log" "Collection failed for /buildkite/$name: $err"
+      fi
       continue
     fi
     if is_empty "$file"; then
@@ -207,8 +215,12 @@ collect_lambda() {
     --query "events[].[timestamp,message]" \
     --output "$outputFormat" >"$file" 2>"$errFile"; then
     err=$(last_error)
-    record_error "Failed to read $logGroup for $fn: $err"
-    mark_failed "lambda-${safe}.log" "Collection failed for $logGroup: $err"
+    if missing_log_group "$err"; then
+      mark_empty "lambda-${safe}.log" "Log group $logGroup does not exist for $fn"
+    else
+      record_error "Failed to read $logGroup for $fn: $err"
+      mark_failed "lambda-${safe}.log" "Collection failed for $logGroup: $err"
+    fi
     return 0
   fi
   if is_empty "$file"; then
