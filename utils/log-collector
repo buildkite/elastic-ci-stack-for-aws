@@ -68,7 +68,7 @@ parse_args() {
     exit 1
   fi
 
-  if [[ -n "$instanceId" && ! "$instanceId" =~ ^i-[0-9a-f]+$ ]]; then
+  if [[ -n "$instanceId" && ! "$instanceId" =~ ^i-[0-9a-f]{8}([0-9a-f]{9})?$ ]]; then
     echo "Error: -i must be an EC2 instance ID (got '$instanceId')" 1>&2
     exit 1
   fi
