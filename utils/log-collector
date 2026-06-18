@@ -163,20 +163,20 @@ list_lambdas() {
 }
 
 find_lambdas() {
-  list_lambdas "$stackName"
+  local stack="$1" nested child
+  list_lambdas "$stack"
 
-  local nested child
   if ! nested=$(aws_cli cloudformation list-stack-resources \
-    --stack-name "$stackName" \
+    --stack-name "$stack" \
     --query "StackResourceSummaries[?ResourceType=='AWS::CloudFormation::Stack' || ResourceType=='AWS::Serverless::Application'].PhysicalResourceId" \
     --output text 2>"$errFile" | tr '\t' '\n'); then
-    record_error "Failed to list nested stacks in $stackName: $(last_error)"
+    record_error "Failed to list nested stacks in $stack: $(last_error)"
     return 0
   fi
 
   while IFS= read -r child; do
     [[ -z "$child" ]] && continue
-    list_lambdas "$child"
+    find_lambdas "$child"
   done <<<"$nested"
 }
 
@@ -218,7 +218,7 @@ collect_lambda() {
 
 collect_lambdas() {
   local functions fn
-  functions=$(find_lambdas | tr '\t' '\n' | sort -u) || true
+  functions=$(find_lambdas "$stackName" | tr '\t' '\n' | sort -u) || true
 
   if [[ -z "$functions" ]]; then
     record_error "No Lambda functions found in stack $stackName"
