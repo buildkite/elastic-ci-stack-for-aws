@@ -268,6 +268,22 @@ package() {
   echo "Finished collecting logs, you can find them at $PWD/$archive"
 }
 
+summarise() {
+  local errors=0 logs
+  if [[ -f "$dir/COLLECTION-ERRORS.txt" ]]; then
+    errors=$(wc -l <"$dir/COLLECTION-ERRORS.txt" | tr -d ' ')
+  fi
+  logs=$(find "$dir" -maxdepth 1 -type f -name '*.log' | wc -l | tr -d ' ')
+
+  if ((errors > 0)); then
+    echo "WARNING: collection completed with $errors error(s). See COLLECTION-ERRORS.txt for more details." 1>&2
+  fi
+  if ((logs == 0 && errors > 0)); then
+    echo "ERROR: every source failed." 1>&2
+    exit 1
+  fi
+}
+
 main() {
   parse_args "$@"
 
@@ -294,6 +310,7 @@ main() {
   collect_asg
 
   package
+  summarise
 }
 
 main "$@"
