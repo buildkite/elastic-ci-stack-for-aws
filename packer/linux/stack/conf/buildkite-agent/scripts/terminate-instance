@@ -29,6 +29,23 @@ fetch_metadata() {
   local retry_count=0
   local backoff=1
 
+  # Validate parameters based on operation type
+  # When fetching token: endpoint must be empty, token should be empty
+  # When fetching metadata: endpoint must NOT be empty, token must NOT be empty
+  if [[ -z "$token" ]]; then
+    # Token fetching mode - endpoint must be empty
+    if [[ ! -z "$endpoint" ]]; then
+      echo "ERROR: Invalid parameters to fetch_metadata - endpoint must be empty when fetching token" >&2
+      return 1
+    fi
+  else
+    # Metadata fetching mode - endpoint must not be empty
+    if [[ -z "$endpoint" ]]; then
+      echo "ERROR: Invalid parameters to fetch_metadata - endpoint cannot be empty when token is provided" >&2
+      return 1
+    fi
+  fi
+
   while [[ $retry_count -lt $max_retries ]]; do
     if [[ -z "$token" ]]; then
       # Fetching token (no token header needed)
