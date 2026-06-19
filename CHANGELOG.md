@@ -4,6 +4,88 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.67.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.2...v6.67.0) (2026-06-19)
+
+* Add scaler event schedule jitter parameter [#1817](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1817) ([vivster7](https://github.com/vivster7))
+* Bump buildkite-agent-scaler to v1.12.0 as part of [#1817](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1817) ([vivster7](https://github.com/vivster7))
+* Rework log collector to use AWS CLI directly [#1815](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1815) ([JoeColeman95](https://github.com/JoeColeman95))
+* Update buildkite-agent to v3.128.0 [#1816](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1816) ([renovate[bot]](https://github.com/apps/renovate))
+* Update golang Docker tag to v1.26 [#1810](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1810) ([renovate[bot]](https://github.com/apps/renovate))
+* Update ruby Docker tag to v4 [#1811](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1811) ([renovate[bot]](https://github.com/apps/renovate))
+* Update aws-cli to v2.35.4 [#1806](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1806) ([renovate[bot]](https://github.com/apps/renovate))
+* Add NestedVirtualizationEnabled launch-template parameter [#1769](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1769) ([iangmaia](https://github.com/iangmaia))
+* Update buildkite/lifecycled to v3.6.0 [#1809](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1809) ([renovate[bot]](https://github.com/apps/renovate))
+* Add m9g(d) instance family [#1808](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1808) ([scadu](https://github.com/scadu))
+* Update buildkite plugin aws-assume-role-with-web-identity to v1.6.0 [#1807](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1807) ([renovate[bot]](https://github.com/apps/renovate))
+* Update module golang.org/x/sys to v0.46.0 [#1805](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1805) ([renovate[bot]](https://github.com/apps/renovate))
+* Update module golang.org/x/sync to v0.21.0 [#1804](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1804) ([renovate[bot]](https://github.com/apps/renovate))
+* Update go toolchain directive to v1.26.4 [#1803](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1803) ([renovate[bot]](https://github.com/apps/renovate))
+* Update docker/compose to v5.1.4 [#1799](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1799) ([renovate[bot]](https://github.com/apps/renovate))
+* Update git-for-windows/git to v2.54.0 [#1802](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1802) ([renovate[bot]](https://github.com/apps/renovate))
+* Update docker/buildx to v0.34.1 [#1798](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1798) ([renovate[bot]](https://github.com/apps/renovate))
+* Update git-lfs/git-lfs to v3.7.1 [#1800](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1800) ([renovate[bot]](https://github.com/apps/renovate))
+* Track Git for Windows version with Renovate [#1801](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1801) ([petetomasik](https://github.com/petetomasik))
+* Fix git-lfs update with Renovate [#1797](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1797) ([scadu](https://github.com/scadu))
+* Add release notes for v6.66.2 [#1795](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1795) ([scadu](https://github.com/scadu))
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 69b020ec257eb42903116d9f4021e32986e7c245 -->
+
+## What's Changed
+### ✨ Added
+* Add SSH config and env var by @mcncl in https://github.com/buildkite/agent/pull/3938
+* Add support for git commit verification by @omehegan in https://github.com/buildkite/agent/pull/3905
+* feat: add sparse checkout support by @mcncl in https://github.com/buildkite/agent/pull/3903
+* feat: migrate agent cache CLI to cache v2 protocol by @ss1909 in https://github.com/buildkite/agent/pull/3993
+* Add `buildkite-agent job promise-failure` command by @123sarahj123 in https://github.com/buildkite/agent/pull/3992
+* feature: Add Job API + CLI support for setting the working directory from polyglot hooks by @francoiscampbell in https://github.com/buildkite/agent/pull/3968
+### 🐛 Fixed
+* Fix env set/unset panic on Job API errors by @petetomasik in https://github.com/buildkite/agent/pull/3987
+* Workaround for ETXTBSY flake by @DrJosh9000 in https://github.com/buildkite/agent/pull/3999
+* Clarify redaction failures without Job API by @jamiemonserrate in https://github.com/buildkite/agent/pull/3997
+* Fix delayed disconnect-after-job in streaming ping mode by @maleadt in https://github.com/buildkite/agent/pull/3994
+### 🔧 Changed
+* chore: Add artifact upload timing summary by @lox in https://github.com/buildkite/agent/pull/3981
+* chore: Add artifact upload span attributes by @lox in https://github.com/buildkite/agent/pull/3982
+* feat: Change ID to Name in the agent to match v2 (follow up on #3993) by @ss1909 in https://github.com/buildkite/agent/pull/3998
+* feat: Support fallbackLimit for agent keyPart by @ss1909 in https://github.com/buildkite/agent/pull/4007
+* feat: Add branch, step, and pipeline as agent cache-key facts, resolv… by @ss1909 in https://github.com/buildkite/agent/pull/4008
+### 🏠 Internal
+* build(deps): bump the golang-x group with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3983
+* build(deps): bump the cloud-providers group across 1 directory with 11 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3972
+* build(deps): bump the container-images group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3928
+* build(deps): bump the container-images group across 5 directories with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3984
+* build(deps): bump the container-images group across 3 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/3985
+* build(deps): bump the cloud-providers group across 1 directory with 10 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3986
+* chore: run go1.26.3 fix ./... by @DrJosh9000 in https://github.com/buildkite/agent/pull/3970
+* build(deps): bump github.com/buildkite/go-buildkite/v4 from 4.22.0 to 4.23.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/3973
+* [TE-6071] Request xgboost selection plan in collect-commit-metadata by @gchan in https://github.com/buildkite/agent/pull/3988
+* lint: Prefer t.Context in tests by @lox in https://github.com/buildkite/agent/pull/3977
+* fix: Test build failure due to missing context import by @DrJosh9000 in https://github.com/buildkite/agent/pull/3989
+* fix: flaky TestCollect_Literal by @DrJosh9000 in https://github.com/buildkite/agent/pull/3990
+* fix: flaky TestContextCancelInterrupts by @DrJosh9000 in https://github.com/buildkite/agent/pull/3991
+* pin creack/pty version in go mod by @jeremybumsted in https://github.com/buildkite/agent/pull/3995
+* build(deps): bump the container-images group across 4 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4001
+* build(deps): bump the golang-x group across 1 directory with 3 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4000
+* build(deps): bump the container-images group across 3 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4004
+* build(deps): bump the container-images group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4005
+* build(deps): bump the cloud-providers group across 1 directory with 8 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4006
+* build(deps): bump the otel group across 1 directory with 9 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/3971
+* A-1376 part 1: e2e test for basic cache read/write by @zhming0 in https://github.com/buildkite/agent/pull/4009
+* A-1376 part 3: e2e test for filesystem integrity by @zhming0 in https://github.com/buildkite/agent/pull/4011
+* A-1376 part 4: e2e test cache fallback logic by @zhming0 in https://github.com/buildkite/agent/pull/4012
+
+## New Contributors
+* @jeremybumsted made their first contribution in https://github.com/buildkite/agent/pull/3995
+* @jamiemonserrate made their first contribution in https://github.com/buildkite/agent/pull/3997
+* @maleadt made their first contribution in https://github.com/buildkite/agent/pull/3994
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.127.2...v3.128.0
+</details>
+
+
 ## Unreleased
 
 ### Added
