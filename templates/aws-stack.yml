@@ -145,6 +145,7 @@ Metadata:
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
+        - ScalerEventScheduleJitter
         - ScalerMinPollInterval
         - ScalerEnableExperimentalElasticCIMode
         - EnableScheduledScaling
@@ -693,6 +694,13 @@ Parameters:
       Should be an expression with units. Example: '30 seconds', '1 minute', '5 minutes'.
     Type: String
     Default: "1 minute"
+
+  ScalerEventScheduleJitter:
+    Description: >
+      Maximum deterministic delay before scheduled buildkite-agent-scaler invocations poll APIs.
+      Use this to stagger many scaler Lambdas, e.g. '30s'.
+    Type: String
+    Default: "0s"
 
   ScalerMinPollInterval:
     Description: >
@@ -2902,7 +2910,7 @@ Resources:
           - AgentScalerARN
           - "x86-64"
           - ARN
-        SemanticVersion: 1.11.2
+        SemanticVersion: 1.12.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -2920,6 +2928,7 @@ Resources:
         ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
         ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
+        EventScheduleJitter: !Ref ScalerEventScheduleJitter
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
         EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
@@ -2934,7 +2943,7 @@ Resources:
           - AgentScalerARN
           - "arm64"
           - ARN
-        SemanticVersion: 1.11.2
+        SemanticVersion: 1.12.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -2952,6 +2961,7 @@ Resources:
         ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
         ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
+        EventScheduleJitter: !Ref ScalerEventScheduleJitter
         MinPollInterval: !Ref ScalerMinPollInterval
         LogRetentionDays: !Ref LogRetentionDays
         EnableElasticCIMode: !Ref ScalerEnableExperimentalElasticCIMode
