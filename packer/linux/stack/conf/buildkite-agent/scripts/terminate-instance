@@ -54,7 +54,7 @@ fetch_metadata() {
         --connect-timeout 2 \
         --max-time 5 \
         -X PUT \
-        -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+        -H "X-aws-ec2-metadata-token-ttl-seconds: 120" \
         --location "http://169.254.169.254/latest/api/token"; then
         return 0
       fi
@@ -100,35 +100,18 @@ if ! region=$(fetch_metadata "http://169.254.169.254/latest/meta-data/placement/
 fi
 
 echo "requesting instance termination..."
-if [[ $BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB == "true" ]]; then
-  # Try to terminate with capacity decrement first
-  if terminate "$region" "$instance_id"; then
-    echo "Successfully terminated instance with desired capacity decremented"
-  else
-    # If that fails (e.g., desired == min), try without decrementing
-    # This allows the ASG to replace the instance
-    echo "Termination with capacity decrement failed, attempting without decrement..."
-    if terminate_without_decrement "$region" "$instance_id"; then
-      echo "Successfully terminated instance (ASG will launch replacement)"
-    else
-      # If both termination attempts fail, mark as unhealthy
-      echo "Direct termination failed, marking instance as unhealthy..."
-      mark_as_unhealthy "$region" "$instance_id"
-    fi
-  fi
+# Try to terminate with capacity decrement first
+if terminate "$region" "$instance_id"; then
+  echo "Successfully terminated instance with desired capacity decremented"
 else
-  # In non-terminate-after-job mode, also attempt graceful termination with fallback
-  # If termination fails, mark as unhealthy so ASG replaces it rather than leaving it running
-  if terminate "$region" "$instance_id"; then
-    echo "Successfully terminated instance with desired capacity decremented"
+  # If that fails (e.g., desired == min), try without decrementing
+  # This allows the ASG to replace the instance
+  echo "Termination with capacity decrement failed, attempting without decrement..."
+  if terminate_without_decrement "$region" "$instance_id"; then
+    echo "Successfully terminated instance (ASG will launch replacement)"
   else
-    echo "Termination with capacity decrement failed, attempting without decrement..."
-    if terminate_without_decrement "$region" "$instance_id"; then
-      echo "Successfully terminated instance (ASG will launch replacement)"
-    else
-      # Mark as unhealthy for ASG replacement instead of leaving instance running
-      echo "Direct termination failed, marking instance as unhealthy..."
-      mark_as_unhealthy "$region" "$instance_id"
-    fi
+    # If both termination attempts fail, mark as unhealthy
+    echo "Direct termination failed, marking instance as unhealthy..."
+    mark_as_unhealthy "$region" "$instance_id"
   fi
 fi
