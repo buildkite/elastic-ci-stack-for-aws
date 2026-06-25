@@ -9,6 +9,12 @@ terminate() {
     --should-decrement-desired-capacity
 }
 
+terminate_without_decrement() {
+  aws autoscaling terminate-instance-in-auto-scaling-group \
+    --region "$1" \
+    --instance-id "$2"
+}
+
 mark_as_unhealthy() {
   aws autoscaling set-instance-health \
     --region "$1" \
@@ -16,37 +22,96 @@ mark_as_unhealthy() {
     --health-status Unhealthy
 }
 
+fetch_metadata() {
+  local endpoint="$1"
+  local token="$2"
+  local max_retries=3
+  local retry_count=0
+  local backoff=1
+
+  # Validate parameters based on operation type
+  # When fetching token: endpoint must be empty, token should be empty
+  # When fetching metadata: endpoint must NOT be empty, token must NOT be empty
+  if [[ -z "$token" ]]; then
+    # Token fetching mode - endpoint must be empty
+    if [[ ! -z "$endpoint" ]]; then
+      echo "ERROR: Invalid parameters to fetch_metadata - endpoint must be empty when fetching token" >&2
+      return 1
+    fi
+  else
+    # Metadata fetching mode - endpoint must not be empty
+    if [[ -z "$endpoint" ]]; then
+      echo "ERROR: Invalid parameters to fetch_metadata - endpoint cannot be empty when token is provided" >&2
+      return 1
+    fi
+  fi
+
+  while [[ $retry_count -lt $max_retries ]]; do
+    if [[ -z "$token" ]]; then
+      # Fetching token (no token header needed)
+      if curl \
+        --fail --silent --show-error \
+        --connect-timeout 2 \
+        --max-time 5 \
+        -X PUT \
+        -H "X-aws-ec2-metadata-token-ttl-seconds: 120" \
+        --location "http://169.254.169.254/latest/api/token"; then
+        return 0
+      fi
+    else
+      # Fetching metadata with token
+      if curl \
+        --fail --silent --show-error \
+        --connect-timeout 2 \
+        --max-time 5 \
+        -H "X-aws-ec2-metadata-token: $token" \
+        --location "$endpoint"; then
+        return 0
+      fi
+    fi
+
+    retry_count=$((retry_count + 1))
+    if [[ $retry_count -lt $max_retries ]]; then
+      echo "Metadata fetch failed, retrying in ${backoff}s (attempt $((retry_count + 1))/$max_retries)..." >&2
+      sleep "$backoff"
+      backoff=$((backoff * 2))
+    fi
+  done
+
+  return 1
+}
 echo "sleeping for 10 seconds before terminating instance to allow agent logs to drain to cloudwatch..."
 sleep 10
 
-token=$(
-  curl \
-    --fail --silent --show-error \
-    -X PUT \
-    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
-    --location "http://169.254.169.254/latest/api/token"
-)
-instance_id=$(
-  curl \
-    --fail --silent --show-error \
-    -H "X-aws-ec2-metadata-token: $token" \
-    --location "http://169.254.169.254/latest/meta-data/instance-id"
-)
-region=$(
-  curl \
-    --fail --silent --show-error \
-    -H "X-aws-ec2-metadata-token: $token" \
-    --location "http://169.254.169.254/latest/meta-data/placement/region"
-)
+echo "fetching EC2 metadata..."
+if ! token=$(fetch_metadata "" ""); then
+  echo "ERROR: Failed to fetch metadata token after retries" >&2
+  exit 1
+fi
+
+if ! instance_id=$(fetch_metadata "http://169.254.169.254/latest/meta-data/instance-id" "$token"); then
+  echo "ERROR: Failed to fetch instance ID after retries" >&2
+  exit 1
+fi
+
+if ! region=$(fetch_metadata "http://169.254.169.254/latest/meta-data/placement/region" "$token"); then
+  echo "ERROR: Failed to fetch region after retries" >&2
+  exit 1
+fi
 
 echo "requesting instance termination..."
-if [[ $BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB == "true" ]]; then
-  # If the ASG is at the min capacity, the call to terminate-instance-in-autoscaling-group
-  # In this case, we mark the instance as unhealthy, then the ASG will spin up a new instance
-  # to replace it.
-  terminate "$region" "$instance_id" || mark_as_unhealthy "$region" "$instance_id"
+# Try to terminate with capacity decrement first
+if terminate "$region" "$instance_id"; then
+  echo "Successfully terminated instance with desired capacity decremented"
 else
-  # If we're not in terminate-after-job mode, then it's fine for this to fail. Systemd will restart
-  # the agent and it'll be as if the instance never got shut down.
-  terminate "$region" "$instance_id"
+  # If that fails (e.g., desired == min), try without decrementing
+  # This allows the ASG to replace the instance
+  echo "Termination with capacity decrement failed, attempting without decrement..."
+  if terminate_without_decrement "$region" "$instance_id"; then
+    echo "Successfully terminated instance (ASG will launch replacement)"
+  else
+    # If both termination attempts fail, mark as unhealthy
+    echo "Direct termination failed, marking instance as unhealthy..."
+    mark_as_unhealthy "$region" "$instance_id"
+  fi
 fi
