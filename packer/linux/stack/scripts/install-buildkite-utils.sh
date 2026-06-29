@@ -19,6 +19,15 @@ echo "Installing fix-buildkite-agent-builds-permissions..."
 sudo chmod +x "/tmp/build/fix-perms-linux-${ARCH}"
 sudo mv "/tmp/build/fix-perms-linux-${ARCH}" /usr/bin/fix-buildkite-agent-builds-permissions
 
+# goss is built by the build/goss-* Makefile targets and uploaded via the
+# build/ provisioner; dgoss is a shell script fetched from the same commit.
+echo "Installing goss ${GOSS_VERSION} (built from ${GOSS_COMMIT}) for system validation..."
+sudo chmod +x "/tmp/build/goss-linux-${ARCH}"
+sudo mv "/tmp/build/goss-linux-${ARCH}" /usr/local/bin/goss
+sudo curl -Lsf -o /usr/local/bin/dgoss \
+  "https://raw.githubusercontent.com/goss-org/goss/${GOSS_COMMIT}/extras/dgoss/dgoss"
+sudo chmod +rx /usr/local/bin/dgoss
+
 echo "Downloading s3-secrets-helper ${S3_SECRETS_HELPER_VERSION}..."
 sudo curl -Lsf -o /usr/local/bin/s3secrets-helper \
   "https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/releases/download/v${S3_SECRETS_HELPER_VERSION}/s3secrets-helper-linux-${ARCH}"

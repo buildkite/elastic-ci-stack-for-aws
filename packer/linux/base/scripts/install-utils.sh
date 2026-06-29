@@ -82,12 +82,8 @@ curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v"${GIT_LFS_VERSI
 sudo git-lfs-"${GIT_LFS_VERSION}"/install.sh
 popd
 
-# See https://github.com/goss-org/goss/releases for release versions
-echo "Installing goss $GOSS_VERSION for system validation..."
-sudo curl -L "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/goss-linux-${ARCH}" -o /usr/local/bin/goss
-sudo chmod +rx /usr/local/bin/goss
-sudo curl -L "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/dgoss" -o /usr/local/bin/dgoss
-sudo chmod +rx /usr/local/bin/dgoss
+# goss is built from source and installed in the stack image (see
+# install-buildkite-utils.sh), because we pin it to an unreleased commit.
 
 echo "Adding authorized keys systemd units..."
 sudo cp /tmp/conf/ssh/systemd/* /etc/systemd/system
