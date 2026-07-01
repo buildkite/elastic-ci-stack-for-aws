@@ -4,6 +4,60 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.68.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.68.0) (2026-07-01)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.67.0...v6.68.0)
+
+### Changed
+- Update buildkite-agent to v3.129.0 [#1820](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1820) (@renovate[bot])
+- Update buildkite-agent to v3.130.0 [#1824](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1824) (@renovate[bot])
+- Update session-manager-plugin to v1.2.835.0 [#1823](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1823) (@renovate[bot])
+- Update aws-cli to v2.35.13 [#1822](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1822) (@renovate[bot])
+- Build goss from source [#1821](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1821) (@scadu)
+- Enhance termination script with improved metadata fetching [#1814](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1814) (@nsuma8989)
+- Update changelogs for upcoming v6.67.0 [#1818](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1818) (@lizrabuya)
+
+<details>
+  <summary><h3>Agent Changelog</h3></summary>
+
+## What's Changed
+### ✨ Added
+* Agent identity now available in lifecycle hooks. The agent-startup and agent-shutdown hooks now receive BUILDKITE_AGENT_IDS and BUILDKITE_AGENT_NAMES — comma-separated lists of the IDs and names of all agents registered by the process, in spawn order. Autoscalers and other hook consumers can discover registered agents from the hook environment instead of querying the API - by @catkins in https://github.com/buildkite/agent/pull/4023
+* feat: add support for GIT LFS checkout by @lizrabuya in https://github.com/buildkite/agent/pull/3909
+* Debounce `buildkite-agent job promise-failure` via the Job API by @jordandcarter in https://github.com/buildkite/agent/pull/3996
+
+### 🐛 Fixed
+* Avoid overriding BUILDKITE_GIT_SPARSE_CHECKOUT_PATHS when agent has no sparse config by @lizrabuya in https://github.com/buildkite/agent/pull/4029
+### 🔧 Changed
+* feat: Add `--reject-parse-warnings` flag to fail pipeline upload on p… by @ss1909 in https://github.com/buildkite/agent/pull/4031
+### 🏠 Internal
+* Stacked review changes for #3996 by @moskyb in https://github.com/buildkite/agent/pull/4027
+* A-1414: support hosted cache by @zhming0 in https://github.com/buildkite/agent/pull/4028
+* A-1453: tune cache restore s3 backend concurrency and part size by @zhming0 in https://github.com/buildkite/agent/pull/4037
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.129.0...v3.130.0
+</details>
+<details>
+  <summary><h3>Agent Changelog (v3.128.0 → v3.129.0)</h3></summary>
+
+## What's Changed
+### ✨ Added
+* Concurrently register spawn by @DrJosh9000 in https://github.com/buildkite/agent/pull/4014
+* redactor add: Add optional filtering like env vars by @DrJosh9000 in https://github.com/buildkite/agent/pull/3605
+* Add `meta-data set-batch` command by @pda in https://github.com/buildkite/agent/pull/3791
+### 🔧 Changed
+* Skip tracking unchanged slices in ReadFromEnvironment (suppress BUILDKITE_GIT_SUBMODULE_CLONE_CONFIG log noise) by @lizrabuya in https://github.com/buildkite/agent/pull/4015
+### 🏠 Internal
+* perf: speed up job integration tests by @lox in https://github.com/buildkite/agent/pull/3842
+* chore: put cache logs in collapsed group by @buildkate in https://github.com/buildkite/agent/pull/4017
+* chore: resolve default cache configuration file by @buildkate in https://github.com/buildkite/agent/pull/4018
+* fix(cache): set flag as name singular by @buildkate in https://github.com/buildkite/agent/pull/4024
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.128.0...v3.129.0
+</details>
+
+
 ## [v6.67.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.2...v6.67.0) (2026-06-19)
 
 * Add scaler event schedule jitter parameter [#1817](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1817) ([vivster7](https://github.com/vivster7))
