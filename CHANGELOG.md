@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.67.0...v6.68.0)
 
 ### Changed
+- Update buildkite-agent to v3.129.0 [#1820](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1820) (@renovate[bot])
 - Update buildkite-agent to v3.130.0 [#1824](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1824) (@renovate[bot])
 - Update session-manager-plugin to v1.2.835.0 [#1823](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1823) (@renovate[bot])
 - Update aws-cli to v2.35.13 [#1822](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1822) (@renovate[bot])
