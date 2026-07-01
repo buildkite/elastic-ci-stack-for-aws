@@ -8,7 +8,16 @@ export SESSION_MANAGER_PLUGIN_VERSION="1.2.814.0"
 
 # Development Tools
 export GIT_LFS_VERSION="3.7.1"
-export GOSS_VERSION="v0.4.9"
+
+# goss is built from source (build/goss-* in the Makefile), pinned to a commit
+# because the dependency-bump fix (https://github.com/goss-org/goss/pull/1064)
+# for the Go CVEs is not in any release yet (latest is v0.4.9). Revert to a
+# release download once a version above v0.4.9 ships with the fix.
+# GOSS_VERSION derives its short hash from GOSS_COMMIT, so a Renovate digest
+# bump updates both. Bump the base version (v0.4.9) when goss next tags a release.
+export GOSS_COMMIT="c4634acb0ff00fff08438b2396deb72e6b2b9d83"
+GOSS_VERSION="v0.4.9-dev-$(printf '%.7s' "$GOSS_COMMIT")"
+export GOSS_VERSION
 
 # Container Tools
 export DOCKER_COMPOSE_V2_VERSION="5.1.4"
