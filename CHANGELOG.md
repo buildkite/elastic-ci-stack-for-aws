@@ -36,6 +36,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 **Full Changelog**: https://github.com/buildkite/agent/compare/v3.129.0...v3.130.0
 </details>
+<details>
+  <summary><h3>Agent Changelog (v3.128.0 → v3.129.0)</h3></summary>
+
+## What's Changed
+### ✨ Added
+* Concurrently register spawn by @DrJosh9000 in https://github.com/buildkite/agent/pull/4014
+* redactor add: Add optional filtering like env vars by @DrJosh9000 in https://github.com/buildkite/agent/pull/3605
+* Add `meta-data set-batch` command by @pda in https://github.com/buildkite/agent/pull/3791
+### 🔧 Changed
+* Skip tracking unchanged slices in ReadFromEnvironment (suppress BUILDKITE_GIT_SUBMODULE_CLONE_CONFIG log noise) by @lizrabuya in https://github.com/buildkite/agent/pull/4015
+### 🏠 Internal
+* perf: speed up job integration tests by @lox in https://github.com/buildkite/agent/pull/3842
+* chore: put cache logs in collapsed group by @buildkate in https://github.com/buildkite/agent/pull/4017
+* chore: resolve default cache configuration file by @buildkate in https://github.com/buildkite/agent/pull/4018
+* fix(cache): set flag as name singular by @buildkate in https://github.com/buildkite/agent/pull/4024
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.128.0...v3.129.0
+</details>
 
 
 ## [v6.67.0](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.2...v6.67.0) (2026-06-19)
