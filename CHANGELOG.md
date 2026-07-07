@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.68.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.68.1) (2026-07-07)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.68.0...v6.68.1)
+
+### Changed
+- Update buildkite-agent to v3.131.0 [#1828](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1828) (@renovate[bot])
+- Add release notes for upcoming v6.68.0 [#1825](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1825) (@scadu)
+
+### Internal
+- generate-changelog: fix changelog for multi version bump [#1826](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1826) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.131.0)</h3></summary>
+
+## What's Changed
+### 🐛 Fixed
+* PS-2124: GCS artifact upload to bucket root no longer uses a leading-slash key by @tomowatt in https://github.com/buildkite/agent/pull/4032
+* Gate GIT_LFS_SKIP_SMUDGE on git-lfs-enabled flag by @petetomasik in https://github.com/buildkite/agent/pull/4042
+* fix: let k8s command containers override BUILDKITE_SHELL/HOOKS_SHELL via podSpec env, falling back to the agent's value when unset by @ss1909 in https://github.com/buildkite/agent/pull/4047
+### 🔧 Changed
+* [SUP-6632]: Clarify `--include-retried-jobs` flag help text by @stephanieatte in https://github.com/buildkite/agent/pull/4049
+### 🏠 Internal
+* fix(cache-restore): retry s3 Download on 412 by @buildkate in https://github.com/buildkite/agent/pull/4045
+* Suggestion for #4050 by @isaacsu in https://github.com/buildkite/agent/pull/4052
+* Conditionally refresh cache TTL on restore (A-1454) by @zhming0 in https://github.com/buildkite/agent/pull/4050
+
+## New Contributors
+* @stephanieatte made their first contribution in https://github.com/buildkite/agent/pull/4049
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.130.0...v3.131.0
+</details>
+
+
+
 ## [v6.68.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.68.0) (2026-07-01)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.67.0...v6.68.0)
 
