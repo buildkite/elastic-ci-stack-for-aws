@@ -308,11 +308,19 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
     echo "Creating ephemeral git-mirrors direcotry at $EPHEMERAL_GIT_MIRRORS_PATH"
     mkdir -p "${EPHEMERAL_GIT_MIRRORS_PATH}"
 
-    echo Bind mounting ephemeral git-mirror directory to git-mirrors path...
-    mount -o bind "${EPHEMERAL_GIT_MIRRORS_PATH}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+    if findmnt --mountpoint "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}" >/dev/null; then
+      echo "$BUILDKITE_AGENT_GIT_MIRRORS_PATH is already mounted. Skipping bind mount."
+    else
+      echo Bind mounting ephemeral git-mirror directory to git-mirrors path...
+      mount -o bind "${EPHEMERAL_GIT_MIRRORS_PATH}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}"
+    fi
 
-    echo Writing bind mount to fstab...
-    echo "${EPHEMERAL_GIT_MIRRORS_PATH} ${BUILDKITE_AGENT_GIT_MIRRORS_PATH} none defaults,bind 0 0" >>/etc/fstab
+    if grep -q -E "[[:space:]]${BUILDKITE_AGENT_GIT_MIRRORS_PATH}[[:space:]]" /etc/fstab; then
+      echo "$BUILDKITE_AGENT_GIT_MIRRORS_PATH already exists in /etc/fstab. Skipping fstab update."
+    else
+      echo Writing bind mount to fstab...
+      echo "${EPHEMERAL_GIT_MIRRORS_PATH} ${BUILDKITE_AGENT_GIT_MIRRORS_PATH} none defaults,bind 0 0" >>/etc/fstab
+    fi
 
     echo fstab is now:
     cat /etc/fstab
@@ -336,8 +344,17 @@ if [[ "${BUILDKITE_ENABLE_INSTANCE_STORAGE:-false}" == "true" ]]; then
   EPHEMERAL_BUILD_PATH="/mnt/ephemeral/builds"
   mkdir -p "${EPHEMERAL_BUILD_PATH}"
 
-  mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
-  echo "${EPHEMERAL_BUILD_PATH} ${BUILDKITE_AGENT_BUILD_PATH} none defaults,bind 0 0" >>/etc/fstab
+  if findmnt --mountpoint "${BUILDKITE_AGENT_BUILD_PATH}" >/dev/null; then
+    echo "$BUILDKITE_AGENT_BUILD_PATH is already mounted. Skipping bind mount."
+  else
+    mount -o bind "${EPHEMERAL_BUILD_PATH}" "${BUILDKITE_AGENT_BUILD_PATH}"
+  fi
+
+  if grep -q -E "[[:space:]]${BUILDKITE_AGENT_BUILD_PATH}[[:space:]]" /etc/fstab; then
+    echo "$BUILDKITE_AGENT_BUILD_PATH already exists in /etc/fstab. Skipping fstab update."
+  else
+    echo "${EPHEMERAL_BUILD_PATH} ${BUILDKITE_AGENT_BUILD_PATH} none defaults,bind 0 0" >>/etc/fstab
+  fi
 
   echo fstab is now:
   cat /etc/fstab
