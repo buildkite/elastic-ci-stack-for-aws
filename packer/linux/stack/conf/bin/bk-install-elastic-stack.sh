@@ -241,6 +241,7 @@ EOF
 # We warned about not putting secrets in this file
 echo Wrote to /var/lib/buildkite-agent/cfn-env:
 cat /var/lib/buildkite-agent/cfn-env
+chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
 echo
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]]; then
@@ -433,6 +434,7 @@ fi
 if [[ "${BUILDKITE_ENV_FILE_URL}" != "" ]]; then
   echo "Fetching env file from ${BUILDKITE_ENV_FILE_URL}..."
   /usr/local/bin/bk-fetch.sh "${BUILDKITE_ENV_FILE_URL}" /var/lib/buildkite-agent/env
+  chown buildkite-agent: /var/lib/buildkite-agent/env
 else
   echo No env file to fetch.
 fi
