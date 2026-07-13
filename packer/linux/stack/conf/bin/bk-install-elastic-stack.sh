@@ -241,7 +241,8 @@ EOF
 # We warned about not putting secrets in this file
 echo Wrote to /var/lib/buildkite-agent/cfn-env:
 cat /var/lib/buildkite-agent/cfn-env
-chown buildkite-agent: /var/lib/buildkite-agent/cfn-env
+chown root:buildkite-agent /var/lib/buildkite-agent/cfn-env
+chmod 0640 /var/lib/buildkite-agent/cfn-env
 echo
 
 if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]]; then
