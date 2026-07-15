@@ -439,7 +439,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
+    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-linux-amd64-cis"
       - "deploy-service-role-stack"
@@ -459,7 +459,7 @@ steps:
       stack: "buildkite-aws-stack-test-linux-amd64-cis-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-amd64-cis-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
+    if_changed: *if_changed_stack_linux
     depends_on:
       - "launch-linux-amd64-cis"
 
@@ -470,7 +470,7 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
+    if_changed: *if_changed_stack_linux
     depends_on:
       - "test-linux-amd64-cis"
     plugins:
