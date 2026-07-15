@@ -12,6 +12,9 @@ PACKER_WINDOWS_STACK_FILES = $(exec find packer/windows/stack)
 # Allow passing an existing golden base AMI into packer via `BASE_AMI_ID` env var
 override BASE_AMI_ID ?=
 
+# Set to true when building a stack image on top of a CIS-hardened base
+IS_CIS ?= false
+
 base_ami_from_output = $(shell \
   if [ -f $(1) ]; then \
     $(SED) -nE 's/^.*AMI: (ami-[a-z0-9]+).*$$/\1/p' $(1) | tail -n 1; \
@@ -144,6 +147,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
 			-var 'base_ami_id=$(if $(BASE_AMI_ID),$(BASE_AMI_ID),$(BASE_AMI_ID_LINUX_AMD64))' \
+			-var 'is_cis=$(IS_CIS)' \
 			buildkite-ami.pkr.hcl | tee $@
 
 build/linux-arm64-ami.txt: packer-linux-arm64.output env-AWS_REGION
@@ -238,6 +242,34 @@ packer-base-linux-amd64.output: $(PACKER_LINUX_BASE_FILES)
 			-var 'is_released=$(IS_RELEASED)' \
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
+			base.pkr.hcl | tee $@
+
+# CIS-hardened source AMI IDs
+CIS_SOURCE_AMI_AMD64 ?= ami-0ade66ab1b3aaa37a
+CIS_SOURCE_AMI_ARM64 ?= ami-039ef18047739861b
+
+# Build base AMI for linux amd64 (CIS-hardened)
+packer-base-linux-amd64-cis.output: $(PACKER_LINUX_BASE_FILES)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/linux/base \
+		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=x86_64' \
+			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_LIST)' \
+			-var 'cis_source_ami=$(CIS_SOURCE_AMI_AMD64)' \
 			base.pkr.hcl | tee $@
 
 # Build base AMI for linux arm64

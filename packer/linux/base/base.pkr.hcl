@@ -44,6 +44,12 @@ variable "ami_users" {
   default     = []
 }
 
+variable "cis_source_ami" {
+  type        = string
+  description = "When set, use this CIS-hardened AMI as the source instead of the standard AL2023 AMI lookup."
+  default     = ""
+}
+
 # Latest minimal Amazon Linux 2023 image for the given arch
 data "amazon-ami" "al2023" {
   filters = {
@@ -56,14 +62,23 @@ data "amazon-ami" "al2023" {
   region      = var.region
 }
 
+locals {
+  is_cis     = var.cis_source_ami != ""
+  source_ami = local.is_cis ? var.cis_source_ami : data.amazon-ami.al2023.id
+  ami_prefix = local.is_cis ? "buildkite-base-cis-linux" : "buildkite-base-linux"
+  ami_desc   = local.is_cis ? "Buildkite Golden Base (CIS AL2023 w/ docker)" : "Buildkite Golden Base (Amazon Linux 2023 w/ docker)"
+  os_version = local.is_cis ? "CIS Amazon Linux 2023" : "Amazon Linux 2023"
+  component  = local.is_cis ? "buildkite-base-cis" : "buildkite-base"
+}
+
 source "amazon-ebs" "buildkite-base-ami" {
-  ami_description                           = "Buildkite Golden Base (Amazon Linux 2023 w/ docker)"
+  ami_description                           = local.ami_desc
   ami_groups                                = var.ami_public ? ["all"] : []
   ami_users                                 = var.ami_public ? [] : var.ami_users
-  ami_name                                  = "buildkite-base-linux-${var.arch}-${replace(timestamp(), ":", "-")}"
+  ami_name                                  = "${local.ami_prefix}-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type                             = var.instance_type
   region                                    = var.region
-  source_ami                                = data.amazon-ami.al2023.id
+  source_ami                                = local.source_ami
   ssh_username                              = "ec2-user"
   ssh_clear_authorized_keys                 = true
   temporary_security_group_source_public_ip = true
@@ -71,7 +86,7 @@ source "amazon-ebs" "buildkite-base-ami" {
   launch_block_device_mappings {
     volume_type           = "gp3"
     device_name           = "/dev/xvda"
-    volume_size           = 10
+    volume_size           = local.is_cis ? 15 : 10
     delete_on_termination = true
   }
 
@@ -82,12 +97,12 @@ source "amazon-ebs" "buildkite-base-ami" {
   imds_support = "v2.0"
 
   tags = {
-    Name        = "buildkite-base-linux-${var.arch}"
-    OSVersion   = "Amazon Linux 2023"
+    Name        = "${local.ami_prefix}-${var.arch}"
+    OSVersion   = local.os_version
     BuildNumber = var.build_number
     IsReleased  = var.is_released
-    SourceAMIID = data.amazon-ami.al2023.id
-    Component   = "buildkite-base"
+    SourceAMIID = local.source_ami
+    Component   = local.component
   }
 }
 
@@ -111,26 +126,31 @@ build {
 
   # Essential utilities & updates
   provisioner "shell" {
-    script = "scripts/install-utils.sh"
+    script        = "scripts/install-utils.sh"
+    remote_folder = "/var/tmp"
   }
 
   # Docker engine
   provisioner "shell" {
-    script = "scripts/install-docker.sh"
+    script        = "scripts/install-docker.sh"
+    remote_folder = "/var/tmp"
   }
 
   # CloudWatch agent
   provisioner "shell" {
-    script = "scripts/install-cloudwatch-agent.sh"
+    script        = "scripts/install-cloudwatch-agent.sh"
+    remote_folder = "/var/tmp"
   }
 
   # Session Manager plugin
   provisioner "shell" {
-    script = "scripts/install-session-manager-plugin.sh"
+    script        = "scripts/install-session-manager-plugin.sh"
+    remote_folder = "/var/tmp"
   }
 
   # Clean up
   provisioner "shell" {
-    script = "../shared/scripts/cleanup.sh"
+    script        = "../shared/scripts/cleanup.sh"
+    remote_folder = "/var/tmp"
   }
 }

@@ -59,7 +59,7 @@ sudo systemctl enable --now amazon-ssm-agent
 sudo systemctl enable --now rsyslog
 
 echo "Installing AWS CLI v2 ${AWS_CLI_LINUX_VERSION}..."
-pushd "$(mktemp -d)"
+pushd "$(mktemp -d -p /var/tmp)"
 case $(uname -m) in
 x86_64)
   curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_LINUX_VERSION}.zip" -o "awscliv2.zip"
@@ -77,7 +77,7 @@ sudo ./aws/install
 popd
 
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
-pushd "$(mktemp -d)"
+pushd "$(mktemp -d -p /var/tmp)"
 curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v"${GIT_LFS_VERSION}"/git-lfs-linux-"${ARCH}"-v"${GIT_LFS_VERSION}".tar.gz | tar xz
 sudo git-lfs-"${GIT_LFS_VERSION}"/install.sh
 popd
