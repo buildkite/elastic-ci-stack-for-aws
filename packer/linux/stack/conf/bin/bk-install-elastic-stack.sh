@@ -245,15 +245,25 @@ chown root:buildkite-agent /var/lib/buildkite-agent/cfn-env
 chmod 0640 /var/lib/buildkite-agent/cfn-env
 echo
 
-if [[ "${BUILDKITE_AGENT_RELEASE}" == "edge" ]]; then
+case "${BUILDKITE_AGENT_RELEASE}" in
+edge)
   echo Downloading buildkite-agent edge...
   curl -Lsf -o /usr/bin/buildkite-agent-edge \
     "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${ARCH}"
   chmod +x /usr/bin/buildkite-agent-edge
   buildkite-agent-edge --version
-else
-  echo Not using buildkite-agent edge.
-fi
+  ;;
+oldstable)
+  echo Downloading buildkite-agent oldstable...
+  curl -Lsf -o /usr/bin/buildkite-agent-oldstable \
+    "https://download.buildkite.com/agent/oldstable/latest/buildkite-agent-linux-${ARCH}"
+  chmod +x /usr/bin/buildkite-agent-oldstable
+  buildkite-agent-oldstable --version
+  ;;
+*)
+  echo Not using buildkite-agent edge or oldstable.
+  ;;
+esac
 
 if [[ "${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" != "" ]]; then
   echo "buildkite-agent ALL=NOPASSWD: ${BUILDKITE_ADDITIONAL_SUDO_PERMISSIONS}" \

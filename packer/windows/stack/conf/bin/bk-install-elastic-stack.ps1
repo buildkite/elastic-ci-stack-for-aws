@@ -106,6 +106,13 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   If ($lastexitcode -ne 0) { Exit $lastexitcode }
 }
 
+If ($Env:BUILDKITE_AGENT_RELEASE -eq "oldstable") {
+  Write-Output "Downloading buildkite-agent oldstable..."
+  Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-oldstable.exe -Uri "https://download.buildkite.com/agent/oldstable/latest/buildkite-agent-windows-amd64.exe"
+  buildkite-agent-oldstable.exe --version
+  If ($lastexitcode -ne 0) { Exit $lastexitcode }
+}
+
 # Check if the source agent executable exists before copying
 $sourceAgentPath = "C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe"
 if (-not (Test-Path -Path $sourceAgentPath -PathType Leaf)) {
