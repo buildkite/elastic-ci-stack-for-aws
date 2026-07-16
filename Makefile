@@ -126,7 +126,7 @@ build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
-packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 build/goss-linux-amd64 packer-base-linux-amd64.output
+packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 build/goss-linux-amd64 $(if $(strip $(BASE_AMI_ID)),,packer-base-linux-amd64.output)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -163,7 +163,7 @@ print-agent-versions:
 	@echo Windows: $(CURRENT_AGENT_VERSION_WINDOWS)
 
 # Build linuxarm64 packer image
-packer-linux-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 build/goss-linux-arm64 packer-base-linux-arm64.output
+packer-linux-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 build/goss-linux-arm64 $(if $(strip $(BASE_AMI_ID)),,packer-base-linux-arm64.output)
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -193,7 +193,7 @@ build/windows-amd64-ami.txt: packer-windows-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build windows packer image
-packer-windows-amd64.output: $(PACKER_WINDOWS_STACK_FILES) packer-base-windows-amd64.output
+packer-windows-amd64.output: $(PACKER_WINDOWS_STACK_FILES) $(if $(strip $(BASE_AMI_ID)),,packer-base-windows-amd64.output)
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_WINDOWS)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
