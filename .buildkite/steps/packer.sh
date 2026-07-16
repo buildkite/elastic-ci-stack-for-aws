@@ -85,6 +85,13 @@ if [[ "${variant}" == "base-cis" && "${BUILDKITE_BRANCH:-}" == "main" ]]; then
   echo "Updated latest CIS base AMI pointer for ${os}/${arch}"
 fi
 
+# For CIS stack images on main branch, also upload as "latest"
+if [[ "${variant}" == "stack-cis" && "${BUILDKITE_BRANCH:-}" == "main" ]]; then
+  latest_file="packer-${os}-${arch}-cis-latest.output"
+  aws s3 cp "${local_output}" "s3://${BUILDKITE_AWS_STACK_BUCKET}/${latest_file}"
+  echo "Updated latest CIS stack AMI pointer for ${os}/${arch}"
+fi
+
 mv "${local_output}" "${packer_file}"
 
 # Get the image id from the packer build output for later steps
