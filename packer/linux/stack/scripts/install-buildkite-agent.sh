@@ -10,7 +10,9 @@ aarch64) ARCH=arm64 ;;
 esac
 
 echo "Creating buildkite-agent user and group..."
-sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
+# Set the shell explicitly: useradd defaults to /bin/sh on Ubuntu but /bin/bash
+# on Amazon Linux, and the agent + goss checks expect bash on both.
+sudo useradd --base-dir /var/lib --uid 2000 --shell /bin/bash buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 sudo mkdir -p /var/lib/buildkite-agent/.aws

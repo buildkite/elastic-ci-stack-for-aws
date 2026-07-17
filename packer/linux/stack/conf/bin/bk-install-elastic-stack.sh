@@ -454,14 +454,27 @@ fi
 echo Setting ownership of /etc/buildkite-agent/buildkite-agent.cfg to buildkite-agent...
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
+# The default login user (and its home) differs by distro: ec2-user on Amazon
+# Linux, ubuntu on Ubuntu. Resolve it at boot rather than hardcoding.
+LOGIN_USER=ec2-user
+if [[ -r /etc/os-release ]]; then
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  if [[ "${ID:-}" == "ubuntu" ]]; then
+    LOGIN_USER=ubuntu
+  fi
+fi
+LOGIN_HOME="$(getent passwd "${LOGIN_USER}" | cut -d: -f6)"
+LOGIN_HOME="${LOGIN_HOME:-/home/${LOGIN_USER}}"
+
 if [[ -n "$BUILDKITE_AUTHORIZED_USERS_URL" ]]; then
   echo Writing authorized user fetching script...
   cat <<-EOF | tee /usr/local/bin/refresh_authorized_keys
 		#!/usr/bin/env bash
 		/usr/local/bin/bk-fetch.sh "$BUILDKITE_AUTHORIZED_USERS_URL" /tmp/authorized_keys
-		mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
-		chmod 600 /home/ec2-user/.ssh/authorized_keys
-		chown ec2-user: /home/ec2-user/.ssh/authorized_keys
+		mv /tmp/authorized_keys ${LOGIN_HOME}/.ssh/authorized_keys
+		chmod 600 ${LOGIN_HOME}/.ssh/authorized_keys
+		chown ${LOGIN_USER}: ${LOGIN_HOME}/.ssh/authorized_keys
 	EOF
 
   echo Setting ownership of /usr/local/bin/refresh_authorized_keys to root...

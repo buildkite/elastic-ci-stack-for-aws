@@ -86,6 +86,7 @@ Metadata:
         - ImageId
         - ImageIdParameter
         - InstanceOperatingSystem
+        - LinuxDistribution
         - InstanceTypes
         - CpuCredits
         - NestedVirtualizationEnabled
@@ -896,6 +897,14 @@ Parameters:
       - windows
     Default: "linux"
 
+  LinuxDistribution:
+    Type: String
+    Description: The Linux distribution to run on the instances. Only applies when InstanceOperatingSystem is linux.
+    AllowedValues:
+      - amazonlinux2023
+      - ubuntu2404
+    Default: "amazonlinux2023"
+
   ECRAccessPolicy:
     Type: String
     Description: >
@@ -1498,6 +1507,11 @@ Conditions:
     UseWindowsAgents:
       !Equals [ !Ref InstanceOperatingSystem, "windows" ]
 
+    UseUbuntu:
+      !And
+        - !Equals [ !Ref InstanceOperatingSystem, "linux" ]
+        - !Equals [ !Ref LinuxDistribution, "ubuntu2404" ]
+
     # Unfortunately, Cloudformation's !Or intrinsic function only accepts
     # between 2 and 10 arguments.  To get around this, we're grouping the
     # instance families in sub-conditionals.  At least this doesn't force us
@@ -1601,7 +1615,7 @@ Mappings:
     arm64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler-arm64' }
 
   # Generated from Makefile via build/mappings.yml
-  AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId }
+  AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId, ubuntu2404amd64: !Ref ImageId, ubuntu2404arm64: !Ref ImageId }
 
 Resources:
   Vpc:
@@ -2259,15 +2273,27 @@ Resources:
                   - !Ref 'AWS::Region'
                   - 'windows'
                 - !If
-                  - UsingArmInstances
-                  - !FindInMap
-                    - AWSRegion2AMI
-                    - !Ref 'AWS::Region'
-                    - 'linuxarm64'
-                  - !FindInMap
-                    - AWSRegion2AMI
-                    - !Ref 'AWS::Region'
-                    - 'linuxamd64'
+                  - UseUbuntu
+                  - !If
+                    - UsingArmInstances
+                    - !FindInMap
+                      - AWSRegion2AMI
+                      - !Ref 'AWS::Region'
+                      - 'ubuntu2404arm64'
+                    - !FindInMap
+                      - AWSRegion2AMI
+                      - !Ref 'AWS::Region'
+                      - 'ubuntu2404amd64'
+                  - !If
+                    - UsingArmInstances
+                    - !FindInMap
+                      - AWSRegion2AMI
+                      - !Ref 'AWS::Region'
+                      - 'linuxarm64'
+                    - !FindInMap
+                      - AWSRegion2AMI
+                      - !Ref 'AWS::Region'
+                      - 'linuxamd64'
           BlockDeviceMappings:
             - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs:
