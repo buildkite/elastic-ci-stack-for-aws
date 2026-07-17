@@ -244,7 +244,13 @@ packer-base-linux-amd64.output: $(PACKER_LINUX_BASE_FILES)
 			-var 'ami_users=$(AMI_USERS_LIST)' \
 			base.pkr.hcl | tee $@
 
-# CIS-hardened source AMI IDs
+# CIS-hardened source AMI IDs (us-east-1 only)
+# Unlike the standard AL2023 base, which uses a dynamic Packer amazon-ami data
+# source lookup that works in any region, CIS AMIs are referenced by ID because
+# they come from the CIS Marketplace publisher (owner 679593333241). AMI IDs are
+# region-specific, so these only work in us-east-1 where our CI runs. To support
+# other regions, replace these with a Packer data source filtering by owner and
+# name pattern (requires an active Marketplace subscription in that region).
 CIS_SOURCE_AMI_AMD64 ?= ami-0ade66ab1b3aaa37a
 CIS_SOURCE_AMI_ARM64 ?= ami-039ef18047739861b
 

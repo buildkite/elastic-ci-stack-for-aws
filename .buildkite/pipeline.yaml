@@ -417,6 +417,7 @@ steps:
     timeout_in_minutes: 60
     env:
       AMI_PUBLIC: false
+    retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
