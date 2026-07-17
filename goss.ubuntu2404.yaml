@@ -2,7 +2,8 @@
 # Keep in sync with goss.yaml. Intentional differences from the AL2023 file:
 #   - login user home is /home/ubuntu (not /home/ec2-user)
 #   - amazon-ssm-agent runs as a snap (snap.amazon-ssm-agent.amazon-ssm-agent)
-#   - the sshd privsep user/group are not the RHEL uid/gid 74
+#   - OpenSSH is socket-activated (ssh.socket): no persistent sshd process, no
+#     sshd.service and no sshd group; only the sshd privsep user exists
 #   - the docker group gid is not constrained to the AL2023 990-995 range
 file:
   /etc/buildkite-agent/buildkite-agent.cfg:
@@ -72,10 +73,6 @@ service:
     enabled: true
     running: true
 
-  sshd:
-    enabled: true
-    running: true
-
   buildkite-agent:
     enabled: true
     running: true
@@ -102,9 +99,6 @@ group:
   docker:
     exists: true
 
-  sshd:
-    exists: true
-
 process:
   buildkite-agent:
     running: true
@@ -112,10 +106,16 @@ process:
   lifecycled:
     running: true
 
-  sshd:
-    running: true
-
 command:
+  # Ubuntu 24.04 ships OpenSSH as a socket-activated unit (ssh.socket); there is
+  # no persistent sshd process and no sshd.service like on Amazon Linux. Assert
+  # the socket is enabled at boot and active (the port 22 checks cover reach).
+  systemctl is-enabled ssh.socket:
+    exit-status: 0
+
+  systemctl is-active ssh.socket:
+    exit-status: 0
+
   aws --version:
     exit-status: 0
 
