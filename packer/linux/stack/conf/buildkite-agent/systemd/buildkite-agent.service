@@ -11,6 +11,7 @@ User=buildkite-agent
 Environment="HOME=/var/lib/buildkite-agent"
 Environment="PATH=/usr/local/bin:/usr/bin"
 Environment="USER=buildkite-agent"
+Environment="TMPDIR=/var/tmp"
 # The =- (rather than just = ) in the line below means that systemd won't complain if it can't find the file
 EnvironmentFile=-/var/lib/buildkite-agent/env
 ExecStart=/usr/bin/buildkite-agent start

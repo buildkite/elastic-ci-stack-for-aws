@@ -92,7 +92,10 @@ user:
     groups:
     - sshd
     home: /usr/share/empty.sshd
-    shell: /sbin/nologin
+    shell:
+      or:
+      - /sbin/nologin
+      - /usr/sbin/nologin
 
 group:
   buildkite-agent:

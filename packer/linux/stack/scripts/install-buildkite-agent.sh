@@ -10,7 +10,14 @@ aarch64) ARCH=arm64 ;;
 esac
 
 echo "Creating buildkite-agent user and group..."
-sudo useradd --base-dir /var/lib --uid 2000 buildkite-agent
+sudo groupadd --gid 2000 buildkite-agent 2>/dev/null || {
+  rc=$?
+  if [[ $rc -ne 9 ]]; then
+    echo "groupadd failed with unexpected exit code $rc" >&2
+    exit 1
+  fi
+}
+sudo useradd --base-dir /var/lib --uid 2000 --gid 2000 buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 sudo mkdir -p /var/lib/buildkite-agent/.aws
@@ -20,17 +27,18 @@ sudo chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.aws
 echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
   "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
-sudo chmod +x /usr/bin/buildkite-agent-stable
+sudo chmod 755 /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 
 echo "Downloading buildkite-agent beta..."
 sudo curl -Lsf -o /usr/bin/buildkite-agent-beta \
   "https://download.buildkite.com/agent/unstable/latest/buildkite-agent-linux-${ARCH}"
-sudo chmod +x /usr/bin/buildkite-agent-beta
+sudo chmod 755 /usr/bin/buildkite-agent-beta
 buildkite-agent-beta --version
 
 echo "Adding scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/* /usr/bin
+sudo chmod 755 /usr/bin/stop-agent-gracefully /usr/bin/terminate-instance
 
 echo "Adding sudoers config..."
 sudo cp /tmp/conf/buildkite-agent/sudoers.conf /etc/sudoers.d/buildkite-agent
@@ -38,11 +46,12 @@ sudo chmod 440 /etc/sudoers.d/buildkite-agent
 
 echo "Creating hooks dir..."
 sudo mkdir -p /etc/buildkite-agent/hooks
+sudo chmod 755 /etc/buildkite-agent
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
 
 echo "Copying custom hooks..."
-sudo cp -a /tmp/conf/buildkite-agent/hooks/* /etc/buildkite-agent/hooks
-sudo chmod +x /etc/buildkite-agent/hooks/*
+sudo cp -a /tmp/conf/buildkite-agent/hooks/* /etc/buildkite-agent/hooks/
+sudo find /etc/buildkite-agent/hooks -type f -exec chmod 755 {} +
 sudo chown -R buildkite-agent: /etc/buildkite-agent/hooks
 
 echo "Creating builds dir..."
@@ -68,7 +77,9 @@ sudo cp /tmp/conf/buildkite-agent/systemd/cloud-init.service.d/10-power-off-on-f
 
 echo "Adding termination scripts..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully
+sudo chmod 755 /usr/local/bin/stop-agent-gracefully
 sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
+sudo chmod 755 /usr/local/bin/terminate-instance
 
 echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins

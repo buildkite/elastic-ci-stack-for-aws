@@ -66,11 +66,24 @@ variable "base_ami_id" {
   default = ""
 }
 
+variable "is_cis" {
+  type        = bool
+  description = "Whether we are building on a CIS-hardened base AMI. Adjusts volume size and naming."
+  default     = false
+}
+
+locals {
+  ami_prefix = var.is_cis ? "buildkite-stack-cis-linux" : "buildkite-stack-linux"
+  ami_desc   = var.is_cis ? "Buildkite Elastic Stack (CIS AL2023 w/ docker)" : "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
+  os_version = var.is_cis ? "CIS Amazon Linux 2023" : "Amazon Linux 2023"
+  component  = var.is_cis ? "elastic-ci-stack-cis" : "elastic-ci-stack"
+}
+
 source "amazon-ebs" "elastic-ci-stack-ami" {
-  ami_description                           = "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
+  ami_description                           = local.ami_desc
   ami_groups                                = var.ami_public ? ["all"] : []
   ami_users                                 = var.ami_public ? [] : var.ami_users
-  ami_name                                  = "buildkite-stack-linux-${var.arch}-${replace(timestamp(), ":", "-")}"
+  ami_name                                  = "${local.ami_prefix}-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type                             = var.instance_type
   region                                    = var.region
   source_ami                                = var.base_ami_id
@@ -88,7 +101,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   launch_block_device_mappings {
     volume_type           = "gp3"
     device_name           = "/dev/xvda"
-    volume_size           = 10
+    volume_size           = var.is_cis ? 15 : 10
     delete_on_termination = true
   }
 
@@ -97,12 +110,13 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   }
 
   tags = {
-    Name         = "elastic-ci-stack-linux-${var.arch}"
-    OSVersion    = "Amazon Linux 2023"
+    Name         = "${local.component}-linux-${var.arch}"
+    OSVersion    = local.os_version
     BuildNumber  = var.build_number
     AgentVersion = var.agent_version
     IsReleased   = var.is_released
     SourceAMIID  = var.base_ami_id
+    Component    = local.component
   }
 }
 
@@ -135,18 +149,22 @@ build {
   }
 
   provisioner "shell" {
-    script = "scripts/configure-cloudwatch-agent.sh"
+    script        = "scripts/configure-cloudwatch-agent.sh"
+    remote_folder = "/var/tmp"
   }
 
   provisioner "shell" {
-    script = "scripts/install-buildkite-agent.sh"
+    script        = "scripts/install-buildkite-agent.sh"
+    remote_folder = "/var/tmp"
   }
 
   provisioner "shell" {
-    script = "scripts/install-buildkite-utils.sh"
+    script        = "scripts/install-buildkite-utils.sh"
+    remote_folder = "/var/tmp"
   }
 
   provisioner "shell" {
-    script = "../shared/scripts/cleanup.sh"
+    script        = "../shared/scripts/cleanup.sh"
+    remote_folder = "/var/tmp"
   }
 }
