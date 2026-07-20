@@ -4,6 +4,82 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.69.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.69.0) (2026-07-20)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.68.1...v6.69.0)
+
+### Added
+- CIS hardened build [#1836](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1836) (@omehegan)
+
+- Add oldstable as a BuildkiteAgentRelease option [#1837](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1837) (@DrJosh9000)
+
+### Changed
+- Update buildkite-agent to v3.133.0 [#1838](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1838) (@renovate[bot])
+- Update buildkite-agent to v3.132.0 [#1831](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1831) (@renovate[bot])
+
+### Fixed
+- Fix CIS umask compatibility: chown cfn-env and env files [#1832](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1832) (@omehegan)
+
+
+### Internal
+- Add changelog entry for v6.68.1 [#1829](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1829) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.133.0)</h3></summary>
+
+## What's Changed
+### 🔒 Security
+* [A-1469] Re-exec agent start to hide the registration token from proc inspection by @moskyb in https://github.com/buildkite/agent/pull/4046
+* Redact Go-escaped needles by @DrJosh9000 in https://github.com/buildkite/agent/pull/4091
+
+### ✨ Added
+* Set Partial Clone flags on sparse-checkout by @lizrabuya in https://github.com/buildkite/agent/pull/4044
+### 🐛 Fixed
+* [A-1515] Improve job log URL and deduplicate url computation by @isaacsu in https://github.com/buildkite/agent/pull/4083
+### 🏠 Internal
+* fix: check for `--ensure_minimum` when refreshExpiry by @ss1909 in https://github.com/buildkite/agent/pull/4085
+* fix: remove archiveInfo.ArchivePath after upload by @ss1909 in https://github.com/buildkite/agent/pull/4086
+* fix: Map expired artifact to ErrBlobNotFound by @ss1909 in https://github.com/buildkite/agent/pull/4087
+* Suggestions for #4044 by @isaacsu in https://github.com/buildkite/agent/pull/4067
+* Bump gh cli in release script to 2.96.0 by @DrJosh9000 in https://github.com/buildkite/agent/pull/4077
+* Improve log URL to point to specific job by @mitchhentgesspotify in https://github.com/buildkite/agent/pull/4076
+* build(deps): dependency bumps by @dependabot[bot] in #4078, #4079, #4080, #4081, #4082
+* Constant-time token comparison by @DrJosh9000 in https://github.com/buildkite/agent/pull/4084
+* Add TestSecretsIntegration_ConfigVarSecretNotLoggedByEnvChange by @DrJosh9000 in https://github.com/buildkite/agent/pull/4092
+* Reduce Windows flakes in TestSetMetaDataBatch? by @DrJosh9000 in https://github.com/buildkite/agent/pull/4093
+
+## New Contributors
+* @mitchhentgesspotify made their first contribution in https://github.com/buildkite/agent/pull/4076
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.132.0...v3.133.0
+</details>
+<details>
+  <summary><h3>Agent Changelog (v3.132.0)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at e1b2453685eda0e266338a4a5dda2f51afc7081a -->
+
+## What's Changed
+### ✨ Added
+* Add BUILDKITE_GCS_PATH_SUFFIX to append a suffix to GCS artifact URLs by @tomowatt in https://github.com/buildkite/agent/pull/4039
+### 🏠 Internal
+* A-1474: Remove --organization, --pipeline, --branch flags from cache subcommand by @zhming0 in https://github.com/buildkite/agent/pull/4051
+* build(deps): bump the cloud-providers group across 1 directory with 11 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4059
+* build(deps): bump the container-images group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4058
+* build(deps): bump the container-images group across 4 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4057
+* build(deps): bump github.com/lestrrat-go/jwx/v2 from 2.1.6 to 2.1.7 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4055
+* build(deps): bump github.com/go-chi/chi/v5 from 5.3.0 to 5.3.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4054
+* build(deps): bump github.com/klauspost/compress from 1.18.6 to 1.19.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4053
+* build(deps): bump the container-images group across 3 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4062
+* build(deps): bump github.com/DataDog/datadog-go/v5 from 5.8.3 to 5.9.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4033
+* build(deps): bump the container-images group across 4 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4063
+* A-1437: TTL refresh on hosted cache object by @zhming0 in https://github.com/buildkite/agent/pull/4073
+* feat: implement cache busting mechanism (part 2/2) by @ss1909 in https://github.com/buildkite/agent/pull/4061
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.131.0...v3.132.0
+</details>
+
+
+
 ## [v6.68.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.68.1) (2026-07-07)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.68.0...v6.68.1)
 

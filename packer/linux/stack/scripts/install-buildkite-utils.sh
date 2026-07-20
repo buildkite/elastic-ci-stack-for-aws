@@ -12,31 +12,31 @@ aarch64) ARCH=arm64 ;;
 esac
 
 echo "Installing bk elastic stack bin files..."
-sudo chmod +x /tmp/conf/bin/bk-*
+sudo chmod 755 /tmp/conf/bin/bk-*
 sudo mv /tmp/conf/bin/bk-* /usr/local/bin
 
 echo "Installing fix-buildkite-agent-builds-permissions..."
-sudo chmod +x "/tmp/build/fix-perms-linux-${ARCH}"
+sudo chmod 755 "/tmp/build/fix-perms-linux-${ARCH}"
 sudo mv "/tmp/build/fix-perms-linux-${ARCH}" /usr/bin/fix-buildkite-agent-builds-permissions
 
 # goss is built by the build/goss-* Makefile targets and uploaded via the
 # build/ provisioner; dgoss is a shell script fetched from the same commit.
 echo "Installing goss ${GOSS_VERSION} (built from ${GOSS_COMMIT}) for system validation..."
-sudo chmod +x "/tmp/build/goss-linux-${ARCH}"
+sudo chmod 755 "/tmp/build/goss-linux-${ARCH}"
 sudo mv "/tmp/build/goss-linux-${ARCH}" /usr/local/bin/goss
 sudo curl -Lsf -o /usr/local/bin/dgoss \
   "https://raw.githubusercontent.com/goss-org/goss/${GOSS_COMMIT}/extras/dgoss/dgoss"
-sudo chmod +rx /usr/local/bin/dgoss
+sudo chmod 755 /usr/local/bin/dgoss
 
 echo "Downloading s3-secrets-helper ${S3_SECRETS_HELPER_VERSION}..."
 sudo curl -Lsf -o /usr/local/bin/s3secrets-helper \
   "https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/releases/download/v${S3_SECRETS_HELPER_VERSION}/s3secrets-helper-linux-${ARCH}"
-sudo chmod +x /usr/local/bin/s3secrets-helper
+sudo chmod 755 /usr/local/bin/s3secrets-helper
 
 echo "Installing lifecycled ${LIFECYCLED_VERSION}..."
 sudo touch /etc/lifecycled
 sudo curl -Lf -o /usr/bin/lifecycled \
   "https://github.com/buildkite/lifecycled/releases/download/${LIFECYCLED_VERSION}/lifecycled-linux-${ARCH}"
-sudo chmod +x /usr/bin/lifecycled
+sudo chmod 755 /usr/bin/lifecycled
 sudo curl -Lf -o /etc/systemd/system/lifecycled.service \
   "https://raw.githubusercontent.com/buildkite/lifecycled/${LIFECYCLED_VERSION}/init/systemd/lifecycled.unit"

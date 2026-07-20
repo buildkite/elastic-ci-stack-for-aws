@@ -3,7 +3,12 @@ set -euo pipefail
 
 os="${1:-linux}"
 arch="${2:-amd64}"
-stack_name="buildkite-aws-stack-test-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
+variant="${3:-}"
+if [[ -n "$variant" ]]; then
+  stack_name="buildkite-aws-stack-test-${os}-${arch}-${variant}-${BUILDKITE_BUILD_NUMBER}"
+else
+  stack_name="buildkite-aws-stack-test-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
+fi
 
 secrets_bucket=$(aws cloudformation describe-stacks \
   --stack-name "${stack_name}" \

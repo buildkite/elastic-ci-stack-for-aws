@@ -250,14 +250,14 @@ edge)
   echo Downloading buildkite-agent edge...
   curl -Lsf -o /usr/bin/buildkite-agent-edge \
     "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-linux-${ARCH}"
-  chmod +x /usr/bin/buildkite-agent-edge
+  chmod 0755 /usr/bin/buildkite-agent-edge
   buildkite-agent-edge --version
   ;;
 oldstable)
   echo Downloading buildkite-agent oldstable...
   curl -Lsf -o /usr/bin/buildkite-agent-oldstable \
     "https://download.buildkite.com/agent/oldstable/latest/buildkite-agent-linux-${ARCH}"
-  chmod +x /usr/bin/buildkite-agent-oldstable
+  chmod 0755 /usr/bin/buildkite-agent-oldstable
   buildkite-agent-oldstable --version
   ;;
 *)

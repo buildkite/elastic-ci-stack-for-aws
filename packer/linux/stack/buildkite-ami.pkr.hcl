@@ -61,6 +61,12 @@ variable "base_ami_id" {
   default = ""
 }
 
+variable "is_cis" {
+  type        = bool
+  description = "Whether we are building on a CIS-hardened base AMI. Adjusts volume size and naming."
+  default     = false
+}
+
 locals {
   os_distro_name = {
     amazonlinux2023 = "Amazon Linux 2023"
@@ -75,13 +81,19 @@ locals {
     amazonlinux2023 = "/dev/xvda"
     ubuntu2404      = "/dev/sda1"
   }
+
+  # CIS is a hardened AL2023 build; when is_cis it overrides the per-distro naming.
+  ami_prefix = var.is_cis ? "buildkite-stack-cis-linux" : "buildkite-stack-linux-${var.os_distro}"
+  ami_desc   = var.is_cis ? "Buildkite Elastic Stack (CIS AL2023 w/ docker)" : "Buildkite Elastic Stack (${local.os_distro_name[var.os_distro]} w/ docker)"
+  os_version = var.is_cis ? "CIS Amazon Linux 2023" : local.os_distro_name[var.os_distro]
+  component  = var.is_cis ? "elastic-ci-stack-cis" : "elastic-ci-stack"
 }
 
 source "amazon-ebs" "elastic-ci-stack-ami" {
-  ami_description                           = "Buildkite Elastic Stack (${local.os_distro_name[var.os_distro]} w/ docker)"
+  ami_description                           = local.ami_desc
   ami_groups                                = var.ami_public ? ["all"] : []
   ami_users                                 = var.ami_public ? [] : var.ami_users
-  ami_name                                  = "buildkite-stack-linux-${var.os_distro}-${var.arch}-${replace(timestamp(), ":", "-")}"
+  ami_name                                  = "${local.ami_prefix}-${var.arch}-${replace(timestamp(), ":", "-")}"
   instance_type                             = var.instance_type
   region                                    = var.region
   source_ami                                = var.base_ami_id
@@ -98,8 +110,8 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
 
   launch_block_device_mappings {
     volume_type           = "gp3"
-    device_name           = local.root_device_name[var.os_distro]
-    volume_size           = 10
+    device_name           = var.is_cis ? "/dev/xvda" : local.root_device_name[var.os_distro]
+    volume_size           = var.is_cis ? 15 : 10
     delete_on_termination = true
   }
 
@@ -108,13 +120,14 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   }
 
   tags = {
-    Name         = "elastic-ci-stack-linux-${var.os_distro}-${var.arch}"
-    OSVersion    = local.os_distro_name[var.os_distro]
+    Name         = var.is_cis ? "${local.component}-linux-${var.arch}" : "elastic-ci-stack-linux-${var.os_distro}-${var.arch}"
+    OSVersion    = local.os_version
     Distro       = var.os_distro
     BuildNumber  = var.build_number
     AgentVersion = var.agent_version
     IsReleased   = var.is_released
     SourceAMIID  = var.base_ami_id
+    Component    = local.component
   }
 }
 
@@ -154,20 +167,24 @@ build {
   provisioner "shell" {
     environment_vars = ["OS_DISTRO=${var.os_distro}"]
     script           = "scripts/configure-cloudwatch-agent.sh"
+    remote_folder    = "/var/tmp"
   }
 
   provisioner "shell" {
     environment_vars = ["OS_DISTRO=${var.os_distro}"]
     script           = "scripts/install-buildkite-agent.sh"
+    remote_folder    = "/var/tmp"
   }
 
   provisioner "shell" {
     environment_vars = ["OS_DISTRO=${var.os_distro}"]
     script           = "scripts/install-buildkite-utils.sh"
+    remote_folder    = "/var/tmp"
   }
 
   provisioner "shell" {
     environment_vars = ["OS_DISTRO=${var.os_distro}"]
     script           = "../shared/scripts/cleanup.sh"
+    remote_folder    = "/var/tmp"
   }
 }

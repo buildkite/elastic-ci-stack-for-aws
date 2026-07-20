@@ -3,8 +3,14 @@ set -euo pipefail
 
 os="${1:-linux}"
 arch="${2:-amd64}"
-stack_name="buildkite-aws-stack-test-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
-stack_queue_name="testqueue-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
+variant="${3:-}"
+if [[ -n "$variant" ]]; then
+  stack_name="buildkite-aws-stack-test-${os}-${arch}-${variant}-${BUILDKITE_BUILD_NUMBER}"
+  stack_queue_name="testqueue-${os}-${arch}-${variant}-${BUILDKITE_BUILD_NUMBER}"
+else
+  stack_name="buildkite-aws-stack-test-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
+  stack_queue_name="testqueue-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
+fi
 
 # The "os" argument may select a Linux distro (e.g. ubuntu2404); map it to the
 # CloudFormation InstanceOperatingSystem + LinuxDistribution parameters.
@@ -27,14 +33,18 @@ subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --quer
 subnet_ids=$(awk '{print $1}' <<<"$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 az_ids=$(awk '{print $2}' <<<"$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
 
-image_id=$(buildkite-agent meta-data get "${os}_${arch}_image_id")
-echo "Using AMI $image_id for $os/$arch"
+if [[ -n "$variant" ]]; then
+  image_id=$(buildkite-agent meta-data get "${os}_${arch}_${variant}_image_id")
+else
+  image_id=$(buildkite-agent meta-data get "${os}_${arch}_image_id")
+fi
+echo "Using AMI $image_id for $os/$arch${variant:+ ($variant)}"
 
 service_role="$(buildkite-agent meta-data get service-role-arn)"
 echo "Using service role ${service_role}"
 
 instance_type="t3.small"
-instance_disk="10"
+instance_disk="${ROOT_VOLUME_SIZE:-10}"
 
 if [[ "$os" == "windows" ]]; then
   instance_type="m5.large"
@@ -142,7 +152,7 @@ make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 
 echo "--- Uploading test template to S3"
 s3_bucket="buildkite-agent-elastic-stack-test-templates"
-s3_key="templates/build-${BUILDKITE_BUILD_NUMBER}/${os}-${arch}/${BUILDKITE_COMMIT}.aws-stack.yml"
+s3_key="templates/build-${BUILDKITE_BUILD_NUMBER}/${os}-${arch}${variant:+-$variant}/${BUILDKITE_COMMIT}.aws-stack.yml"
 
 # s3 cp requires old path style, cloudformation requires new http style. sigh.
 upload_location="s3://${s3_bucket}/${s3_key}"
