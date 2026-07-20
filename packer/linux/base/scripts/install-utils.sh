@@ -82,10 +82,12 @@ ubuntu2404)
   # cfn-signal (the only CFN helper this stack uses) is not packaged for Ubuntu,
   # so install it from Amazon's tarball. Source its Python dependencies from apt
   # rather than letting pip pull them from PyPI unpinned as root: with --no-deps
-  # pip installs only aws-cfn-bootstrap itself. AWS publishes no signature or
-  # versioned URL for the tarball, so the fetch trusts TLS to the AWS-owned
-  # bucket (its documented install method).
-  pkg_install python3-daemon python3-docutils python3-chevron
+  # pip installs only aws-cfn-bootstrap itself. The third declared dep, chevron,
+  # is omitted: it is imported lazily only by cfn-init's template rendering
+  # (never reached by cfn-signal) and is not packaged for Ubuntu 24.04. AWS
+  # publishes no signature or versioned URL for the tarball, so the fetch trusts
+  # TLS to the AWS-owned bucket (its documented install method).
+  pkg_install python3-daemon python3-docutils
   sudo pip3 install --break-system-packages --no-deps \
     https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
   # cfn-hup's init script (init/ubuntu/cfn-hup) is intentionally not symlinked
