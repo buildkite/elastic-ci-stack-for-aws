@@ -240,7 +240,12 @@ Buildkite builds and deploys the following AMIs to all our supported regions:
 
 - Amazon Linux 2023 (64-bit x86)
 - Amazon Linux 2023 (64-bit Arm)
+- Ubuntu 24.04 LTS (64-bit x86)
+- Ubuntu 24.04 LTS (64-bit Arm)
 - Windows Server 2022 (64-bit x86)
+
+Amazon Linux 2023 is the default for Linux instances. To run Ubuntu 24.04 LTS
+instead, set the `LinuxDistribution` parameter to `ubuntu2404`.
 
 ### Buildkite Agent
 
