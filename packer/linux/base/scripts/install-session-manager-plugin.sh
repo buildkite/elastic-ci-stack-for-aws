@@ -24,7 +24,7 @@ amazonlinux2023)
   ;;
 ubuntu2404)
   pushd "$(mktemp -d)"
-  curl -sSL "${BASE_URL}/ubuntu_${ARCH}/session-manager-plugin.deb" -o session-manager-plugin.deb
+  curl -fsSL "${BASE_URL}/ubuntu_${ARCH}/session-manager-plugin.deb" -o session-manager-plugin.deb
   pkg_install_local ./session-manager-plugin.deb
   popd
   ;;
