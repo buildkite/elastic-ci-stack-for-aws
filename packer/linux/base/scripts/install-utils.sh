@@ -79,9 +79,17 @@ ubuntu2404)
   fi
   sudo systemctl enable --now snap.amazon-ssm-agent.amazon-ssm-agent.service
 
-  # cfn-init/cfn-signal are not packaged for Ubuntu; install from Amazon's tarball
-  sudo pip3 install --break-system-packages \
+  # cfn-signal (the only CFN helper this stack uses) is not packaged for Ubuntu,
+  # so install it from Amazon's tarball. Source its Python dependencies from apt
+  # rather than letting pip pull them from PyPI unpinned as root: with --no-deps
+  # pip installs only aws-cfn-bootstrap itself. AWS publishes no signature or
+  # versioned URL for the tarball, so the fetch trusts TLS to the AWS-owned
+  # bucket (its documented install method).
+  pkg_install python3-daemon python3-docutils python3-chevron
+  sudo pip3 install --break-system-packages --no-deps \
     https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+  # cfn-hup's init script (init/ubuntu/cfn-hup) is intentionally not symlinked
+  # into /etc/init.d: this stack runs cfn-signal only, never cfn-hup.
   ;;
 esac
 
