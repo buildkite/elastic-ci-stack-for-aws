@@ -237,7 +237,7 @@ To test a Linux instance type with local NVMe instance storage, such as `c8id.xl
 ]
 ```
 
-When enabled on Linux, available NVMe instance storage is mounted at `/mnt/ephemeral`, and the Buildkite builds path is bind-mounted from `/mnt/ephemeral/builds` to `/var/lib/buildkite-agent/builds`.
+When enabled on Linux, available NVMe instance storage is mounted at `/mnt/ephemeral`, and the Buildkite builds path is bind-mounted from `/mnt/ephemeral/builds` to `/var/lib/buildkite-agent/builds`. When git-mirrors are also enabled, the git-mirrors path is bind-mounted from `/mnt/ephemeral/git-mirrors` to `/var/lib/buildkite-agent/git-mirrors`.
 
 **Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 

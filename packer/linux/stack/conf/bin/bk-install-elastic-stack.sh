@@ -305,7 +305,7 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
     echo Mounting git-mirrors to instance storage...
 
     EPHEMERAL_GIT_MIRRORS_PATH="/mnt/ephemeral/git-mirrors"
-    echo "Creating ephemeral git-mirrors direcotry at $EPHEMERAL_GIT_MIRRORS_PATH"
+    echo "Creating ephemeral git-mirrors directory at $EPHEMERAL_GIT_MIRRORS_PATH"
     mkdir -p "${EPHEMERAL_GIT_MIRRORS_PATH}"
 
     if findmnt --mountpoint "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}" >/dev/null; then
