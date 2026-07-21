@@ -434,6 +434,10 @@ steps:
       - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 amd64
       - .buildkite/steps/launch.sh ubuntu2404 amd64
     retry: { automatic: { limit: 3 } }
+    # Ubuntu's image is larger than AL2023: the 10GB test default leaves under the
+    # 5GiB docker-low-disk-gc cutoff free, which marks the fresh instance unhealthy.
+    env:
+      ROOT_VOLUME_SIZE: "20"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
@@ -513,6 +517,10 @@ steps:
     command:
       - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 arm64
       - .buildkite/steps/launch.sh ubuntu2404 arm64
+    # Ubuntu's image is larger than AL2023: the 10GB test default leaves under the
+    # 5GiB docker-low-disk-gc cutoff free, which marks the fresh instance unhealthy.
+    env:
+      ROOT_VOLUME_SIZE: "20"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
