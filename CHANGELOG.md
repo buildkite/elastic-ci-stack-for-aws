@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.69.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.69.1) (2026-07-21)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.69.0...v6.69.1)
+
+### Changed
+- Update buildkite-agent to v3.133.1 [#1840](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1840) (@renovate[bot])
+
+### Internal
+- Update changelog with v6.69.0 [#1839](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1839) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.133.1)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 9501741059a738ed36696ef62454e3a240d3b3ef -->
+
+## What's Changed
+### 🐛 Fixed
+* fix(api): classify http2 client connection lost as retriable by @zhming0 in https://github.com/buildkite/agent/pull/4110
+### 🔧 Changed
+* [A-1511] Redact repo URL credentials in repo-checkout OTel span by @isaacsu in https://github.com/buildkite/agent/pull/4099
+### 🏠 Internal
+* A-1542: Rename cache_key fallbackLimit to fallback_limit by @zhming0 in https://github.com/buildkite/agent/pull/4096
+* [A-1511] Split internal/job/checkout.go into multiple files by @isaacsu in https://github.com/buildkite/agent/pull/4109
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.133.0...v3.133.1
+</details>
+
+
+
 ## [v6.69.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.69.0) (2026-07-20)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.68.1...v6.69.0)
 
