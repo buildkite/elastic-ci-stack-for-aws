@@ -395,6 +395,9 @@ steps:
     plugins:
       - *aws_role_plugin
 
+  # ============================================================
+  # Ubuntu 24.04 AMD64
+  # ============================================================
   - id: "packer-base-ubuntu2404-amd64"
     name: ":packer: :ubuntu: AMD64 (base)"
     command: ".buildkite/steps/packer.sh ubuntu2404 amd64 base"
@@ -456,8 +459,8 @@ steps:
       - jq --version
       - git --version
       - sudo goss -g goss.ubuntu2404.yaml validate --format documentation
-    timeout_in_minutes: 5
     retry: { automatic: { limit: 3 } }
+    timeout_in_minutes: 5
     agents:
       stack: "buildkite-aws-stack-test-ubuntu2404-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-ubuntu2404-amd64-${BUILDKITE_BUILD_NUMBER}"
@@ -479,6 +482,9 @@ steps:
     plugins:
       - *aws_role_plugin
 
+  # ============================================================
+  # Ubuntu 24.04 ARM64
+  # ============================================================
   - id: "packer-base-ubuntu2404-arm64"
     name: ":packer: :ubuntu: ARM64 (base)"
     command: ".buildkite/steps/packer.sh ubuntu2404 arm64 base"
