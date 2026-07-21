@@ -97,7 +97,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   instance_type                             = var.instance_type
   region                                    = var.region
   source_ami                                = var.base_ami_id
-  ssh_username                              = local.ssh_username[var.os_distro]
+  ssh_username                              = local.is_cis ? "ec2-user" : local.ssh_username[var.os_distro]
   ssh_clear_authorized_keys                 = true
   temporary_security_group_source_public_ip = true
 
