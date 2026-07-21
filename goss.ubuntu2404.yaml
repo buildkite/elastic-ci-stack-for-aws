@@ -138,6 +138,9 @@ command:
   git-lfs --version:
     exit-status: 0
 
+  session-manager-plugin --version:
+    exit-status: 0
+
   command -v lsof:
     exit-status: 0
 
