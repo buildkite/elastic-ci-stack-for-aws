@@ -1512,6 +1512,12 @@ Conditions:
         - !Equals [ !Ref InstanceOperatingSystem, "linux" ]
         - !Equals [ !Ref LinuxDistribution, "ubuntu2404" ]
 
+    # Windows and Ubuntu AMIs root on /dev/sda1; Amazon Linux roots on /dev/xvda.
+    # The root block device mapping must name the AMI's actual root device or the
+    # RootVolumeSize override silently applies to a phantom device.
+    RootDeviceIsSda1:
+      !Or [ { Condition: UseWindowsAgents }, { Condition: UseUbuntu } ]
+
     # Unfortunately, Cloudformation's !Or intrinsic function only accepts
     # between 2 and 10 arguments.  To get around this, we're grouping the
     # instance families in sub-conditionals.  At least this doesn't force us
@@ -2295,7 +2301,7 @@ Resources:
                       - !Ref 'AWS::Region'
                       - 'linuxamd64'
           BlockDeviceMappings:
-            - DeviceName: !If [ UseDefaultRootVolumeName, !If [ UseWindowsAgents, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
+            - DeviceName: !If [ UseDefaultRootVolumeName, !If [ RootDeviceIsSda1, /dev/sda1, /dev/xvda ], !Ref RootVolumeName ]
               Ebs:
                 VolumeSize: !Ref RootVolumeSize
                 VolumeType: !Ref RootVolumeType
