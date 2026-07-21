@@ -211,7 +211,7 @@ build/ubuntu2404-amd64-ami.txt: packer-ubuntu2404-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build ubuntu2404 amd64 packer image (reuses packer/linux/stack via os_distro)
-packer-ubuntu2404-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 build/goss-linux-amd64 packer-base-ubuntu2404-amd64.output
+packer-ubuntu2404-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 build/goss-linux-amd64 $(if $(strip $(BASE_AMI_ID)),,packer-base-ubuntu2404-amd64.output)
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -242,7 +242,7 @@ build/ubuntu2404-arm64-ami.txt: packer-ubuntu2404-arm64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build ubuntu2404 arm64 packer image (reuses packer/linux/stack via os_distro)
-packer-ubuntu2404-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 build/goss-linux-arm64 packer-base-ubuntu2404-arm64.output
+packer-ubuntu2404-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 build/goss-linux-arm64 $(if $(strip $(BASE_AMI_ID)),,packer-base-ubuntu2404-arm64.output)
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
