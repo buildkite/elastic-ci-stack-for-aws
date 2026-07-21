@@ -24,10 +24,30 @@ ubuntu2404)
   CW_SYSLOG_PATH="/var/log/syslog"
   CW_AUTHLOG_PATH="/var/log/auth.log"
 
+  # apt can 404 on a package version when ports.ubuntu.com rotates a security
+  # update between `apt-get update` and the fetch: the index lists a version the
+  # pool has already purged. A plain URL retry cannot help (the file is gone), so
+  # refresh the index (which then lists the version that exists) and retry.
+  _apt_install() {
+    local attempt
+    for attempt in 1 2 3; do
+      if sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq "$@"; then
+        return 0
+      fi
+      if [ "${attempt}" -lt 3 ]; then
+        echo "apt-get install failed (attempt ${attempt}/3); refreshing index and retrying..." >&2
+        sudo apt-get update -yq || true
+        sleep $((attempt * 5))
+      fi
+    done
+    echo "apt-get install failed after 3 attempts" >&2
+    return 1
+  }
+
   pkg_update() { sudo apt-get update -yq; }
-  pkg_install() { sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq "$@"; }
+  pkg_install() { _apt_install "$@"; }
   # apt resolves dependencies for a local .deb path when prefixed with ./
-  pkg_install_local() { sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq "$@"; }
+  pkg_install_local() { _apt_install "$@"; }
   pkg_clean() { sudo apt-get clean; }
   ;;
 *)
