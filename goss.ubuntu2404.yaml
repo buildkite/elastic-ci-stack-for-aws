@@ -116,6 +116,13 @@ command:
   systemctl is-active ssh.socket:
     exit-status: 0
 
+  # /tmp is a tmpfs by default: tmp.mount is enabled at build time (mirroring
+  # AL2023), and MountTmpfsAtTmp defaults to true.
+  findmnt --noheadings --output FSTYPE /tmp:
+    exit-status: 0
+    stdout:
+    - tmpfs
+
   aws --version:
     exit-status: 0
 

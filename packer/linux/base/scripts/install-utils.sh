@@ -92,6 +92,13 @@ ubuntu2404)
     https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
   # cfn-hup's init script (init/ubuntu/cfn-hup) is intentionally not symlinked
   # into /etc/init.d: this stack runs cfn-signal only, never cfn-hup.
+
+  # AL2023 enables systemd's tmp.mount (tmpfs /tmp) by default; Ubuntu ships it
+  # as a static, disabled unit. Enable it so the default MountTmpfsAtTmp=true
+  # gives a tmpfs /tmp (bk-mount-instance-storage.sh masks it when set false).
+  sudo cp /usr/share/systemd/tmp.mount /etc/systemd/system/tmp.mount
+  sudo systemctl daemon-reload
+  sudo systemctl enable tmp.mount
   ;;
 esac
 
