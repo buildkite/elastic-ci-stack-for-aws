@@ -33,8 +33,6 @@ ubuntu2404)
   pushd "$workdir"
 
   curl -fsSL "${CW_BASE}/assets/amazon-cloudwatch-agent.gpg" -o amazon-cloudwatch-agent.gpg
-  curl -fsSL "${CW_BASE}/ubuntu/${CW_ARCH}/latest/amazon-cloudwatch-agent.deb" -o amazon-cloudwatch-agent.deb
-  curl -fsSL "${CW_BASE}/ubuntu/${CW_ARCH}/latest/amazon-cloudwatch-agent.deb.sig" -o amazon-cloudwatch-agent.deb.sig
 
   # Import the key into an isolated keyring and confirm its fingerprint before
   # trusting it to verify the package signature.
@@ -48,7 +46,24 @@ ubuntu2404)
     echo "CloudWatch agent GPG key fingerprint mismatch; refusing to install" >&2
     exit 1
   fi
-  gpg --batch --verify amazon-cloudwatch-agent.deb.sig amazon-cloudwatch-agent.deb
+
+  # .deb and .deb.sig are fetched from unversioned latest/ paths in separate
+  # requests, so a release rotating between them leaves a mismatched pair.
+  # Re-fetch both together and retry verification a few times to self-heal.
+  cw_verified=false
+  for attempt in 1 2 3; do
+    curl -fsSL "${CW_BASE}/ubuntu/${CW_ARCH}/latest/amazon-cloudwatch-agent.deb" -o amazon-cloudwatch-agent.deb
+    curl -fsSL "${CW_BASE}/ubuntu/${CW_ARCH}/latest/amazon-cloudwatch-agent.deb.sig" -o amazon-cloudwatch-agent.deb.sig
+    if gpg --batch --verify amazon-cloudwatch-agent.deb.sig amazon-cloudwatch-agent.deb; then
+      cw_verified=true
+      break
+    fi
+    echo "CloudWatch agent .deb/.sig verification failed on attempt ${attempt}/3; latest/ may have rotated mid-fetch, retrying..." >&2
+  done
+  if [ "$cw_verified" != true ]; then
+    echo "CloudWatch agent signature verification failed after 3 attempts; refusing to install" >&2
+    exit 1
+  fi
 
   pkg_install_local ./amazon-cloudwatch-agent.deb
 
