@@ -116,6 +116,11 @@ steps:
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
+      - name: ":mag: goss sync"
+        command: .buildkite/steps/goss-sync-check.sh
+        agents:
+          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
   - id: "fixperms-tests"
     name: ":go: fixperms tests"
     agents:
