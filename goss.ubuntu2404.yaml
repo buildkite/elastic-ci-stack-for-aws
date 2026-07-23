@@ -1,0 +1,224 @@
+# Ubuntu 24.04 variant of goss.yaml, used by the ubuntu2404 test steps.
+# Keep in sync with goss.yaml. Intentional differences from the AL2023 file:
+#   - login user home is /home/ubuntu (not /home/ec2-user)
+#   - amazon-ssm-agent runs as a snap (snap.amazon-ssm-agent.amazon-ssm-agent)
+#   - OpenSSH is socket-activated (ssh.socket): no persistent sshd process, no
+#     sshd.service and no sshd group; only the sshd privsep user exists
+#   - the docker group gid is not constrained to the AL2023 990-995 range
+file:
+  /etc/buildkite-agent/buildkite-agent.cfg:
+    exists: true
+
+  /etc/buildkite-agent/hooks:
+    filetype: directory
+    exists: true
+    owner: buildkite-agent
+    group: buildkite-agent
+
+  /etc/systemd/system/refresh_authorized_keys.service:
+    exists: true
+
+  /etc/systemd/system/refresh_authorized_keys.timer:
+    exists: true
+
+  /home/ubuntu/.ssh/authorized_keys:
+    exists: true
+    contains: ["!packer"]
+
+  /root/.ssh/authorized_keys:
+    exists: true
+    contains: ["!packer"]
+
+  /var/lib/buildkite-agent/builds:
+    filetype: directory
+    exists: true
+    owner: buildkite-agent
+    group: buildkite-agent
+
+  /var/lib/buildkite-agent/plugins:
+    filetype: directory
+    exists: true
+    owner: buildkite-agent
+    group: buildkite-agent
+
+  /usr/local/bin/stop-agent-gracefully:
+    exists: true
+    mode: "0755"
+
+port:
+  tcp:22:
+    listening: true
+    ip:
+    - 0.0.0.0
+
+  tcp6:22:
+    listening: true
+    ip:
+    - "::"
+
+service:
+  amazon-cloudwatch-agent:
+    enabled: true
+    running: true
+
+  snap.amazon-ssm-agent.amazon-ssm-agent:
+    enabled: true
+    running: true
+
+  docker:
+    enabled: true
+    running: true
+
+  lifecycled:
+    enabled: true
+    running: true
+
+  buildkite-agent:
+    enabled: true
+    running: true
+
+user:
+  buildkite-agent:
+    exists: true
+    uid: 2000
+    gid: 2000
+    groups:
+    - buildkite-agent
+    - docker
+    home: /var/lib/buildkite-agent
+    shell: /bin/bash
+
+  sshd:
+    exists: true
+
+group:
+  buildkite-agent:
+    exists: true
+    gid: 2000
+
+  docker:
+    exists: true
+
+process:
+  buildkite-agent:
+    running: true
+
+  lifecycled:
+    running: true
+
+command:
+  # Ubuntu 24.04 ships OpenSSH as a socket-activated unit (ssh.socket); there is
+  # no persistent sshd process and no sshd.service like on Amazon Linux. Assert
+  # the socket is enabled at boot and active (the port 22 checks cover reach).
+  systemctl is-enabled ssh.socket:
+    exit-status: 0
+
+  systemctl is-active ssh.socket:
+    exit-status: 0
+
+  # /tmp is a tmpfs by default: tmp.mount is enabled at build time (mirroring
+  # AL2023), and MountTmpfsAtTmp defaults to true.
+  findmnt --noheadings --output FSTYPE /tmp:
+    exit-status: 0
+    stdout:
+    - tmpfs
+
+  aws --version:
+    exit-status: 0
+
+  curl --version:
+    exit-status: 0
+
+  dig -h:
+    exit-status: 0
+
+  git --version:
+    exit-status: 0
+
+  git-lfs --version:
+    exit-status: 0
+
+  session-manager-plugin --version:
+    exit-status: 0
+
+  command -v lsof:
+    exit-status: 0
+
+  make --version:
+    exit-status: 0
+
+  wget --version:
+    exit-status: 0
+
+  # Check refresh authorized keys gear is present, but disabled.
+  # disabled: The unit file is not enabled, but contains an [Install] section with installation instructions.
+  systemctl is-enabled refresh_authorized_keys.timer:
+    exit-status: 1
+    stdout:
+    - /disabled/
+
+  systemctl is-enabled proc-sys-fs-binfmt_misc.mount:
+    exit-status: 0
+
+  systemctl is-enabled docker-binfmt.service:
+    exit-status: 0
+
+  systemctl is-enabled docker-gc.timer:
+    exit-status: 0
+
+  /usr/local/bin/docker-gc:
+    exit-status: 0
+
+  systemctl is-enabled docker-low-disk-gc.timer:
+    exit-status: 0
+
+  /usr/local/bin/docker-low-disk-gc:
+    exit-status: 0
+
+  # test that we can build a docker image
+  docker buildx build -f tests/Dockerfile --progress=plain -t buildkite-postgres:latest tests:
+    exit-status: 0
+    timeout: 60000
+
+  # Check docker userns is enabled
+  # Note that goss will evaluate the outer layer of templating, and docker will evaluate the second
+  # Running `goss validate --format documentation` will print this with the first layer of templating evaluated
+  '{{ `docker info --format=",{{range .SecurityOptions}}{{.}},{{end}}"` }}':
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - /,name=userns,/
+
+  # Check docker plugins are installed
+  # Note that goss will evaluate the first layer of templating, and docker will evaluate the second
+  # Running `goss validate --format documentation` will print this with the first layer of templating evaluated
+  '{{ `docker info --format=",{{range .ClientInfo.Plugins}}{{.Name}},{{end}}"` }}':
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - /,buildx,/
+    - /,compose,/
+
+  # Check that docker containers can run
+  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker:latest version:
+    exit-status: 0
+    timeout: 60000
+
+  # Check that userns allows writing as buildkite-agent
+  sh -c 'docker run --rm -v "$PWD:/pwd" alpine:latest touch /pwd/test && stat -c %U:%G test' && rm test:
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - buildkite-agent:docker
+
+  docker run --rm --platform linux/arm64 -t arm64v8/ubuntu uname -m:
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - aarch64
+
+  docker run --rm --platform linux/amd64 -t amd64/ubuntu uname -m:
+    exit-status: 0
+    timeout: 30000
+    stdout:
+    - x86_64

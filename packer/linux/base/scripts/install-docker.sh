@@ -4,14 +4,24 @@ set -euo pipefail
 # Source centralized version definitions
 # shellcheck disable=SC1091
 source "/tmp/versions.sh"
+# shellcheck disable=SC1091
+source "/tmp/distro.sh"
 MACHINE=$(uname -m)
 
 echo Installing docker...
-sudo dnf install -yq docker
+case "${OS_DISTRO}" in
+amazonlinux2023)
+  pkg_install docker
+  ;;
+ubuntu2404)
+  # docker.io is Ubuntu's packaged engine; buildx/compose plugins are added below.
+  pkg_install docker.io
+  ;;
+esac
 sudo systemctl enable --now docker
 
-echo Add ec2-user to docker group.
-sudo usermod -a -G docker ec2-user
+echo "Add ${LOGIN_USER} to docker group."
+sudo usermod -a -G docker "${LOGIN_USER}"
 
 echo Add docker config
 sudo mkdir -p /etc/docker
@@ -62,4 +72,4 @@ echo "show docker-binfmt status..."
 systemctl status docker-binfmt.service
 
 echo "Installing Amazon ECR credential helper..."
-sudo dnf install -y amazon-ecr-credential-helper
+pkg_install amazon-ecr-credential-helper

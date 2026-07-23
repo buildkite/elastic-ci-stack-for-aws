@@ -10,6 +10,11 @@ aarch64) ARCH=arm64 ;;
 esac
 
 echo "Creating buildkite-agent user and group..."
+# Set the shell explicitly: useradd defaults to /bin/sh on Ubuntu but /bin/bash
+# on Amazon Linux, and the agent + goss checks expect bash on both.
+# --create-home: Ubuntu's useradd does not create the home dir by default
+# (CREATE_HOME=no), unlike Amazon Linux (CREATE_HOME=yes). Without it the home
+# dir ends up root-owned and `git lfs install` cannot write ~/.gitconfig.
 sudo groupadd --gid 2000 buildkite-agent 2>/dev/null || {
   rc=$?
   if [[ $rc -ne 9 ]]; then
@@ -17,7 +22,7 @@ sudo groupadd --gid 2000 buildkite-agent 2>/dev/null || {
     exit 1
   fi
 }
-sudo useradd --base-dir /var/lib --uid 2000 --gid 2000 buildkite-agent
+sudo useradd --create-home --base-dir /var/lib --uid 2000 --gid 2000 --shell /bin/bash buildkite-agent
 sudo usermod -a -G docker buildkite-agent
 
 sudo mkdir -p /var/lib/buildkite-agent/.aws
