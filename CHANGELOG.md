@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.69.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.69.2) (2026-07-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.69.1...v6.69.2)
+
+### Changed
+- Update buildkite-agent to v3.134.0 [#1843](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1843) (@renovate[bot])
+
+### Internal
+- Update changelog with v6.69.1 [#1841](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1841) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.134.0)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 790b839fe2406269dceffb0dc6d2501674db67be -->
+
+## What's Changed
+### ✨ Added
+* Add `checkout-override-mode` option by @petetomasik in https://github.com/buildkite/agent/pull/4010
+### 🐛 Fixed
+* Fix unknown Kubernetes container exit statuses by @jamiemonserrate in https://github.com/buildkite/agent/pull/4115
+### 🔧 Changed
+* Nice the command subprocess so k8s boostrap can't be starved of CPU by @omehegan in https://github.com/buildkite/agent/pull/4100
+### 🏠 Internal
+* Add no-checkout-override flag by @scadu in https://github.com/buildkite/agent/pull/3859
+* Add skip checkout tests for `no-checkout-override` by @petetomasik in https://github.com/buildkite/agent/pull/3906
+* Dedupe needles in replacer using map by @DrJosh9000 in https://github.com/buildkite/agent/pull/4113
+* build(deps): bump the container-images group across 4 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4103
+* build(deps): bump github.com/prometheus/client_golang from 1.23.2 to 1.24.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4106
+* build(deps): bump cloud.google.com/go/kms from 1.31.0 to 1.32.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4108
+* build(deps): bump the container-images group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4104
+* build(deps): bump github.com/klauspost/compress from 1.19.0 to 1.19.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4107
+* build(deps): bump the cloud-providers group across 1 directory with 11 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4114
+* [A-1511] Extract updateGitSubmodules into its own method by @isaacsu in https://github.com/buildkite/agent/pull/4111
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.133.1...v3.134.0
+</details>
+
+
+
 ## [v6.69.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.69.1) (2026-07-21)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.69.0...v6.69.1)
 
