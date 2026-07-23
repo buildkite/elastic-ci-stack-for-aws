@@ -389,27 +389,32 @@ config.json:
 
 SERVICE_ROLE=
 ifdef SERVICE_ROLE
-	role_arn="--role-arn=$(SERVICE_ROLE)"
+	role_arn=--role-arn=$(SERVICE_ROLE)
 endif
 
-create-stack: build/aws-stack.yml env-STACK_NAME
+template_arg=--template-body file://$(PWD)/build/aws-stack.yml
+stack_deps=build/aws-stack.yml
+ifdef TEMPLATE_URL
+	template_arg=--template-url $(TEMPLATE_URL)
+	stack_deps=
+endif
+
+create-stack: $(stack_deps) env-STACK_NAME
 	aws cloudformation create-stack \
 		--output text \
 		--stack-name $(STACK_NAME) \
 		--disable-rollback \
-		--template-body "file://$(PWD)/build/aws-stack.yml" \
+		$(template_arg) \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-		--parameters "$$(cat config.json)" \
-		"$(role_arn)"
+		--parameters file://$(PWD)/config.json $(role_arn)
 
-update-stack: build/aws-stack.yml env-STACK_NAME
+update-stack: $(stack_deps) env-STACK_NAME
 	aws cloudformation update-stack \
 		--output text \
 		--stack-name $(STACK_NAME) \
-		--template-body "file://$(PWD)/build/aws-stack.yml" \
+		$(template_arg) \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-		--parameters "$$(cat config.json)" \
-		"$(role_arn)"
+		--parameters file://$(PWD)/config.json $(role_arn)
 
 # -----------------------------------------
 # Other
