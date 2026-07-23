@@ -44,7 +44,10 @@ ubuntu2404)
     return 1
   }
 
-  pkg_update() { sudo apt-get update -yq; }
+  pkg_update() {
+    sudo apt-get update -yq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -yq
+  }
   pkg_install() { _apt_install "$@"; }
   # apt resolves dependencies for a local .deb path when prefixed with ./
   pkg_install_local() { _apt_install "$@"; }
