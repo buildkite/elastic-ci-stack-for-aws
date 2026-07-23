@@ -4,10 +4,10 @@ VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 
 PACKER_VERSION ?= 1.11.2
-PACKER_LINUX_BASE_FILES = $(exec find packer/linux/base)
-PACKER_LINUX_STACK_FILES = $(exec find packer/linux/stack)
-PACKER_WINDOWS_BASE_FILES = $(exec find packer/windows/base)
-PACKER_WINDOWS_STACK_FILES = $(exec find packer/windows/stack)
+PACKER_LINUX_BASE_FILES = $(shell find packer/linux/base packer/linux/shared)
+PACKER_LINUX_STACK_FILES = $(shell find packer/linux/stack packer/linux/shared)
+PACKER_WINDOWS_BASE_FILES = $(shell find packer/windows/base)
+PACKER_WINDOWS_STACK_FILES = $(shell find packer/windows/stack)
 
 # Allow passing an existing golden base AMI into packer via `BASE_AMI_ID` env var
 override BASE_AMI_ID ?=
@@ -29,7 +29,7 @@ BASE_AMI_ID_WINDOWS_AMD64 ?= $(call base_ami_from_output,packer-base-windows-amd
 
 GO_VERSION ?= 1.26.1
 
-FIXPERMS_FILES = go.mod go.sum $(exec find internal/fixperms)
+FIXPERMS_FILES = go.mod go.sum $(shell find internal/fixperms)
 
 # goss is pinned to a commit (see versions.sh) until the upstream fix is
 # released. Read the pin from versions.sh.
