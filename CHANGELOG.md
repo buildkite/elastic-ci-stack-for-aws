@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.70.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.70.0) (2026-07-24)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.69.2...v6.70.0)
+
+### Changed
+- Add Ubuntu 24.04 as a selectable Linux base OS [#1842](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1842) (@petetomasik)
+
+### Internal
+- Update changelog with v6.69.2 [#1844](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1844) (@scadu)
+
+
 ## [v6.69.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.69.2) (2026-07-23)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.69.1...v6.69.2)
 
@@ -315,13 +325,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 **Full Changelog**: https://github.com/buildkite/agent/compare/v3.127.2...v3.128.0
 </details>
-
-
-## Unreleased
-
-### Added
-* Public API: add `NestedVirtualizationEnabled` stack parameter for `c8i`, `m8i`, `r8i`, and their flex variants
-* Public API: add `LinuxDistribution` stack parameter to select the Linux base OS (`amazonlinux2023` default, or `ubuntu2404`)
 
 ## [v6.66.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.66.2) (2026-06-05)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.1...v6.66.2)
