@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-sudo dnf clean all
+# shellcheck disable=SC1091
+source "/tmp/distro.sh"
+
+pkg_clean

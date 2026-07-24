@@ -12,6 +12,12 @@ variable "arch" {
   default = "x86_64"
 }
 
+variable "os_distro" {
+  type        = string
+  description = "Base Linux distribution the base AMI was built on: amazonlinux2023 or ubuntu2404."
+  default     = "amazonlinux2023"
+}
+
 variable "instance_type" {
   type    = string
   default = "m7a.xlarge"
@@ -49,17 +55,6 @@ variable "ami_users" {
   default     = []
 }
 
-data "amazon-ami" "al2023" {
-  filters = {
-    architecture        = var.arch
-    name                = "al2023-ami-minimal-*"
-    virtualization-type = "hvm"
-  }
-  most_recent = true
-  owners      = ["amazon"]
-  region      = var.region
-}
-
 # Optional override for building from a pre-baked “golden base” AMI
 variable "base_ami_id" {
   type    = string
@@ -73,9 +68,24 @@ variable "is_cis" {
 }
 
 locals {
-  ami_prefix = var.is_cis ? "buildkite-stack-cis-linux" : "buildkite-stack-linux"
-  ami_desc   = var.is_cis ? "Buildkite Elastic Stack (CIS AL2023 w/ docker)" : "Buildkite Elastic Stack (Amazon Linux 2023 w/ docker)"
-  os_version = var.is_cis ? "CIS Amazon Linux 2023" : "Amazon Linux 2023"
+  os_distro_name = {
+    amazonlinux2023 = "Amazon Linux 2023"
+    ubuntu2404      = "Ubuntu 24.04"
+  }
+  ssh_username = {
+    amazonlinux2023 = "ec2-user"
+    ubuntu2404      = "ubuntu"
+  }
+  # Must match the base AMI's root device (Ubuntu /dev/sda1, AL2023 /dev/xvda)
+  root_device_name = {
+    amazonlinux2023 = "/dev/xvda"
+    ubuntu2404      = "/dev/sda1"
+  }
+
+  # CIS is a hardened AL2023 build; when is_cis it overrides the per-distro naming.
+  ami_prefix = var.is_cis ? "buildkite-stack-cis-linux" : "buildkite-stack-linux-${var.os_distro}"
+  ami_desc   = var.is_cis ? "Buildkite Elastic Stack (CIS AL2023 w/ docker)" : "Buildkite Elastic Stack (${local.os_distro_name[var.os_distro]} w/ docker)"
+  os_version = var.is_cis ? "CIS Amazon Linux 2023" : local.os_distro_name[var.os_distro]
   component  = var.is_cis ? "elastic-ci-stack-cis" : "elastic-ci-stack"
 }
 
@@ -87,7 +97,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   instance_type                             = var.instance_type
   region                                    = var.region
   source_ami                                = var.base_ami_id
-  ssh_username                              = "ec2-user"
+  ssh_username                              = var.is_cis ? "ec2-user" : local.ssh_username[var.os_distro]
   ssh_clear_authorized_keys                 = true
   temporary_security_group_source_public_ip = true
 
@@ -100,7 +110,7 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
 
   launch_block_device_mappings {
     volume_type           = "gp3"
-    device_name           = "/dev/xvda"
+    device_name           = var.is_cis ? "/dev/xvda" : local.root_device_name[var.os_distro]
     volume_size           = var.is_cis ? 15 : 10
     delete_on_termination = true
   }
@@ -110,8 +120,9 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
   }
 
   tags = {
-    Name         = "${local.component}-linux-${var.arch}"
+    Name         = var.is_cis ? "${local.component}-linux-${var.arch}" : "elastic-ci-stack-linux-${var.os_distro}-${var.arch}"
     OSVersion    = local.os_version
+    Distro       = var.os_distro
     BuildNumber  = var.build_number
     AgentVersion = var.agent_version
     IsReleased   = var.is_released
@@ -148,23 +159,32 @@ build {
     source      = "../base/scripts/versions.sh"
   }
 
-  provisioner "shell" {
-    script        = "scripts/configure-cloudwatch-agent.sh"
-    remote_folder = "/var/tmp"
+  provisioner "file" {
+    destination = "/tmp/"
+    source      = "../shared/scripts/distro.sh"
   }
 
   provisioner "shell" {
-    script        = "scripts/install-buildkite-agent.sh"
-    remote_folder = "/var/tmp"
+    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    script           = "scripts/configure-cloudwatch-agent.sh"
+    remote_folder    = "/var/tmp"
   }
 
   provisioner "shell" {
-    script        = "scripts/install-buildkite-utils.sh"
-    remote_folder = "/var/tmp"
+    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    script           = "scripts/install-buildkite-agent.sh"
+    remote_folder    = "/var/tmp"
   }
 
   provisioner "shell" {
-    script        = "../shared/scripts/cleanup.sh"
-    remote_folder = "/var/tmp"
+    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    script           = "scripts/install-buildkite-utils.sh"
+    remote_folder    = "/var/tmp"
+  }
+
+  provisioner "shell" {
+    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    script           = "../shared/scripts/cleanup.sh"
+    remote_folder    = "/var/tmp"
   }
 }

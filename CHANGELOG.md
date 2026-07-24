@@ -321,6 +321,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Added
 * Public API: add `NestedVirtualizationEnabled` stack parameter for `c8i`, `m8i`, `r8i`, and their flex variants
+* Public API: add `LinuxDistribution` stack parameter to select the Linux base OS (`amazonlinux2023` default, or `ubuntu2404`)
 
 ## [v6.66.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.66.2) (2026-06-05)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.66.1...v6.66.2)

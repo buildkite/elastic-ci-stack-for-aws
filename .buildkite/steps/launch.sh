@@ -12,6 +12,17 @@ else
   stack_queue_name="testqueue-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
 fi
 
+# The "os" argument may select a Linux distro (e.g. ubuntu2404); map it to the
+# CloudFormation InstanceOperatingSystem + LinuxDistribution parameters.
+instance_os="$os"
+linux_distribution="amazonlinux2023"
+case "$os" in
+ubuntu2404)
+  instance_os="linux"
+  linux_distribution="ubuntu2404"
+  ;;
+esac
+
 # download parfait binary
 wget -N https://github.com/lox/parfait/releases/download/v1.1.3/parfait_linux_amd64
 mv parfait_linux_amd64 parfait
@@ -71,7 +82,11 @@ cat <<EOF >config.json
   },
   {
     "ParameterKey": "InstanceOperatingSystem",
-    "ParameterValue": "${os}"
+    "ParameterValue": "${instance_os}"
+  },
+  {
+    "ParameterKey": "LinuxDistribution",
+    "ParameterValue": "${linux_distribution}"
   },
   {
     "ParameterKey": "VpcId",

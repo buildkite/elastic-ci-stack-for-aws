@@ -84,12 +84,14 @@ def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
 
     if os_type == "windows":
         key_name = "windows"
+    elif os_type == "ubuntu2404":
+        key_name = "ubuntu2404arm64" if arch == "arm64" else "ubuntu2404amd64"
     elif arch == "arm64":
         key_name = "linuxarm64"
     else:
         key_name = "linuxamd64"
 
-    # Template format: "    us-east-1: { linuxamd64: ami-xxx, linuxarm64: ami-yyy, windows: ami-zzz }"
+    # Template format: "    us-east-1: { linuxamd64: ami-xxx, linuxarm64: ami-yyy, windows: ami-zzz, ubuntu2404amd64: ami-aaa, ubuntu2404arm64: ami-bbb }"
     pattern = rf"^\s+{re.escape(region)}\s*:.*{key_name}:\s*(ami-[a-z0-9]+)"
 
     for line in template_content.split("\n"):
@@ -205,7 +207,7 @@ def main() -> int:
     """Main entry point."""
     if len(sys.argv) < 3 or len(sys.argv) > 4:
         print(f"Usage: {sys.argv[0]} <os> <arch> [variant]", file=sys.stderr)
-        print("  os:      linux or windows", file=sys.stderr)
+        print("  os:      linux, windows or ubuntu2404", file=sys.stderr)
         print("  arch:    amd64 or arm64", file=sys.stderr)
         print("  variant: optional build variant (e.g. cis)", file=sys.stderr)
         return 1
@@ -214,9 +216,9 @@ def main() -> int:
     arch = sys.argv[2]
     variant = sys.argv[3] if len(sys.argv) == 4 else None
 
-    if os_type not in ("linux", "windows"):
+    if os_type not in ("linux", "windows", "ubuntu2404"):
         print(
-            f"ERROR: Invalid OS '{os_type}', must be 'linux' or 'windows'",
+            f"ERROR: Invalid OS '{os_type}', must be 'linux', 'windows' or 'ubuntu2404'",
             file=sys.stderr,
         )
         return 1

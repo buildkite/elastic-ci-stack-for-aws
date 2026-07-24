@@ -51,7 +51,7 @@ aws cloudformation describe-stacks \
   --output text \
   --query "$(printf 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date")" \
   | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-(linux|windows)-(amd64|arm64)-([[:alpha:]]+-)?[[:digit:]]+' \
+  | grep -E 'buildkite-aws-stack-test-(linux|windows|ubuntu2404)-(amd64|arm64)-([[:alpha:]]+-)?[[:digit:]]+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
 
 echo "--- Deleting old cloudformation stacks for test stack service roles"
