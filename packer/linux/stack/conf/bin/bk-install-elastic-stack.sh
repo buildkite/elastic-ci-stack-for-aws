@@ -321,8 +321,30 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
     echo Not mounting git-mirrors to instance storage as instance storage is disabled.
   fi
 
+  if [[ -n "${BUILDKITE_AGENT_GIT_MIRRORS_SEED_BUCKET:-}" ]]; then
+    GIT_MIRRORS_SEED_URI="s3://${BUILDKITE_AGENT_GIT_MIRRORS_SEED_BUCKET}/git-mirrors-seed.tar"
+    echo "Seeding git-mirrors from ${GIT_MIRRORS_SEED_URI}..."
+
+    # A missing or unreadable seed must not fail the boot, it is only an optimisation. The
+    # agent will fall back to cloning mirrors from scratch as usual.
+    if aws s3 cp "$GIT_MIRRORS_SEED_URI" /tmp/git-mirrors-seed.tar; then
+      if tar -xf /tmp/git-mirrors-seed.tar -C "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
+        echo "Extracted git-mirrors seed to $BUILDKITE_AGENT_GIT_MIRRORS_PATH"
+      else
+        # A partially extracted mirror would break git fetches, so start clean instead
+        echo "WARNING: Failed to extract git-mirrors seed, clearing git-mirrors and continuing..."
+        rm -rf "${BUILDKITE_AGENT_GIT_MIRRORS_PATH:?}"/*
+      fi
+      rm -f /tmp/git-mirrors-seed.tar
+    else
+      echo "WARNING: Failed to fetch git-mirrors seed from ${GIT_MIRRORS_SEED_URI}, continuing with empty git-mirrors..."
+    fi
+  else
+    echo No git-mirrors seed bucket configured.
+  fi
+
   echo Setting ownership of git-mirrors directory to buildkite-agent...
-  chown buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
+  chown -R buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
 else
   echo git-mirrors disabled.
 fi
