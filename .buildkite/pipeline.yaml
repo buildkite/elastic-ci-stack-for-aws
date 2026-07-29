@@ -170,85 +170,84 @@ steps:
   # Windows AMD64
   # ============================================================
 
-  - group: ":windows: Windows AMD64"
-    key: "windows-amd64"
+  - id: "packer-base-windows-amd64"
+    name: ":packer: :windows: (base)"
+    command: ".buildkite/steps/packer.sh windows amd64 base"
+    timeout_in_minutes: 40
+    env:
+      AMI_PUBLIC: false
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    if_changed: *if_changed_base_windows
+    depends_on:
+      - "linting"
+      - "fixperms-tests"
+    plugins:
+      - *aws_role_plugin
+
+  - id: "packer-windows-amd64"
+    name: ":packer: :windows:"
+    command: .buildkite/steps/packer.sh windows
+    timeout_in_minutes: 60
+    env:
+      AMI_PUBLIC: true
+    retry: { automatic: { limit: 3 } }
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    if: build.source != "schedule"
+    if_changed: *if_changed_stack_windows
+    depends_on:
+      - "packer-base-windows-amd64"
+      - "linting"
+      - "fixperms-tests"
+    plugins:
+      - *aws_role_plugin
+
+  - id: "launch-windows-amd64"
+    name: ":cloudformation: :windows: AMD64 Launch"
+    command:
+      - .buildkite/steps/ensure_ami_metadata.py windows amd64
+      - .buildkite/steps/launch.sh windows amd64
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    artifact_paths: "build/aws-stack.yml"
+    if: build.source != "schedule"
     if_changed: *if_changed_launch_test_delete_windows
-    steps:
-      - id: "packer-base-windows-amd64"
-        name: ":packer: :windows: (base)"
-        command: ".buildkite/steps/packer.sh windows amd64 base"
-        timeout_in_minutes: 40
-        env:
-          AMI_PUBLIC: false
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-        if_changed: *if_changed_base_windows
-        depends_on:
-          - "linting"
-          - "fixperms-tests"
-        plugins:
-          - *aws_role_plugin
+    depends_on:
+      - "packer-windows-amd64"
+      - "deploy-service-role-stack"
+    plugins:
+      - *aws_role_plugin
 
-      - id: "packer-windows-amd64"
-        name: ":packer: :windows:"
-        command: .buildkite/steps/packer.sh windows
-        timeout_in_minutes: 60
-        env:
-          AMI_PUBLIC: true
-        retry: { automatic: { limit: 3 } }
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-        if: build.source != "schedule"
-        if_changed: *if_changed_stack_windows
-        depends_on:
-          - "packer-base-windows-amd64"
-          - "linting"
-          - "fixperms-tests"
-        plugins:
-          - *aws_role_plugin
+  - id: "test-windows-amd64"
+    name: ":cloudformation: :windows: AMD64 Test"
+    command:
+      - aws --version
+      - jq --version
+      - git --version
+      - docker info
+      - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
+    timeout_in_minutes: 5
+    agents:
+      stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
+      queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
+    if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_windows
+    depends_on:
+      - "launch-windows-amd64"
 
-      - id: "launch-windows-amd64"
-        name: ":cloudformation: :windows: AMD64 Launch"
-        command:
-          - .buildkite/steps/ensure_ami_metadata.py windows amd64
-          - .buildkite/steps/launch.sh windows amd64
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-        artifact_paths: "build/aws-stack.yml"
-        if: build.source != "schedule"
-        depends_on:
-          - "packer-windows-amd64"
-          - "deploy-service-role-stack"
-        plugins:
-          - *aws_role_plugin
-
-      - id: "test-windows-amd64"
-        name: ":cloudformation: :windows: AMD64 Test"
-        command:
-          - aws --version
-          - jq --version
-          - git --version
-          - docker info
-          - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
-        timeout_in_minutes: 5
-        agents:
-          stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
-          queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
-        if: build.source != "schedule"
-        depends_on:
-          - "launch-windows-amd64"
-
-      - id: "delete-windows-amd64"
-        name: ":cloudformation: :windows: AMD64 Delete"
-        command: .buildkite/steps/delete.sh windows amd64
-        allow_dependency_failure: true
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-        if: build.source != "schedule"
-        depends_on:
-          - "test-windows-amd64"
-        plugins:
-          - *aws_role_plugin
+  - id: "delete-windows-amd64"
+    name: ":cloudformation: :windows: AMD64 Delete"
+    command: .buildkite/steps/delete.sh windows amd64
+    allow_dependency_failure: true
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    if: build.source != "schedule"
+    if_changed: *if_changed_launch_test_delete_windows
+    depends_on:
+      - "test-windows-amd64"
+    plugins:
+      - *aws_role_plugin
 
   # ============================================================
   # Linux AMD64
