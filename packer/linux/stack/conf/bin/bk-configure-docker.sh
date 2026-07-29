@@ -121,3 +121,8 @@ systemctl enable docker-gc.timer docker-low-disk-gc.timer
 
 echo Restarting docker daemon...
 systemctl restart docker
+
+# docker-binfmt can dependency-fail if Docker's initial boot start races with this configuration.
+# Starting it here is a no-op when it is already active and retries it after Docker recovers.
+echo Starting docker-binfmt...
+systemctl start docker-binfmt.service
