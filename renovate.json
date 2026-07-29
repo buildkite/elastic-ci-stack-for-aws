@@ -117,6 +117,18 @@
     {
       "customType": "regex",
       "fileMatch": [
+        "^packer/linux/base/scripts/versions\\.sh$"
+      ],
+      "matchStrings": [
+        "export DOCKER_BINFMT_IMAGE=\"tonistiigi/binfmt:(?<currentValue>qemu-v[^@]+)@(?<currentDigest>sha256:[a-f0-9]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "tonistiigi/binfmt",
+      "versioningTemplate": "regex:^qemu-v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
         "^packer/linux/base/scripts/versions\\.sh$",
         "^packer/windows/base/scripts/versions\\.ps1$"
       ],
@@ -204,6 +216,7 @@
         "goss",
         "docker/compose",
         "docker/buildx",
+        "tonistiigi/binfmt",
         "buildkite/lifecycled",
         "buildkite/elastic-ci-stack-s3-secrets-hooks",
         "buildkite/buildkite-agent-scaler"
@@ -215,6 +228,12 @@
         "dependencies",
         "tools"
       ]
+    },
+    {
+      "matchPackageNames": [
+        "tonistiigi/binfmt"
+      ],
+      "commitMessageExtra": "to {{newVersion}}"
     },
     {
       "description": "Global stable releases configuration",
