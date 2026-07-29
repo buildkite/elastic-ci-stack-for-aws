@@ -27,22 +27,28 @@ exec > >(tee -a /var/log/elastic-stack.log | logger -t user-data -s 2>/dev/conso
 
 echo "Starting ${BASH_SOURCE[0]}..."
 
+# Replace mappings atomically so Docker never reads a truncated file during boot.
+write_userns_mapping_file() {
+  local destination="$1"
+  local first_id="$2"
+  local temporary_file
+
+  temporary_file=$(mktemp "${destination}.XXXXXX")
+  cp --attributes-only --preserve=all "$destination" "$temporary_file"
+  printf 'buildkite-agent:%s:1\nbuildkite-agent:100000:65536\n' "$first_id" >"$temporary_file"
+  mv "$temporary_file" "$destination"
+}
+
 if [[ "${DOCKER_USERNS_REMAP:-false}" == "true" ]]; then
   echo Configuring user namespace remapping...
 
-  cat <<<"$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" >/etc/docker/daemon.json
-
   echo Writing subuid...
-  cat <<EOF | tee /etc/subuid
-buildkite-agent:$(id -u buildkite-agent):1
-buildkite-agent:100000:65536
-EOF
+  write_userns_mapping_file /etc/subuid "$(id -u buildkite-agent)"
 
   echo Writing subgid...
-  cat <<EOF | tee /etc/subgid
-buildkite-agent:$(getent group docker | awk -F: '{print $3}'):1
-buildkite-agent:100000:65536
-EOF
+  write_userns_mapping_file /etc/subgid "$(getent group docker | awk -F: '{print $3}')"
+
+  cat <<<"$(jq '."userns-remap"="buildkite-agent"' /etc/docker/daemon.json)" >/etc/docker/daemon.json
 else
   echo User namespace remapping not configured.
 fi
