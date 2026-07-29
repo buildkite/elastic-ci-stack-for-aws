@@ -32,6 +32,12 @@ sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
 sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
 sudo chmod 755 /usr/local/bin/docker-*
 
+echo "Writing docker-binfmt environment..."
+sudo tee /etc/docker-binfmt.env >/dev/null <<EOF
+DOCKER_BINFMT_IMAGE=${DOCKER_BINFMT_IMAGE}
+EOF
+sudo chmod 644 /etc/docker-binfmt.env
+
 echo "Installing docker buildx..."
 DOCKER_CLI_DIR=/usr/libexec/docker/cli-plugins
 sudo mkdir -p "${DOCKER_CLI_DIR}"
