@@ -321,26 +321,74 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
     echo Not mounting git-mirrors to instance storage as instance storage is disabled.
   fi
 
-  if [[ -n "${BUILDKITE_AGENT_GIT_MIRRORS_SEED_BUCKET:-}" ]]; then
-    GIT_MIRRORS_SEED_URI="s3://${BUILDKITE_AGENT_GIT_MIRRORS_SEED_BUCKET}/git-mirrors-seed.tar"
-    echo "Seeding git-mirrors from ${GIT_MIRRORS_SEED_URI}..."
+  if [[ -n "${BUILDKITE_GIT_MIRROR_SEED_BUCKET:-}" ]]; then
+    GIT_MIRROR_SEED_PREFIX="git-mirror-seeds"
+    echo "Seeding git-mirrors from s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${GIT_MIRROR_SEED_PREFIX}/..."
 
-    # A missing or unreadable seed must not fail the boot, it is only an optimisation. The
-    # agent will fall back to cloning mirrors from scratch as usual.
-    if aws s3 cp "$GIT_MIRRORS_SEED_URI" /tmp/git-mirrors-seed.tar; then
-      if tar -xf /tmp/git-mirrors-seed.tar -C "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
-        echo "Extracted git-mirrors seed to $BUILDKITE_AGENT_GIT_MIRRORS_PATH"
-      else
-        # A partially extracted mirror would break git fetches, so start clean instead
-        echo "WARNING: Failed to extract git-mirrors seed, clearing git-mirrors and continuing..."
-        rm -rf "${BUILDKITE_AGENT_GIT_MIRRORS_PATH:?}"/*
-      fi
-      rm -f /tmp/git-mirrors-seed.tar
+    # Seeding is best-effort, it is only an optimisation. If listing or extraction fails, the
+    # agent falls back to cloning mirrors from scratch as usual, and the boot must not fail.
+    seed_keys=()
+    if seed_listing="$(
+      aws s3api list-objects-v2 \
+        --bucket "$BUILDKITE_GIT_MIRROR_SEED_BUCKET" \
+        --prefix "${GIT_MIRROR_SEED_PREFIX}/" \
+        --output json \
+        | jq -r '.Contents[]?.Key // empty'
+    )"; then
+      while IFS= read -r seed_key; do
+        if [[ "$seed_key" == *.tar || "$seed_key" == *.tar.gz || "$seed_key" == *.zip ]]; then
+          seed_keys+=("$seed_key")
+        fi
+      done <<<"$seed_listing"
     else
-      echo "WARNING: Failed to fetch git-mirrors seed from ${GIT_MIRRORS_SEED_URI}, continuing with empty git-mirrors..."
+      echo "WARNING: Failed to list git mirror seeds in s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${GIT_MIRROR_SEED_PREFIX}/, continuing with empty git-mirrors..."
     fi
+
+    if [[ ${#seed_keys[@]} -eq 0 ]]; then
+      echo "No git mirror seeds found."
+    fi
+
+    for seed_key in "${seed_keys[@]}"; do
+      seed_archive="${seed_key##*/}"
+      seed_uri="s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${seed_key}"
+      extracted=false
+
+      echo "Extracting git mirror seed ${seed_archive}..."
+      case "$seed_archive" in
+      *.tar.gz)
+        seed_mirror_dir="${seed_archive%.tar.gz}"
+        if aws s3 cp "$seed_uri" - | tar -xzf - -C "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
+          extracted=true
+        fi
+        ;;
+      *.tar)
+        seed_mirror_dir="${seed_archive%.tar}"
+        if aws s3 cp "$seed_uri" - | tar -xf - -C "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
+          extracted=true
+        fi
+        ;;
+      *.zip)
+        # zip cannot be streamed: its central directory is at the end of the file
+        seed_mirror_dir="${seed_archive%.zip}"
+        seed_tmp="$(mktemp /tmp/git-mirror-seed-XXXXXX.zip)"
+        if aws s3 cp "$seed_uri" "$seed_tmp" && unzip -oq "$seed_tmp" -d "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
+          extracted=true
+        fi
+        rm -f "$seed_tmp"
+        ;;
+      esac
+
+      if [[ "$extracted" == "true" ]]; then
+        echo "Seeded git mirror ${seed_mirror_dir}"
+      else
+        # A partially extracted mirror would break git fetches for that repository, so remove
+        # it while leaving mirrors seeded from other archives intact.
+        echo "WARNING: Failed to extract ${seed_archive}, removing partial mirror ${seed_mirror_dir} and continuing..."
+        rm -rf "${BUILDKITE_AGENT_GIT_MIRRORS_PATH:?}/${seed_mirror_dir}"
+      fi
+    done
   else
-    echo No git-mirrors seed bucket configured.
+    echo No git mirror seed bucket configured.
   fi
 
   echo Setting ownership of git-mirrors directory to buildkite-agent...
