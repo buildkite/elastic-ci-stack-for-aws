@@ -7,13 +7,18 @@ x-if-changed-patterns:
       - "packer/linux/shared/**"
       - ".buildkite/steps/packer.sh"
       - "Makefile"
+      - "make/packer-common.mk"
+      - "make/packer-linux.mk"
 
   - &if_changed_base_windows
     include:
+      - ".buildkite/pipeline.yaml"
       - "packer/windows/base/**"
       - "packer/windows/shared/**"
       - ".buildkite/steps/packer.sh"
       - "Makefile"
+      - "make/packer-common.mk"
+      - "make/packer-windows.mk"
 
   - &if_changed_stack_linux
     include:
@@ -21,6 +26,8 @@ x-if-changed-patterns:
       - "plugins/**"
       - ".buildkite/steps/packer.sh"
       - "Makefile"
+      - "make/packer-common.mk"
+      - "make/packer-linux.mk"
       - "internal/**"
       - "goss.yaml"
       - "goss.ubuntu2404.yaml"
@@ -30,11 +37,13 @@ x-if-changed-patterns:
 
   - &if_changed_stack_windows
     include:
+      - ".buildkite/pipeline.yaml"
       - "packer/windows/**"
       - "plugins/**"
       - ".buildkite/steps/packer.sh"
       - "Makefile"
-      - "internal/**"
+      - "make/packer-common.mk"
+      - "make/packer-windows.mk"
     exclude:
       - "**/*.md"
       - "**/README*"
@@ -47,6 +56,9 @@ x-if-changed-patterns:
       - ".buildkite/steps/launch.sh"
       - "templates/**"
       - "Makefile"
+      - "make/packer-common.mk"
+      - "make/packer-linux.mk"
+      - "make/stack.mk"
       - "internal/**"
       - "goss.yaml"
       - "goss.ubuntu2404.yaml"
@@ -56,13 +68,16 @@ x-if-changed-patterns:
 
   - &if_changed_launch_test_delete_windows
     include:
+      - ".buildkite/pipeline.yaml"
       - "packer/windows/**"
       - "plugins/**"
       - ".buildkite/steps/packer.sh"
       - ".buildkite/steps/launch.sh"
       - "templates/**"
       - "Makefile"
-      - "internal/**"
+      - "make/packer-common.mk"
+      - "make/packer-windows.mk"
+      - "make/stack.mk"
     exclude:
       - "**/*.md"
       - "**/README*"
@@ -77,6 +92,7 @@ x-if-changed-patterns:
       - ".buildkite/steps/deploy-service-role-stack.sh"
       - "templates/**"
       - "Makefile"
+      - "make/**"
       - "internal/**"
       - "goss.yaml"
       - "goss.ubuntu2404.yaml"
