@@ -1,5 +1,5 @@
 diff --git a/agent/agent_pool.go b/agent/agent_pool.go
-index 5d334666..83bb2258 100644
+index 5d334666..cb2db337 100644
 --- a/agent/agent_pool.go
 +++ b/agent/agent_pool.go
 @@ -10,6 +10,7 @@ import (
@@ -29,7 +29,7 @@ index 5d334666..83bb2258 100644
  	}
  }
  
-@@ -57,6 +63,40 @@ func (ap *AgentPool) StartStatusServer(ctx context.Context, l logger.Logger, add
+@@ -57,6 +63,29 @@ func (ap *AgentPool) StartStatusServer(ctx context.Context, l logger.Logger, add
  
  // Start kicks off the parallel AgentWorkers and waits for them to finish.
  func (r *AgentPool) Start(ctx context.Context) error {
@@ -37,21 +37,12 @@ index 5d334666..83bb2258 100644
 +		return fmt.Errorf("configure systemd watchdog: %w", r.watchdogErr)
 +	}
 +
-+	var l logger.Logger
-+	if len(r.workers) > 0 {
-+		l = r.workers[0].logger
-+	}
 +	if r.watchdog != nil {
-+		if err := r.watchdog.Ready(); err != nil {
-+			return fmt.Errorf("notify systemd that agent is ready: %w", err)
-+		}
-+		defer func() {
-+			if err := r.watchdog.Stopping(); err != nil && l != nil {
-+				l.Warnf("Failed to notify systemd that the agent is stopping: %v", err)
-+			}
-+		}()
-+
 +		if watchdogInterval := r.watchdog.WatchdogInterval(); watchdogInterval > 0 {
++			var l logger.Logger = logger.Discard
++			if len(r.workers) > 0 {
++				l = r.workers[0].logger
++			}
 +			watchdogCtx, stopWatchdog := context.WithCancel(ctx)
 +			var watchdogWG sync.WaitGroup
 +			watchdogWG.Go(func() {
@@ -61,16 +52,14 @@ index 5d334666..83bb2258 100644
 +				stopWatchdog()
 +				watchdogWG.Wait()
 +			}()
-+			if l != nil {
-+				l.Noticef("Systemd watchdog enabled with a %s timeout", watchdogInterval)
-+			}
++			l.Noticef("Systemd watchdog enabled with a %s timeout", watchdogInterval)
 +		}
 +	}
 +
  	ctx, setStat, done := status.AddSimpleItem(ctx, "Agent Pool")
  	defer done()
  	setStat("🏃 Spawning workers...")
-@@ -89,13 +129,25 @@ func runWorker(ctx context.Context, worker *AgentWorker, idleMon *idleMonitor) e
+@@ -89,13 +118,25 @@ func runWorker(ctx context.Context, worker *AgentWorker, idleMon *idleMonitor) e
  
  	// Connect the worker to the API
  	if err := worker.Connect(ctx); err != nil {
@@ -99,10 +88,10 @@ index 5d334666..83bb2258 100644
  // StopGracefully stops all workers in the pool gracefully.
 diff --git a/agent/agent_watchdog.go b/agent/agent_watchdog.go
 new file mode 100644
-index 00000000..ae2d90c2
+index 00000000..1dca4f5c
 --- /dev/null
 +++ b/agent/agent_watchdog.go
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,109 @@
 +package agent
 +
 +import (
@@ -113,99 +102,61 @@ index 00000000..ae2d90c2
 +	"github.com/buildkite/agent/v3/logger"
 +)
 +
-+type workerWatchdogState uint8
-+
-+const (
-+	workerWatchdogConnecting workerWatchdogState = iota
-+	workerWatchdogRunning
-+	workerWatchdogStopped
-+	workerWatchdogFailed
-+)
-+
-+type workerWatchdog struct {
-+	state                 workerWatchdogState
-+	lastSuccessfulContact time.Time
-+	err                   error
-+}
-+
 +type watchdogNotifier interface {
-+	Ready() error
-+	Stopping() error
 +	Watchdog() error
 +	WatchdogInterval() time.Duration
 +}
 +
-+func (a *AgentWorker) watchdogMarkConnecting() {
-+	a.watchdogMtx.Lock()
-+	defer a.watchdogMtx.Unlock()
-+
-+	a.watchdog.state = workerWatchdogConnecting
-+	a.watchdog.lastSuccessfulContact = time.Now()
-+	a.watchdog.err = nil
-+}
-+
 +func (a *AgentWorker) watchdogMarkRunning() {
-+	a.watchdogMtx.Lock()
-+	defer a.watchdogMtx.Unlock()
++	a.stats.Lock()
++	defer a.stats.Unlock()
 +
-+	a.watchdog.state = workerWatchdogRunning
-+	// Connect succeeded immediately before the worker started, so begin the
-+	// heartbeat grace period from that successful Buildkite API contact.
-+	a.watchdog.lastSuccessfulContact = time.Now()
-+	a.watchdog.err = nil
++	a.stats.watchdogRunningSince = time.Now()
++	a.stats.watchdogErr = nil
 +}
 +
 +func (a *AgentWorker) watchdogMarkStopped() {
-+	a.watchdogMtx.Lock()
-+	defer a.watchdogMtx.Unlock()
++	a.stats.Lock()
++	defer a.stats.Unlock()
 +
-+	a.watchdog.state = workerWatchdogStopped
-+	a.watchdog.err = nil
++	a.stats.watchdogRunningSince = time.Time{}
++	a.stats.watchdogErr = nil
 +}
 +
 +func (a *AgentWorker) watchdogMarkFailed(err error) {
-+	a.watchdogMtx.Lock()
-+	defer a.watchdogMtx.Unlock()
++	a.stats.Lock()
++	defer a.stats.Unlock()
 +
-+	a.watchdog.state = workerWatchdogFailed
-+	a.watchdog.err = err
++	a.stats.watchdogRunningSince = time.Time{}
++	a.stats.watchdogErr = err
 +}
 +
-+func (a *AgentWorker) watchdogRecordSuccessfulHeartbeat() {
-+	a.watchdogMtx.Lock()
-+	defer a.watchdogMtx.Unlock()
++func (a *AgentWorker) watchdogHealth(now time.Time) error {
++	a.stats.Lock()
++	defer a.stats.Unlock()
 +
-+	if a.watchdog.state == workerWatchdogRunning {
-+		a.watchdog.lastSuccessfulContact = time.Now()
++	if a.stats.watchdogErr != nil {
++		return fmt.Errorf("worker %d failed: %w", a.spawnIndex, a.stats.watchdogErr)
 +	}
-+}
-+
-+func (a *AgentWorker) watchdogHealth(now time.Time, maxContactAge time.Duration) error {
-+	a.watchdogMtx.Lock()
-+	defer a.watchdogMtx.Unlock()
-+
-+	switch a.watchdog.state {
-+	case workerWatchdogConnecting, workerWatchdogStopped:
-+		// Connecting is bounded by the client's retry policy, while an
-+		// intentionally stopped worker no longer contributes to pool health.
++	if a.stats.watchdogRunningSince.IsZero() {
++		// Workers that are still connecting or have intentionally stopped do
++		// not contribute to pool health.
 +		return nil
-+	case workerWatchdogFailed:
-+		if a.watchdog.err == nil {
-+			return fmt.Errorf("worker %d failed", a.spawnIndex)
-+		}
-+		return fmt.Errorf("worker %d failed: %w", a.spawnIndex, a.watchdog.err)
-+	case workerWatchdogRunning:
-+		if a.watchdog.lastSuccessfulContact.IsZero() {
-+			return fmt.Errorf("worker %d has not successfully contacted Buildkite", a.spawnIndex)
-+		}
-+		age := now.Sub(a.watchdog.lastSuccessfulContact)
-+		if age > maxContactAge {
-+			return fmt.Errorf("worker %d has not successfully contacted Buildkite for %s", a.spawnIndex, age.Round(time.Second))
-+		}
-+		return nil
-+	default:
-+		return fmt.Errorf("worker %d has unknown watchdog state %d", a.spawnIndex, a.watchdog.state)
 +	}
++
++	lastSuccessfulContact := a.stats.lastHeartbeat
++	if lastSuccessfulContact.Before(a.stats.watchdogRunningSince) {
++		// Connect succeeded immediately before the worker started, so use it
++		// as the heartbeat grace period until the first heartbeat succeeds.
++		lastSuccessfulContact = a.stats.watchdogRunningSince
++	}
++	// A worker remains healthy through one delayed or in-flight heartbeat.
++	maxContactAge := 2 * time.Duration(a.agent.HeartbeatInterval) * time.Second
++	age := now.Sub(lastSuccessfulContact)
++	if age > maxContactAge {
++		return fmt.Errorf("worker %d has not successfully contacted Buildkite for %s", a.spawnIndex, age.Round(time.Second))
++	}
++	return nil
 +}
 +
 +func (ap *AgentPool) runWatchdog(ctx context.Context, l logger.Logger, watchdogInterval time.Duration) {
@@ -213,25 +164,25 @@ index 00000000..ae2d90c2
 +	ticker := time.NewTicker(watchdogInterval / 2)
 +	defer ticker.Stop()
 +
-+	ap.runWatchdogLoop(ctx, l, watchdogInterval, ticker.C)
++	ap.runWatchdogLoop(ctx, l, ticker.C)
 +}
 +
-+func (ap *AgentPool) runWatchdogLoop(ctx context.Context, l logger.Logger, watchdogInterval time.Duration, ticks <-chan time.Time) {
++func (ap *AgentPool) runWatchdogLoop(ctx context.Context, l logger.Logger, ticks <-chan time.Time) {
 +	for {
 +		select {
 +		case now, ok := <-ticks:
 +			if !ok {
 +				return
 +			}
-+			ap.notifyWatchdog(l, watchdogInterval, now)
++			ap.notifyWatchdog(l, now)
 +		case <-ctx.Done():
 +			return
 +		}
 +	}
 +}
 +
-+func (ap *AgentPool) notifyWatchdog(l logger.Logger, watchdogInterval time.Duration, now time.Time) {
-+	if err := ap.watchdogHealth(now, watchdogInterval/2); err != nil {
++func (ap *AgentPool) notifyWatchdog(l logger.Logger, now time.Time) {
++	if err := ap.watchdogHealth(now); err != nil {
 +		l.Warnf("Buildkite heartbeat has not succeeded; not sending systemd watchdog notification: %v", err)
 +		return
 +	}
@@ -242,9 +193,9 @@ index 00000000..ae2d90c2
 +	l.Debugf("Notified systemd watchdog")
 +}
 +
-+func (ap *AgentPool) watchdogHealth(now time.Time, maxContactAge time.Duration) error {
++func (ap *AgentPool) watchdogHealth(now time.Time) error {
 +	for _, worker := range ap.workers {
-+		if err := worker.watchdogHealth(now, maxContactAge); err != nil {
++		if err := worker.watchdogHealth(now); err != nil {
 +			return err
 +		}
 +	}
@@ -252,10 +203,10 @@ index 00000000..ae2d90c2
 +}
 diff --git a/agent/agent_watchdog_test.go b/agent/agent_watchdog_test.go
 new file mode 100644
-index 00000000..9f6e2e4e
+index 00000000..759e5a93
 --- /dev/null
 +++ b/agent/agent_watchdog_test.go
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,288 @@
 +package agent
 +
 +import (
@@ -278,24 +229,8 @@ index 00000000..9f6e2e4e
 +	interval time.Duration
 +
 +	mu       sync.Mutex
-+	ready    int
-+	stopping int
 +	watchdog int
 +	watchErr error
-+}
-+
-+func (n *fakeWatchdogNotifier) Ready() error {
-+	n.mu.Lock()
-+	defer n.mu.Unlock()
-+	n.ready++
-+	return nil
-+}
-+
-+func (n *fakeWatchdogNotifier) Stopping() error {
-+	n.mu.Lock()
-+	defer n.mu.Unlock()
-+	n.stopping++
-+	return nil
 +}
 +
 +func (n *fakeWatchdogNotifier) Watchdog() error {
@@ -315,49 +250,46 @@ index 00000000..9f6e2e4e
 +	return n.watchdog
 +}
 +
-+func (n *fakeWatchdogNotifier) lifecycleCounts() (ready, stopping int) {
-+	n.mu.Lock()
-+	defer n.mu.Unlock()
-+	return n.ready, n.stopping
-+}
-+
 +func TestAgentWorkerWatchdogHealth(t *testing.T) {
 +	t.Parallel()
 +
 +	now := time.Now()
 +	failure := errors.New("heartbeat rejected")
 +	tests := []struct {
-+		name      string
-+		watchdog  workerWatchdog
-+		wantError string
++		name                 string
++		heartbeatInterval    int
++		lastHeartbeat        time.Time
++		watchdogRunningSince time.Time
++		watchdogErr          error
++		wantError            string
 +	}{
 +		{
-+			name:     "connecting worker",
-+			watchdog: workerWatchdog{state: workerWatchdogConnecting},
++			name:              "connecting or stopped worker",
++			heartbeatInterval: 60,
 +		},
 +		{
-+			name: "running worker with recent Buildkite contact",
-+			watchdog: workerWatchdog{
-+				state:                 workerWatchdogRunning,
-+				lastSuccessfulContact: now.Add(-time.Minute),
-+			},
++			name:                 "running worker within two heartbeat intervals",
++			heartbeatInterval:    60,
++			lastHeartbeat:        now.Add(-119 * time.Second),
++			watchdogRunningSince: now.Add(-3 * time.Minute),
 +		},
 +		{
-+			name: "running worker with stale Buildkite contact",
-+			watchdog: workerWatchdog{
-+				state:                 workerWatchdogRunning,
-+				lastSuccessfulContact: now.Add(-2 * time.Minute),
-+			},
-+			wantError: "has not successfully contacted Buildkite",
++			name:                 "running worker beyond two heartbeat intervals",
++			heartbeatInterval:    60,
++			lastHeartbeat:        now.Add(-121 * time.Second),
++			watchdogRunningSince: now.Add(-3 * time.Minute),
++			wantError:            "has not successfully contacted Buildkite",
 +		},
 +		{
-+			name:      "failed worker",
-+			watchdog:  workerWatchdog{state: workerWatchdogFailed, err: failure},
-+			wantError: failure.Error(),
++			name:              "failed worker",
++			heartbeatInterval: 60,
++			watchdogErr:       failure,
++			wantError:         failure.Error(),
 +		},
 +		{
-+			name:     "intentionally stopped worker",
-+			watchdog: workerWatchdog{state: workerWatchdogStopped},
++			name:                 "running worker awaiting its first heartbeat",
++			heartbeatInterval:    60,
++			watchdogRunningSince: now.Add(-time.Minute),
 +		},
 +	}
 +
@@ -367,9 +299,16 @@ index 00000000..9f6e2e4e
 +
 +			worker := &AgentWorker{
 +				spawnIndex: 3,
-+				watchdog:   test.watchdog,
++				agent: &api.AgentRegisterResponse{
++					HeartbeatInterval: test.heartbeatInterval,
++				},
++				stats: agentStats{
++					lastHeartbeat:        test.lastHeartbeat,
++					watchdogRunningSince: test.watchdogRunningSince,
++					watchdogErr:          test.watchdogErr,
++				},
 +			}
-+			err := worker.watchdogHealth(now, 90*time.Second)
++			err := worker.watchdogHealth(now)
 +			if test.wantError == "" {
 +				if err != nil {
 +					t.Errorf("watchdogHealth() error = %v, want nil", err)
@@ -386,11 +325,15 @@ index 00000000..9f6e2e4e
 +func TestAgentWorkerSuccessfulHeartbeatDoesNotReviveFailedWorker(t *testing.T) {
 +	t.Parallel()
 +
-+	worker := &AgentWorker{}
++	worker := &AgentWorker{
++		agent: &api.AgentRegisterResponse{HeartbeatInterval: 60},
++	}
 +	worker.watchdogMarkFailed(errors.New("failed"))
-+	worker.watchdogRecordSuccessfulHeartbeat()
++	worker.stats.Lock()
++	worker.stats.lastHeartbeat = time.Now()
++	worker.stats.Unlock()
 +
-+	if err := worker.watchdogHealth(time.Now(), time.Minute); err == nil {
++	if err := worker.watchdogHealth(time.Now()); err == nil {
 +		t.Fatal("watchdogHealth() error = nil, want failed worker error")
 +	}
 +}
@@ -418,20 +361,21 @@ index 00000000..9f6e2e4e
 +	t.Cleanup(server.Close)
 +
 +	worker := &AgentWorker{
++		agent: &api.AgentRegisterResponse{HeartbeatInterval: 60},
 +		apiClient: api.NewClient(logger.Discard, api.Config{
 +			Endpoint: server.URL,
 +			Token:    "test-token",
 +		}),
 +		logger: logger.Discard,
-+		watchdog: workerWatchdog{
-+			state:                 workerWatchdogRunning,
-+			lastSuccessfulContact: time.Now().Add(-time.Minute),
++		stats: agentStats{
++			lastHeartbeat:        time.Now().Add(-time.Minute),
++			watchdogRunningSince: time.Now().Add(-2 * time.Minute),
 +		},
 +	}
 +	lastSuccessfulContact := func() time.Time {
-+		worker.watchdogMtx.Lock()
-+		defer worker.watchdogMtx.Unlock()
-+		return worker.watchdog.lastSuccessfulContact
++		worker.stats.Lock()
++		defer worker.stats.Unlock()
++		return worker.stats.lastHeartbeat
 +	}
 +
 +	beforeSuccess := lastSuccessfulContact()
@@ -457,9 +401,10 @@ index 00000000..9f6e2e4e
 +
 +	now := time.Now()
 +	worker := &AgentWorker{
-+		watchdog: workerWatchdog{
-+			state:                 workerWatchdogRunning,
-+			lastSuccessfulContact: now,
++		agent: &api.AgentRegisterResponse{HeartbeatInterval: 60},
++		stats: agentStats{
++			lastHeartbeat:        now,
++			watchdogRunningSince: now.Add(-time.Minute),
 +		},
 +	}
 +	notifier := &fakeWatchdogNotifier{}
@@ -468,7 +413,7 @@ index 00000000..9f6e2e4e
 +		watchdog: notifier,
 +	}
 +
-+	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now.Add(time.Minute))
++	pool.notifyWatchdog(logger.Discard, now.Add(time.Minute))
 +	if got := notifier.watchdogCount(); got != 1 {
 +		t.Errorf("Watchdog() calls = %d, want 1", got)
 +	}
@@ -481,14 +426,15 @@ index 00000000..9f6e2e4e
 +	notifier := &fakeWatchdogNotifier{}
 +	pool := &AgentPool{
 +		workers: []*AgentWorker{{
-+			watchdog: workerWatchdog{
-+				state:                 workerWatchdogRunning,
-+				lastSuccessfulContact: now.Add(-2 * time.Minute),
++			agent: &api.AgentRegisterResponse{HeartbeatInterval: 60},
++			stats: agentStats{
++				lastHeartbeat:        now.Add(-121 * time.Second),
++				watchdogRunningSince: now.Add(-3 * time.Minute),
 +			},
 +		}},
 +		watchdog: notifier,
 +	}
-+	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now)
++	pool.notifyWatchdog(logger.Discard, now)
 +	if got := notifier.watchdogCount(); got != 0 {
 +		t.Errorf("Watchdog() calls = %d, want 0", got)
 +	}
@@ -503,16 +449,17 @@ index 00000000..9f6e2e4e
 +	}
 +	pool := &AgentPool{
 +		workers: []*AgentWorker{{
-+			watchdog: workerWatchdog{
-+				state:                 workerWatchdogRunning,
-+				lastSuccessfulContact: now,
++			agent: &api.AgentRegisterResponse{HeartbeatInterval: 60},
++			stats: agentStats{
++				lastHeartbeat:        now,
++				watchdogRunningSince: now.Add(-time.Minute),
 +			},
 +		}},
 +		watchdog: notifier,
 +	}
 +
-+	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now)
-+	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now)
++	pool.notifyWatchdog(logger.Discard, now)
++	pool.notifyWatchdog(logger.Discard, now)
 +	if got := notifier.watchdogCount(); got != 2 {
 +		t.Errorf("Watchdog() calls = %d, want 2", got)
 +	}
@@ -526,7 +473,7 @@ index 00000000..9f6e2e4e
 +	ctx, cancel := context.WithCancel(t.Context())
 +	done := make(chan struct{})
 +	go func() {
-+		pool.runWatchdogLoop(ctx, logger.Discard, 2*time.Minute, ticks)
++		pool.runWatchdogLoop(ctx, logger.Discard, ticks)
 +		close(done)
 +	}()
 +
@@ -535,24 +482,6 @@ index 00000000..9f6e2e4e
 +	case <-done:
 +	case <-time.After(time.Second):
 +		t.Fatal("watchdog loop did not stop after context cancellation")
-+	}
-+}
-+
-+func TestAgentPoolNotifiesSystemdLifecycle(t *testing.T) {
-+	t.Parallel()
-+
-+	notifier := &fakeWatchdogNotifier{}
-+	pool := &AgentPool{watchdog: notifier}
-+	if err := pool.Start(t.Context()); err != nil {
-+		t.Fatalf("Start() error = %v, want nil", err)
-+	}
-+
-+	ready, stopping := notifier.lifecycleCounts()
-+	if ready != 1 {
-+		t.Errorf("Ready() calls = %d, want 1", ready)
-+	}
-+	if stopping != 1 {
-+		t.Errorf("Stopping() calls = %d, want 1", stopping)
 +	}
 +}
 +
@@ -567,45 +496,19 @@ index 00000000..9f6e2e4e
 +	}
 +}
 diff --git a/agent/agent_worker.go b/agent/agent_worker.go
-index 4f0e2103..c3f2667a 100644
+index 4f0e2103..6c9edf8d 100644
 --- a/agent/agent_worker.go
 +++ b/agent/agent_worker.go
-@@ -114,6 +114,9 @@ type AgentWorker struct {
- 	state        agentWorkerState
- 	currentJobID string
+@@ -59,6 +59,9 @@ type agentStats struct {
  
-+	watchdogMtx sync.Mutex
-+	watchdog    workerWatchdog
+ 	// The last error that occurred during heartbeat, or nil if it was successful
+ 	lastHeartbeatError error
 +
- 	// The time when this agent worker started
- 	startTime time.Time
- 
-@@ -197,7 +200,7 @@ func (e *errUnrecoverable) Unwrap() error {
- // Creates the agent worker and initializes its API Client
- func NewAgentWorker(l logger.Logger, reg *api.AgentRegisterResponse, m *metrics.Collector, apiClient *api.Client, c AgentWorkerConfig) *AgentWorker {
- 	apiClient = apiClient.FromAgentRegisterResponse(reg)
--	return &AgentWorker{
-+	worker := &AgentWorker{
- 		logger:           l,
- 		agent:            reg,
- 		metricsCollector: m,
-@@ -215,6 +218,8 @@ func NewAgentWorker(l logger.Logger, reg *api.AgentRegisterResponse, m *metrics.
- 		agentStdout:        c.AgentStdout,
- 		state:              agentWorkerStateIdle,
- 	}
-+	worker.watchdogMarkConnecting()
-+	return worker
++	watchdogRunningSince time.Time
++	watchdogErr          error
  }
  
- // AgentID returns the registered agent ID for this worker.
-@@ -480,6 +485,7 @@ func (a *AgentWorker) Heartbeat(ctx context.Context) error {
- 
- 	// Track a timestamp for the successful heartbeat for better errors
- 	a.stats.lastHeartbeat = time.Now()
-+	a.watchdogRecordSuccessfulHeartbeat()
- 
- 	a.logger.Debugf("Heartbeat sent at %s and received at %s", beat.SentAt, beat.ReceivedAt)
- 	return nil
+ type AgentWorker struct {
 diff --git a/go.mod b/go.mod
 index 49716ab6..6d226166 100644
 --- a/go.mod
@@ -696,11 +599,11 @@ index 00000000..eff4c7eb
 +}
 diff --git a/internal/systemdnotify/notifier.go b/internal/systemdnotify/notifier.go
 new file mode 100644
-index 00000000..85c57665
+index 00000000..3149f479
 --- /dev/null
 +++ b/internal/systemdnotify/notifier.go
-@@ -0,0 +1,93 @@
-+// Package systemdnotify reports service readiness and liveness to systemd.
+@@ -0,0 +1,70 @@
++// Package systemdnotify reports service liveness to systemd.
 +package systemdnotify
 +
 +import (
@@ -709,11 +612,7 @@ index 00000000..85c57665
 +	"time"
 +)
 +
-+const (
-+	readyState    = "READY=1"
-+	stoppingState = "STOPPING=1"
-+	watchdogState = "WATCHDOG=1"
-+)
++const watchdogState = "WATCHDOG=1"
 +
 +type backend interface {
 +	notifyEnabled() bool
@@ -721,12 +620,10 @@ index 00000000..85c57665
 +	watchdogInterval() (time.Duration, error)
 +}
 +
-+// Notifier reports the agent process state to its systemd service manager.
-+// It is inert when the process was not started with systemd notification
-+// environment variables.
++// Notifier reports agent liveness to its systemd service manager. It is inert
++// when the systemd watchdog is disabled.
 +type Notifier struct {
 +	backend          backend
-+	notifyEnabled    bool
 +	watchdogDuration time.Duration
 +}
 +
@@ -748,7 +645,6 @@ index 00000000..85c57665
 +
 +	return &Notifier{
 +		backend:          b,
-+		notifyEnabled:    notifyEnabled,
 +		watchdogDuration: watchdogDuration,
 +	}, nil
 +}
@@ -759,28 +655,12 @@ index 00000000..85c57665
 +	return n.watchdogDuration
 +}
 +
-+// Ready tells systemd that agent initialization is complete.
-+func (n *Notifier) Ready() error {
-+	if !n.notifyEnabled {
-+		return nil
-+	}
-+	return n.notify(readyState)
-+}
-+
 +// Watchdog tells systemd that the agent remains healthy.
 +func (n *Notifier) Watchdog() error {
 +	if n.watchdogDuration <= 0 {
 +		return nil
 +	}
 +	return n.notify(watchdogState)
-+}
-+
-+// Stopping tells systemd that the agent is shutting down normally.
-+func (n *Notifier) Stopping() error {
-+	if !n.notifyEnabled {
-+		return nil
-+	}
-+	return n.notify(stoppingState)
 +}
 +
 +func (n *Notifier) notify(state string) error {
@@ -795,10 +675,10 @@ index 00000000..85c57665
 +}
 diff --git a/internal/systemdnotify/notifier_test.go b/internal/systemdnotify/notifier_test.go
 new file mode 100644
-index 00000000..acb9b110
+index 00000000..079cbf42
 --- /dev/null
 +++ b/internal/systemdnotify/notifier_test.go
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,109 @@
 +package systemdnotify
 +
 +import (
@@ -840,7 +720,7 @@ index 00000000..acb9b110
 +		t.Fatalf("newNotifier() error = %v, want nil", err)
 +	}
 +
-+	if err := errors.Join(n.Ready(), n.Watchdog(), n.Stopping()); err != nil {
++	if err := n.Watchdog(); err != nil {
 +		t.Errorf("disabled notifier returned error: %v", err)
 +	}
 +	if len(b.states) != 0 {
@@ -848,7 +728,7 @@ index 00000000..acb9b110
 +	}
 +}
 +
-+func TestNotifierLifecycle(t *testing.T) {
++func TestNotifierWatchdog(t *testing.T) {
 +	t.Parallel()
 +
 +	b := &fakeBackend{
@@ -864,10 +744,10 @@ index 00000000..acb9b110
 +	if got, want := n.WatchdogInterval(), 3*time.Minute; got != want {
 +		t.Errorf("WatchdogInterval() = %v, want %v", got, want)
 +	}
-+	if err := errors.Join(n.Ready(), n.Watchdog(), n.Stopping()); err != nil {
-+		t.Fatalf("notifier lifecycle error = %v, want nil", err)
++	if err := n.Watchdog(); err != nil {
++		t.Fatalf("Watchdog() error = %v, want nil", err)
 +	}
-+	if got, want := b.states, []string{readyState, watchdogState, stoppingState}; !slices.Equal(got, want) {
++	if got, want := b.states, []string{watchdogState}; !slices.Equal(got, want) {
 +		t.Errorf("notification states = %q, want %q", got, want)
 +	}
 +}
@@ -906,21 +786,5 @@ index 00000000..acb9b110
 +
 +	if err := n.Watchdog(); !errors.Is(err, want) {
 +		t.Errorf("Watchdog() error = %v, want error wrapping %v", err, want)
-+	}
-+}
-+
-+func TestNotifierReportsMissingNotificationSocket(t *testing.T) {
-+	t.Parallel()
-+
-+	n, err := newNotifier(&fakeBackend{
-+		enabled:  true,
-+		interval: time.Minute,
-+	})
-+	if err != nil {
-+		t.Fatalf("newNotifier() error = %v, want nil", err)
-+	}
-+
-+	if err := n.Ready(); err == nil || !strings.Contains(err.Error(), "unavailable") {
-+		t.Errorf("Ready() error = %v, want unavailable socket error", err)
 +	}
 +}

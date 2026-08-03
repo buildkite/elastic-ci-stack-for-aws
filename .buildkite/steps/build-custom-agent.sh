@@ -2,7 +2,7 @@
 set -euo pipefail
 
 readonly agent_revision="3ee0b89468d280228410016a5cb6d207c4959532"
-readonly agent_tree="8dd2352c7566a39158a8d8d4f2e7de70000ffa4b"
+readonly agent_tree="dc78d6cc8afe00c152e85153a3cf0897c004a8ca"
 readonly agent_patch="${BUILDKITE_BUILD_CHECKOUT_PATH:-${PWD}}/.buildkite/agent-systemd-watchdog.patch"
 readonly output_path="${BUILDKITE_BUILD_CHECKOUT_PATH:-${PWD}}/build/buildkite-agent-linux-amd64"
 
