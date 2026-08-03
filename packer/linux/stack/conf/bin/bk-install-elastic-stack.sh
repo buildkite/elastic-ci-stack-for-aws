@@ -559,9 +559,11 @@ EOL
 
   mkdir -p /etc/systemd/system/buildkite-agent.service.d
   cat >/etc/systemd/system/buildkite-agent.service.d/10-resource-limits.conf <<'EOL'
+[Unit]
+IgnoreOnIsolate=yes
+
 [Service]
 Slice=buildkite-agent.slice
-IgnoreOnIsolate=yes
 EOL
 
   chmod 644 /etc/systemd/system/buildkite-agent.slice
