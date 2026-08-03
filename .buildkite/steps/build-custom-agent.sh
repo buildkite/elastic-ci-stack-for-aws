@@ -7,7 +7,14 @@ readonly agent_patch="${BUILDKITE_BUILD_CHECKOUT_PATH:-${PWD}}/.buildkite/agent-
 readonly output_path="${BUILDKITE_BUILD_CHECKOUT_PATH:-${PWD}}/build/buildkite-agent-linux-amd64"
 
 agent_source_dir="$(mktemp -d)"
-trap 'rm -rf "${agent_source_dir}"' EXIT
+container_id=""
+cleanup() {
+  if [[ -n "${container_id}" ]]; then
+    docker rm --force "${container_id}" >/dev/null 2>&1 || true
+  fi
+  rm -rf "${agent_source_dir}"
+}
+trap cleanup EXIT
 
 echo "Building custom Buildkite agent from ${agent_revision}..."
 git -C "${agent_source_dir}" init --quiet
@@ -21,9 +28,10 @@ if [[ "$(git -C "${agent_source_dir}" write-tree)" != "${agent_tree}" ]]; then
   echo "Custom agent patch did not produce the expected source tree" >&2
   exit 1
 fi
+chmod 0755 "${agent_source_dir}"
 
 mkdir -p "$(dirname "${output_path}")"
-docker run --rm \
+container_id="$(docker create \
   --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
   --env HOME=/tmp \
@@ -32,12 +40,15 @@ docker run --rm \
   --env GOPATH=/tmp/go \
   --env GOMODCACHE=/tmp/go-mod \
   --volume "${agent_source_dir}:/input:ro" \
-  --volume "$(dirname "${output_path}"):/output" \
   golang:1.26.5 \
   bash -euo pipefail -c '
     cp -a /input/. /tmp/agent
     cd /tmp/agent
     ./scripts/build-binary.sh linux amd64 sup-6917-watchdog
     ./pkg/buildkite-agent-linux-amd64 --version
-    install -m 0755 pkg/buildkite-agent-linux-amd64 /output/buildkite-agent-linux-amd64
-  '
+  ')"
+docker start --attach "${container_id}"
+docker cp \
+  "${container_id}:/tmp/agent/pkg/buildkite-agent-linux-amd64" \
+  "${output_path}"
+chmod 0755 "${output_path}"
