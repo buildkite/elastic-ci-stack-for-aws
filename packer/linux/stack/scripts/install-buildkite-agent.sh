@@ -29,10 +29,18 @@ sudo mkdir -p /var/lib/buildkite-agent/.aws
 sudo cp /tmp/conf/aws/config /var/lib/buildkite-agent/.aws/config
 sudo chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.aws
 
-echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
-sudo chmod 755 /usr/bin/buildkite-agent-stable
+custom_agent_binary="/tmp/build/buildkite-agent-linux-${ARCH}"
+custom_agent_installed=false
+if [[ -f "${custom_agent_binary}" ]]; then
+  echo "Installing custom buildkite-agent stable binary..."
+  sudo install -m 0755 "${custom_agent_binary}" /usr/bin/buildkite-agent-stable
+  custom_agent_installed=true
+else
+  echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
+  sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
+    "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
+  sudo chmod 755 /usr/bin/buildkite-agent-stable
+fi
 buildkite-agent-stable --version
 
 echo "Downloading buildkite-agent beta..."
@@ -73,6 +81,13 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 echo "Adding systemd service template..."
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent.service /etc/systemd/system/buildkite-agent.service
+if [[ "${custom_agent_installed}" == "true" ]]; then
+  echo "Enabling systemd watchdog for custom buildkite-agent..."
+  sudo mkdir -p /etc/systemd/system/buildkite-agent.service.d
+  sudo cp \
+    /tmp/conf/buildkite-agent/systemd/20-systemd-watchdog.conf \
+    /etc/systemd/system/buildkite-agent.service.d/20-systemd-watchdog.conf
+fi
 
 echo "Adding cloud-init failure safety check..."
 sudo mkdir -p /etc/systemd/system/cloud-final.service.d/

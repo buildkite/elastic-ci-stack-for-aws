@@ -19,6 +19,8 @@ x-if-changed-patterns:
     include:
       - "packer/linux/**"
       - "plugins/**"
+      - ".buildkite/agent-systemd-watchdog.patch"
+      - ".buildkite/steps/build-custom-agent.sh"
       - ".buildkite/steps/packer.sh"
       - "Makefile"
       - "internal/**"
@@ -43,6 +45,8 @@ x-if-changed-patterns:
     include:
       - "packer/linux/**"
       - "plugins/**"
+      - ".buildkite/agent-systemd-watchdog.patch"
+      - ".buildkite/steps/build-custom-agent.sh"
       - ".buildkite/steps/packer.sh"
       - ".buildkite/steps/launch.sh"
       - "templates/**"
@@ -254,10 +258,13 @@ steps:
 
   - id: "packer-linux-amd64"
     name: ":packer: :linux: AMD64"
-    command: .buildkite/steps/packer.sh linux
+    command:
+      - bash .buildkite/steps/build-custom-agent.sh
+      - .buildkite/steps/packer.sh linux
     timeout_in_minutes: 60
     env:
-      AMI_PUBLIC: true
+      AMI_PUBLIC: false
+      AMI_USERS: "097340723131"
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"

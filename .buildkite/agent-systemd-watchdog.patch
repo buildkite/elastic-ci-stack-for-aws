@@ -1,0 +1,926 @@
+diff --git a/agent/agent_pool.go b/agent/agent_pool.go
+index 5d334666..83bb2258 100644
+--- a/agent/agent_pool.go
++++ b/agent/agent_pool.go
+@@ -10,6 +10,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"github.com/buildkite/agent/v3/internal/systemdnotify"
+ 	"github.com/buildkite/agent/v3/logger"
+ 	"github.com/buildkite/agent/v3/status"
+ 
+@@ -20,13 +21,18 @@ import (
+ type AgentPool struct {
+ 	workers     []*AgentWorker
+ 	idleTimeout time.Duration
++	watchdog    watchdogNotifier
++	watchdogErr error
+ }
+ 
+ // NewAgentPool returns a new AgentPool.
+ func NewAgentPool(workers []*AgentWorker, config *AgentConfiguration) *AgentPool {
++	watchdog, watchdogErr := systemdnotify.New()
+ 	return &AgentPool{
+ 		workers:     workers,
+ 		idleTimeout: config.DisconnectAfterIdleTimeout,
++		watchdog:    watchdog,
++		watchdogErr: watchdogErr,
+ 	}
+ }
+ 
+@@ -57,6 +63,40 @@ func (ap *AgentPool) StartStatusServer(ctx context.Context, l logger.Logger, add
+ 
+ // Start kicks off the parallel AgentWorkers and waits for them to finish.
+ func (r *AgentPool) Start(ctx context.Context) error {
++	if r.watchdogErr != nil {
++		return fmt.Errorf("configure systemd watchdog: %w", r.watchdogErr)
++	}
++
++	var l logger.Logger
++	if len(r.workers) > 0 {
++		l = r.workers[0].logger
++	}
++	if r.watchdog != nil {
++		if err := r.watchdog.Ready(); err != nil {
++			return fmt.Errorf("notify systemd that agent is ready: %w", err)
++		}
++		defer func() {
++			if err := r.watchdog.Stopping(); err != nil && l != nil {
++				l.Warnf("Failed to notify systemd that the agent is stopping: %v", err)
++			}
++		}()
++
++		if watchdogInterval := r.watchdog.WatchdogInterval(); watchdogInterval > 0 {
++			watchdogCtx, stopWatchdog := context.WithCancel(ctx)
++			var watchdogWG sync.WaitGroup
++			watchdogWG.Go(func() {
++				r.runWatchdog(watchdogCtx, l, watchdogInterval)
++			})
++			defer func() {
++				stopWatchdog()
++				watchdogWG.Wait()
++			}()
++			if l != nil {
++				l.Noticef("Systemd watchdog enabled with a %s timeout", watchdogInterval)
++			}
++		}
++	}
++
+ 	ctx, setStat, done := status.AddSimpleItem(ctx, "Agent Pool")
+ 	defer done()
+ 	setStat("🏃 Spawning workers...")
+@@ -89,13 +129,25 @@ func runWorker(ctx context.Context, worker *AgentWorker, idleMon *idleMonitor) e
+ 
+ 	// Connect the worker to the API
+ 	if err := worker.Connect(ctx); err != nil {
++		if ctx.Err() != nil {
++			worker.watchdogMarkStopped()
++		} else {
++			worker.watchdogMarkFailed(err)
++		}
+ 		return err
+ 	}
+ 	// Ensure the worker is disconnected at the end of this function.
+ 	defer worker.Disconnect(ctx) //nolint:errcheck // Error is logged within core/client
+ 
+ 	// Starts the agent worker and wait for it to finish.
+-	return worker.Start(ctx, idleMon)
++	worker.watchdogMarkRunning()
++	err := worker.Start(ctx, idleMon)
++	if err == nil || ctx.Err() != nil {
++		worker.watchdogMarkStopped()
++	} else {
++		worker.watchdogMarkFailed(err)
++	}
++	return err
+ }
+ 
+ // StopGracefully stops all workers in the pool gracefully.
+diff --git a/agent/agent_watchdog.go b/agent/agent_watchdog.go
+new file mode 100644
+index 00000000..ae2d90c2
+--- /dev/null
++++ b/agent/agent_watchdog.go
+@@ -0,0 +1,147 @@
++package agent
++
++import (
++	"context"
++	"fmt"
++	"time"
++
++	"github.com/buildkite/agent/v3/logger"
++)
++
++type workerWatchdogState uint8
++
++const (
++	workerWatchdogConnecting workerWatchdogState = iota
++	workerWatchdogRunning
++	workerWatchdogStopped
++	workerWatchdogFailed
++)
++
++type workerWatchdog struct {
++	state                 workerWatchdogState
++	lastSuccessfulContact time.Time
++	err                   error
++}
++
++type watchdogNotifier interface {
++	Ready() error
++	Stopping() error
++	Watchdog() error
++	WatchdogInterval() time.Duration
++}
++
++func (a *AgentWorker) watchdogMarkConnecting() {
++	a.watchdogMtx.Lock()
++	defer a.watchdogMtx.Unlock()
++
++	a.watchdog.state = workerWatchdogConnecting
++	a.watchdog.lastSuccessfulContact = time.Now()
++	a.watchdog.err = nil
++}
++
++func (a *AgentWorker) watchdogMarkRunning() {
++	a.watchdogMtx.Lock()
++	defer a.watchdogMtx.Unlock()
++
++	a.watchdog.state = workerWatchdogRunning
++	// Connect succeeded immediately before the worker started, so begin the
++	// heartbeat grace period from that successful Buildkite API contact.
++	a.watchdog.lastSuccessfulContact = time.Now()
++	a.watchdog.err = nil
++}
++
++func (a *AgentWorker) watchdogMarkStopped() {
++	a.watchdogMtx.Lock()
++	defer a.watchdogMtx.Unlock()
++
++	a.watchdog.state = workerWatchdogStopped
++	a.watchdog.err = nil
++}
++
++func (a *AgentWorker) watchdogMarkFailed(err error) {
++	a.watchdogMtx.Lock()
++	defer a.watchdogMtx.Unlock()
++
++	a.watchdog.state = workerWatchdogFailed
++	a.watchdog.err = err
++}
++
++func (a *AgentWorker) watchdogRecordSuccessfulHeartbeat() {
++	a.watchdogMtx.Lock()
++	defer a.watchdogMtx.Unlock()
++
++	if a.watchdog.state == workerWatchdogRunning {
++		a.watchdog.lastSuccessfulContact = time.Now()
++	}
++}
++
++func (a *AgentWorker) watchdogHealth(now time.Time, maxContactAge time.Duration) error {
++	a.watchdogMtx.Lock()
++	defer a.watchdogMtx.Unlock()
++
++	switch a.watchdog.state {
++	case workerWatchdogConnecting, workerWatchdogStopped:
++		// Connecting is bounded by the client's retry policy, while an
++		// intentionally stopped worker no longer contributes to pool health.
++		return nil
++	case workerWatchdogFailed:
++		if a.watchdog.err == nil {
++			return fmt.Errorf("worker %d failed", a.spawnIndex)
++		}
++		return fmt.Errorf("worker %d failed: %w", a.spawnIndex, a.watchdog.err)
++	case workerWatchdogRunning:
++		if a.watchdog.lastSuccessfulContact.IsZero() {
++			return fmt.Errorf("worker %d has not successfully contacted Buildkite", a.spawnIndex)
++		}
++		age := now.Sub(a.watchdog.lastSuccessfulContact)
++		if age > maxContactAge {
++			return fmt.Errorf("worker %d has not successfully contacted Buildkite for %s", a.spawnIndex, age.Round(time.Second))
++		}
++		return nil
++	default:
++		return fmt.Errorf("worker %d has unknown watchdog state %d", a.spawnIndex, a.watchdog.state)
++	}
++}
++
++func (ap *AgentPool) runWatchdog(ctx context.Context, l logger.Logger, watchdogInterval time.Duration) {
++	// systemd recommends notifying every half of the configured interval.
++	ticker := time.NewTicker(watchdogInterval / 2)
++	defer ticker.Stop()
++
++	ap.runWatchdogLoop(ctx, l, watchdogInterval, ticker.C)
++}
++
++func (ap *AgentPool) runWatchdogLoop(ctx context.Context, l logger.Logger, watchdogInterval time.Duration, ticks <-chan time.Time) {
++	for {
++		select {
++		case now, ok := <-ticks:
++			if !ok {
++				return
++			}
++			ap.notifyWatchdog(l, watchdogInterval, now)
++		case <-ctx.Done():
++			return
++		}
++	}
++}
++
++func (ap *AgentPool) notifyWatchdog(l logger.Logger, watchdogInterval time.Duration, now time.Time) {
++	if err := ap.watchdogHealth(now, watchdogInterval/2); err != nil {
++		l.Warnf("Buildkite heartbeat has not succeeded; not sending systemd watchdog notification: %v", err)
++		return
++	}
++	if err := ap.watchdog.Watchdog(); err != nil {
++		l.Warnf("Failed to notify systemd watchdog: %v", err)
++		return
++	}
++	l.Debugf("Notified systemd watchdog")
++}
++
++func (ap *AgentPool) watchdogHealth(now time.Time, maxContactAge time.Duration) error {
++	for _, worker := range ap.workers {
++		if err := worker.watchdogHealth(now, maxContactAge); err != nil {
++			return err
++		}
++	}
++	return nil
++}
+diff --git a/agent/agent_watchdog_test.go b/agent/agent_watchdog_test.go
+new file mode 100644
+index 00000000..9f6e2e4e
+--- /dev/null
++++ b/agent/agent_watchdog_test.go
+@@ -0,0 +1,310 @@
++package agent
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"net/http"
++	"net/http/httptest"
++	"strings"
++	"sync"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"github.com/buildkite/agent/v3/api"
++	"github.com/buildkite/agent/v3/logger"
++)
++
++type fakeWatchdogNotifier struct {
++	interval time.Duration
++
++	mu       sync.Mutex
++	ready    int
++	stopping int
++	watchdog int
++	watchErr error
++}
++
++func (n *fakeWatchdogNotifier) Ready() error {
++	n.mu.Lock()
++	defer n.mu.Unlock()
++	n.ready++
++	return nil
++}
++
++func (n *fakeWatchdogNotifier) Stopping() error {
++	n.mu.Lock()
++	defer n.mu.Unlock()
++	n.stopping++
++	return nil
++}
++
++func (n *fakeWatchdogNotifier) Watchdog() error {
++	n.mu.Lock()
++	defer n.mu.Unlock()
++	n.watchdog++
++	return n.watchErr
++}
++
++func (n *fakeWatchdogNotifier) WatchdogInterval() time.Duration {
++	return n.interval
++}
++
++func (n *fakeWatchdogNotifier) watchdogCount() int {
++	n.mu.Lock()
++	defer n.mu.Unlock()
++	return n.watchdog
++}
++
++func (n *fakeWatchdogNotifier) lifecycleCounts() (ready, stopping int) {
++	n.mu.Lock()
++	defer n.mu.Unlock()
++	return n.ready, n.stopping
++}
++
++func TestAgentWorkerWatchdogHealth(t *testing.T) {
++	t.Parallel()
++
++	now := time.Now()
++	failure := errors.New("heartbeat rejected")
++	tests := []struct {
++		name      string
++		watchdog  workerWatchdog
++		wantError string
++	}{
++		{
++			name:     "connecting worker",
++			watchdog: workerWatchdog{state: workerWatchdogConnecting},
++		},
++		{
++			name: "running worker with recent Buildkite contact",
++			watchdog: workerWatchdog{
++				state:                 workerWatchdogRunning,
++				lastSuccessfulContact: now.Add(-time.Minute),
++			},
++		},
++		{
++			name: "running worker with stale Buildkite contact",
++			watchdog: workerWatchdog{
++				state:                 workerWatchdogRunning,
++				lastSuccessfulContact: now.Add(-2 * time.Minute),
++			},
++			wantError: "has not successfully contacted Buildkite",
++		},
++		{
++			name:      "failed worker",
++			watchdog:  workerWatchdog{state: workerWatchdogFailed, err: failure},
++			wantError: failure.Error(),
++		},
++		{
++			name:     "intentionally stopped worker",
++			watchdog: workerWatchdog{state: workerWatchdogStopped},
++		},
++	}
++
++	for _, test := range tests {
++		t.Run(test.name, func(t *testing.T) {
++			t.Parallel()
++
++			worker := &AgentWorker{
++				spawnIndex: 3,
++				watchdog:   test.watchdog,
++			}
++			err := worker.watchdogHealth(now, 90*time.Second)
++			if test.wantError == "" {
++				if err != nil {
++					t.Errorf("watchdogHealth() error = %v, want nil", err)
++				}
++				return
++			}
++			if err == nil || !strings.Contains(err.Error(), test.wantError) {
++				t.Errorf("watchdogHealth() error = %v, want error containing %q", err, test.wantError)
++			}
++		})
++	}
++}
++
++func TestAgentWorkerSuccessfulHeartbeatDoesNotReviveFailedWorker(t *testing.T) {
++	t.Parallel()
++
++	worker := &AgentWorker{}
++	worker.watchdogMarkFailed(errors.New("failed"))
++	worker.watchdogRecordSuccessfulHeartbeat()
++
++	if err := worker.watchdogHealth(time.Now(), time.Minute); err == nil {
++		t.Fatal("watchdogHealth() error = nil, want failed worker error")
++	}
++}
++
++func TestAgentWorkerHeartbeatRecordsOnlySuccessfulBuildkiteContact(t *testing.T) {
++	t.Parallel()
++
++	var rejectHeartbeat atomic.Bool
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if rejectHeartbeat.Load() {
++			http.Error(w, "heartbeat rejected", http.StatusUnauthorized)
++			return
++		}
++
++		var heartbeat api.Heartbeat
++		if err := json.NewDecoder(r.Body).Decode(&heartbeat); err != nil {
++			http.Error(w, err.Error(), http.StatusBadRequest)
++			return
++		}
++		heartbeat.ReceivedAt = time.Now().Format(time.RFC3339Nano)
++		if err := json.NewEncoder(w).Encode(heartbeat); err != nil {
++			t.Errorf("Encode(heartbeat) error = %v", err)
++		}
++	}))
++	t.Cleanup(server.Close)
++
++	worker := &AgentWorker{
++		apiClient: api.NewClient(logger.Discard, api.Config{
++			Endpoint: server.URL,
++			Token:    "test-token",
++		}),
++		logger: logger.Discard,
++		watchdog: workerWatchdog{
++			state:                 workerWatchdogRunning,
++			lastSuccessfulContact: time.Now().Add(-time.Minute),
++		},
++	}
++	lastSuccessfulContact := func() time.Time {
++		worker.watchdogMtx.Lock()
++		defer worker.watchdogMtx.Unlock()
++		return worker.watchdog.lastSuccessfulContact
++	}
++
++	beforeSuccess := lastSuccessfulContact()
++	if err := worker.Heartbeat(t.Context()); err != nil {
++		t.Fatalf("Heartbeat() error = %v, want nil", err)
++	}
++	afterSuccess := lastSuccessfulContact()
++	if !afterSuccess.After(beforeSuccess) {
++		t.Errorf("lastSuccessfulContact after successful heartbeat = %s, want after %s", afterSuccess, beforeSuccess)
++	}
++
++	rejectHeartbeat.Store(true)
++	if err := worker.Heartbeat(t.Context()); err == nil {
++		t.Fatal("Heartbeat() error = nil, want heartbeat rejection")
++	}
++	if got := lastSuccessfulContact(); got != afterSuccess {
++		t.Errorf("lastSuccessfulContact after rejected heartbeat = %s, want unchanged %s", got, afterSuccess)
++	}
++}
++
++func TestAgentPoolWatchdogNotifiesForHealthyWorkers(t *testing.T) {
++	t.Parallel()
++
++	now := time.Now()
++	worker := &AgentWorker{
++		watchdog: workerWatchdog{
++			state:                 workerWatchdogRunning,
++			lastSuccessfulContact: now,
++		},
++	}
++	notifier := &fakeWatchdogNotifier{}
++	pool := &AgentPool{
++		workers:  []*AgentWorker{worker},
++		watchdog: notifier,
++	}
++
++	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now.Add(time.Minute))
++	if got := notifier.watchdogCount(); got != 1 {
++		t.Errorf("Watchdog() calls = %d, want 1", got)
++	}
++}
++
++func TestAgentPoolWatchdogSkipsUnhealthyWorkers(t *testing.T) {
++	t.Parallel()
++
++	now := time.Now()
++	notifier := &fakeWatchdogNotifier{}
++	pool := &AgentPool{
++		workers: []*AgentWorker{{
++			watchdog: workerWatchdog{
++				state:                 workerWatchdogRunning,
++				lastSuccessfulContact: now.Add(-2 * time.Minute),
++			},
++		}},
++		watchdog: notifier,
++	}
++	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now)
++	if got := notifier.watchdogCount(); got != 0 {
++		t.Errorf("Watchdog() calls = %d, want 0", got)
++	}
++}
++
++func TestAgentPoolWatchdogContinuesAfterNotificationError(t *testing.T) {
++	t.Parallel()
++
++	now := time.Now()
++	notifier := &fakeWatchdogNotifier{
++		watchErr: errors.New("send failed"),
++	}
++	pool := &AgentPool{
++		workers: []*AgentWorker{{
++			watchdog: workerWatchdog{
++				state:                 workerWatchdogRunning,
++				lastSuccessfulContact: now,
++			},
++		}},
++		watchdog: notifier,
++	}
++
++	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now)
++	pool.notifyWatchdog(logger.Discard, 2*time.Minute, now)
++	if got := notifier.watchdogCount(); got != 2 {
++		t.Errorf("Watchdog() calls = %d, want 2", got)
++	}
++}
++
++func TestAgentPoolWatchdogLoopStops(t *testing.T) {
++	t.Parallel()
++
++	pool := &AgentPool{}
++	ticks := make(chan time.Time)
++	ctx, cancel := context.WithCancel(t.Context())
++	done := make(chan struct{})
++	go func() {
++		pool.runWatchdogLoop(ctx, logger.Discard, 2*time.Minute, ticks)
++		close(done)
++	}()
++
++	cancel()
++	select {
++	case <-done:
++	case <-time.After(time.Second):
++		t.Fatal("watchdog loop did not stop after context cancellation")
++	}
++}
++
++func TestAgentPoolNotifiesSystemdLifecycle(t *testing.T) {
++	t.Parallel()
++
++	notifier := &fakeWatchdogNotifier{}
++	pool := &AgentPool{watchdog: notifier}
++	if err := pool.Start(t.Context()); err != nil {
++		t.Fatalf("Start() error = %v, want nil", err)
++	}
++
++	ready, stopping := notifier.lifecycleCounts()
++	if ready != 1 {
++		t.Errorf("Ready() calls = %d, want 1", ready)
++	}
++	if stopping != 1 {
++		t.Errorf("Stopping() calls = %d, want 1", stopping)
++	}
++}
++
++func TestAgentPoolRejectsInvalidSystemdWatchdogConfiguration(t *testing.T) {
++	t.Parallel()
++
++	want := errors.New("invalid watchdog configuration")
++	pool := &AgentPool{watchdogErr: want}
++	err := pool.Start(t.Context())
++	if !errors.Is(err, want) {
++		t.Fatalf("Start() error = %v, want error wrapping %v", err, want)
++	}
++}
+diff --git a/agent/agent_worker.go b/agent/agent_worker.go
+index 4f0e2103..c3f2667a 100644
+--- a/agent/agent_worker.go
++++ b/agent/agent_worker.go
+@@ -114,6 +114,9 @@ type AgentWorker struct {
+ 	state        agentWorkerState
+ 	currentJobID string
+ 
++	watchdogMtx sync.Mutex
++	watchdog    workerWatchdog
++
+ 	// The time when this agent worker started
+ 	startTime time.Time
+ 
+@@ -197,7 +200,7 @@ func (e *errUnrecoverable) Unwrap() error {
+ // Creates the agent worker and initializes its API Client
+ func NewAgentWorker(l logger.Logger, reg *api.AgentRegisterResponse, m *metrics.Collector, apiClient *api.Client, c AgentWorkerConfig) *AgentWorker {
+ 	apiClient = apiClient.FromAgentRegisterResponse(reg)
+-	return &AgentWorker{
++	worker := &AgentWorker{
+ 		logger:           l,
+ 		agent:            reg,
+ 		metricsCollector: m,
+@@ -215,6 +218,8 @@ func NewAgentWorker(l logger.Logger, reg *api.AgentRegisterResponse, m *metrics.
+ 		agentStdout:        c.AgentStdout,
+ 		state:              agentWorkerStateIdle,
+ 	}
++	worker.watchdogMarkConnecting()
++	return worker
+ }
+ 
+ // AgentID returns the registered agent ID for this worker.
+@@ -480,6 +485,7 @@ func (a *AgentWorker) Heartbeat(ctx context.Context) error {
+ 
+ 	// Track a timestamp for the successful heartbeat for better errors
+ 	a.stats.lastHeartbeat = time.Now()
++	a.watchdogRecordSuccessfulHeartbeat()
+ 
+ 	a.logger.Debugf("Heartbeat sent at %s and received at %s", beat.SentAt, beat.ReceivedAt)
+ 	return nil
+diff --git a/go.mod b/go.mod
+index 49716ab6..6d226166 100644
+--- a/go.mod
++++ b/go.mod
+@@ -29,6 +29,7 @@ require (
+ 	github.com/buildkite/interpolate v0.1.5
+ 	github.com/buildkite/roko v1.4.0
+ 	github.com/buildkite/shellwords v1.0.1
++	github.com/coreos/go-systemd/v22 v22.7.0
+ 	github.com/creack/pty v1.1.19
+ 	github.com/denisbrodbeck/machineid v1.0.1
+ 	github.com/dustin/go-humanize v1.0.1
+diff --git a/go.sum b/go.sum
+index 4f497370..d0a18bf4 100644
+--- a/go.sum
++++ b/go.sum
+@@ -175,6 +175,8 @@ github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575 h1:kHaBemcxl8o/pQ5VM1
+ github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575/go.mod h1:9d6lWj8KzO/fd/NrVaLscBKmPigpZpn5YawRPw+e3Yo=
+ github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 h1:aBangftG7EVZoUb69Os8IaYg++6uMOdKK83QtkkvJik=
+ github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2/go.mod h1:qwXFYgsP6T7XnJtbKlf1HP8AjxZZyzxMmc+Lq5GjlU4=
++github.com/coreos/go-systemd/v22 v22.7.0 h1:LAEzFkke61DFROc7zNLX/WA2i5J8gYqe0rSj9KI28KA=
++github.com/coreos/go-systemd/v22 v22.7.0/go.mod h1:xNUYtjHu2EDXbsxz1i41wouACIwT7Ybq9o0BQhMwD0w=
+ github.com/cpuguy83/go-md2man/v2 v2.0.7 h1:zbFlGlXEAKlwXpmvle3d8Oe3YnkKIK4xSRTd3sHPnBo=
+ github.com/cpuguy83/go-md2man/v2 v2.0.7/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
+ github.com/creack/pty v1.1.19 h1:tUN6H7LWqNx4hQVxomd0CVsDwaDr9gaRQaI4GpSmrsA=
+diff --git a/internal/systemdnotify/backend_linux.go b/internal/systemdnotify/backend_linux.go
+new file mode 100644
+index 00000000..d43efd08
+--- /dev/null
++++ b/internal/systemdnotify/backend_linux.go
+@@ -0,0 +1,28 @@
++//go:build linux
++
++package systemdnotify
++
++import (
++	"os"
++	"time"
++
++	"github.com/coreos/go-systemd/v22/daemon"
++)
++
++type systemdBackend struct{}
++
++func newBackend() backend {
++	return systemdBackend{}
++}
++
++func (systemdBackend) notifyEnabled() bool {
++	return os.Getenv("NOTIFY_SOCKET") != ""
++}
++
++func (systemdBackend) notify(state string) (bool, error) {
++	return daemon.SdNotify(false, state)
++}
++
++func (systemdBackend) watchdogInterval() (time.Duration, error) {
++	return daemon.SdWatchdogEnabled(false)
++}
+diff --git a/internal/systemdnotify/backend_other.go b/internal/systemdnotify/backend_other.go
+new file mode 100644
+index 00000000..eff4c7eb
+--- /dev/null
++++ b/internal/systemdnotify/backend_other.go
+@@ -0,0 +1,23 @@
++//go:build !linux
++
++package systemdnotify
++
++import "time"
++
++type noopBackend struct{}
++
++func newBackend() backend {
++	return noopBackend{}
++}
++
++func (noopBackend) notifyEnabled() bool {
++	return false
++}
++
++func (noopBackend) notify(string) (bool, error) {
++	return false, nil
++}
++
++func (noopBackend) watchdogInterval() (time.Duration, error) {
++	return 0, nil
++}
+diff --git a/internal/systemdnotify/notifier.go b/internal/systemdnotify/notifier.go
+new file mode 100644
+index 00000000..85c57665
+--- /dev/null
++++ b/internal/systemdnotify/notifier.go
+@@ -0,0 +1,93 @@
++// Package systemdnotify reports service readiness and liveness to systemd.
++package systemdnotify
++
++import (
++	"errors"
++	"fmt"
++	"time"
++)
++
++const (
++	readyState    = "READY=1"
++	stoppingState = "STOPPING=1"
++	watchdogState = "WATCHDOG=1"
++)
++
++type backend interface {
++	notifyEnabled() bool
++	notify(state string) (bool, error)
++	watchdogInterval() (time.Duration, error)
++}
++
++// Notifier reports the agent process state to its systemd service manager.
++// It is inert when the process was not started with systemd notification
++// environment variables.
++type Notifier struct {
++	backend          backend
++	notifyEnabled    bool
++	watchdogDuration time.Duration
++}
++
++// New returns a notifier configured from the current systemd environment.
++func New() (*Notifier, error) {
++	return newNotifier(newBackend())
++}
++
++func newNotifier(b backend) (*Notifier, error) {
++	watchdogDuration, err := b.watchdogInterval()
++	if err != nil {
++		return nil, fmt.Errorf("read systemd watchdog configuration: %w", err)
++	}
++
++	notifyEnabled := b.notifyEnabled()
++	if watchdogDuration > 0 && !notifyEnabled {
++		return nil, errors.New("systemd watchdog is enabled but NOTIFY_SOCKET is not set")
++	}
++
++	return &Notifier{
++		backend:          b,
++		notifyEnabled:    notifyEnabled,
++		watchdogDuration: watchdogDuration,
++	}, nil
++}
++
++// WatchdogInterval returns the maximum time systemd permits between watchdog
++// notifications. A zero duration means the watchdog is disabled.
++func (n *Notifier) WatchdogInterval() time.Duration {
++	return n.watchdogDuration
++}
++
++// Ready tells systemd that agent initialization is complete.
++func (n *Notifier) Ready() error {
++	if !n.notifyEnabled {
++		return nil
++	}
++	return n.notify(readyState)
++}
++
++// Watchdog tells systemd that the agent remains healthy.
++func (n *Notifier) Watchdog() error {
++	if n.watchdogDuration <= 0 {
++		return nil
++	}
++	return n.notify(watchdogState)
++}
++
++// Stopping tells systemd that the agent is shutting down normally.
++func (n *Notifier) Stopping() error {
++	if !n.notifyEnabled {
++		return nil
++	}
++	return n.notify(stoppingState)
++}
++
++func (n *Notifier) notify(state string) error {
++	sent, err := n.backend.notify(state)
++	if err != nil {
++		return fmt.Errorf("send systemd notification %q: %w", state, err)
++	}
++	if !sent {
++		return fmt.Errorf("send systemd notification %q: notification socket is unavailable", state)
++	}
++	return nil
++}
+diff --git a/internal/systemdnotify/notifier_test.go b/internal/systemdnotify/notifier_test.go
+new file mode 100644
+index 00000000..acb9b110
+--- /dev/null
++++ b/internal/systemdnotify/notifier_test.go
+@@ -0,0 +1,125 @@
++package systemdnotify
++
++import (
++	"errors"
++	"slices"
++	"strings"
++	"testing"
++	"time"
++)
++
++type fakeBackend struct {
++	enabled   bool
++	interval  time.Duration
++	watchErr  error
++	notifyOK  bool
++	notifyErr error
++	states    []string
++}
++
++func (b *fakeBackend) notifyEnabled() bool {
++	return b.enabled
++}
++
++func (b *fakeBackend) notify(state string) (bool, error) {
++	b.states = append(b.states, state)
++	return b.notifyOK, b.notifyErr
++}
++
++func (b *fakeBackend) watchdogInterval() (time.Duration, error) {
++	return b.interval, b.watchErr
++}
++
++func TestNotifierDisabled(t *testing.T) {
++	t.Parallel()
++
++	b := &fakeBackend{}
++	n, err := newNotifier(b)
++	if err != nil {
++		t.Fatalf("newNotifier() error = %v, want nil", err)
++	}
++
++	if err := errors.Join(n.Ready(), n.Watchdog(), n.Stopping()); err != nil {
++		t.Errorf("disabled notifier returned error: %v", err)
++	}
++	if len(b.states) != 0 {
++		t.Errorf("disabled notifier sent states %q, want none", b.states)
++	}
++}
++
++func TestNotifierLifecycle(t *testing.T) {
++	t.Parallel()
++
++	b := &fakeBackend{
++		enabled:  true,
++		interval: 3 * time.Minute,
++		notifyOK: true,
++	}
++	n, err := newNotifier(b)
++	if err != nil {
++		t.Fatalf("newNotifier() error = %v, want nil", err)
++	}
++
++	if got, want := n.WatchdogInterval(), 3*time.Minute; got != want {
++		t.Errorf("WatchdogInterval() = %v, want %v", got, want)
++	}
++	if err := errors.Join(n.Ready(), n.Watchdog(), n.Stopping()); err != nil {
++		t.Fatalf("notifier lifecycle error = %v, want nil", err)
++	}
++	if got, want := b.states, []string{readyState, watchdogState, stoppingState}; !slices.Equal(got, want) {
++		t.Errorf("notification states = %q, want %q", got, want)
++	}
++}
++
++func TestNotifierRejectsWatchdogWithoutSocket(t *testing.T) {
++	t.Parallel()
++
++	_, err := newNotifier(&fakeBackend{interval: time.Minute})
++	if err == nil || !strings.Contains(err.Error(), "NOTIFY_SOCKET") {
++		t.Fatalf("newNotifier() error = %v, want error mentioning NOTIFY_SOCKET", err)
++	}
++}
++
++func TestNotifierReportsConfigurationError(t *testing.T) {
++	t.Parallel()
++
++	want := errors.New("invalid watchdog interval")
++	_, err := newNotifier(&fakeBackend{watchErr: want})
++	if !errors.Is(err, want) {
++		t.Fatalf("newNotifier() error = %v, want error wrapping %v", err, want)
++	}
++}
++
++func TestNotifierReportsSendFailure(t *testing.T) {
++	t.Parallel()
++
++	want := errors.New("socket unavailable")
++	n, err := newNotifier(&fakeBackend{
++		enabled:   true,
++		interval:  time.Minute,
++		notifyErr: want,
++	})
++	if err != nil {
++		t.Fatalf("newNotifier() error = %v, want nil", err)
++	}
++
++	if err := n.Watchdog(); !errors.Is(err, want) {
++		t.Errorf("Watchdog() error = %v, want error wrapping %v", err, want)
++	}
++}
++
++func TestNotifierReportsMissingNotificationSocket(t *testing.T) {
++	t.Parallel()
++
++	n, err := newNotifier(&fakeBackend{
++		enabled:  true,
++		interval: time.Minute,
++	})
++	if err != nil {
++		t.Fatalf("newNotifier() error = %v, want nil", err)
++	}
++
++	if err := n.Ready(); err == nil || !strings.Contains(err.Error(), "unavailable") {
++		t.Errorf("Ready() error = %v, want unavailable socket error", err)
++	}
++}
