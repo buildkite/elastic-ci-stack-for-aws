@@ -22,6 +22,7 @@ if [[ "$(git -C "${agent_source_dir}" write-tree)" != "${agent_tree}" ]]; then
   exit 1
 fi
 
+mkdir -p "$(dirname "${output_path}")"
 docker run --rm \
   --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
@@ -30,15 +31,13 @@ docker run --rm \
   --env GOBIN=/tmp/go/bin \
   --env GOPATH=/tmp/go \
   --env GOMODCACHE=/tmp/go-mod \
-  --volume "${agent_source_dir}:/src" \
-  --workdir /src \
+  --volume "${agent_source_dir}:/input:ro" \
+  --volume "$(dirname "${output_path}"):/output" \
   golang:1.26.5 \
-  ./scripts/build-binary.sh linux amd64 sup-6917-watchdog
-
-mkdir -p "$(dirname "${output_path}")"
-install -m 0755 "${agent_source_dir}/pkg/buildkite-agent-linux-amd64" "${output_path}"
-docker run --rm \
-  --platform linux/amd64 \
-  --volume "${output_path}:/usr/local/bin/buildkite-agent:ro" \
-  golang:1.26.5 \
-  /usr/local/bin/buildkite-agent --version
+  bash -euo pipefail -c '
+    cp -a /input/. /tmp/agent
+    cd /tmp/agent
+    ./scripts/build-binary.sh linux amd64 sup-6917-watchdog
+    ./pkg/buildkite-agent-linux-amd64 --version
+    install -m 0755 pkg/buildkite-agent-linux-amd64 /output/buildkite-agent-linux-amd64
+  '
