@@ -15,7 +15,7 @@ export GIT_LFS_VERSION="3.7.1"
 # release download once a version above v0.4.9 ships with the fix.
 # GOSS_VERSION derives its short hash from GOSS_COMMIT, so a Renovate digest
 # bump updates both. Bump the base version (v0.4.9) when goss next tags a release.
-export GOSS_COMMIT="c4634acb0ff00fff08438b2396deb72e6b2b9d83"
+export GOSS_COMMIT="056389cceab7173d7e128fb1c9268e20aa50d227"
 GOSS_VERSION="v0.4.9-dev-$(printf '%.7s' "$GOSS_COMMIT")"
 export GOSS_VERSION
 
