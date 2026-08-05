@@ -9,9 +9,18 @@ source "/tmp/versions.sh"
 source "/tmp/distro.sh"
 
 case $(uname -m) in
-x86_64) ARCH=amd64 ;;
-aarch64) ARCH=arm64 ;;
-*) ARCH=unknown ;;
+x86_64)
+  ARCH=amd64
+  GOSS_ARCH=x86_64
+  ;;
+aarch64)
+  ARCH=arm64
+  GOSS_ARCH=arm64
+  ;;
+*)
+  ARCH=unknown
+  GOSS_ARCH=unknown
+  ;;
 esac
 
 echo Updating core packages
@@ -128,8 +137,16 @@ curl -sSL https://github.com/git-lfs/git-lfs/releases/download/v"${GIT_LFS_VERSI
 sudo git-lfs-"${GIT_LFS_VERSION}"/install.sh
 popd
 
-# goss is built from source and installed in the stack image (see
-# install-buildkite-utils.sh), because we pin it to an unreleased commit.
+# See https://github.com/goss-org/goss/releases for release versions
+GOSS_RELEASE_VERSION="${GOSS_VERSION#v}"
+echo "Installing goss $GOSS_VERSION for system validation..."
+curl -Lsf \
+  "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/goss_${GOSS_RELEASE_VERSION}_linux_${GOSS_ARCH}.tar.gz" \
+  | sudo tar xz -C /usr/local/bin goss
+sudo chmod 755 /usr/local/bin/goss
+sudo curl -Lsf -o /usr/local/bin/dgoss \
+  "https://github.com/goss-org/goss/releases/download/${GOSS_VERSION}/dgoss"
+sudo chmod 755 /usr/local/bin/dgoss
 
 echo "Adding authorized keys systemd units..."
 sudo cp /tmp/conf/ssh/systemd/* /etc/systemd/system
