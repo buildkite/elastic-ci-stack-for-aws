@@ -368,9 +368,11 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
         fi
         ;;
       *.zip)
-        # zip cannot be streamed: its central directory is at the end of the file
+        # Stage zip file in the mirrors path rather than /tmp, because /tmp is a memory-backed
+        # tmpfs by default (MountTmpfsAtTmp), which large archives would exhaust,
+        # while the mirrors path is on a volume sized for mirror data.
         seed_mirror_dir="${seed_archive%.zip}"
-        seed_tmp="$(mktemp /tmp/git-mirror-seed-XXXXXX.zip)"
+        seed_tmp="$(mktemp "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.git-mirror-seed-XXXXXX.zip")"
         if aws s3 cp "$seed_uri" "$seed_tmp" && unzip -oq "$seed_tmp" -d "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
           extracted=true
         fi
