@@ -80,13 +80,11 @@
         "^packer/linux/base/scripts/versions\\.sh$"
       ],
       "matchStrings": [
-        "export GOSS_COMMIT=\"(?<currentDigest>[a-f0-9]+)\""
+        "export GOSS_VERSION=\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
-      "currentValueTemplate": "master",
-      "datasourceTemplate": "git-refs",
-      "depNameTemplate": "goss",
-      "packageNameTemplate": "https://github.com/goss-org/goss",
-      "versioningTemplate": "git"
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "goss-org/goss",
+      "versioningTemplate": "semver"
     },
     {
       "customType": "regex",
@@ -113,6 +111,18 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "docker/buildx",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^packer/linux/base/scripts/versions\\.sh$"
+      ],
+      "matchStrings": [
+        "export DOCKER_BINFMT_IMAGE=\"tonistiigi/binfmt:(?<currentValue>qemu-v[^@]+)@(?<currentDigest>sha256:[a-f0-9]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "tonistiigi/binfmt",
+      "versioningTemplate": "regex:^qemu-v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$"
     },
     {
       "customType": "regex",
@@ -201,9 +211,10 @@
       "matchPackageNames": [
         "git-lfs/git-lfs",
         "git-for-windows/git",
-        "goss",
+        "goss-org/goss",
         "docker/compose",
         "docker/buildx",
+        "tonistiigi/binfmt",
         "buildkite/lifecycled",
         "buildkite/elastic-ci-stack-s3-secrets-hooks",
         "buildkite/buildkite-agent-scaler"
@@ -215,6 +226,12 @@
         "dependencies",
         "tools"
       ]
+    },
+    {
+      "matchPackageNames": [
+        "tonistiigi/binfmt"
+      ],
+      "commitMessageExtra": "to {{newVersion}}"
     },
     {
       "description": "Global stable releases configuration",

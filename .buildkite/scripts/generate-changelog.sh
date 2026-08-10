@@ -18,22 +18,24 @@ CHANGELOG_BODY=$(ghch --format=markdown --from="$PREVIOUS_TAG" --next-version="$
 
 # 3. Check for Buildkite Agent updates
 AGENT_INSTALL_SCRIPT_LINUX="packer/linux/stack/scripts/install-buildkite-agent.sh"
-AGENT_INSTALL_SCRIPT_WINDOWS="packer/windows/stack/scripts/install-buildkite-agent.ps1"
 
 extract_agent_version() {
   # Reads the pinned agent version from a given git ref's Linux install script.
   git show "$1:${AGENT_INSTALL_SCRIPT_LINUX}" 2>/dev/null | grep "AGENT_VERSION=" | cut -d'=' -f2 | tr -d '"'
 }
 
-if git diff --name-only "$PREVIOUS_TAG..HEAD" -- "$AGENT_INSTALL_SCRIPT_LINUX" "$AGENT_INSTALL_SCRIPT_WINDOWS" | grep -q "."; then
+PREVIOUS_AGENT_VERSION=$(extract_agent_version "$PREVIOUS_TAG")
+CURRENT_AGENT_VERSION=$(extract_agent_version HEAD)
+
+if [[ "$PREVIOUS_AGENT_VERSION" != "$CURRENT_AGENT_VERSION" ]]; then
   echo "--- Buildkite Agent version has changed. Fetching agent release notes."
-  PREVIOUS_AGENT_VERSION=$(extract_agent_version "$PREVIOUS_TAG")
-  CURRENT_AGENT_VERSION=$(extract_agent_version HEAD)
 
   # The stack can jump across multiple agent releases between two stack releases
-  # (e.g. v3.128.0 -> v3.129.0 -> v3.130.0). Enumerate every agent release in the
-  # range (PREVIOUS_AGENT_VERSION, CURRENT_AGENT_VERSION] so no hop is skipped.
-  AGENT_VERSIONS=$(gh release list --repo "buildkite/agent" --limit 200 --json tagName -q '.[].tagName' \
+  # (e.g. v3.128.0 -> v3.129.0 -> v3.130.0). Enumerate every stable agent release
+  # in the range (PREVIOUS_AGENT_VERSION, CURRENT_AGENT_VERSION] so no hop is skipped.
+  # Prereleases are available as the stack's beta variant, but are not the pinned agent.
+  AGENT_VERSIONS=$(gh release list --repo "buildkite/agent" --limit 200 --json tagName,isPrerelease \
+    -q '.[] | select(.isPrerelease == false) | .tagName' \
     | sed 's/^v//' \
     | sort -V \
     | awk -v prev="$PREVIOUS_AGENT_VERSION" -v cur="$CURRENT_AGENT_VERSION" '
