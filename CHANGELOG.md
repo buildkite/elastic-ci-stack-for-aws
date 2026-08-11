@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.1) (2026-08-11)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.0...v6.71.1)
+
+### Changed
+- Update buildkite-agent to v3.137.0 [#1858](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1858) (@renovate[bot])
+
+### Internal
+- Update changelog with v6.71.0 [#1856](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1856) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.137.0)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at d312b88564052a9742f6c50e008c07e5d6035511 -->
+
+## What's Changed
+### ✨ Added
+* PB-2693: Use remote Git mirrors for pull request head builds (v3 backport) by @zhming0 in https://github.com/buildkite/agent/pull/4229
+### 🏠 Internal
+* build(deps): bump the cloud-providers group with 10 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4225
+* build(deps): bump github.com/klauspost/compress from 1.19.1 to 1.19.2 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4226
+* build(deps): bump ruby from `d9a5d26` to `c400c1e` in /.buildkite in the container-images group across 1 directory by @dependabot[bot] in https://github.com/buildkite/agent/pull/4221
+* build(deps): bump the otel group across 1 directory with 13 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4222
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.136.3...v3.137.0
+</details>
+<details>
+  <summary><h3>Agent Changelog (v3.136.3)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 22babd1ac8489b42c187483f75dfe9b90286be03 -->
+
+## What's Changed
+### 🔧 Changed
+* feat(cache): namespace archive entries by anchor via a manifest (backport to v3) by @ss1909 in https://github.com/buildkite/agent/pull/4200
+* A-1494: Verify cache checksum on restore (backport to v3) by @ss1909 in https://github.com/buildkite/agent/pull/4195
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.136.2...v3.136.3
+</details>
+
+
+
 ## [v6.71.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.0) (2026-08-06)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.70.1...v6.71.0)
 
