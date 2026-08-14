@@ -1371,6 +1371,7 @@ Conditions:
 
     HasGitMirrorSeedBucket:
       !And
+         - !Equals [ !Ref InstanceOperatingSystem, "linux" ]
          - !Equals [ !Ref BuildkiteAgentEnableGitMirrors, "true" ]
          - !Not [ !Equals [ !Ref GitMirrorSeedBucket, "" ] ]
 
