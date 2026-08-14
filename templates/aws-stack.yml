@@ -773,7 +773,10 @@ Parameters:
     Default: "false"
 
   InstanceCreationTimeout:
-    Description: Optional - Timeout period for Auto Scaling Group Creation Policy.
+    Description: >
+      Optional - Timeout period for Auto Scaling Group Creation Policy. Defaults to PT5M on
+      Linux (PT15M when GitMirrorSeedBucket is set, to allow for downloading and extracting
+      seed archives at boot) and PT10M on Windows.
     Type: String
     Default: ""
 
@@ -1129,7 +1132,10 @@ Parameters:
       BuildkiteAgentEnableGitMirrors is true; each archive is extracted into the git-mirrors
       path at instance boot, before the agent starts. If blank, or archives cannot be fetched,
       git mirrors start empty as usual. Instances using a custom InstanceRoleARN must be
-      granted access to this bucket separately. Linux instances only.
+      granted access to this bucket separately. When set, the default InstanceCreationTimeout
+      is raised from PT5M to PT15M to allow for seed extraction at boot; set
+      InstanceCreationTimeout explicitly if extracting your archives takes longer.
+      Linux instances only.
     Type: String
     Default: ""
 
@@ -2726,7 +2732,7 @@ Resources:
           Value: !Ref AgentsPerInstance
     CreationPolicy:
       ResourceSignal:
-        Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, PT5M ], !Ref InstanceCreationTimeout ]
+        Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, !If [ HasGitMirrorSeedBucket, PT15M, PT5M ] ], !Ref InstanceCreationTimeout ]
         Count: !Ref MinSize
     UpdatePolicy:
       AutoScalingReplacingUpdate:

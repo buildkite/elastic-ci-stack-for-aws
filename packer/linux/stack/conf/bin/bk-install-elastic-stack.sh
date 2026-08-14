@@ -351,43 +351,69 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
     for seed_key in "${seed_keys[@]}"; do
       seed_archive="${seed_key##*/}"
       seed_uri="s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${seed_key}"
-      extracted=false
 
+      case "$seed_archive" in
+      *.tar.gz) seed_mirror_dir="${seed_archive%.tar.gz}" ;;
+      *.tar) seed_mirror_dir="${seed_archive%.tar}" ;;
+      *.zip) seed_mirror_dir="${seed_archive%.zip}" ;;
+      esac
+
+      if [[ -z "$seed_mirror_dir" || "$seed_mirror_dir" == "." || "$seed_mirror_dir" == ".." ]]; then
+        echo "WARNING: Skipping seed ${seed_key} as its name does not contain a mirror directory name..."
+        continue
+      fi
+
+      if [[ -e "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${seed_mirror_dir}" ]]; then
+        echo "WARNING: Skipping seed ${seed_archive} as mirror ${seed_mirror_dir} already exists..."
+        continue
+      fi
+
+      # Extract each archive into its own staging directory and validate the contents before
+      # moving the mirror into the live mirrors path, so a bad archive can never overwrite or
+      # delete other mirrors. Staging lives on the mirrors volume rather than /tmp, because
+      # /tmp is a memory-backed tmpfs by default (MountTmpfsAtTmp) which large archives would
+      # exhaust, and so the final move is a rename on the same filesystem.
+      if ! seed_staging="$(mktemp -d "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.git-mirror-seed-XXXXXX")" ||
+        ! mkdir "${seed_staging}/extract"; then
+        echo "WARNING: Failed to create staging directory for ${seed_archive}, skipping seed..."
+        continue
+      fi
+
+      extracted=false
       echo "Extracting git mirror seed ${seed_archive}..."
       case "$seed_archive" in
       *.tar.gz)
-        seed_mirror_dir="${seed_archive%.tar.gz}"
-        if aws s3 cp "$seed_uri" - | tar -xzf - -C "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
+        if aws s3 cp "$seed_uri" - | tar -xzf - -C "${seed_staging}/extract"; then
           extracted=true
         fi
         ;;
       *.tar)
-        seed_mirror_dir="${seed_archive%.tar}"
-        if aws s3 cp "$seed_uri" - | tar -xf - -C "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
+        if aws s3 cp "$seed_uri" - | tar -xf - -C "${seed_staging}/extract"; then
           extracted=true
         fi
         ;;
       *.zip)
-        # Stage zip file in the mirrors path rather than /tmp, because /tmp is a memory-backed
-        # tmpfs by default (MountTmpfsAtTmp), which large archives would exhaust,
-        # while the mirrors path is on a volume sized for mirror data.
-        seed_mirror_dir="${seed_archive%.zip}"
-        seed_tmp="$(mktemp "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.git-mirror-seed-XXXXXX.zip")"
-        if aws s3 cp "$seed_uri" "$seed_tmp" && unzip -oq "$seed_tmp" -d "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"; then
+        # zip cannot be streamed: its central directory is at the end of the file.
+        if aws s3 cp "$seed_uri" "${seed_staging}/download.zip" &&
+          unzip -oq "${seed_staging}/download.zip" -d "${seed_staging}/extract"; then
           extracted=true
         fi
-        rm -f "$seed_tmp"
         ;;
       esac
 
-      if [[ "$extracted" == "true" ]]; then
-        echo "Seeded git mirror ${seed_mirror_dir}"
+      if [[ "$extracted" != "true" ]]; then
+        echo "WARNING: Failed to extract ${seed_archive}, continuing without it..."
+      elif [[ "$(find "${seed_staging}/extract" -mindepth 1 -maxdepth 1 | wc -l)" -ne 1 ]] ||
+        [[ ! -f "${seed_staging}/extract/${seed_mirror_dir}/HEAD" ]] ||
+        [[ ! -d "${seed_staging}/extract/${seed_mirror_dir}/objects" ]]; then
+        echo "WARNING: ${seed_archive} does not contain a single bare git mirror named ${seed_mirror_dir}, continuing without it..."
+      elif ! mv "${seed_staging}/extract/${seed_mirror_dir}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${seed_mirror_dir}"; then
+        echo "WARNING: Failed to move mirror ${seed_mirror_dir} into place, continuing without it..."
       else
-        # A partially extracted mirror would break git fetches for that repository, so remove
-        # it while leaving mirrors seeded from other archives intact.
-        echo "WARNING: Failed to extract ${seed_archive}, removing partial mirror ${seed_mirror_dir} and continuing..."
-        rm -rf "${BUILDKITE_AGENT_GIT_MIRRORS_PATH:?}/${seed_mirror_dir}"
+        echo "Seeded git mirror ${seed_mirror_dir}"
       fi
+
+      rm -rf "$seed_staging" || true
     done
   else
     echo No git mirror seed bucket configured.
