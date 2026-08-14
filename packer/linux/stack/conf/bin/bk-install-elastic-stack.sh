@@ -373,8 +373,8 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
       # delete other mirrors. Staging lives on the mirrors volume rather than /tmp, because
       # /tmp is a memory-backed tmpfs by default (MountTmpfsAtTmp) which large archives would
       # exhaust, and so the final move is a rename on the same filesystem.
-      if ! seed_staging="$(mktemp -d "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.git-mirror-seed-XXXXXX")" ||
-        ! mkdir "${seed_staging}/extract"; then
+      if ! seed_staging="$(mktemp -d "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.git-mirror-seed-XXXXXX")" \
+        || ! mkdir "${seed_staging}/extract"; then
         echo "WARNING: Failed to create staging directory for ${seed_archive}, skipping seed..."
         continue
       fi
@@ -394,8 +394,8 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
         ;;
       *.zip)
         # zip cannot be streamed: its central directory is at the end of the file.
-        if aws s3 cp "$seed_uri" "${seed_staging}/download.zip" &&
-          unzip -oq "${seed_staging}/download.zip" -d "${seed_staging}/extract"; then
+        if aws s3 cp "$seed_uri" "${seed_staging}/download.zip" \
+          && unzip -oq "${seed_staging}/download.zip" -d "${seed_staging}/extract"; then
           extracted=true
         fi
         ;;
@@ -403,9 +403,9 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
 
       if [[ "$extracted" != "true" ]]; then
         echo "WARNING: Failed to extract ${seed_archive}, continuing without it..."
-      elif [[ "$(find "${seed_staging}/extract" -mindepth 1 -maxdepth 1 | wc -l)" -ne 1 ]] ||
-        [[ ! -f "${seed_staging}/extract/${seed_mirror_dir}/HEAD" ]] ||
-        [[ ! -d "${seed_staging}/extract/${seed_mirror_dir}/objects" ]]; then
+      elif [[ "$(find "${seed_staging}/extract" -mindepth 1 -maxdepth 1 | wc -l)" -ne 1 ]] \
+        || [[ ! -f "${seed_staging}/extract/${seed_mirror_dir}/HEAD" ]] \
+        || [[ ! -d "${seed_staging}/extract/${seed_mirror_dir}/objects" ]]; then
         echo "WARNING: ${seed_archive} does not contain a single bare git mirror named ${seed_mirror_dir}, continuing without it..."
       elif ! mv "${seed_staging}/extract/${seed_mirror_dir}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${seed_mirror_dir}"; then
         echo "WARNING: Failed to move mirror ${seed_mirror_dir} into place, continuing without it..."
