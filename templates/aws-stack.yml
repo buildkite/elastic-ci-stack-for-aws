@@ -144,6 +144,8 @@ Metadata:
         - ScaleOutCooldownPeriod
         - ScaleInIdlePeriod
         - ScaleInCooldownPeriod
+        - DanglingCheckMinimumInstanceUptime
+        - MaxDanglingInstancesToCheck
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
@@ -349,6 +351,16 @@ Parameters:
     Description: Cooldown period in seconds before allowing another scale-in event. Longer periods prevent premature termination when job queues fluctuate.
     Type: Number
     Default: 3600
+
+  DanglingCheckMinimumInstanceUptime:
+    Description: Minimum instance uptime in seconds before checking for an inactive buildkite-agent service during a dangling instance scan. Only used when experimental Elastic CI Mode is enabled.
+    Type: Number
+    Default: 3600
+
+  MaxDanglingInstancesToCheck:
+    Description: Maximum number of instances to check for an inactive buildkite-agent service during a dangling instance scan. Only used when experimental Elastic CI Mode is enabled.
+    Type: Number
+    Default: 5
 
   EnableEC2LogRetentionPolicy:
     Type: String
@@ -2996,7 +3008,7 @@ Resources:
           - AgentScalerARN
           - "x86-64"
           - ARN
-        SemanticVersion: 1.12.0
+        SemanticVersion: 1.13.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -3013,6 +3025,8 @@ Resources:
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
         ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
+        DanglingCheckMinimumInstanceUptime: !Ref DanglingCheckMinimumInstanceUptime
+        MaxDanglingInstancesToCheck: !Ref MaxDanglingInstancesToCheck
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         EventScheduleJitter: !Ref ScalerEventScheduleJitter
         MinPollInterval: !Ref ScalerMinPollInterval
@@ -3029,7 +3043,7 @@ Resources:
           - AgentScalerARN
           - "arm64"
           - ARN
-        SemanticVersion: 1.12.0
+        SemanticVersion: 1.13.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -3046,6 +3060,8 @@ Resources:
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
         ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
+        DanglingCheckMinimumInstanceUptime: !Ref DanglingCheckMinimumInstanceUptime
+        MaxDanglingInstancesToCheck: !Ref MaxDanglingInstancesToCheck
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         EventScheduleJitter: !Ref ScalerEventScheduleJitter
         MinPollInterval: !Ref ScalerMinPollInterval
