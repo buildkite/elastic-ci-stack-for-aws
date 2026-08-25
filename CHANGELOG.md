@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.2) (2026-08-25)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.1...v6.71.2)
+
+### Added
+- Feat: SUP-7653 Implement Git Mirror Seed [#1846](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1846) (@dahtey-bk)
+
+### Changed
+- Update buildkite-agent to v3.137.1 [#1863](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1863) (@buildkite-renovate-self-hosted[bot])
+
+### Internal
+- Add changelog for v6.71.1 [#1859](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1859) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.137.1)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 5e95881a9a6d2b751fbb320159d30ba0a9546a24 -->
+
+## What's Changed
+### 🐛 Fixed
+* [Backport] Describe and retry undecodable API responses by @DrJosh9000 in https://github.com/buildkite/agent/pull/4242
+* [Backport] PS-2073: Validate GitHub pull request merge heads by @SorchaAbel in https://github.com/buildkite/agent/pull/4253
+* fix (Backport): Clarify error when GitHub PR merge refspec fetch fails by @ss1909 in https://github.com/buildkite/agent/pull/4255
+### 🏠 Internal
+* build(deps): bump buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go from 1.36.11-20260709200747-435963d16310.1 to 1.36.12-20260709200747-435963d16310.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4236
+* build(deps): bump the cloud-providers group with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4235
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.137.0...v3.137.1
+</details>
+
+
+
 ## [v6.71.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.1) (2026-08-11)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.0...v6.71.1)
 
