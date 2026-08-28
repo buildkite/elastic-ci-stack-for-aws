@@ -4,6 +4,166 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.2) (2026-08-25)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.1...v6.71.2)
+
+### Added
+- Feat: SUP-7653 Implement Git Mirror Seed [#1846](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1846) (@dahtey-bk)
+
+### Changed
+- Update buildkite-agent to v3.137.1 [#1863](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1863) (@buildkite-renovate-self-hosted[bot])
+
+### Internal
+- Add changelog for v6.71.1 [#1859](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1859) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.137.1)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 5e95881a9a6d2b751fbb320159d30ba0a9546a24 -->
+
+## What's Changed
+### 🐛 Fixed
+* [Backport] Describe and retry undecodable API responses by @DrJosh9000 in https://github.com/buildkite/agent/pull/4242
+* [Backport] PS-2073: Validate GitHub pull request merge heads by @SorchaAbel in https://github.com/buildkite/agent/pull/4253
+* fix (Backport): Clarify error when GitHub PR merge refspec fetch fails by @ss1909 in https://github.com/buildkite/agent/pull/4255
+### 🏠 Internal
+* build(deps): bump buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go from 1.36.11-20260709200747-435963d16310.1 to 1.36.12-20260709200747-435963d16310.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4236
+* build(deps): bump the cloud-providers group with 2 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4235
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.137.0...v3.137.1
+</details>
+
+
+
+## [v6.71.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.1) (2026-08-11)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.0...v6.71.1)
+
+### Changed
+- Update buildkite-agent to v3.137.0 [#1858](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1858) (@renovate[bot])
+
+### Internal
+- Update changelog with v6.71.0 [#1856](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1856) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.137.0)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at d312b88564052a9742f6c50e008c07e5d6035511 -->
+
+## What's Changed
+### ✨ Added
+* PB-2693: Use remote Git mirrors for pull request head builds (v3 backport) by @zhming0 in https://github.com/buildkite/agent/pull/4229
+### 🏠 Internal
+* build(deps): bump the cloud-providers group with 10 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4225
+* build(deps): bump github.com/klauspost/compress from 1.19.1 to 1.19.2 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4226
+* build(deps): bump ruby from `d9a5d26` to `c400c1e` in /.buildkite in the container-images group across 1 directory by @dependabot[bot] in https://github.com/buildkite/agent/pull/4221
+* build(deps): bump the otel group across 1 directory with 13 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4222
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.136.3...v3.137.0
+</details>
+<details>
+  <summary><h3>Agent Changelog (v3.136.3)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 22babd1ac8489b42c187483f75dfe9b90286be03 -->
+
+## What's Changed
+### 🔧 Changed
+* feat(cache): namespace archive entries by anchor via a manifest (backport to v3) by @ss1909 in https://github.com/buildkite/agent/pull/4200
+* A-1494: Verify cache checksum on restore (backport to v3) by @ss1909 in https://github.com/buildkite/agent/pull/4195
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.136.2...v3.136.3
+</details>
+
+
+
+## [v6.71.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.0) (2026-08-06)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.70.1...v6.71.0)
+
+### Changed
+- Update buildkite-agent to v3.136.2 [#1855](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1855) (@renovate[bot])
+- Update buildkite-agent to v3.136.1 [#1853](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1853) (@renovate[bot])
+
+### Internal
+- Return to released goss binary [#1854](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1854) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.136.2)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 2d26d63db1fddefebf33c8594d99021c313ea6e6 -->
+
+## What's Changed
+### ✨ Added
+* A-1641: Consume control-plane OTLP exporter configuration from registration by @lox in https://github.com/buildkite/agent/pull/4165
+### 🐛 Fixed
+* fix: Skip post-fetch mirror scan without URL by @pda in https://github.com/buildkite/agent/pull/4172
+* fix: Backport #4179 warm mirror hit fix to v3 and release v3.136.2 by @pda in https://github.com/buildkite/agent/pull/4186
+### 🏠 Internal
+* fix: Restore local mirror warm-hit performance by @pda in https://github.com/buildkite/agent/pull/4171
+* [Backport] e2e tests: Include job logs in agent logs by @DrJosh9000 in https://github.com/buildkite/agent/pull/4177
+* build(deps): bump the cloud-providers group with 10 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4184
+* Allow releases from diverged v3 history by @pda in https://github.com/buildkite/agent/pull/4188
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.136.0...v3.136.2
+</details>
+<details>
+  <summary><h3>Agent Changelog (v3.136.1)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at cdf9bb8147241e7405ccf4d0fce4921b2be58030 -->
+
+## What's Changed
+### ✨ Added
+* A-1641: Consume control-plane OTLP exporter configuration from registration by @lox in https://github.com/buildkite/agent/pull/4165
+### 🏠 Internal
+* fix: Restore local mirror warm-hit performance by @pda in https://github.com/buildkite/agent/pull/4171
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.136.0...v3.136.1
+</details>
+<details>
+  <summary><h3>Agent Changelog (v3.136.0)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at 5286a2e1fd0ca8ceb81cf1f0693f24007229e483 -->
+
+## What's Changed
+### ✨ Added
+* feat: add non-cone mode support for sparse checkout by @lox in https://github.com/buildkite/agent/pull/4127
+* Document step parallelism updates by @catkins in https://github.com/buildkite/agent/pull/3941
+* A-1547: Add --job-context-dir to configure job coordination file locations by @zhming0 in https://github.com/buildkite/agent/pull/4142
+* Add provider-neutral repository access credentials by @pda in https://github.com/buildkite/agent/pull/4152
+* feat: Populate on-host mirrors from remote mirrors by @pda in https://github.com/buildkite/agent/pull/4161
+* feat: Refresh reused checkouts from remote mirrors by @pda in https://github.com/buildkite/agent/pull/4162
+* feat: Clone fresh checkouts from remote mirrors by @pda in https://github.com/buildkite/agent/pull/4163
+### 🐛 Fixed
+* Fix commit verification with non-default branches by @petetomasik in https://github.com/buildkite/agent/pull/4094
+* A-1553: Restore OTel job attributes as resource attributes by @zhming0 in https://github.com/buildkite/agent/pull/4137
+### 🔧 Changed
+* SUP-6153: Warn instead of comment when submodule init is skipped for sparse checkout by @lizrabuya in https://github.com/buildkite/agent/pull/4143
+* Honour cone mode on git older than 2.35 by @lox in https://github.com/buildkite/agent/pull/4130
+### 🏠 Internal
+* Add development environment setup instructions by @lox in https://github.com/buildkite/agent/pull/4129
+* Upgrade to Go 1.26.5 by @DrJosh9000 in https://github.com/buildkite/agent/pull/4134
+* build(deps): bump github.com/DataDog/dd-trace-go/v2 from 2.7.1 to 2.8.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4136
+* build(deps): bump google.golang.org/grpc from 1.82.0 to 1.82.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4135
+* Upgrade go-pipeline to v0.18.0, jwx to v3.2.0 by @DrJosh9000 in https://github.com/buildkite/agent/pull/4139
+* Fix flaky TestIsStdinIsReadableWithAPipe by draining stdin in the test helper by @claude[bot] in https://github.com/buildkite/agent/pull/4140
+* docs: Requirements and delivery plan for remote Git mirrors by @pda in https://github.com/buildkite/agent/pull/4158
+* Bound Cmd.Wait so a leaked stdout/stderr pipe can't hang hooks by @claude[bot] in https://github.com/buildkite/agent/pull/4141
+* feat: Add remote Git mirror foundations by @pda in https://github.com/buildkite/agent/pull/4160
+* build(deps): bump the cloud-providers group with 11 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4167
+* ci: Update Test Engine client to v3 by @meghan-kradolfer in https://github.com/buildkite/agent/pull/4168
+
+## New Contributors
+* @claude[bot] made their first contribution in https://github.com/buildkite/agent/pull/4140
+* @meghan-kradolfer made their first contribution in https://github.com/buildkite/agent/pull/4168
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.135.0...v3.136.0
+</details>
+
+
+
 ## [v6.70.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.70.0) (2026-07-24)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.69.2...v6.70.0)
 

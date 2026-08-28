@@ -321,8 +321,106 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
     echo Not mounting git-mirrors to instance storage as instance storage is disabled.
   fi
 
+  if [[ -n "${BUILDKITE_GIT_MIRROR_SEED_BUCKET:-}" ]]; then
+    GIT_MIRROR_SEED_PREFIX="git-mirror-seeds"
+    echo "Seeding git-mirrors from s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${GIT_MIRROR_SEED_PREFIX}/..."
+
+    # Seeding is best-effort, it is only an optimisation. If listing or extraction fails, the
+    # agent falls back to cloning mirrors from scratch as usual, and the boot must not fail.
+    seed_keys=()
+    if seed_listing="$(
+      aws s3api list-objects-v2 \
+        --bucket "$BUILDKITE_GIT_MIRROR_SEED_BUCKET" \
+        --prefix "${GIT_MIRROR_SEED_PREFIX}/" \
+        --output json \
+        | jq -r '.Contents[]?.Key // empty'
+    )"; then
+      while IFS= read -r seed_key; do
+        if [[ "$seed_key" == *.tar || "$seed_key" == *.tar.gz || "$seed_key" == *.zip ]]; then
+          seed_keys+=("$seed_key")
+        fi
+      done <<<"$seed_listing"
+    else
+      echo "WARNING: Failed to list git mirror seeds in s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${GIT_MIRROR_SEED_PREFIX}/, continuing with empty git-mirrors..."
+    fi
+
+    if [[ ${#seed_keys[@]} -eq 0 ]]; then
+      echo "No git mirror seeds found."
+    fi
+
+    for seed_key in "${seed_keys[@]}"; do
+      seed_archive="${seed_key##*/}"
+      seed_uri="s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${seed_key}"
+
+      case "$seed_archive" in
+      *.tar.gz) seed_mirror_dir="${seed_archive%.tar.gz}" ;;
+      *.tar) seed_mirror_dir="${seed_archive%.tar}" ;;
+      *.zip) seed_mirror_dir="${seed_archive%.zip}" ;;
+      esac
+
+      if [[ -z "$seed_mirror_dir" || "$seed_mirror_dir" == "." || "$seed_mirror_dir" == ".." ]]; then
+        echo "WARNING: Skipping seed ${seed_key} as its name does not contain a mirror directory name..."
+        continue
+      fi
+
+      if [[ -e "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${seed_mirror_dir}" ]]; then
+        echo "WARNING: Skipping seed ${seed_archive} as mirror ${seed_mirror_dir} already exists..."
+        continue
+      fi
+
+      # Extract each archive into its own staging directory and validate the contents before
+      # moving the mirror into the live mirrors path, so a bad archive can never overwrite or
+      # delete other mirrors. Staging lives on the mirrors volume rather than /tmp, because
+      # /tmp is a memory-backed tmpfs by default (MountTmpfsAtTmp) which large archives would
+      # exhaust, and so the final move is a rename on the same filesystem.
+      if ! seed_staging="$(mktemp -d "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.git-mirror-seed-XXXXXX")" \
+        || ! mkdir "${seed_staging}/extract"; then
+        echo "WARNING: Failed to create staging directory for ${seed_archive}, skipping seed..."
+        continue
+      fi
+
+      extracted=false
+      echo "Extracting git mirror seed ${seed_archive}..."
+      case "$seed_archive" in
+      *.tar.gz)
+        if aws s3 cp "$seed_uri" - | tar -xzf - -C "${seed_staging}/extract"; then
+          extracted=true
+        fi
+        ;;
+      *.tar)
+        if aws s3 cp "$seed_uri" - | tar -xf - -C "${seed_staging}/extract"; then
+          extracted=true
+        fi
+        ;;
+      *.zip)
+        # zip cannot be streamed: its central directory is at the end of the file.
+        if aws s3 cp "$seed_uri" "${seed_staging}/download.zip" \
+          && unzip -oq "${seed_staging}/download.zip" -d "${seed_staging}/extract"; then
+          extracted=true
+        fi
+        ;;
+      esac
+
+      if [[ "$extracted" != "true" ]]; then
+        echo "WARNING: Failed to extract ${seed_archive}, continuing without it..."
+      elif [[ "$(find "${seed_staging}/extract" -mindepth 1 -maxdepth 1 | wc -l)" -ne 1 ]] \
+        || [[ ! -f "${seed_staging}/extract/${seed_mirror_dir}/HEAD" ]] \
+        || [[ ! -d "${seed_staging}/extract/${seed_mirror_dir}/objects" ]]; then
+        echo "WARNING: ${seed_archive} does not contain a single bare git mirror named ${seed_mirror_dir}, continuing without it..."
+      elif ! mv "${seed_staging}/extract/${seed_mirror_dir}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${seed_mirror_dir}"; then
+        echo "WARNING: Failed to move mirror ${seed_mirror_dir} into place, continuing without it..."
+      else
+        echo "Seeded git mirror ${seed_mirror_dir}"
+      fi
+
+      rm -rf "$seed_staging" || true
+    done
+  else
+    echo No git mirror seed bucket configured.
+  fi
+
   echo Setting ownership of git-mirrors directory to buildkite-agent...
-  chown buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
+  chown -R buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
 else
   echo git-mirrors disabled.
 fi

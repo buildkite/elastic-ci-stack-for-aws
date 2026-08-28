@@ -31,12 +31,6 @@ GO_VERSION ?= 1.26.1
 
 FIXPERMS_FILES = go.mod go.sum $(shell find internal/fixperms)
 
-# goss is pinned to a commit (see versions.sh) until the upstream fix is
-# released. Read the pin from versions.sh.
-GOSS_VERSIONS_FILE = packer/linux/base/scripts/versions.sh
-GOSS_COMMIT = $(shell . $(GOSS_VERSIONS_FILE) && echo $$GOSS_COMMIT)
-GOSS_VERSION = $(shell . $(GOSS_VERSIONS_FILE) && echo $$GOSS_VERSION)
-
 AWS_REGION ?= us-east-1
 
 ARM64_INSTANCE_TYPE ?= m7g.xlarge
@@ -140,7 +134,7 @@ build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build linux packer image
-packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 build/goss-linux-amd64 $(if $(strip $(BASE_AMI_ID)),,packer-base-linux-amd64.output)
+packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 $(if $(strip $(BASE_AMI_ID)),,packer-base-linux-amd64.output)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
 		-e AWS_PROFILE \
@@ -177,7 +171,7 @@ print-agent-versions:
 	@echo Windows: $(CURRENT_AGENT_VERSION_WINDOWS)
 
 # Build linuxarm64 packer image
-packer-linux-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 build/goss-linux-arm64 $(if $(strip $(BASE_AMI_ID)),,packer-base-linux-arm64.output)
+packer-linux-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 $(if $(strip $(BASE_AMI_ID)),,packer-base-linux-arm64.output)
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -211,7 +205,7 @@ build/ubuntu2404-amd64-ami.txt: packer-ubuntu2404-amd64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build ubuntu2404 amd64 packer image (reuses packer/linux/stack via os_distro)
-packer-ubuntu2404-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 build/goss-linux-amd64 $(if $(strip $(BASE_AMI_ID)),,packer-base-ubuntu2404-amd64.output)
+packer-ubuntu2404-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd64 $(if $(strip $(BASE_AMI_ID)),,packer-base-ubuntu2404-amd64.output)
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -242,7 +236,7 @@ build/ubuntu2404-arm64-ami.txt: packer-ubuntu2404-arm64.output env-AWS_REGION
 	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
 
 # Build ubuntu2404 arm64 packer image (reuses packer/linux/stack via os_distro)
-packer-ubuntu2404-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 build/goss-linux-arm64 $(if $(strip $(BASE_AMI_ID)),,packer-base-ubuntu2404-arm64.output)
+packer-ubuntu2404-arm64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-arm64 $(if $(strip $(BASE_AMI_ID)),,packer-base-ubuntu2404-arm64.output)
 	@echo Agent Version: $(CURRENT_AGENT_VERSION_LINUX)
 	docker run \
 		-e AWS_DEFAULT_REGION  \
@@ -472,38 +466,6 @@ build/fix-perms-linux-arm64: $(FIXPERMS_FILES)
 		--rm \
 		golang:$(GO_VERSION) \
 			go build -v -buildvcs=false -o "build/fix-perms-linux-arm64" ./internal/fixperms
-
-# Build goss in the golang container so no Go toolchain ends up in the AMI.
-# Same flags as goss's release-build.sh. Rebuilds when the pin changes.
-build/goss-linux-amd64: $(GOSS_VERSIONS_FILE)
-	mkdir -p build
-	docker run \
-		-e CGO_ENABLED=0 \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-v "$(PWD)/build:/out" \
-		--rm \
-		golang:$(GO_VERSION) \
-			bash -c 'set -euo pipefail; \
-				git clone --quiet https://github.com/goss-org/goss /goss; \
-				git -C /goss checkout --quiet $(GOSS_COMMIT); \
-				cd /goss; \
-				go build -trimpath -ldflags "-X github.com/goss-org/goss/util.Version=$(GOSS_VERSION) -s -w" -o /out/goss-linux-amd64 ./cmd/goss'
-
-build/goss-linux-arm64: $(GOSS_VERSIONS_FILE)
-	mkdir -p build
-	docker run \
-		-e CGO_ENABLED=0 \
-		-e GOOS=linux \
-		-e GOARCH=arm64 \
-		-v "$(PWD)/build:/out" \
-		--rm \
-		golang:$(GO_VERSION) \
-			bash -c 'set -euo pipefail; \
-				git clone --quiet https://github.com/goss-org/goss /goss; \
-				git -C /goss checkout --quiet $(GOSS_COMMIT); \
-				cd /goss; \
-				go build -trimpath -ldflags "-X github.com/goss-org/goss/util.Version=$(GOSS_VERSION) -s -w" -o /out/goss-linux-arm64 ./cmd/goss'
 
 # -----------------------------------------
 # Cloudformation helpers

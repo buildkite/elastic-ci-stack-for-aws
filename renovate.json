@@ -80,13 +80,11 @@
         "^packer/linux/base/scripts/versions\\.sh$"
       ],
       "matchStrings": [
-        "export GOSS_COMMIT=\"(?<currentDigest>[a-f0-9]+)\""
+        "export GOSS_VERSION=\"v(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
-      "currentValueTemplate": "master",
-      "datasourceTemplate": "git-refs",
-      "depNameTemplate": "goss",
-      "packageNameTemplate": "https://github.com/goss-org/goss",
-      "versioningTemplate": "git"
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "goss-org/goss",
+      "versioningTemplate": "semver"
     },
     {
       "customType": "regex",
@@ -213,7 +211,7 @@
       "matchPackageNames": [
         "git-lfs/git-lfs",
         "git-for-windows/git",
-        "goss",
+        "goss-org/goss",
         "docker/compose",
         "docker/buildx",
         "tonistiigi/binfmt",

@@ -54,6 +54,7 @@ Metadata:
         - BuildkiteAgentTimestampLines
         - BuildkiteAgentExperiments
         - BuildkiteAgentEnableGitMirrors
+        - GitMirrorSeedBucket
         - BuildkiteAgentTracingBackend
         - BuildkiteAgentCancelGracePeriod
         - BuildkiteAgentSignalGracePeriod
@@ -143,6 +144,8 @@ Metadata:
         - ScaleOutCooldownPeriod
         - ScaleInIdlePeriod
         - ScaleInCooldownPeriod
+        - DanglingCheckMinimumInstanceUptime
+        - MaxDanglingInstancesToCheck
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
         - ScalerEventSchedulePeriod
@@ -348,6 +351,16 @@ Parameters:
     Description: Cooldown period in seconds before allowing another scale-in event. Longer periods prevent premature termination when job queues fluctuate.
     Type: Number
     Default: 3600
+
+  DanglingCheckMinimumInstanceUptime:
+    Description: Minimum instance uptime in seconds before checking for an inactive buildkite-agent service during a dangling instance scan. Only used when experimental Elastic CI Mode is enabled.
+    Type: Number
+    Default: 3600
+
+  MaxDanglingInstancesToCheck:
+    Description: Maximum number of instances to check for an inactive buildkite-agent service during a dangling instance scan. Only used when experimental Elastic CI Mode is enabled.
+    Type: Number
+    Default: 5
 
   EnableEC2LogRetentionPolicy:
     Type: String
@@ -772,7 +785,10 @@ Parameters:
     Default: "false"
 
   InstanceCreationTimeout:
-    Description: Optional - Timeout period for Auto Scaling Group Creation Policy.
+    Description: >
+      Optional - Timeout period for Auto Scaling Group Creation Policy. Defaults to PT5M on
+      Linux (PT15M when GitMirrorSeedBucket is set, to allow for downloading and extracting
+      seed archives at boot) and PT10M on Windows.
     Type: String
     Default: ""
 
@@ -1120,6 +1136,21 @@ Parameters:
       - "false"
     Default: "false"
 
+  GitMirrorSeedBucket:
+    Description: >
+      Optional - Name of an existing S3 bucket containing git mirror seed archives under the
+      git-mirror-seeds/ prefix, one archive (.tar, .tar.gz, or .zip) per repository, named
+      after the agent's mirror directory for that repository. Only used when
+      BuildkiteAgentEnableGitMirrors is true; each archive is extracted into the git-mirrors
+      path at instance boot, before the agent starts. If blank, or archives cannot be fetched,
+      git mirrors start empty as usual. Instances using a custom InstanceRoleARN must be
+      granted access to this bucket separately. When set, the default InstanceCreationTimeout
+      is raised from PT5M to PT15M to allow for seed extraction at boot; set
+      InstanceCreationTimeout explicitly if extracting your archives takes longer.
+      Linux instances only.
+    Type: String
+    Default: ""
+
   EnableDetailedMonitoring:
     Type: String
     Description: Enable detailed EC2 monitoring.
@@ -1349,6 +1380,12 @@ Conditions:
 
     HasSecretsBucket:
       !Or [ !Condition CreateSecretsBucket, !Condition UseSpecifiedSecretsBucket ]
+
+    HasGitMirrorSeedBucket:
+      !And
+         - !Equals [ !Ref InstanceOperatingSystem, "linux" ]
+         - !Equals [ !Ref BuildkiteAgentEnableGitMirrors, "true" ]
+         - !Not [ !Equals [ !Ref GitMirrorSeedBucket, "" ] ]
 
     UseSpecifiedAvailabilityZones:
       !Not [ !Equals [ !Join [ "", !Ref AvailabilityZones ], "" ]  ]
@@ -2082,6 +2119,29 @@ Resources:
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}/*"
                 - !Sub "arn:aws:s3:::${ArtifactsBucket}"
             - !Ref "AWS::NoValue"
+          - !If
+            - HasGitMirrorSeedBucket
+            - Sid: GitMirrorSeedBucketRead
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource:
+                - !Sub "arn:aws:s3:::${GitMirrorSeedBucket}/git-mirror-seeds/*"
+            - !Ref "AWS::NoValue"
+          - !If
+            - HasGitMirrorSeedBucket
+            - Sid: GitMirrorSeedBucketList
+              Effect: Allow
+              Action:
+                - s3:ListBucket
+              Resource:
+                - !Sub "arn:aws:s3:::${GitMirrorSeedBucket}"
+              Condition:
+                StringLike:
+                  s3:prefix:
+                    - git-mirror-seeds/
+                    - git-mirror-seeds/*
+            - !Ref "AWS::NoValue"
           - Effect: Allow
             Action:
               - autoscaling:DescribeAutoScalingInstances
@@ -2485,6 +2545,7 @@ Resources:
                   BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR="${PipelineSigningVerificationFailureBehavior}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
                   BUILDKITE_AGENT_ENABLE_GIT_MIRRORS="${BuildkiteAgentEnableGitMirrors}" \
+                  BUILDKITE_GIT_MIRROR_SEED_BUCKET="${LocalGitMirrorSeedBucket}" \
                   BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT="${BootstrapScriptUrl}" \
                   BUILDKITE_ENV_FILE_URL=${AgentEnvFileUrl} \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
@@ -2540,6 +2601,10 @@ Resources:
                     - CreatePipelineSigningKMSKey
                     - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${PipelineSigningKMSKey}
                     - !Ref PipelineSigningKMSKeyId
+                  LocalGitMirrorSeedBucket: !If
+                    - HasGitMirrorSeedBucket
+                    - !Ref GitMirrorSeedBucket
+                    - ""
 
   AgentAutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -2680,7 +2745,7 @@ Resources:
           Value: !Ref AgentsPerInstance
     CreationPolicy:
       ResourceSignal:
-        Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, PT5M ], !Ref InstanceCreationTimeout ]
+        Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, !If [ HasGitMirrorSeedBucket, PT15M, PT5M ] ], !Ref InstanceCreationTimeout ]
         Count: !Ref MinSize
     UpdatePolicy:
       AutoScalingReplacingUpdate:
@@ -2943,7 +3008,7 @@ Resources:
           - AgentScalerARN
           - "x86-64"
           - ARN
-        SemanticVersion: 1.12.0
+        SemanticVersion: 1.13.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -2960,6 +3025,8 @@ Resources:
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
         ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
+        DanglingCheckMinimumInstanceUptime: !Ref DanglingCheckMinimumInstanceUptime
+        MaxDanglingInstancesToCheck: !Ref MaxDanglingInstancesToCheck
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         EventScheduleJitter: !Ref ScalerEventScheduleJitter
         MinPollInterval: !Ref ScalerMinPollInterval
@@ -2976,7 +3043,7 @@ Resources:
           - AgentScalerARN
           - "arm64"
           - ARN
-        SemanticVersion: 1.12.0
+        SemanticVersion: 1.13.0
       Parameters:
         BuildkiteAgentTokenParameter: !If [ UseCustomerManagedParameterPath, !Ref BuildkiteAgentTokenParameterStorePath, !Ref BuildkiteAgentTokenParameter ]
         BuildkiteAgentTokenParameterStoreKMSKey: !If [ UseCustomerManagedKeyForParameterStore, !Ref BuildkiteAgentTokenParameterStoreKMSKey, "" ]
@@ -2993,6 +3060,8 @@ Resources:
         ScaleOutForWaitingJobs: !Ref ScaleOutForWaitingJobs
         ScaleInCooldownPeriod: !Ref ScaleInCooldownPeriod
         ScaleOutCooldownPeriod: !Ref ScaleOutCooldownPeriod
+        DanglingCheckMinimumInstanceUptime: !Ref DanglingCheckMinimumInstanceUptime
+        MaxDanglingInstancesToCheck: !Ref MaxDanglingInstancesToCheck
         EventSchedulePeriod: !Ref ScalerEventSchedulePeriod
         EventScheduleJitter: !Ref ScalerEventScheduleJitter
         MinPollInterval: !Ref ScalerMinPollInterval
