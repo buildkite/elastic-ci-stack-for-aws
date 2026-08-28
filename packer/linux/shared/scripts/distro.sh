@@ -23,6 +23,7 @@ ubuntu2404)
   LOGIN_USER="ubuntu"
   CW_SYSLOG_PATH="/var/log/syslog"
   CW_AUTHLOG_PATH="/var/log/auth.log"
+  APT_HTTP_TIMEOUT=10
 
   # apt can 404 on a package version when ports.ubuntu.com rotates a security
   # update between `apt-get update` and the fetch: the index lists a version the
@@ -31,12 +32,13 @@ ubuntu2404)
   _apt_install() {
     local attempt
     for attempt in 1 2 3; do
-      if sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq "$@"; then
+      if sudo DEBIAN_FRONTEND=noninteractive apt-get \
+        -o Acquire::http::Timeout="${APT_HTTP_TIMEOUT}" install -yq "$@"; then
         return 0
       fi
       if [ "${attempt}" -lt 3 ]; then
         echo "apt-get install failed (attempt ${attempt}/3); refreshing index and retrying..." >&2
-        sudo apt-get update -yq || true
+        sudo apt-get -o Acquire::http::Timeout="${APT_HTTP_TIMEOUT}" update -yq || true
         sleep $((attempt * 5))
       fi
     done
@@ -45,8 +47,26 @@ ubuntu2404)
   }
 
   pkg_update() {
-    sudo apt-get update -yq
-    sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -yq
+    local mirror_list="/etc/apt/ubuntu-ports-mirrors.list"
+    local sources="/etc/apt/sources.list.d/ubuntu.sources"
+    local regional_mirror
+
+    # Prefer Canonical's mirror pool, but let apt transparently fall back to the
+    # EC2 regional mirror if it is unavailable.
+    regional_mirror="$(sed -n -E \
+      's|^URIs:[[:space:]]+(https?://[a-z0-9-]+\.ec2\.ports\.ubuntu\.com/ubuntu-ports/?).*|\1|p' \
+      "${sources}")"
+    if [ -n "${regional_mirror}" ]; then
+      printf '%s\tpriority:1\n%s\tpriority:2\n' \
+        "http://ports.ubuntu.com/ubuntu-ports/" "${regional_mirror}" \
+        | sudo tee "${mirror_list}" >/dev/null
+      sudo sed -i -E \
+        "s|https?://[a-z0-9-]+\\.ec2\\.ports\\.ubuntu\\.com/ubuntu-ports/?|mirror+file:${mirror_list}|g" \
+        "${sources}"
+    fi
+    sudo apt-get -o Acquire::http::Timeout="${APT_HTTP_TIMEOUT}" update -yq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get \
+      -o Acquire::http::Timeout="${APT_HTTP_TIMEOUT}" dist-upgrade -yq
   }
   pkg_install() { _apt_install "$@"; }
   # apt resolves dependencies for a local .deb path when prefixed with ./
