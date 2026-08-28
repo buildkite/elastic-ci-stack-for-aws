@@ -45,6 +45,11 @@ ubuntu2404)
   }
 
   pkg_update() {
+    # The EC2 regional ports mirrors can remain unavailable for hours. Use the
+    # canonical Ubuntu ports mirror so retries do not keep hitting the outage.
+    sudo sed -i -E \
+      's|https?://[a-z0-9-]+\.ec2\.ports\.ubuntu\.com/ubuntu-ports/?|http://ports.ubuntu.com/ubuntu-ports/|g' \
+      /etc/apt/sources.list.d/ubuntu.sources
     sudo apt-get update -yq
     sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -yq
   }
