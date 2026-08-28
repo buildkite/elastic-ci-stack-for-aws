@@ -51,14 +51,14 @@ ubuntu2404)
     local sources="/etc/apt/sources.list.d/ubuntu.sources"
     local regional_mirror
 
-    # Prefer the fast EC2 regional mirror, but let apt transparently fall back
-    # to Canonical's mirror pool when the regional mirror is unavailable.
+    # Prefer Canonical's mirror pool, but let apt transparently fall back to the
+    # EC2 regional mirror if it is unavailable.
     regional_mirror="$(sed -n -E \
       's|^URIs:[[:space:]]+(https?://[a-z0-9-]+\.ec2\.ports\.ubuntu\.com/ubuntu-ports/?).*|\1|p' \
       "${sources}")"
     if [ -n "${regional_mirror}" ]; then
       printf '%s\tpriority:1\n%s\tpriority:2\n' \
-        "${regional_mirror}" "http://ports.ubuntu.com/ubuntu-ports/" \
+        "http://ports.ubuntu.com/ubuntu-ports/" "${regional_mirror}" \
         | sudo tee "${mirror_list}" >/dev/null
       sudo sed -i -E \
         "s|https?://[a-z0-9-]+\\.ec2\\.ports\\.ubuntu\\.com/ubuntu-ports/?|mirror+file:${mirror_list}|g" \
