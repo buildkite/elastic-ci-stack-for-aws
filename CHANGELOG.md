@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.3) (2026-08-28)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.2...v6.71.3)
+
+### Changed
+- Update buildkite-agent to v3.137.2 [#1867](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1867) (@lizrabuya)
+
+### Added
+- Expose Elastic CI dangling instance settings [#1866](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1866) (@scadu)
+
+### Internal
+- Add changelog entry for v6.71.2 [#1865](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1865) (@scadu)
+
+<details>
+  <summary><h3>Agent Changelog (v3.137.2)</h3></summary>
+
+<!-- Release notes generated using configuration in .github/release.yml at b3b6ef6ce7d53ccb4e6c6cea3f02d8747bafb91d -->
+
+## What's Changed
+### 🐛 Fixed
+* [Backport] [A-1755] Die cleanly when heartbeats fail by @moskyb in https://github.com/buildkite/agent/pull/4274
+* [Backport] [A-1756] Apply request headers from streaming pings by @moskyb in https://github.com/buildkite/agent/pull/4275
+### 🏠 Internal
+* [Backport] Replace bk-cli-backed pipeline test with agent e2e tests by @ss1909 in https://github.com/buildkite/agent/pull/4277
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.137.1...v3.137.2
+</details>
+
+
+
 ## [v6.71.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.2) (2026-08-25)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.1...v6.71.2)
 
