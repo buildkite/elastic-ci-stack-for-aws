@@ -56,8 +56,8 @@ ubuntu2404)
       "${sources}")"
     if [ -n "${regional_mirror}" ]; then
       printf '%s\tpriority:1\n%s\tpriority:2\n' \
-        "${regional_mirror}" "http://ports.ubuntu.com/ubuntu-ports/" |
-        sudo tee "${mirror_list}" >/dev/null
+        "${regional_mirror}" "http://ports.ubuntu.com/ubuntu-ports/" \
+        | sudo tee "${mirror_list}" >/dev/null
       sudo sed -i -E \
         "s|https?://[a-z0-9-]+\\.ec2\\.ports\\.ubuntu\\.com/ubuntu-ports/?|mirror+file:${mirror_list}|g" \
         "${sources}"
