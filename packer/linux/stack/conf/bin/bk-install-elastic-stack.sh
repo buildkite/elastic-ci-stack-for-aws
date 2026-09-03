@@ -473,7 +473,7 @@ else
   fi
   if ((cancel_signal_timeout < 0 || cancel_signal_timeout >= BUILDKITE_AGENT_CANCEL_GRACE_PERIOD)); then
     echo "BuildkiteAgentSignalGracePeriod must resolve to at least 0 and less than BuildkiteAgentCancelGracePeriod."
-    exit 1
+    false
   fi
   cancel_cleanup_timeout=$((BUILDKITE_AGENT_CANCEL_GRACE_PERIOD - cancel_signal_timeout))
   agent_cancellation_config="cancel-signal-timeout=${cancel_signal_timeout}s
