@@ -395,7 +395,7 @@ Parameters:
     Default: "false"
 
   BuildkiteAgentTracingBackend:
-    Description: Optional - The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing.
+    Description: Optional - The tracing backend to use for CI tracing. The opentelemetry value enables OpenTelemetry for Agent v4; datadog is supported only by oldstable. See https://buildkite.com/docs/agent/v3/tracing.
     Type: String
     AllowedValues:
       - ""
@@ -1202,6 +1202,18 @@ Parameters:
     Default: "x86_64"
 
 Rules:
+  BuildkiteAgentTracingBackendMatchesRelease:
+    Assertions:
+      - Assert:
+          !Or
+            - !Not
+              - !Equals
+                - !Ref BuildkiteAgentTracingBackend
+                - datadog
+            - !Equals
+              - !Ref BuildkiteAgentRelease
+              - oldstable
+        AssertDescription: "BuildkiteAgentTracingBackend can be set to 'datadog' only when BuildkiteAgentRelease is 'oldstable'"
   HasToken:
     Assertions:
       - Assert:
