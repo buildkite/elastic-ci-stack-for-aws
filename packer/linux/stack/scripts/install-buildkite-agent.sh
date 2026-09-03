@@ -29,9 +29,9 @@ sudo mkdir -p /var/lib/buildkite-agent/.aws
 sudo cp /tmp/conf/aws/config /var/lib/buildkite-agent/.aws/config
 sudo chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.aws
 
-echo "Downloading buildkite-agent v${AGENT_VERSION} stable..."
-sudo curl -Lsf -o /usr/bin/buildkite-agent-stable \
-  "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
+echo "Downloading buildkite-agent v${AGENT_VERSION} oldstable..."
+sudo curl -LfsS -o /usr/bin/buildkite-agent-stable \
+  "https://download.buildkite.com/agent/oldstable/${AGENT_VERSION}/buildkite-agent-linux-${ARCH}"
 sudo chmod 755 /usr/bin/buildkite-agent-stable
 buildkite-agent-stable --version
 

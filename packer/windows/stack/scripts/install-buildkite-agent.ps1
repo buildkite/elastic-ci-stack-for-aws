@@ -11,8 +11,8 @@ Write-Output 'Updating PATH'
 $env:PATH = "C:\buildkite-agent\bin;" + $env:PATH
 [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
 
-Write-Output "Downloading buildkite-agent v${AGENT_VERSION} stable..."
-Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-stable.exe -Uri "https://download.buildkite.com/agent/stable/${AGENT_VERSION}/buildkite-agent-windows-amd64.exe"
+Write-Output "Downloading buildkite-agent v${AGENT_VERSION} oldstable..."
+Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-stable.exe -Uri "https://download.buildkite.com/agent/oldstable/${AGENT_VERSION}/buildkite-agent-windows-amd64.exe"
 buildkite-agent-stable.exe --version
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
