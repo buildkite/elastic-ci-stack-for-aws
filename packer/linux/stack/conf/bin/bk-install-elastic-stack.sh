@@ -446,20 +446,39 @@ fi
 echo Setting ownership of build path to buildkite-agent.
 chown buildkite-agent: "$BUILDKITE_AGENT_BUILD_PATH"
 
-# Either you can have timestamp-lines xor ansi-timestamps.
-# There's no technical reason you can't have both, it's a pragmatic decision to
-# simplify the avaliable parameters on the stack
-if [[ ${BUILDKITE_AGENT_TIMESTAMP_LINES:-"false"} == "true" ]]; then
-  BUILDKITE_AGENT_TIMESTAMPS_LINES="true"
-  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="true"
+# Agent v4 always emits ANSI timestamps and uses separate cancellation and
+# cleanup timeouts. Keep the v3 options for the oldstable release channel.
+agent_timestamp_config=""
+agent_tracing_config=""
+if [[ "$BUILDKITE_AGENT_RELEASE" == "oldstable" ]]; then
+  if [[ ${BUILDKITE_AGENT_TIMESTAMP_LINES:-"false"} == "true" ]]; then
+    agent_timestamp_config=$'no-ansi-timestamps=true\ntimestamp-lines=true'
+  else
+    agent_timestamp_config=$'no-ansi-timestamps=false\ntimestamp-lines=false'
+  fi
+  agent_tracing_config="tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}"
 else
-  BUILDKITE_AGENT_TIMESTAMPS_LINES="false"
-  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="false"
+  if [[ "${BUILDKITE_AGENT_TRACING_BACKEND}" == "opentelemetry" ]]; then
+    agent_tracing_config="opentelemetry-tracing=true"
+  fi
 fi
 
-echo Setting \$BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS to \$BUILDKITE_AGENT_TIMESTAMP_LINES
-echo "BUILDKITE_AGENT_TIMESTAMP_LINES is $BUILDKITE_AGENT_TIMESTAMPS_LINES"
-echo "BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS is $BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS"
+if [[ "$BUILDKITE_AGENT_RELEASE" == "oldstable" ]]; then
+  agent_cancellation_config="cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
+signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}"
+else
+  cancel_signal_timeout=$BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS
+  if ((cancel_signal_timeout < 0)); then
+    cancel_signal_timeout=$((BUILDKITE_AGENT_CANCEL_GRACE_PERIOD + cancel_signal_timeout))
+  fi
+  if ((cancel_signal_timeout < 0 || cancel_signal_timeout >= BUILDKITE_AGENT_CANCEL_GRACE_PERIOD)); then
+    echo "BuildkiteAgentSignalGracePeriod must resolve to at least 0 and less than BuildkiteAgentCancelGracePeriod."
+    false
+  fi
+  cancel_cleanup_timeout=$((BUILDKITE_AGENT_CANCEL_GRACE_PERIOD - cancel_signal_timeout))
+  agent_cancellation_config="cancel-signal-timeout=${cancel_signal_timeout}s
+cancel-cleanup-timeout=${cancel_cleanup_timeout}s"
+fi
 
 echo "Setting \$BUILDKITE_AGENT_TOKEN from SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH"
 BUILDKITE_AGENT_TOKEN="$(
@@ -480,8 +499,7 @@ tags=$(
 )
 endpoint=${BUILDKITE_AGENT_ENDPOINT:-"https://agent-edge.buildkite.com/v3"}
 tags-from-ec2-meta-data=true
-no-ansi-timestamps=${BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
-timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
+${agent_timestamp_config}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=${BUILDKITE_AGENT_BUILD_PATH}
 plugins-path=/var/lib/buildkite-agent/plugins
@@ -493,9 +511,8 @@ no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 disconnect-after-uptime=${BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
-tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
-cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
-signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
+${agent_tracing_config}
+${agent_cancellation_config}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 EOF

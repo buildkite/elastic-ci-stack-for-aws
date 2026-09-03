@@ -256,7 +256,7 @@ Parameters:
     Default: ""
 
   BuildkiteAgentTimestampLines:
-    Description: Set to true to prepend timestamps to every line of output.
+    Description: Set to true to prepend plaintext timestamps to every line of output when using the oldstable agent. Agent v4 always emits ANSI timestamps.
     Type: String
     AllowedValues:
       - "true"
@@ -395,7 +395,7 @@ Parameters:
     Default: "false"
 
   BuildkiteAgentTracingBackend:
-    Description: Optional - The tracing backend to use for CI tracing. See https://buildkite.com/docs/agent/v3/tracing.
+    Description: Optional - The tracing backend to use for CI tracing. The opentelemetry value enables OpenTelemetry for Agent v4; datadog is supported only by oldstable. See https://buildkite.com/docs/agent/v3/tracing.
     Type: String
     AllowedValues:
       - ""
@@ -423,15 +423,20 @@ Parameters:
     ConstraintDescription: "Expects a leading forward slash"
 
   BuildkiteAgentCancelGracePeriod:
-    Description: The number of seconds a canceled or timed out job is given to gracefully terminate and upload its artifacts.
+    Description: >
+        Linux only. The total number of seconds allowed for the agent to stop after receiving a shutdown signal.
+        BuildkiteAgentSignalGracePeriod is used to stop subprocesses; any remaining time is reserved for agent cleanup.
+        This must be greater than the effective BuildkiteAgentSignalGracePeriod.
     Type: Number
     Default: 60
     MinValue: 1
 
   BuildkiteAgentSignalGracePeriod:
     Description: >
-        The number of seconds given to a subprocess to handle being sent `cancel-signal`.
-        After this period has elapsed, SIGKILL will be sent.
+        Linux only. The number of seconds given to a subprocess to handle `cancel-signal` before SIGKILL is sent.
+        This applies to ordinary job cancellations and jobs running while the agent is stopping.
+        Non-negative values are absolute and must be less than BuildkiteAgentCancelGracePeriod.
+        Set to -1 to use one second less than BuildkiteAgentCancelGracePeriod.
     Type: Number
     Default: -1
     MinValue: -1
@@ -1202,6 +1207,18 @@ Parameters:
     Default: "x86_64"
 
 Rules:
+  BuildkiteAgentTracingBackendMatchesRelease:
+    Assertions:
+      - Assert:
+          !Or
+            - !Not
+              - !Equals
+                - !Ref BuildkiteAgentTracingBackend
+                - datadog
+            - !Equals
+              - !Ref BuildkiteAgentRelease
+              - oldstable
+        AssertDescription: "BuildkiteAgentTracingBackend can be set to 'datadog' only when BuildkiteAgentRelease is 'oldstable'"
   HasToken:
     Assertions:
       - Assert:
