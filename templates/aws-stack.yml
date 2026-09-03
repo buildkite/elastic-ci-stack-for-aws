@@ -256,7 +256,7 @@ Parameters:
     Default: ""
 
   BuildkiteAgentTimestampLines:
-    Description: Set to true to prepend timestamps to every line of output.
+    Description: Set to true to prepend plaintext timestamps to every line of output when using the oldstable agent. Agent v4 always emits ANSI timestamps.
     Type: String
     AllowedValues:
       - "true"
