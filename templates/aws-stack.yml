@@ -423,15 +423,20 @@ Parameters:
     ConstraintDescription: "Expects a leading forward slash"
 
   BuildkiteAgentCancelGracePeriod:
-    Description: The number of seconds a canceled or timed out job is given to gracefully terminate and upload its artifacts.
+    Description: >
+        Linux only. The total number of seconds allowed for the agent to stop after receiving a shutdown signal.
+        BuildkiteAgentSignalGracePeriod is used to stop subprocesses; any remaining time is reserved for agent cleanup.
+        This must be greater than the effective BuildkiteAgentSignalGracePeriod.
     Type: Number
     Default: 60
     MinValue: 1
 
   BuildkiteAgentSignalGracePeriod:
     Description: >
-        The number of seconds given to a subprocess to handle being sent `cancel-signal`.
-        After this period has elapsed, SIGKILL will be sent.
+        Linux only. The number of seconds given to a subprocess to handle `cancel-signal` before SIGKILL is sent.
+        This applies to ordinary job cancellations and jobs running while the agent is stopping.
+        Non-negative values are absolute and must be less than BuildkiteAgentCancelGracePeriod.
+        Set to -1 to use one second less than BuildkiteAgentCancelGracePeriod.
     Type: Number
     Default: -1
     MinValue: -1
