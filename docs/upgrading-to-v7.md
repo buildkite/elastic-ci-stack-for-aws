@@ -11,20 +11,15 @@ Elastic CI Stack v7 uses Buildkite Agent v4. Read the [Agent v3 to v4 upgrade gu
      --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
    ```
 
-2. Remove deleted parameters from parameter files and deployment automation. CloudFormation rejects parameters that aren't in the v7 template.
+2. Update parameter files and deployment automation. CloudFormation rejects parameters that aren't in the v7 template:
+   - Remove `BuildkiteAgentTimestampLines`. Agent v4 always emits ANSI timestamps.
+   - Replace `BuildkiteAgentTracingBackend` with `BuildkiteAgentOpenTelemetryTracing`: `""` becomes `false`, `opentelemetry` becomes `true`, and `datadog` has no direct replacement.
+   - Replace `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` with `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`.
+   - Change `BuildkiteAgentRelease=oldstable` to `stable`, `beta`, or `edge`.
 3. If you use `AgentEnvFileUrl`, review that file against the Agent upgrade guide. CloudFormation can't check its contents.
 4. Preview the update with a [CloudFormation change set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html).
 
 If you need Agent v3, remain on Elastic CI Stack v6. Stack v7 no longer provides the `oldstable` channel.
-
-## Parameter changes
-
-| Stack v6 | Stack v7 |
-| --- | --- |
-| `BuildkiteAgentTimestampLines` | Removed. Agent v4 always emits ANSI timestamps. |
-| `BuildkiteAgentTracingBackend` | Removed. Use `BuildkiteAgentOpenTelemetryTracing=true` for OpenTelemetry. Agent v4 doesn't support the Datadog backend. |
-| `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` | Replaced by `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`. |
-| `BuildkiteAgentRelease=oldstable` | Removed. Use `stable`, `beta`, or `edge`, or remain on stack v6. |
 
 ## Cancellation timing
 
