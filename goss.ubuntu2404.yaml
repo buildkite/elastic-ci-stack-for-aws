@@ -8,6 +8,10 @@
 file:
   /etc/buildkite-agent/buildkite-agent.cfg:
     exists: true
+    contains:
+    - /opentelemetry-tracing=false/
+    - /cancel-signal-timeout=10s/
+    - /cancel-cleanup-timeout=5s/
 
   /etc/buildkite-agent/hooks:
     filetype: directory
@@ -107,6 +111,11 @@ process:
     running: true
 
 command:
+  buildkite-agent --version:
+    exit-status: 0
+    stdout:
+    - /4\.0\.1/
+
   # Ubuntu 24.04 ships OpenSSH as a socket-activated unit (ssh.socket); there is
   # no persistent sshd process and no sshd.service like on Amazon Linux. Assert
   # the socket is enabled at boot and active (the port 22 checks cover reach).

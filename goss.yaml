@@ -1,6 +1,10 @@
 file:
   /etc/buildkite-agent/buildkite-agent.cfg:
     exists: true
+    contains:
+    - /opentelemetry-tracing=false/
+    - /cancel-signal-timeout=10s/
+    - /cancel-cleanup-timeout=5s/
 
   /etc/buildkite-agent/hooks:
     filetype: directory
@@ -120,6 +124,11 @@ process:
     running: true
 
 command:
+  buildkite-agent --version:
+    exit-status: 0
+    stdout:
+    - /4\.0\.1/
+
   aws --version:
     exit-status: 0
 

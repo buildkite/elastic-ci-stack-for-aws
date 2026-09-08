@@ -106,13 +106,6 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   If ($lastexitcode -ne 0) { Exit $lastexitcode }
 }
 
-If ($Env:BUILDKITE_AGENT_RELEASE -eq "oldstable") {
-  Write-Output "Downloading buildkite-agent oldstable..."
-  Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-oldstable.exe -Uri "https://download.buildkite.com/agent/oldstable/latest/buildkite-agent-windows-amd64.exe"
-  buildkite-agent-oldstable.exe --version
-  If ($lastexitcode -ne 0) { Exit $lastexitcode }
-}
-
 # Check if the source agent executable exists before copying
 $sourceAgentPath = "C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe"
 if (-not (Test-Path -Path $sourceAgentPath -PathType Leaf)) {
@@ -139,23 +132,6 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS -eq "true") {
   $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
 }
 
-# Agent v4 always emits ANSI timestamps and only supports OpenTelemetry tracing.
-# Keep the v3 options for the oldstable release channel.
-$agentTimestampConfig = ""
-$agentTracingConfig = ""
-If ($Env:BUILDKITE_AGENT_RELEASE -eq "oldstable") {
-  If ($Env:BUILDKITE_AGENT_TIMESTAMP_LINES -eq "true") {
-    $agentTimestampConfig = "no-ansi-timestamps=true`ntimestamp-lines=true"
-  } Else {
-    $agentTimestampConfig = "no-ansi-timestamps=false`ntimestamp-lines=false"
-  }
-  $agentTracingConfig = "tracing-backend=$Env:BUILDKITE_AGENT_TRACING_BACKEND"
-} Else {
-  If ($Env:BUILDKITE_AGENT_TRACING_BACKEND -eq "opentelemetry") {
-    $agentTracingConfig = "opentelemetry-tracing=true"
-  }
-}
-
 # Get token from ssm param (if we have a path)
 If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PATH -ne "") {
   $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
@@ -168,7 +144,6 @@ token="${Env:BUILDKITE_AGENT_TOKEN}"
 endpoint="${Env:BUILDKITE_AGENT_ENDPOINT}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true
-${agentTimestampConfig}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
 plugins-path="C:\buildkite-agent\plugins"
@@ -181,7 +156,9 @@ shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 disconnect-after-uptime=${Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
-${agentTracingConfig}
+opentelemetry-tracing=${Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING}
+cancel-signal-timeout=${Env:BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT}
+cancel-cleanup-timeout=${Env:BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT}
 signing-aws-kms-key=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${Env:BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 "@

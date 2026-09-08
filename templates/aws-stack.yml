@@ -51,13 +51,12 @@ Metadata:
         Parameters:
         - BuildkiteAgentRelease
         - BuildkiteAgentTags
-        - BuildkiteAgentTimestampLines
         - BuildkiteAgentExperiments
         - BuildkiteAgentEnableGitMirrors
         - GitMirrorSeedBucket
-        - BuildkiteAgentTracingBackend
-        - BuildkiteAgentCancelGracePeriod
-        - BuildkiteAgentSignalGracePeriod
+        - BuildkiteAgentOpenTelemetryTracing
+        - BuildkiteAgentCancelSignalTimeout
+        - BuildkiteAgentCancelCleanupTimeout
         - BuildkiteTerminateInstanceAfterJob
         - BuildkiteAgentDisconnectAfterUptime
         - BuildkiteTerminateInstanceOnDiskFull
@@ -203,13 +202,12 @@ Parameters:
 
   BuildkiteAgentRelease:
     Description: >
-        Buildkite agent release channel to install.
-        'stable' = production-ready (recommended), 'oldstable' = most recent release from the major version branch prior to stable, 'beta' = pre-release with latest features, 'edge' = bleeding-edge development builds.
+        Buildkite Agent v4 release channel to install.
+        'stable' = production-ready (recommended), 'beta' = pre-release with latest features, 'edge' = bleeding-edge development builds.
         Use 'stable' unless specific new features are required.
     Type: String
     AllowedValues:
       - stable
-      - oldstable
       - beta
       - edge
     Default: "stable"
@@ -254,14 +252,6 @@ Parameters:
       Use these tags in pipeline steps with 'agents: { environment: production }'.
     Type: String
     Default: ""
-
-  BuildkiteAgentTimestampLines:
-    Description: Set to true to prepend plaintext timestamps to every line of output when using the oldstable agent. Agent v4 always emits ANSI timestamps.
-    Type: String
-    AllowedValues:
-      - "true"
-      - "false"
-    Default: "false"
 
   BuildkiteAgentExperiments:
     Description: >
@@ -394,14 +384,13 @@ Parameters:
       - "false"
     Default: "false"
 
-  BuildkiteAgentTracingBackend:
-    Description: Optional - The tracing backend to use for CI tracing. The opentelemetry value enables OpenTelemetry for Agent v4; datadog is supported only by oldstable. See https://buildkite.com/docs/agent/v3/tracing.
+  BuildkiteAgentOpenTelemetryTracing:
+    Description: Enable OpenTelemetry tracing for the Buildkite Agent. See https://buildkite.com/docs/agent/v3/tracing.
     Type: String
     AllowedValues:
-      - ""
-      - "datadog"
-      - "opentelemetry"
-    Default: ""
+      - "true"
+      - "false"
+    Default: "false"
 
   BuildkiteAgentSigningKeySSMParameter:
     Description: Existing SSM Parameter Store path to a JSON Web Key Set (JWKS) containing a key to sign jobs with.
@@ -422,24 +411,23 @@ Parameters:
     AllowedPattern: "^$|^/[a-zA-Z0-9_.\\-/]+$"
     ConstraintDescription: "Expects a leading forward slash"
 
-  BuildkiteAgentCancelGracePeriod:
+  BuildkiteAgentCancelSignalTimeout:
     Description: >
-        Linux only. The total number of seconds allowed for the agent to stop after receiving a shutdown signal.
-        BuildkiteAgentSignalGracePeriod is used to stop subprocesses; any remaining time is reserved for agent cleanup.
-        This must be greater than the effective BuildkiteAgentSignalGracePeriod.
-    Type: Number
-    Default: 60
-    MinValue: 1
+        How long a subprocess has to handle the cancel signal before the Buildkite Agent sends SIGKILL.
+        Accepts duration strings such as '30s' and '1m30s'.
+    Type: String
+    Default: "10s"
+    AllowedPattern: "^(0|([0-9]+(\\.[0-9]+)?(ns|us|ms|s|m|h))+)$"
+    ConstraintDescription: "Must be a non-negative duration such as '30s' or '1m30s'."
 
-  BuildkiteAgentSignalGracePeriod:
+  BuildkiteAgentCancelCleanupTimeout:
     Description: >
-        Linux only. The number of seconds given to a subprocess to handle `cancel-signal` before SIGKILL is sent.
-        This applies to ordinary job cancellations and jobs running while the agent is stopping.
-        Non-negative values are absolute and must be less than BuildkiteAgentCancelGracePeriod.
-        Set to -1 to use one second less than BuildkiteAgentCancelGracePeriod.
-    Type: Number
-    Default: -1
-    MinValue: -1
+        Extra time for a stopping Buildkite Agent to upload logs and artifacts after the job process exits or is killed.
+        Accepts duration strings such as '5s' and '1m30s'.
+    Type: String
+    Default: "5s"
+    AllowedPattern: "^(0|([0-9]+(\\.[0-9]+)?(ns|us|ms|s|m|h))+)$"
+    ConstraintDescription: "Must be a non-negative duration such as '5s' or '1m30s'."
 
   BuildkiteTerminateInstanceAfterJob:
     Description: Set to 'true' to terminate the instance after a job has completed.
@@ -635,6 +623,8 @@ Parameters:
         Supported URI schemes: S3 object URI (s3://bucket/key), SSM parameter path (ssm:/path/to/param),
         HTTPS URL (https://example.com/script.sh), or local file path (file:///path/to/script).
         These variables configure agent behavior like proxy settings or debugging options.
+        Before upgrading to stack v7, review this file for Agent v3 options that Agent v4 removed or renamed.
+        See https://buildkite.com/docs/agent/v3-v4-upgrade-guide.
         For build environment variables, use pipeline 'env' configuration instead.
     Type: String
     Default: ""
@@ -1207,18 +1197,6 @@ Parameters:
     Default: "x86_64"
 
 Rules:
-  BuildkiteAgentTracingBackendMatchesRelease:
-    Assertions:
-      - Assert:
-          !Or
-            - !Not
-              - !Equals
-                - !Ref BuildkiteAgentTracingBackend
-                - datadog
-            - !Equals
-              - !Ref BuildkiteAgentRelease
-              - oldstable
-        AssertDescription: "BuildkiteAgentTracingBackend can be set to 'datadog' only when BuildkiteAgentRelease is 'oldstable'"
   HasToken:
     Assertions:
       - Assert:
@@ -2447,9 +2425,10 @@ Resources:
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}"
                   $Env:BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}"
-                  $Env:BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}"
                   $Env:BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}"
-                  $Env:BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}"
+                  $Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING="${BuildkiteAgentOpenTelemetryTracing}"
+                  $Env:BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT="${BuildkiteAgentCancelSignalTimeout}"
+                  $Env:BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT="${BuildkiteAgentCancelCleanupTimeout}"
                   $Env:BUILDKITE_AGENT_SIGNING_KEY_PATH="${BuildkiteAgentSigningKeySSMParameter}"
                   $Env:BUILDKITE_AGENT_SIGNING_KEY_ID="${BuildkiteAgentSigningKeyID}"
                   $Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH="${BuildkiteAgentVerificationKeySSMParameter}"
@@ -2549,15 +2528,14 @@ Resources:
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}" \
                   BUILDKITE_AGENT_TAGS="${BuildkiteAgentTags}" \
-                  BUILDKITE_AGENT_TIMESTAMP_LINES="${BuildkiteAgentTimestampLines}" \
                   BUILDKITE_AGENT_EXPERIMENTS="${BuildkiteAgentExperiments}" \
-                  BUILDKITE_AGENT_TRACING_BACKEND="${BuildkiteAgentTracingBackend}" \
+                  BUILDKITE_AGENT_OPENTELEMETRY_TRACING="${BuildkiteAgentOpenTelemetryTracing}" \
+                  BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT="${BuildkiteAgentCancelSignalTimeout}" \
+                  BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT="${BuildkiteAgentCancelCleanupTimeout}" \
                   BUILDKITE_AGENT_SIGNING_KEY_PATH="${BuildkiteAgentSigningKeySSMParameter}" \
                   BUILDKITE_AGENT_SIGNING_KEY_ID="${BuildkiteAgentSigningKeyID}" \
                   BUILDKITE_AGENT_VERIFICATION_KEY_PATH="${BuildkiteAgentVerificationKeySSMParameter}" \
                   BUILDKITE_AGENT_RELEASE="${BuildkiteAgentRelease}" \
-                  BUILDKITE_AGENT_CANCEL_GRACE_PERIOD="${BuildkiteAgentCancelGracePeriod}" \
-                  BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS="${BuildkiteAgentSignalGracePeriod}" \
                   BUILDKITE_AGENT_SIGNING_KMS_KEY="${PipelineSigningKMSKey}" \
                   BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR="${PipelineSigningVerificationFailureBehavior}" \
                   BUILDKITE_QUEUE="${BuildkiteQueue}" \
