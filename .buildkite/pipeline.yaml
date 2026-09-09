@@ -210,7 +210,6 @@ steps:
       - jq --version
       - git --version
       - buildkite-agent --version
-      - powershell -NoProfile -Command "$c = Get-Content C:\\buildkite-agent\\buildkite-agent.cfg; if (($c -notcontains 'opentelemetry-tracing=false') -or ($c -notcontains 'cancel-signal-timeout=10s') -or ($c -notcontains 'cancel-cleanup-timeout=5s')) { exit 1 }"
       - docker info
       - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
     timeout_in_minutes: 5

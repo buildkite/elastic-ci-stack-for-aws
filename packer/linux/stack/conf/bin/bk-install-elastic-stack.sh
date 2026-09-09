@@ -469,9 +469,9 @@ no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 disconnect-after-uptime=${BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
-opentelemetry-tracing=${BUILDKITE_AGENT_OPENTELEMETRY_TRACING}
-cancel-signal-timeout=${BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT}
-cancel-cleanup-timeout=${BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT}
+opentelemetry-tracing=${BUILDKITE_AGENT_OPENTELEMETRY_TRACING:-false}
+cancel-signal-timeout=${BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT:-10s}
+cancel-cleanup-timeout=${BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT:-5s}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 EOF

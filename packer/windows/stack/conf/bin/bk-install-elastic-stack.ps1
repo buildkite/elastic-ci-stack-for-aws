@@ -137,6 +137,16 @@ If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PA
   $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
 }
 
+If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING)) {
+  $Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING = "false"
+}
+If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT)) {
+  $Env:BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT = "10s"
+}
+If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT)) {
+  $Env:BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT = "5s"
+}
+
 $OFS=","
 Set-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value @"
 name="${Env:BUILDKITE_STACK_NAME}-${Env:INSTANCE_ID}-%spawn"

@@ -16,8 +16,9 @@ Elastic CI Stack v7 uses Buildkite Agent v4. Read the [Agent v3 to v4 upgrade gu
    - Replace `BuildkiteAgentTracingBackend` with `BuildkiteAgentOpenTelemetryTracing`: `""` becomes `false`, `opentelemetry` becomes `true`, and `datadog` has no direct replacement.
    - Replace `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` with `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`.
    - Change `BuildkiteAgentRelease=oldstable` to `stable`, `beta`, or `edge`.
-3. If you use `AgentEnvFileUrl`, review that file against the Agent upgrade guide. CloudFormation can't check its contents.
-4. Preview the update with a [CloudFormation change set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html).
+3. If you set `ImageId` or `ImageIdParameter`, rebuild your derived AMI from the v7 base AMI and update the parameter in the same stack update. A v6-based AMI cannot boot under the v7 template.
+4. If you use `AgentEnvFileUrl`, review that file against the Agent upgrade guide. CloudFormation can't check its contents.
+5. Preview the update with a [CloudFormation change set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html).
 
 If you need Agent v3, remain on Elastic CI Stack v6. Stack v7 no longer provides the `oldstable` channel.
 

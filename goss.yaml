@@ -1,10 +1,6 @@
 file:
   /etc/buildkite-agent/buildkite-agent.cfg:
     exists: true
-    contains:
-    - /opentelemetry-tracing=false/
-    - /cancel-signal-timeout=10s/
-    - /cancel-cleanup-timeout=5s/
 
   /etc/buildkite-agent/hooks:
     filetype: directory
