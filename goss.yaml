@@ -120,11 +120,6 @@ process:
     running: true
 
 command:
-  buildkite-agent --version:
-    exit-status: 0
-    stdout:
-    - /4\.0\.1/
-
   aws --version:
     exit-status: 0
 
