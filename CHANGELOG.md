@@ -17,6 +17,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Remove the `oldstable` release channel. Stay on stack v6 if you need Agent v3.
 - Remove `BuildkiteAgentTimestampLines`; Agent v4 always emits ANSI timestamps.
 
+## [v6.71.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.4) (2026-09-09)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.3...v6.71.4)
+
+### Added
+* Add r9g(d) instance family by @jaimebarriga in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1880
+
+### Updated
+* Update git-lfs/git-lfs to v3.8.0 by @renovate[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1869
+* Update aws-cli to v2.36.37 by @renovate[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1872
+
+
+### Internal
+* Update changelog with v6.71.3 by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1870
+* Use canonical Ubuntu ports mirror for AMI builds by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1871
+* Update buildkite plugin aws-assume-role-with-web-identity to v1.7.0 by @renovate[bot] in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1873
+
 ## [v6.71.3](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.3) (2026-08-28)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.2...v6.71.3)
 
