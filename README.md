@@ -262,7 +262,7 @@ tracks the latest Buildkite Agent release.
 
 You may wish to preview any updates to your stack from this template
 [using a CloudFormation Stack Change Set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
-to decide whether to apply it.
+to decide whether to apply it. See the [Elastic CI Stack v7 upgrade guide](docs/upgrading-to-v7.md) before upgrading from stack v6.
 
 ## Recommended reading
 

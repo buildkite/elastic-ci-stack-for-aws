@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [Unreleased]
+
+> **Breaking changes:** Stack v7 uses Buildkite Agent v4 and removes Agent v3 support. Before upgrading, review the [v7 upgrade guide](docs/upgrading-to-v7.md), especially if you use custom parameter files or `AgentEnvFileUrl`.
+
+### Changed
+- Upgrade the bundled Linux and Windows agents from v3.137.2 to v4.0.3 [#1879](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1879) (@scadu)
+- Replace `BuildkiteAgentTracingBackend` with `BuildkiteAgentOpenTelemetryTracing`
+- Replace `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` with `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`. The default total cancellation time changes from 60 seconds to 15 seconds.
+
+### Removed
+- Remove the `oldstable` release channel. Stay on stack v6 if you need Agent v3.
+- Remove `BuildkiteAgentTimestampLines`; Agent v4 always emits ANSI timestamps.
+
 ## [v6.71.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.4) (2026-09-09)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.3...v6.71.4)
 
