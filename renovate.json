@@ -10,6 +10,17 @@
     {
       "customType": "regex",
       "fileMatch": [
+        "^\\.buildkite/steps/lint\\.sh$"
+      ],
+      "matchStrings": [
+        "koalaman/shellcheck:(?<currentValue>v\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "koalaman/shellcheck"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
         "^packer/linux/stack/scripts/install-buildkite-agent\\.sh$",
         "^packer/windows/stack/scripts/install-buildkite-agent\\.ps1$"
       ],
