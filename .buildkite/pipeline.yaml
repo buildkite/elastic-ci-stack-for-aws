@@ -209,6 +209,7 @@ steps:
       - aws --version
       - jq --version
       - git --version
+      - buildkite-agent --version
       - docker info
       - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
     timeout_in_minutes: 5

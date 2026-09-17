@@ -253,15 +253,8 @@ edge)
   chmod 0755 /usr/bin/buildkite-agent-edge
   buildkite-agent-edge --version
   ;;
-oldstable)
-  echo Downloading buildkite-agent oldstable...
-  curl -Lsf -o /usr/bin/buildkite-agent-oldstable \
-    "https://download.buildkite.com/agent/oldstable/latest/buildkite-agent-linux-${ARCH}"
-  chmod 0755 /usr/bin/buildkite-agent-oldstable
-  buildkite-agent-oldstable --version
-  ;;
 *)
-  echo Not using buildkite-agent edge or oldstable.
+  echo Not using buildkite-agent edge.
   ;;
 esac
 
@@ -446,21 +439,6 @@ fi
 echo Setting ownership of build path to buildkite-agent.
 chown buildkite-agent: "$BUILDKITE_AGENT_BUILD_PATH"
 
-# Either you can have timestamp-lines xor ansi-timestamps.
-# There's no technical reason you can't have both, it's a pragmatic decision to
-# simplify the avaliable parameters on the stack
-if [[ ${BUILDKITE_AGENT_TIMESTAMP_LINES:-"false"} == "true" ]]; then
-  BUILDKITE_AGENT_TIMESTAMPS_LINES="true"
-  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="true"
-else
-  BUILDKITE_AGENT_TIMESTAMPS_LINES="false"
-  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="false"
-fi
-
-echo Setting \$BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS to \$BUILDKITE_AGENT_TIMESTAMP_LINES
-echo "BUILDKITE_AGENT_TIMESTAMP_LINES is $BUILDKITE_AGENT_TIMESTAMPS_LINES"
-echo "BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS is $BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS"
-
 echo "Setting \$BUILDKITE_AGENT_TOKEN from SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH"
 BUILDKITE_AGENT_TOKEN="$(
   aws ssm get-parameter \
@@ -480,8 +458,6 @@ tags=$(
 )
 endpoint=${BUILDKITE_AGENT_ENDPOINT:-"https://agent-edge.buildkite.com/v3"}
 tags-from-ec2-meta-data=true
-no-ansi-timestamps=${BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
-timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=${BUILDKITE_AGENT_BUILD_PATH}
 plugins-path=/var/lib/buildkite-agent/plugins
@@ -493,9 +469,9 @@ no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 disconnect-after-uptime=${BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
-tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
-cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
-signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
+opentelemetry-tracing=${BUILDKITE_AGENT_OPENTELEMETRY_TRACING:-false}
+cancel-signal-timeout=${BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT:-10s}
+cancel-cleanup-timeout=${BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT:-5s}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 EOF

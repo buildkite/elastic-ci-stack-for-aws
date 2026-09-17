@@ -1,0 +1,58 @@
+# Upgrading to Elastic CI Stack v7
+
+Elastic CI Stack v7 uses Buildkite Agent v4. Read the [Agent v3 to v4 upgrade guide](https://buildkite.com/docs/agent/v3-v4-upgrade-guide) first; this page only covers the stack-specific steps.
+
+## Before upgrading
+
+1. Export your current stack parameters:
+
+   ```bash
+   aws cloudformation describe-stacks --stack-name MY_STACK_NAME \
+     --query 'Stacks[].Parameters[].[ParameterKey,ParameterValue]' --output table
+   ```
+
+2. Update parameter files and deployment automation. CloudFormation rejects parameters that aren't in the v7 template:
+   - Remove `BuildkiteAgentTimestampLines`. Agent v4 always emits ANSI timestamps.
+   - Replace `BuildkiteAgentTracingBackend` with `BuildkiteAgentOpenTelemetryTracing`: `""` becomes `false` and `opentelemetry` becomes `true`. For `datadog`, follow [Datadog tracing](#datadog-tracing) below.
+   - Replace `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` with `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`.
+   - Change `BuildkiteAgentRelease=oldstable` to `stable`, `beta`, or `edge`.
+3. If you set `ImageId` or `ImageIdParameter`, rebuild your derived AMI from the v7 base AMI and update the parameter in the same stack update. A v6-based AMI cannot boot under the v7 template.
+4. If you use `AgentEnvFileUrl`, review that file against the Agent upgrade guide. CloudFormation can't check its contents.
+5. Preview the update with a [CloudFormation change set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html).
+
+If you need Agent v3, remain on Elastic CI Stack v6. Stack v7 no longer provides the `oldstable` channel.
+
+## Cancellation timing
+
+- `BuildkiteAgentCancelSignalTimeout` controls how long the process has before SIGKILL.
+- `BuildkiteAgentCancelCleanupTimeout` gives a stopping agent extra time to upload logs and artifacts.
+
+Stack v7 defaults to `10s` and `5s` on both platforms. To preserve v6 defaults, set:
+
+| Platform | `BuildkiteAgentCancelSignalTimeout` | `BuildkiteAgentCancelCleanupTimeout` |
+| --- | --- | --- |
+| Linux | `59s` | `1s` |
+| Windows | `9s` | `1s` |
+
+The v6 cancellation parameters applied only to Linux. Windows used Agent v3 defaults unless overridden through custom Agent configuration.
+
+For custom v6 Linux parameter values:
+
+- If `BuildkiteAgentSignalGracePeriod` was `-1`, subtract one second from `BuildkiteAgentCancelGracePeriod` for the new signal timeout and use `1s` for cleanup.
+- Otherwise, keep the old signal grace period as the signal timeout. The cleanup timeout is the old cancel grace period minus the signal timeout.
+
+For example, `BuildkiteAgentCancelGracePeriod=120` and `BuildkiteAgentSignalGracePeriod=30` become `30s` and `90s`. The new parameters accept durations such as `30s` and `1m30s`.
+
+## Reviewing `AgentEnvFileUrl`
+
+`AgentEnvFileUrl` still works, but its values configure the Agent directly and can override the generated configuration. Check every custom setting against the Agent upgrade guide. In particular:
+
+- Remove `BUILDKITE_NO_ANSI_TIMESTAMPS` and `BUILDKITE_TIMESTAMP_LINES`.
+- Migrate tracing and metrics to OpenTelemetry. This includes replacing `BUILDKITE_TRACING_BACKEND`, renaming `BUILDKITE_TRACING_SERVICE_NAME`, and removing `BUILDKITE_TRACING_PROPAGATE_TRACEPARENT`.
+- Replace `BUILDKITE_CANCEL_GRACE_PERIOD` and `BUILDKITE_SIGNAL_GRACE_PERIOD_SECONDS` with `BUILDKITE_CANCEL_SIGNAL_TIMEOUT` and `BUILDKITE_CANCEL_CLEANUP_TIMEOUT`, using the timing conversion above.
+
+Also review any custom Agent experiments before replacing your instances.
+
+## Datadog tracing
+
+Agent v4 sends traces through OpenTelemetry instead of the native Datadog backend. Set `BuildkiteAgentOpenTelemetryTracing=true`, then use `AgentEnvFileUrl` to set `OTEL_EXPORTER_OTLP_ENDPOINT` to your Datadog Agent's OTLP receiver and `OTEL_EXPORTER_OTLP_PROTOCOL` to its configured protocol. If you set `BUILDKITE_TRACING_SERVICE_NAME`, rename it to `BUILDKITE_TELEMETRY_SERVICE_NAME` to preserve the service name.

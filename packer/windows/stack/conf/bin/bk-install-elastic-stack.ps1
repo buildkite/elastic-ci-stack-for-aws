@@ -106,13 +106,6 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   If ($lastexitcode -ne 0) { Exit $lastexitcode }
 }
 
-If ($Env:BUILDKITE_AGENT_RELEASE -eq "oldstable") {
-  Write-Output "Downloading buildkite-agent oldstable..."
-  Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-oldstable.exe -Uri "https://download.buildkite.com/agent/oldstable/latest/buildkite-agent-windows-amd64.exe"
-  buildkite-agent-oldstable.exe --version
-  If ($lastexitcode -ne 0) { Exit $lastexitcode }
-}
-
 # Check if the source agent executable exists before copying
 $sourceAgentPath = "C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe"
 if (-not (Test-Path -Path $sourceAgentPath -PathType Leaf)) {
@@ -139,18 +132,19 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS -eq "true") {
   $Env:BUILDKITE_AGENT_GIT_MIRRORS_PATH = "C:\buildkite-agent\git-mirrors"
 }
 
-# Either you can have timestamp-lines xor ansi-timestamps.
-# There's no technical reason you can't have both, its a pragmatic decision to
-# simplify the avaliable parameters on the stack
-If ($Env:BUILDKITE_AGENT_TIMESTAMP_LINES -eq "true") {
-  $Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS = "true"
-} Else {
-  $Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS = "false"
-}
-
 # Get token from ssm param (if we have a path)
 If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PATH -ne "") {
   $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
+}
+
+If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING)) {
+  $Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING = "false"
+}
+If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT)) {
+  $Env:BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT = "10s"
+}
+If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT)) {
+  $Env:BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT = "5s"
 }
 
 $OFS=","
@@ -160,8 +154,6 @@ token="${Env:BUILDKITE_AGENT_TOKEN}"
 endpoint="${Env:BUILDKITE_AGENT_ENDPOINT}"
 tags=$agent_metadata
 tags-from-ec2-meta-data=true
-no-ansi-timestamps=${Env:BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
-timestamp-lines=${Env:BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path="C:\buildkite-agent\hooks"
 build-path="C:\buildkite-agent\builds"
 plugins-path="C:\buildkite-agent\plugins"
@@ -174,7 +166,9 @@ shell=powershell
 disconnect-after-idle-timeout=${Env:BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 disconnect-after-uptime=${Env:BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
-tracing-backend=${Env:BUILDKITE_AGENT_TRACING_BACKEND}
+opentelemetry-tracing=${Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING}
+cancel-signal-timeout=${Env:BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT}
+cancel-cleanup-timeout=${Env:BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT}
 signing-aws-kms-key=${Env:BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${Env:BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 "@
