@@ -24,19 +24,19 @@ If you need Agent v3, remain on Elastic CI Stack v6. Stack v7 no longer provides
 
 ## Cancellation timing
 
-Agent v4 separates the time given to a job process from the time reserved for agent cleanup:
-
 - `BuildkiteAgentCancelSignalTimeout` controls how long the process has before SIGKILL.
 - `BuildkiteAgentCancelCleanupTimeout` gives a stopping agent extra time to upload logs and artifacts.
 
-Stack v7 defaults to `10s` and `5s`. The v6 defaults allowed 59 seconds for the process and 1 second for cleanup. To keep that timing, set:
+Stack v7 defaults to `10s` and `5s` on both platforms. To preserve v6 defaults, set:
 
-```text
-BuildkiteAgentCancelSignalTimeout=59s
-BuildkiteAgentCancelCleanupTimeout=1s
-```
+| Platform | `BuildkiteAgentCancelSignalTimeout` | `BuildkiteAgentCancelCleanupTimeout` |
+| --- | --- | --- |
+| Linux | `59s` | `1s` |
+| Windows | `9s` | `1s` |
 
-For custom v6 values:
+The v6 cancellation parameters applied only to Linux. Windows used Agent v3 defaults unless overridden through custom Agent configuration.
+
+For custom v6 Linux parameter values:
 
 - If `BuildkiteAgentSignalGracePeriod` was `-1`, subtract one second from `BuildkiteAgentCancelGracePeriod` for the new signal timeout and use `1s` for cleanup.
 - Otherwise, keep the old signal grace period as the signal timeout. The cleanup timeout is the old cancel grace period minus the signal timeout.

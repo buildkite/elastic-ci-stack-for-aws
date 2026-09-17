@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 - Upgrade the bundled Linux and Windows agents from v3.137.2 to v4.0.3 [#1879](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1879) (@scadu)
 - Replace `BuildkiteAgentTracingBackend` with `BuildkiteAgentOpenTelemetryTracing`
-- Replace `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` with `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`. The default total cancellation time changes from 60 seconds to 15 seconds.
+- Replace `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` with `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`. The default total cancellation time changes from 60 to 15 seconds on Linux and from 10 to 15 seconds on Windows.
 
 ### Removed
 - Remove the `oldstable` release channel. Stay on stack v6 if you need Agent v3.
