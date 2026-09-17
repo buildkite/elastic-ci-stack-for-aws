@@ -13,7 +13,7 @@ Elastic CI Stack v7 uses Buildkite Agent v4. Read the [Agent v3 to v4 upgrade gu
 
 2. Update parameter files and deployment automation. CloudFormation rejects parameters that aren't in the v7 template:
    - Remove `BuildkiteAgentTimestampLines`. Agent v4 always emits ANSI timestamps.
-   - Replace `BuildkiteAgentTracingBackend` with `BuildkiteAgentOpenTelemetryTracing`: `""` becomes `false`, `opentelemetry` becomes `true`, and `datadog` has no direct replacement.
+   - Replace `BuildkiteAgentTracingBackend` with `BuildkiteAgentOpenTelemetryTracing`: `""` becomes `false` and `opentelemetry` becomes `true`. For `datadog`, follow [Datadog tracing](#datadog-tracing) below.
    - Replace `BuildkiteAgentCancelGracePeriod` and `BuildkiteAgentSignalGracePeriod` with `BuildkiteAgentCancelSignalTimeout` and `BuildkiteAgentCancelCleanupTimeout`.
    - Change `BuildkiteAgentRelease=oldstable` to `stable`, `beta`, or `edge`.
 3. If you set `ImageId` or `ImageIdParameter`, rebuild your derived AMI from the v7 base AMI and update the parameter in the same stack update. A v6-based AMI cannot boot under the v7 template.
@@ -52,3 +52,7 @@ For example, `BuildkiteAgentCancelGracePeriod=120` and `BuildkiteAgentSignalGrac
 - Replace `BUILDKITE_CANCEL_GRACE_PERIOD` and `BUILDKITE_SIGNAL_GRACE_PERIOD_SECONDS` with `BUILDKITE_CANCEL_SIGNAL_TIMEOUT` and `BUILDKITE_CANCEL_CLEANUP_TIMEOUT`, using the timing conversion above.
 
 Also review any custom Agent experiments before replacing your instances.
+
+## Datadog tracing
+
+Agent v4 sends traces through OpenTelemetry instead of the native Datadog backend. Set `BuildkiteAgentOpenTelemetryTracing=true`, then use `AgentEnvFileUrl` to set `OTEL_EXPORTER_OTLP_ENDPOINT` to your Datadog Agent's OTLP receiver and `OTEL_EXPORTER_OTLP_PROTOCOL` to its configured protocol. If you set `BUILDKITE_TRACING_SERVICE_NAME`, rename it to `BUILDKITE_TELEMETRY_SERVICE_NAME` to preserve the service name.
