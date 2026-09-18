@@ -55,6 +55,17 @@ fi
 
 echo Mounting instance storage...
 
+devicemount=/mnt/ephemeral
+fs_type="ext4"
+mount_options="defaults,noatime"
+
+mkdir -p "$devicemount"
+
+if findmnt --mountpoint "$devicemount" >/dev/null; then
+  echo "$devicemount is already mounted. Skipping instance storage setup."
+  exit 0
+fi
+
 #shellcheck disable=SC2207
 devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -f1 -d' ' || true))
 if [[ -z "${devices[*]}" ]]; then
@@ -96,29 +107,36 @@ else
   exit 1
 fi
 
-echo "Formatting $logicalname as ext4..."
-# Make an ext4 file system, [-F]orce creation, don’t TRIM at fs creation time (-E nodiscard)
-mkfs.ext4 -F -E nodiscard "$logicalname" >/dev/null
+existing_fs_type="$(blkid -o value -s TYPE "$logicalname" || true)"
+if [[ "$existing_fs_type" == "$fs_type" ]]; then
+  echo "$logicalname is already formatted as $fs_type. Skipping format."
+elif [[ -n "$existing_fs_type" ]]; then
+  echo "$logicalname already has filesystem type $existing_fs_type, expected $fs_type."
+  echo "Refusing to format an existing filesystem."
+  exit 1
+else
+  echo "Formatting $logicalname as ext4..."
+  # Make an ext4 file system, [-F]orce creation, don’t TRIM at fs creation time (-E nodiscard)
+  mkfs.ext4 -F -E nodiscard "$logicalname" >/dev/null
+fi
 
-devicemount=/mnt/ephemeral
 echo "Mounting $logicalname to $devicemount..."
-fs_type="ext4"
-mount_options="defaults,noatime"
 
-mkdir -p "$devicemount"
 mount -t "$fs_type" -o "$mount_options" "$logicalname" "$devicemount"
 
 if [[ ! -f /etc/fstab.backup ]]; then
   echo Backing up /etc/fstab to /etc/fstab.backup...
   cp -P /etc/fstab /etc/fstab.backup
+fi
 
-  fstab_line="$logicalname $devicemount    ${fs_type}  ${mount_options}  0 0"
+fstab_line="$logicalname $devicemount    ${fs_type}  ${mount_options}  0 0"
+if grep -q -E "[[:space:]]${devicemount}[[:space:]]" /etc/fstab; then
+  echo "$devicemount already exists in /etc/fstab. Not modifying /etc/fstab:"
+  cat /etc/fstab
+else
   echo "Appending $fstab_line to /etc/fstab..."
   echo "$fstab_line" >>/etc/fstab
 
-  echo Appened to /etc/fstab:
-  cat /etc/fstab
-else
-  echo /etc/fstab.backup already exists. Not modifying /etc/fstab:
+  echo Appended to /etc/fstab:
   cat /etc/fstab
 fi
