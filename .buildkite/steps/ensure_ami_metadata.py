@@ -4,14 +4,14 @@ Ensure AMI metadata is set for Stack AMI builds.
 
 This script checks if the packer build step set AMI metadata. If not,
 it fetches the AMI ID from a fallback source. For standard builds, the
-fallback is the main branch CloudFormation template on S3. For CIS builds,
+fallback is the latest stable release CloudFormation template on S3. For CIS builds,
 the fallback is the latest CIS stack AMI output file on S3 (since CIS AMIs
 are private and not published in the CloudFormation template).
 
 This allows launch/test/delete steps to use a broader if_changed scope
 than the packer build step: when only launch scripts or templates change,
 the packer step is skipped but the launch/test/delete chain still runs
-against the most recently built AMI.
+against an existing AMI.
 """
 
 import os
@@ -57,7 +57,7 @@ def set_metadata(key: str, value: str) -> None:
 
 def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
     """
-    Fetch AMI ID from the main branch CloudFormation template.
+    Fetch AMI ID from the latest stable release CloudFormation template.
 
     Args:
         os_type: Operating system (linux or windows)
@@ -70,16 +70,16 @@ def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
     Raises:
         RuntimeError: If AMI cannot be found
     """
-    template_url = "https://s3.amazonaws.com/buildkite-aws-stack/main/aws-stack.yml"
+    template_url = "https://s3.amazonaws.com/buildkite-aws-stack/latest/aws-stack.yml"
 
-    print(f"--- Fetching AMI ID from main branch template for {os_type}/{arch}")
+    print(f"--- Fetching AMI ID from latest stable release template for {os_type}/{arch}")
 
     try:
         with urllib.request.urlopen(template_url) as response:
             template_content = response.read().decode("utf-8")
     except Exception as e:
         raise RuntimeError(
-            f"Failed to download main branch template from {template_url}: {e}"
+            f"Failed to download latest stable release template from {template_url}: {e}"
         ) from e
 
     if os_type == "windows":
@@ -102,7 +102,7 @@ def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
             return ami_id
 
     raise RuntimeError(
-        f"Could not find AMI ID for region {region}, os {os_type}, arch {arch} in main template"
+        f"Could not find AMI ID for region {region}, os {os_type}, arch {arch} in latest stable release template"
     )
 
 
@@ -170,7 +170,7 @@ def ensure_ami_metadata(os_type: str, arch: str, variant: Optional[str] = None) 
     """
     Ensure AMI metadata is set, fetching from a fallback if necessary.
 
-    For standard builds, falls back to the published CloudFormation template.
+    For standard builds, falls back to the latest stable release CloudFormation template.
     For variant builds (e.g. CIS), falls back to the latest S3 output file.
 
     Args:
