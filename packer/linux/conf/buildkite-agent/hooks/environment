@@ -170,3 +170,11 @@ if [[ "${DOCKER_USERNS_REMAP:-false}" == "false" ]]; then
   sudo /usr/bin/fix-buildkite-agent-builds-permissions "${AGENT_DIR}" "${ORG_DIR}" "${PIPELINE_DIR}"
   echo
 fi
+
+# Job steps are fresh non-login shells and do not inherit the AMI provisioner PATH.
+if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+  # shellcheck source=/dev/null
+  . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+export PATH="/nix/var/nix/profiles/default/bin:${PATH}"
+

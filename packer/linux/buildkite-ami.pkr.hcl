@@ -133,6 +133,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "scripts/install-nix.sh"
+  }
+
+  provisioner "shell" {
     script = "scripts/install-kernel.sh"
   }
 
