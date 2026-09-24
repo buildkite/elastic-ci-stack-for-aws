@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Internal
 - Always build and test final AMIs on this v6 backport branch, including release tags, to retain Agent v3 and avoid reusing Agent v4 images from `main`.
 - Skip test-stack deletion when CloudFormation confirms the stack does not exist, so cleanup does not add failures when an earlier CI failure prevented stack creation.
+- Skip service-role cleanup when deployment never set its metadata, and avoid early-exit pipelines flagged by ShellCheck in tag, signing-key, and mount checks.
 
 ## [v6.71.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.4) (2026-09-09)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.3...v6.71.4)
