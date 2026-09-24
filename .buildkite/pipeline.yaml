@@ -1,5 +1,3 @@
-dag: true
-
 x-if-changed-patterns:
   - &if_changed_base_linux
     include:
@@ -14,77 +12,6 @@ x-if-changed-patterns:
       - "packer/windows/shared/**"
       - ".buildkite/steps/packer.sh"
       - "Makefile"
-
-  - &if_changed_stack_linux
-    include:
-      - "packer/linux/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - "Makefile"
-      - "internal/**"
-      - "goss.yaml"
-      - "goss.ubuntu2404.yaml"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_stack_windows
-    include:
-      - "packer/windows/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - "Makefile"
-      - "internal/**"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_launch_test_delete_linux
-    include:
-      - "packer/linux/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - ".buildkite/steps/launch.sh"
-      - "templates/**"
-      - "Makefile"
-      - "internal/**"
-      - "goss.yaml"
-      - "goss.ubuntu2404.yaml"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_launch_test_delete_windows
-    include:
-      - "packer/windows/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - ".buildkite/steps/launch.sh"
-      - "templates/**"
-      - "Makefile"
-      - "internal/**"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_deploy_service_role
-    include:
-      - "packer/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - ".buildkite/steps/launch.sh"
-      - ".buildkite/steps/delete.sh"
-      - ".buildkite/steps/deploy-service-role-stack.sh"
-      - "templates/**"
-      - "Makefile"
-      - "internal/**"
-      - "goss.yaml"
-      - "goss.ubuntu2404.yaml"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-
 
 steps:
   - group: ":lint-roller: Linting"
@@ -131,29 +58,6 @@ steps:
           run: fixperms-tests
           config: .buildkite/docker-compose.yml
 
-  - id: "deploy-service-role-stack"
-    name: ":aws-iam: :cloudformation:"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    command: .buildkite/steps/deploy-service-role-stack.sh
-    if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
-    depends_on:
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - &aws_role_plugin
-        aws-assume-role-with-web-identity#v1.7.0:
-          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
-          session-tags:
-            - organization_slug
-            - organization_id
-            - pipeline_slug
-
-  # ============================================================
-  # Windows AMD64
-  # ============================================================
-
   - id: "packer-base-windows-amd64"
     name: ":packer: :windows: (base)"
     command: ".buildkite/steps/packer.sh windows amd64 base"
@@ -167,76 +71,13 @@ steps:
       - "linting"
       - "fixperms-tests"
     plugins:
-      - *aws_role_plugin
-
-  - id: "packer-windows-amd64"
-    name: ":packer: :windows:"
-    command: .buildkite/steps/packer.sh windows
-    timeout_in_minutes: 60
-    env:
-      AMI_PUBLIC: true
-    retry: { automatic: { limit: 3 } }
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_stack_windows
-    depends_on:
-      - "packer-base-windows-amd64"
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "launch-windows-amd64"
-    name: ":cloudformation: :windows: AMD64 Launch"
-    command:
-      - .buildkite/steps/ensure_ami_metadata.py windows amd64
-      - .buildkite/steps/launch.sh windows amd64
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_windows
-    depends_on:
-      - "packer-windows-amd64"
-      - "deploy-service-role-stack"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "test-windows-amd64"
-    name: ":cloudformation: :windows: AMD64 Test"
-    command:
-      - aws --version
-      - jq --version
-      - git --version
-      - buildkite-agent --version
-      - docker info
-      - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
-    timeout_in_minutes: 5
-    agents:
-      stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_windows
-    depends_on:
-      - "launch-windows-amd64"
-
-  - id: "delete-windows-amd64"
-    name: ":cloudformation: :windows: AMD64 Delete"
-    command: .buildkite/steps/delete.sh windows amd64
-    allow_dependency_failure: true
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_windows
-    depends_on:
-      - "test-windows-amd64"
-    plugins:
-      - *aws_role_plugin
-
-  # ============================================================
-  # Linux AMD64
-  # ============================================================
+      - &aws_role_plugin
+        aws-assume-role-with-web-identity#v1.7.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
 
   - id: "packer-base-linux-amd64"
     name: ":packer: :linux: AMD64 (base)"
@@ -253,75 +94,6 @@ steps:
     plugins:
       - *aws_role_plugin
 
-  - id: "packer-linux-amd64"
-    name: ":packer: :linux: AMD64"
-    command: .buildkite/steps/packer.sh linux
-    timeout_in_minutes: 60
-    env:
-      AMI_PUBLIC: true
-    retry: { automatic: { limit: 3 } }
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
-    depends_on:
-      - "packer-base-linux-amd64"
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "launch-linux-amd64"
-    name: ":cloudformation: :linux: AMD64 Launch"
-    command:
-      - .buildkite/steps/ensure_ami_metadata.py linux amd64
-      - .buildkite/steps/launch.sh linux
-    retry: { automatic: { limit: 3 } }
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "packer-linux-amd64"
-      - "deploy-service-role-stack"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "test-linux-amd64"
-    name: ":cloudformation: :linux: AMD64 Test"
-    command:
-      - aws --version
-      - jq --version
-      - git --version
-      - sudo goss validate --format documentation
-    timeout_in_minutes: 5
-    retry: { automatic: { limit: 3 } }
-    agents:
-      stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "launch-linux-amd64"
-
-  - id: "delete-linux-amd64"
-    name: ":cloudformation: :linux: AMD64 Delete"
-    command: .buildkite/steps/delete.sh linux amd64
-    allow_dependency_failure: true
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "test-linux-amd64"
-    plugins:
-      - *aws_role_plugin
-
-  # ============================================================
-  # Linux ARM64
-  # ============================================================
-
   - id: "packer-base-linux-arm64"
     name: ":packer: :linux: ARM64 (base)"
     command: ".buildkite/steps/packer.sh linux arm64 base"
@@ -337,73 +109,6 @@ steps:
     plugins:
       - *aws_role_plugin
 
-  - id: "packer-linux-arm64"
-    name: ":packer: :linux: ARM64"
-    command: .buildkite/steps/packer.sh linux arm64
-    timeout_in_minutes: 60
-    env:
-      AMI_PUBLIC: true
-    retry: { automatic: { limit: 3 } }
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
-    depends_on:
-      - "packer-base-linux-arm64"
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "launch-linux-arm64"
-    name: ":cloudformation: :linux: ARM64 Launch"
-    command:
-      - .buildkite/steps/ensure_ami_metadata.py linux arm64
-      - .buildkite/steps/launch.sh linux arm64
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "packer-linux-arm64"
-      - "deploy-service-role-stack"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "test-linux-arm64"
-    name: ":cloudformation: :linux: ARM64 Test"
-    command:
-      - aws --version
-      - jq --version
-      - git --version
-      - sudo goss validate --format documentation
-    retry: { automatic: { limit: 3 } }
-    timeout_in_minutes: 5
-    agents:
-      stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "launch-linux-arm64"
-
-  - id: "delete-linux-arm64"
-    name: ":cloudformation: :linux: ARM64 Delete"
-    command: .buildkite/steps/delete.sh linux arm64
-    allow_dependency_failure: true
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "test-linux-arm64"
-    plugins:
-      - *aws_role_plugin
-
-  # ============================================================
-  # Ubuntu 24.04 AMD64
-  # ============================================================
   - id: "packer-base-ubuntu2404-amd64"
     name: ":packer: :ubuntu: AMD64 (base)"
     command: ".buildkite/steps/packer.sh ubuntu2404 amd64 base"
@@ -419,78 +124,6 @@ steps:
     plugins:
       - *aws_role_plugin
 
-  - id: "packer-ubuntu2404-amd64"
-    name: ":packer: :ubuntu: AMD64"
-    command: .buildkite/steps/packer.sh ubuntu2404 amd64
-    timeout_in_minutes: 60
-    env:
-      AMI_PUBLIC: true
-    retry: { automatic: { limit: 3 } }
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
-    depends_on:
-      - "packer-base-ubuntu2404-amd64"
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "launch-ubuntu2404-amd64"
-    name: ":cloudformation: :ubuntu: AMD64 Launch"
-    command:
-      - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 amd64
-      - .buildkite/steps/launch.sh ubuntu2404 amd64
-    retry: { automatic: { limit: 3 } }
-    # Ubuntu's image is larger than AL2023: the 10GB test default leaves under the
-    # 5GiB docker-low-disk-gc cutoff free, which marks the fresh instance unhealthy.
-    env:
-      ROOT_VOLUME_SIZE: "20"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "packer-ubuntu2404-amd64"
-      - "deploy-service-role-stack"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "test-ubuntu2404-amd64"
-    name: ":cloudformation: :ubuntu: AMD64 Test"
-    command:
-      - aws --version
-      - jq --version
-      - git --version
-      - sudo goss -g goss.ubuntu2404.yaml validate --format documentation
-    retry: { automatic: { limit: 3 } }
-    timeout_in_minutes: 5
-    agents:
-      stack: "buildkite-aws-stack-test-ubuntu2404-amd64-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-ubuntu2404-amd64-${BUILDKITE_BUILD_NUMBER}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "launch-ubuntu2404-amd64"
-
-  - id: "delete-ubuntu2404-amd64"
-    name: ":cloudformation: :ubuntu: AMD64 Delete"
-    command: .buildkite/steps/delete.sh ubuntu2404 amd64
-    allow_dependency_failure: true
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "test-ubuntu2404-amd64"
-    plugins:
-      - *aws_role_plugin
-
-  # ============================================================
-  # Ubuntu 24.04 ARM64
-  # ============================================================
   - id: "packer-base-ubuntu2404-arm64"
     name: ":packer: :ubuntu: ARM64 (base)"
     command: ".buildkite/steps/packer.sh ubuntu2404 arm64 base"
@@ -505,78 +138,6 @@ steps:
       - "fixperms-tests"
     plugins:
       - *aws_role_plugin
-
-  - id: "packer-ubuntu2404-arm64"
-    name: ":packer: :ubuntu: ARM64"
-    command: .buildkite/steps/packer.sh ubuntu2404 arm64
-    timeout_in_minutes: 60
-    env:
-      AMI_PUBLIC: true
-    retry: { automatic: { limit: 3 } }
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
-    depends_on:
-      - "packer-base-ubuntu2404-arm64"
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "launch-ubuntu2404-arm64"
-    name: ":cloudformation: :ubuntu: ARM64 Launch"
-    command:
-      - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 arm64
-      - .buildkite/steps/launch.sh ubuntu2404 arm64
-    # Ubuntu's image is larger than AL2023: the 10GB test default leaves under the
-    # 5GiB docker-low-disk-gc cutoff free, which marks the fresh instance unhealthy.
-    env:
-      ROOT_VOLUME_SIZE: "20"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "packer-ubuntu2404-arm64"
-      - "deploy-service-role-stack"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "test-ubuntu2404-arm64"
-    name: ":cloudformation: :ubuntu: ARM64 Test"
-    command:
-      - aws --version
-      - jq --version
-      - git --version
-      - sudo goss -g goss.ubuntu2404.yaml validate --format documentation
-    retry: { automatic: { limit: 3 } }
-    timeout_in_minutes: 5
-    agents:
-      stack: "buildkite-aws-stack-test-ubuntu2404-arm64-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-ubuntu2404-arm64-${BUILDKITE_BUILD_NUMBER}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "launch-ubuntu2404-arm64"
-
-  - id: "delete-ubuntu2404-arm64"
-    name: ":cloudformation: :ubuntu: ARM64 Delete"
-    command: .buildkite/steps/delete.sh ubuntu2404 arm64
-    allow_dependency_failure: true
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "test-ubuntu2404-arm64"
-    plugins:
-      - *aws_role_plugin
-
-  # ============================================================
-  # Linux AMD64 CIS-hardened variant
-  # ============================================================
 
   - id: "packer-base-linux-amd64-cis"
     name: ":packer: :linux: AMD64 CIS (base)"
@@ -593,139 +154,32 @@ steps:
     plugins:
       - *aws_role_plugin
 
-  - id: "packer-linux-amd64-cis"
-    name: ":packer: :linux: AMD64 CIS"
-    command: .buildkite/steps/packer.sh linux amd64 stack-cis
-    timeout_in_minutes: 60
-    env:
-      AMI_PUBLIC: false
-    retry: { automatic: { limit: 3 } }
+  # Only the stack pipeline bypasses change filtering on release tags. Its
+  # existing dependencies still wait for any base AMIs selected above.
+  - label: ":pipeline: Stack build"
+    key: upload-stack
+    if: build.source != "schedule" && build.tag == null
+    command: buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
     depends_on:
-      - "packer-base-linux-amd64-cis"
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
+      - linting
+      - fixperms-tests
 
-  - id: "launch-linux-amd64-cis"
-    name: ":cloudformation: :linux: AMD64 CIS Launch"
-    command:
-      - .buildkite/steps/ensure_ami_metadata.py linux amd64 cis
-      - .buildkite/steps/launch.sh linux amd64 cis
-    retry: { automatic: { limit: 3 } }
-    env:
-      ROOT_VOLUME_SIZE: "15"
+  - label: ":pipeline: Release build"
+    key: upload-release
+    if: build.source != "schedule" && build.tag != null
+    command: |
+      set -euo pipefail
+      git check-ref-format "refs/tags/$${BUILDKITE_TAG}"
+      git fetch origin "refs/tags/$${BUILDKITE_TAG}:refs/tags/$${BUILDKITE_TAG}"
+      if [[ "$$(git rev-parse "refs/tags/$${BUILDKITE_TAG}^{commit}")" != "$$(git rev-parse HEAD)" ]]; then
+        echo "Release tag $${BUILDKITE_TAG} does not match the checked-out commit" >&2
+        exit 1
+      fi
+      buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml --apply-if-changed=false
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/aws-stack.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
-      - "packer-linux-amd64-cis"
-      - "deploy-service-role-stack"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "test-linux-amd64-cis"
-    name: ":cloudformation: :linux: AMD64 CIS Test"
-    command:
-      - aws --version
-      - jq --version
-      - git --version
-      - sudo goss validate --format documentation
-    timeout_in_minutes: 5
-    retry: { automatic: { limit: 3 } }
-    agents:
-      stack: "buildkite-aws-stack-test-linux-amd64-cis-${BUILDKITE_BUILD_NUMBER}"
-      queue: "testqueue-linux-amd64-cis-${BUILDKITE_BUILD_NUMBER}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "launch-linux-amd64-cis"
-
-  - id: "delete-linux-amd64-cis"
-    name: ":cloudformation: :linux: AMD64 CIS Delete"
-    command: .buildkite/steps/delete.sh linux amd64 cis
-    allow_dependency_failure: true
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
-    depends_on:
-      - "test-linux-amd64-cis"
-    plugins:
-      - *aws_role_plugin
-
-  # ============================================================
-  # Post-test: service role cleanup, copy, publish, cleanup
-  # ============================================================
-
-  - id: "delete-service-role-stack"
-    name: ":aws-iam: :cloudformation: Delete"
-    command: .buildkite/steps/delete-service-role-stack.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
-    depends_on:
-      - "delete-windows-amd64"
-      - "delete-linux-amd64"
-      - "delete-linux-arm64"
-      - "delete-ubuntu2404-amd64"
-      - "delete-ubuntu2404-arm64"
-      - "delete-linux-amd64-cis"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "copy-ami"
-    name: ":cloudformation: 🚚 🌎"
-    command:
-      - .buildkite/steps/ensure_ami_metadata.py linux amd64
-      - .buildkite/steps/ensure_ami_metadata.py linux arm64
-      - .buildkite/steps/ensure_ami_metadata.py windows amd64
-      - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 amd64
-      - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 arm64
-      - .buildkite/steps/copy.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    artifact_paths: "build/mappings.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
-    depends_on:
-      - "test-linux-amd64"
-      - "test-linux-arm64"
-      - "test-windows-amd64"
-      - "test-ubuntu2404-amd64"
-      - "test-ubuntu2404-arm64"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "publish"
-    name: ":cloudformation: :rocket:"
-    command: .buildkite/steps/publish.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    concurrency_group: "aws-stack-publish"
-    concurrency: 1
-    concurrency_method: eager
-    artifact_paths: "build/*.yml"
-    if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
-    depends_on: "copy-ami"
-    plugins:
-      - *aws_role_plugin
-
-  - id: cleanup
-    name: ":broom: Cleanup"
-    command: .buildkite/steps/cleanup.sh
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
-    depends_on: "publish"
-    plugins:
-      - *aws_role_plugin
+      - linting
+      - fixperms-tests
