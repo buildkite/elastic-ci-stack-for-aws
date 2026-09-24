@@ -1,5 +1,8 @@
 dag: true
 
+# This v6 backport always builds and tests final AMIs before publication, even
+# for an empty tag diff. Skipping Packer would reuse main's Agent v4 images.
+# Unchanged base images can still use the existing cache; they contain no agent.
 x-if-changed-patterns:
   - &if_changed_base_linux
     include:
@@ -14,77 +17,6 @@ x-if-changed-patterns:
       - "packer/windows/shared/**"
       - ".buildkite/steps/packer.sh"
       - "Makefile"
-
-  - &if_changed_stack_linux
-    include:
-      - "packer/linux/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - "Makefile"
-      - "internal/**"
-      - "goss.yaml"
-      - "goss.ubuntu2404.yaml"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_stack_windows
-    include:
-      - "packer/windows/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - "Makefile"
-      - "internal/**"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_launch_test_delete_linux
-    include:
-      - "packer/linux/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - ".buildkite/steps/launch.sh"
-      - "templates/**"
-      - "Makefile"
-      - "internal/**"
-      - "goss.yaml"
-      - "goss.ubuntu2404.yaml"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_launch_test_delete_windows
-    include:
-      - "packer/windows/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - ".buildkite/steps/launch.sh"
-      - "templates/**"
-      - "Makefile"
-      - "internal/**"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-  - &if_changed_deploy_service_role
-    include:
-      - "packer/**"
-      - "plugins/**"
-      - ".buildkite/steps/packer.sh"
-      - ".buildkite/steps/launch.sh"
-      - ".buildkite/steps/delete.sh"
-      - ".buildkite/steps/deploy-service-role-stack.sh"
-      - "templates/**"
-      - "Makefile"
-      - "internal/**"
-      - "goss.yaml"
-      - "goss.ubuntu2404.yaml"
-    exclude:
-      - "**/*.md"
-      - "**/README*"
-
-
 
 steps:
   - group: ":lint-roller: Linting"
@@ -137,7 +69,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     command: .buildkite/steps/deploy-service-role-stack.sh
     if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -179,7 +110,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_stack_windows
     depends_on:
       - "packer-base-windows-amd64"
       - "linting"
@@ -196,7 +126,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_windows
     depends_on:
       - "packer-windows-amd64"
       - "deploy-service-role-stack"
@@ -216,7 +145,6 @@ steps:
       stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_windows
     depends_on:
       - "launch-windows-amd64"
 
@@ -227,7 +155,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_windows
     depends_on:
       - "test-windows-amd64"
     plugins:
@@ -262,7 +189,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-base-linux-amd64"
       - "linting"
@@ -280,7 +206,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "packer-linux-amd64"
       - "deploy-service-role-stack"
@@ -300,7 +225,6 @@ steps:
       stack: "buildkite-aws-stack-test-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-amd64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "launch-linux-amd64"
 
@@ -311,7 +235,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "test-linux-amd64"
     plugins:
@@ -346,7 +269,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-base-linux-arm64"
       - "linting"
@@ -363,7 +285,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "packer-linux-arm64"
       - "deploy-service-role-stack"
@@ -383,7 +304,6 @@ steps:
       stack: "buildkite-aws-stack-test-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-arm64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "launch-linux-arm64"
 
@@ -394,7 +314,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "test-linux-arm64"
     plugins:
@@ -428,7 +347,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-base-ubuntu2404-amd64"
       - "linting"
@@ -450,7 +368,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "packer-ubuntu2404-amd64"
       - "deploy-service-role-stack"
@@ -470,7 +387,6 @@ steps:
       stack: "buildkite-aws-stack-test-ubuntu2404-amd64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-ubuntu2404-amd64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "launch-ubuntu2404-amd64"
 
@@ -481,7 +397,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "test-ubuntu2404-amd64"
     plugins:
@@ -515,7 +430,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-base-ubuntu2404-arm64"
       - "linting"
@@ -536,7 +450,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "packer-ubuntu2404-arm64"
       - "deploy-service-role-stack"
@@ -556,7 +469,6 @@ steps:
       stack: "buildkite-aws-stack-test-ubuntu2404-arm64-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-ubuntu2404-arm64-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "launch-ubuntu2404-arm64"
 
@@ -567,7 +479,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "test-ubuntu2404-arm64"
     plugins:
@@ -602,7 +513,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_stack_linux
     depends_on:
       - "packer-base-linux-amd64-cis"
       - "linting"
@@ -622,7 +532,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "packer-linux-amd64-cis"
       - "deploy-service-role-stack"
@@ -642,7 +551,6 @@ steps:
       stack: "buildkite-aws-stack-test-linux-amd64-cis-${BUILDKITE_BUILD_NUMBER}"
       queue: "testqueue-linux-amd64-cis-${BUILDKITE_BUILD_NUMBER}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "launch-linux-amd64-cis"
 
@@ -653,7 +561,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_launch_test_delete_linux
     depends_on:
       - "test-linux-amd64-cis"
     plugins:
@@ -669,7 +576,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
     depends_on:
       - "delete-windows-amd64"
       - "delete-linux-amd64"
@@ -693,7 +599,6 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/mappings.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
     depends_on:
       - "test-linux-amd64"
       - "test-linux-arm64"
@@ -713,7 +618,6 @@ steps:
     concurrency_method: eager
     artifact_paths: "build/*.yml"
     if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
     depends_on: "copy-ami"
     plugins:
       - *aws_role_plugin
@@ -724,7 +628,6 @@ steps:
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
-    if_changed: *if_changed_deploy_service_role
     depends_on: "publish"
     plugins:
       - *aws_role_plugin
