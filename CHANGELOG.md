@@ -13,7 +13,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Update buildkite-agent-scaler to [v1.14.0](https://github.com/buildkite/buildkite-agent-scaler/releases/tag/v1.14.0) for both Lambda architectures. This fixes double-decrementing desired capacity during Linux Elastic CI graceful scale-in, which could strand stopped agents at `MinSize` or prematurely terminate instances with running jobs when scale-in protection was disabled.
 
 ### Internal
-- Always build and test final AMIs on this v6 backport branch, including release tags, to retain Agent v3 and avoid reusing Agent v4 images from `main`.
 - Skip test-stack deletion when CloudFormation confirms the stack does not exist, so cleanup does not add failures when an earlier CI failure prevented stack creation.
 - Skip service-role cleanup when deployment never set its metadata, and avoid early-exit pipelines flagged by ShellCheck in tag, signing-key, and mount checks.
 
