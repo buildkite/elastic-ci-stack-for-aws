@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Fixed
+- Update buildkite-agent-scaler to [v1.14.0](https://github.com/buildkite/buildkite-agent-scaler/releases/tag/v1.14.0) for both Lambda architectures. This fixes double-decrementing desired capacity during Linux Elastic CI graceful scale-in, which could strand stopped agents at `MinSize` or prematurely terminate instances with running jobs when scale-in protection was disabled. The bundled Agent remains v4.0.3.
+- Fix metadata fetch retries exiting early because of the shell `ERR` trap [#1889](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1889).
+
+## [v7.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.0.0) (2026-09-18)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.4...v7.0.0)
+
 > **Breaking changes:** Stack v7 uses Buildkite Agent v4 and removes Agent v3 support. Before upgrading, review the [v7 upgrade guide](docs/upgrading-to-v7.md), especially if you use custom parameter files or `AgentEnvFileUrl`.
 
 ### Changed
