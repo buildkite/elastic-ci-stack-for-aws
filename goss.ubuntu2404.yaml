@@ -45,6 +45,10 @@ file:
     exists: true
     mode: "0755"
 
+  # The test stack runs with BuildkiteTerminateInstanceAfterJob=false, so the agent keeps its default restart policy.
+  /etc/systemd/system/buildkite-agent.service.d/terminate-after-job.conf:
+    exists: false
+
 port:
   tcp:22:
     listening: true
@@ -149,6 +153,12 @@ command:
 
   wget --version:
     exit-status: 0
+
+  systemctl show buildkite-agent --property=Restart,RestartForceExitStatus:
+    exit-status: 0
+    stdout:
+    - Restart=on-failure
+    - RestartForceExitStatus=PIPE
 
   # Check refresh authorized keys gear is present, but disabled.
   # disabled: The unit file is not enabled, but contains an [Install] section with installation instructions.

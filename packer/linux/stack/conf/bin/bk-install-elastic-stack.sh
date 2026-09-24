@@ -647,6 +647,21 @@ cat <<EOF | tee /etc/systemd/system/buildkite-agent.service.d/environment.conf
 Environment="BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}"
 EOF
 
+if [[ "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}" == "true" ]]; then
+  echo Writing buildkite-agent systemd terminate-after-job override...
+  # A restarted agent registers again and takes another job on this instance, so never restart it,
+  # not even after SIGPIPE. If terminate-instance fails, the unit fails and systemd powers the
+  # instance off instead: the stopped instance fails its EC2 health check and the ASG replaces it.
+  cat <<'EOF' | tee /etc/systemd/system/buildkite-agent.service.d/terminate-after-job.conf
+[Unit]
+FailureAction=poweroff
+
+[Service]
+Restart=no
+RestartForceExitStatus=
+EOF
+fi
+
 echo Reloading systemctl services...
 systemctl daemon-reload
 
