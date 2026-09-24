@@ -12,7 +12,7 @@ echo "--- :git: Checking and fetching git tags"
 # if BUILDKITE_TAG is set, fetch the tags, and check that it's a valid tag
 if [[ -n "${BUILDKITE_TAG:-}" ]]; then
   git fetch -v --tags
-  if ! git tag --list | grep -q "^${BUILDKITE_TAG}$"; then
+  if ! git show-ref --verify --quiet "refs/tags/${BUILDKITE_TAG}"; then
     echo "^^^ +++"
     echo "Tag ${BUILDKITE_TAG} does not exist"
     exit 1

@@ -10,10 +10,24 @@ else
   stack_name="buildkite-aws-stack-test-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
 fi
 
-secrets_bucket=$(aws cloudformation describe-stacks \
+describe_error=$(mktemp)
+trap 'rm -f "$describe_error"' EXIT
+
+if secrets_bucket=$(aws cloudformation describe-stacks \
   --stack-name "${stack_name}" \
   --query "Stacks[0].Outputs[?OutputKey=='ManagedSecretsBucket'].OutputValue" \
-  --output text)
+  --output text 2>"$describe_error"); then
+  cat "$describe_error" >&2
+else
+  status=$?
+  # Cleanup also runs when a failed dependency prevented stack creation.
+  if grep -Fq "(ValidationError) when calling the DescribeStacks operation: Stack with id ${stack_name} does not exist" "$describe_error"; then
+    echo "--- Stack $stack_name does not exist; nothing to delete"
+    exit 0
+  fi
+  cat "$describe_error" >&2
+  exit "$status"
+fi
 
 secrets_logging_bucket=$(aws cloudformation describe-stacks \
   --stack-name "${stack_name}" \

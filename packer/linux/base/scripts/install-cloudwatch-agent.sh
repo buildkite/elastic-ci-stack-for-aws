@@ -42,7 +42,7 @@ ubuntu2404)
   gpg --batch --import amazon-cloudwatch-agent.gpg
   if ! gpg --batch --with-colons --fingerprint \
     | awk -F: '/^fpr:/ { print $10 }' \
-    | grep -qx "$CW_KEY_FINGERPRINT"; then
+    | grep -x "$CW_KEY_FINGERPRINT" >/dev/null; then
     echo "CloudWatch agent GPG key fingerprint mismatch; refusing to install" >&2
     exit 1
   fi

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [Unreleased]
+
+### Changed
+- Update the bundled Linux and Windows agents from v3.137.2 to [v3.138.0](https://github.com/buildkite/agent/releases/tag/v3.138.0), the latest stable Agent v3 release. Stack v6's default `stable` agent uses the pinned v3 binary from the upstream `oldstable` download channel.
+
+### Fixed
+- Update buildkite-agent-scaler to [v1.14.0](https://github.com/buildkite/buildkite-agent-scaler/releases/tag/v1.14.0) for both Lambda architectures. This fixes double-decrementing desired capacity during Linux Elastic CI graceful scale-in, which could strand stopped agents at `MinSize` or prematurely terminate instances with running jobs when scale-in protection was disabled.
+
+### Internal
+- Skip test-stack deletion when CloudFormation confirms the stack does not exist, so cleanup does not add failures when an earlier CI failure prevented stack creation.
+- Skip service-role cleanup when deployment never set its metadata, and avoid early-exit pipelines flagged by ShellCheck in tag, signing-key, and mount checks.
+
 ## [v6.71.4](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.4) (2026-09-09)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.3...v6.71.4)
 
