@@ -68,33 +68,27 @@ fetch_metadata_with_retry() {
 
   echo "Fetching EC2 metadata with retry (max attempts: $max_attempts)..."
 
-  # Temporarily disable exit on error for retry logic
-  set +e
-
+  # NOTE: the curl calls must be guarded by `if` conditions rather than relying
+  # on `set +e`. With `set -E` (errtrace), the ERR trap still fires for a failed
+  # assignment using command substitution even when errexit is disabled, which
+  # would run on_error and exit the script on the first failed attempt instead
+  # of retrying.
   while [[ $attempt -le $max_attempts ]]; do
     echo "Attempt $attempt of $max_attempts to fetch metadata..."
 
     # Try to get the token
     local token
-    token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+    if token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
       --max-time "$timeout" \
       --fail --silent --show-error \
-      --location http://169.254.169.254/latest/api/token 2>&1)
-    local token_result=$?
-
-    if [[ $token_result -eq 0 ]]; then
+      --location http://169.254.169.254/latest/api/token 2>&1); then
       # Try to get the instance ID
-      INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" \
+      if INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" \
         --max-time "$timeout" \
         --fail --silent --show-error \
-        --location http://169.254.169.254/latest/meta-data/instance-id 2>&1)
-      local instance_id_result=$?
-
-      if [[ $instance_id_result -eq 0 ]]; then
+        --location http://169.254.169.254/latest/meta-data/instance-id 2>&1); then
         echo "Successfully fetched metadata on attempt $attempt"
         echo "Detected INSTANCE_ID=$INSTANCE_ID"
-        # Re-enable exit on error
-        set -e
         return 0
       else
         echo "Failed to fetch instance ID: $INSTANCE_ID"
@@ -115,9 +109,6 @@ fetch_metadata_with_retry() {
 
     attempt=$((attempt + 1))
   done
-
-  # Re-enable exit on error before returning failure
-  set -e
 
   echo "ERROR: Failed to fetch EC2 metadata after $max_attempts attempts"
   echo "This likely indicates the EC2 metadata service is unavailable or this instance has connectivity issues"
