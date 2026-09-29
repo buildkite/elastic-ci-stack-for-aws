@@ -12,7 +12,8 @@ terminate() {
 terminate_without_decrement() {
   aws autoscaling terminate-instance-in-auto-scaling-group \
     --region "$1" \
-    --instance-id "$2"
+    --instance-id "$2" \
+    --no-should-decrement-desired-capacity
 }
 
 mark_as_unhealthy() {
