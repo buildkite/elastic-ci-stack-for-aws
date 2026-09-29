@@ -6,9 +6,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## [v7.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.1.0) (2026-09-29)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.0.0...v7.1.0)
+
+### Added
+- Shut down Linux instances when the Agent stops responding for three minutes or its service fails, allowing the Auto Scaling group to replace them [#1895](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1895).
+
+### Changed
+- Update the bundled Linux and Windows Agents from v4.0.3 to v4.0.8 [#1883](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1883) [#1896](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1896).
+- Update buildkite-agent-scaler from v1.13.0 to v1.15.0. Scale-in cooldowns now survive Lambda cold starts, preventing overlapping invocations from dispatching duplicate scale-ins [#1897](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1897).
+
 ### Fixed
-- Update buildkite-agent-scaler to [v1.15.0](https://github.com/buildkite/buildkite-agent-scaler/releases/tag/v1.15.0) for both Lambda architectures. This fixes Elastic CI scale-in behavior and persists the scale-in cooldown across Lambda cold starts, preventing overlapping scaler invocations from dispatching duplicate scale-ins. The bundled Agent remains v4.0.8.
-- Fix metadata fetch retries exiting early because of the shell `ERR` trap [#1889](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1889).
+- Retry transient EC2 metadata failures instead of exiting after the first attempt [#1889](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1889).
+
+### New Contributors
+- @kurigashvili-benchling made their first contribution in [#1889](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1889).
 
 ## [v7.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.0.0) (2026-09-18)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.4...v7.0.0)
