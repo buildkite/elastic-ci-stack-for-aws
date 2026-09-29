@@ -83,6 +83,14 @@ fetch_metadata() {
 echo "sleeping for 10 seconds before terminating instance to allow agent logs to drain to cloudwatch..."
 sleep 10
 
+# A failed agent service powers off locally via FailureAction.
+# Do not let IMDS or Auto Scaling API calls delay it or decrement desired capacity.
+# Normal service exits and direct calls from job hooks still use the existing path.
+if [[ -n "${SERVICE_RESULT:-}" && "${SERVICE_RESULT}" != "success" ]]; then
+  echo "Agent service failed (${SERVICE_RESULT}); leaving instance recovery to systemd."
+  exit 0
+fi
+
 echo "fetching EC2 metadata..."
 if ! token=$(fetch_metadata "" ""); then
   echo "ERROR: Failed to fetch metadata token after retries" >&2

@@ -95,6 +95,12 @@ To enable resource limits with custom values, include these parameters in your C
 - Resource limits are disabled by default
 - Values can be specified as percentages or absolute values (for memory-related parameters)
 
+## Agent watchdog
+
+Buildkite marks agents that stop sending heartbeats as lost and fails their running jobs. On Linux, a watchdog powers off the instance after three minutes without an agent health notification. The Auto Scaling group replaces it, maintaining desired capacity.
+
+Agent service failures and out-of-memory kills within the service also trigger instance replacement, interrupting all jobs on that instance. Normal graceful shutdown lets running jobs finish.
+
 ## Scheduled Scaling
 
 The Elastic CI Stack supports time-based scaling to automatically adjust the minimum number of instances based on your team's working hours. This feature helps optimize costs by scaling down during off-hours while allowing users the ability to proactively scale up capacity ahead of expected increasing capacity requirements.
