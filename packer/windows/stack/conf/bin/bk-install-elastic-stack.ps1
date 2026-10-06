@@ -213,6 +213,9 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
 
 nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
+if ($Env:BUILDKITE_WARM_POOL_ENABLED -eq "true") {
+  nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_LAUNCHING_HOOK=WarmPoolBootstrap
+}
 Restart-Service lifecycled
 
 # wait for docker service and API to be ready
@@ -365,7 +368,11 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-Restart-Service buildkite-agent
+if ($Env:BUILDKITE_WARM_POOL_ENABLED -eq "true") {
+  Write-Output "Warm pool enabled: skipping agent start (will start on InService transition)."
+} else {
+  Restart-Service buildkite-agent
+}
 
 Write-Output "Configuring CloudWatch agent log retention..."
 if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "true") {
@@ -416,6 +423,19 @@ if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
     }
 } else {
   Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
+}
+
+if ($Env:BUILDKITE_WARM_POOL_ENABLED -eq "true" -and ![string]::IsNullOrEmpty($Env:BUILDKITE_ASG_NAME)) {
+  Write-Output "Completing warm pool lifecycle action..."
+  aws autoscaling complete-lifecycle-action `
+    --region "$Env:AWS_REGION" `
+    --auto-scaling-group-name "$Env:BUILDKITE_ASG_NAME" `
+    --lifecycle-hook-name WarmPoolBootstrap `
+    --lifecycle-action-result CONTINUE `
+    --instance-id "$Env:INSTANCE_ID" 2> $null
+  if (-not $?) {
+    Write-Output "WARNING: Failed to complete warm pool lifecycle action, continuing anyway."
+  }
 }
 
 Set-PSDebug -Off

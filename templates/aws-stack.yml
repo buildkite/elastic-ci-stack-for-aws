@@ -157,6 +157,11 @@ Metadata:
         - ScaleUpMinSize
         - ScaleDownSchedule
         - ScaleDownMinSize
+        - WarmPoolEnabled
+        - WarmPoolState
+        - WarmPoolBootstrapTimeout
+        - WarmPoolMinSize
+        - WarmPoolMaxGroupPreparedCapacity
 
       - Label:
           default: Cost Allocation Configuration
@@ -331,6 +336,42 @@ Parameters:
     Type: Number
     Default: 0
     MinValue: 0
+
+  WarmPoolEnabled:
+    Type: String
+    Description: Enable ASG warm pool to keep pre-initialized instances ready for faster job starts.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  WarmPoolState:
+    Type: String
+    Description: State of instances in the warm pool. Stopped is cheapest. Running avoids OS boot time on scale-out. Hibernated balances cost and speed (requires hibernation-enabled AMI).
+    AllowedValues:
+      - Stopped
+      - Running
+      - Hibernated
+    Default: Stopped
+
+  WarmPoolBootstrapTimeout:
+    Type: Number
+    Description: Seconds to wait for bootstrap to complete before abandoning the warm pool instance. Increase if your bootstrap script takes longer than 15 minutes.
+    Default: 900
+    MinValue: 60
+    MaxValue: 3600
+
+  WarmPoolMinSize:
+    Type: Number
+    Description: Minimum number of pre-initialized instances to keep in the warm pool.
+    Default: 0
+    MinValue: 0
+
+  WarmPoolMaxGroupPreparedCapacity:
+    Type: Number
+    Description: Maximum total prepared capacity (warm pool + active). Set to -1 to use the difference between MaxSize and DesiredCapacity.
+    MinValue: -1
+    Default: -1
 
   ScaleOutCooldownPeriod:
     Description: Cooldown period in seconds before allowing another scale-out event. Prevents rapid scaling and reduces costs from frequent instance launches.
@@ -1641,6 +1682,12 @@ Conditions:
         - !Condition HasVariableSize
         - !Not [ !Condition IsLambdaArchitectureArm64 ]
 
+    WarmPoolEnabled:
+      !Equals [ !Ref WarmPoolEnabled, "true" ]
+
+    WarmPoolMaxPreparedCapacitySet:
+      !Not [ !Equals [ !Ref WarmPoolMaxGroupPreparedCapacity, -1 ] ]
+
 Mappings:
   ECRManagedPolicy:
     none                  : { Policy: '' }
@@ -2149,6 +2196,7 @@ Resources:
           - Sid: TerminateInstance
             Effect: Allow
             Action:
+              - autoscaling:CompleteLifecycleAction
               - autoscaling:SetInstanceHealth
               - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
@@ -2457,6 +2505,8 @@ Resources:
                   $Env:AWS_REGION="${AWS::Region}"
                   $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
                   $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
+                  $Env:BUILDKITE_WARM_POOL_ENABLED="${WarmPoolEnabled}"
+                  $Env:BUILDKITE_ASG_NAME="${AgentAutoScaleGroup}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
                 - LocalSecretsBucket: !If
@@ -2573,6 +2623,8 @@ Resources:
                   RESOURCE_LIMITS_IO_WEIGHT="${ResourceLimitsIOWeight}" \
                   ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}" \
                   EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}" \
+                  BUILDKITE_WARM_POOL_ENABLED="${WarmPoolEnabled}" \
+                  BUILDKITE_ASG_NAME="${AgentAutoScaleGroup}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If
@@ -2767,6 +2819,26 @@ Resources:
       Recurrence: !Ref ScaleDownSchedule
       MinSize: !Ref ScaleDownMinSize
       TimeZone: !Ref ScheduleTimezone
+
+  AgentWarmPool:
+    Condition: WarmPoolEnabled
+    Type: AWS::AutoScaling::WarmPool
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      MinSize: !Ref WarmPoolMinSize
+      MaxGroupPreparedCapacity: !If [ WarmPoolMaxPreparedCapacitySet, !Ref WarmPoolMaxGroupPreparedCapacity, !Ref "AWS::NoValue" ]
+      PoolState: !Ref WarmPoolState
+
+  WarmPoolBootstrapLifecycleHook:
+    Condition: WarmPoolEnabled
+    DependsOn: AgentWarmPool
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      LifecycleHookName: WarmPoolBootstrap
+      LifecycleTransition: "autoscaling:EC2_INSTANCE_LAUNCHING"
+      DefaultResult: ABANDON
+      HeartbeatTimeout: !Ref WarmPoolBootstrapTimeout
 
   AsgProcessSuspenderRole:
     Type: AWS::IAM::Role

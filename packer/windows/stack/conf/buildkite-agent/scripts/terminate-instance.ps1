@@ -5,6 +5,13 @@ $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-m
 $InstanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
 $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
 
+$LifecycleState = (aws autoscaling describe-auto-scaling-instances --region "$Region" --instance-ids "$InstanceId" --query 'AutoScalingInstances[0].LifecycleState' --output text 2> $null)
+if ($LifecycleState -like "Warmed:*") {
+  Write-Output "$(Get-Date) terminate-instance: instance is in warm pool (state: $LifecycleState), skipping termination."
+  Stop-Transcript
+  exit 0
+}
+
 Write-Output "$(Get-Date) terminate-instance: requesting instance termination..."
 aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
 

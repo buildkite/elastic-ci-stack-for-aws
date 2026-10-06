@@ -571,6 +571,7 @@ cat <<EOF | tee /etc/lifecycled
 AWS_REGION=$AWS_REGION
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
+$(if [[ "${BUILDKITE_WARM_POOL_ENABLED:-false}" == "true" ]]; then echo "LIFECYCLED_LAUNCHING_HOOK=WarmPoolBootstrap"; fi)
 EOF
 
 echo Starting lifecycled...
@@ -651,7 +652,12 @@ echo Reloading systemctl services...
 systemctl daemon-reload
 
 echo Starting buildkite-agent...
-systemctl enable --now buildkite-agent
+if [[ "${BUILDKITE_WARM_POOL_ENABLED:-false}" == "true" ]]; then
+  echo "Warm pool enabled: enabling buildkite-agent without starting (will start on InService transition)."
+  systemctl enable buildkite-agent
+else
+  systemctl enable --now buildkite-agent
+fi
 
 echo Configuring CloudWatch agent log retention...
 if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
@@ -690,6 +696,18 @@ if [[ "${BUILDKITE_STACK_DEPLOYED_BY:-}" == "cloudformation" ]]; then
     --exit-code 0 || echo Signal failed
 else
   echo "Skipping cfn-signal (not deployed by CloudFormation)"
+fi
+
+if [[ "${BUILDKITE_WARM_POOL_ENABLED:-false}" == "true" && -n "${BUILDKITE_ASG_NAME:-}" ]]; then
+  echo "Completing warm pool lifecycle action..."
+  if ! aws autoscaling complete-lifecycle-action \
+    --region "$AWS_REGION" \
+    --auto-scaling-group-name "$BUILDKITE_ASG_NAME" \
+    --lifecycle-hook-name WarmPoolBootstrap \
+    --lifecycle-action-result CONTINUE \
+    --instance-id "$INSTANCE_ID"; then
+    echo "WARNING: Failed to complete warm pool lifecycle action, continuing anyway."
+  fi
 fi
 
 # Record bootstrap as complete (this should be the last step in this file)
