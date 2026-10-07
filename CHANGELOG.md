@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.3.0) (2026-10-07)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.2.0...v7.3.0)
+
+### Changed
+- Update buildkite-agent to v4.2.1 [#1903](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1903) (@renovate[bot])
+
+### Internal
+- Update changelog with v7.2.0 [#1901](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1901) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.2.0–v4.2.1)</h3></summary>
+
+### [v4.2.1](https://github.com/buildkite/agent/releases/tag/v4.2.1)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### ✨ Added
+* Show warnings sent by Buildkite, such as agent version support notices, at startup and in job logs by @moskyb in https://github.com/buildkite/agent/pull/4452
+* Add `buildkite-agent cache exec` to skip a command when its result is already cached by @ss1909 in https://github.com/buildkite/agent/pull/4436
+##### 🐛 Fixed
+* Run repository hooks from the job's working directory, so monorepos can keep hooks in subdirectories by @jamiemonserrate in https://github.com/buildkite/agent/pull/4441
+##### 🏠 Internal
+* Stop publishing releases from the 2022 deploytools image by @moskyb in https://github.com/buildkite/agent/pull/4454
+* Fix copying release binaries to /latest after the move to aws-cli v2 by @moskyb in https://github.com/buildkite/agent/pull/4456
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.2.0...v4.2.1
+
+### [v4.2.0](https://github.com/buildkite/agent/releases/tag/v4.2.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### ✨ Added
+* Add `--git-fetch-base-branch` (`BUILDKITE_GIT_FETCH_BASE_BRANCH`) to fetch the base branch during checkout, so commands in the job diff against its current tip by @jasonwbarnett in https://github.com/buildkite/agent/pull/4285
+##### 🏠 Internal
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4444 and https://github.com/buildkite/agent/pull/4450
+* Trigger agent overlay images from stable releases by @buildkate in https://github.com/buildkite/agent/pull/4443
+
+#### New Contributors
+* @jasonwbarnett made their first contribution in https://github.com/buildkite/agent/pull/4285
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.1.0...v4.2.0
+
+</details>
+
+
+
 ## [Unreleased]
 
 ## [v7.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.2.0) (2026-10-01)
