@@ -347,11 +347,13 @@ Parameters:
 
   WarmPoolState:
     Type: String
-    Description: State of instances in the warm pool. Stopped is cheapest. Running avoids OS boot time on scale-out. Hibernated balances cost and speed (requires hibernation-enabled AMI).
+    Description: >
+      State of instances in the warm pool. Stopped is cheapest. Running avoids OS boot time on scale-out.
+      Hibernated is not currently offered: it additionally requires HibernationOptions in the launch template
+      and an encrypted EBS root volume, and may be supported in a future update.
     AllowedValues:
       - Stopped
       - Running
-      - Hibernated
     Default: Stopped
 
   WarmPoolBootstrapTimeout:
@@ -363,13 +365,18 @@ Parameters:
 
   WarmPoolMinSize:
     Type: Number
-    Description: Minimum number of pre-initialized instances to keep in the warm pool.
+    Description: >
+      Minimum number of instances to keep pre-initialized in the warm pool at all times.
+      This is a floor, not a cap - the pool can grow up to MaxGroupPreparedCapacity.
     Default: 0
     MinValue: 0
 
   WarmPoolMaxGroupPreparedCapacity:
     Type: Number
-    Description: Maximum total prepared capacity (warm pool + active). Set to -1 to use the difference between MaxSize and DesiredCapacity.
+    Description: >
+      Maximum total prepared capacity (warm pool + active). Set to -1 to use MaxSize minus DesiredCapacity -
+      WARNING: with a high MaxSize this can pre-provision many instances and incur significant cost
+      (EBS storage for a Stopped pool, full compute for a Running one). Set an explicit value to cap the pool size.
     MinValue: -1
     Default: -1
 
@@ -1262,6 +1269,17 @@ Rules:
               - !Ref PipelineSigningKMSKeySpec
               - "none"
         AssertDescription: "You must provide either a PipelineSigningKMSKeyId, or select a PipelineSigningKMSKeySpec, but not both"
+  WarmPoolRequiresOnDemand:
+    RuleCondition:
+      !Equals
+        - !Ref WarmPoolEnabled
+        - "true"
+    Assertions:
+      - Assert:
+          !Equals
+            - !Ref OnDemandPercentage
+            - "100"
+        AssertDescription: "Warm pools do not support Spot Instances in a mixed instances group. Set OnDemandPercentage to 100 when WarmPoolEnabled is true"
 
 Outputs:
   VpcId:
@@ -2505,8 +2523,6 @@ Resources:
                   $Env:AWS_REGION="${AWS::Region}"
                   $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
                   $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
-                  $Env:BUILDKITE_WARM_POOL_ENABLED="${WarmPoolEnabled}"
-                  $Env:BUILDKITE_ASG_NAME="${AgentAutoScaleGroup}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
                 - LocalSecretsBucket: !If
@@ -2623,8 +2639,6 @@ Resources:
                   RESOURCE_LIMITS_IO_WEIGHT="${ResourceLimitsIOWeight}" \
                   ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}" \
                   EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}" \
-                  BUILDKITE_WARM_POOL_ENABLED="${WarmPoolEnabled}" \
-                  BUILDKITE_ASG_NAME="${AgentAutoScaleGroup}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If

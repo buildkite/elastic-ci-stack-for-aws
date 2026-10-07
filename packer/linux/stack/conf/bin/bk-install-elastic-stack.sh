@@ -571,7 +571,6 @@ cat <<EOF | tee /etc/lifecycled
 AWS_REGION=$AWS_REGION
 LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 LIFECYCLED_CLOUDWATCH_GROUP=/buildkite/lifecycled
-$(if [[ "${BUILDKITE_WARM_POOL_ENABLED:-false}" == "true" ]]; then echo "LIFECYCLED_LAUNCHING_HOOK=WarmPoolBootstrap"; fi)
 EOF
 
 echo Starting lifecycled...
@@ -652,11 +651,23 @@ echo Reloading systemctl services...
 systemctl daemon-reload
 
 echo Starting buildkite-agent...
-if [[ "${BUILDKITE_WARM_POOL_ENABLED:-false}" == "true" ]]; then
-  echo "Warm pool enabled: enabling buildkite-agent without starting (will start on InService transition)."
-  systemctl enable buildkite-agent
-else
+# An instance headed for the warm pool must not take jobs while parked. Which way this
+# instance is headed is per-launch, so read it from IMDS rather than the stack parameter:
+# a cold start or an empty warm pool goes straight to InService and must start now.
+TARGET_LIFECYCLE_STATE=$(curl -sf \
+  -H "X-aws-ec2-metadata-token: $(curl -sf -X PUT \
+    -H 'X-aws-ec2-metadata-token-ttl-seconds: 30' \
+    http://169.254.169.254/latest/api/token)" \
+  http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state || echo InService)
+
+if [[ "$TARGET_LIFECYCLE_STATE" == "InService" ]]; then
   systemctl enable --now buildkite-agent
+else
+  # Deliberately left disabled: a Stopped warm pool instance boots while still paused at
+  # Pending:Wait, and an enabled unit would take jobs before the lifecycle hook completes.
+  # warm-pool-watcher starts the agent once IMDS reports InService.
+  echo "Target lifecycle state is ${TARGET_LIFECYCLE_STATE}, deferring agent start to the InService transition."
+  systemctl enable --now warm-pool-watcher.service
 fi
 
 echo Configuring CloudWatch agent log retention...
@@ -698,16 +709,11 @@ else
   echo "Skipping cfn-signal (not deployed by CloudFormation)"
 fi
 
-if [[ "${BUILDKITE_WARM_POOL_ENABLED:-false}" == "true" && -n "${BUILDKITE_ASG_NAME:-}" ]]; then
-  echo "Completing warm pool lifecycle action..."
-  if ! aws autoscaling complete-lifecycle-action \
-    --region "$AWS_REGION" \
-    --auto-scaling-group-name "$BUILDKITE_ASG_NAME" \
-    --lifecycle-hook-name WarmPoolBootstrap \
-    --lifecycle-action-result CONTINUE \
-    --instance-id "$INSTANCE_ID"; then
-    echo "WARNING: Failed to complete warm pool lifecycle action, continuing anyway."
-  fi
+# Only the Warmed:Pending:Wait pause is completed here. The instance pauses a second time at
+# Pending:Wait when it leaves the pool, by which point this script has already run to
+# completion and short-circuits on the status file, so warm-pool-watcher completes that one.
+if [[ "$TARGET_LIFECYCLE_STATE" != "InService" ]]; then
+  /usr/local/bin/complete-warm-pool-lifecycle-action
 fi
 
 # Record bootstrap as complete (this should be the last step in this file)

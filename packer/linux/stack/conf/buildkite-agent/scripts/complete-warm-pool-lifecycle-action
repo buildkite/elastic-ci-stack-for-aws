@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+
+token=$(curl -sf -X PUT \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 30" \
+  http://169.254.169.254/latest/api/token)
+
+instance_id=$(curl -sf \
+  -H "X-aws-ec2-metadata-token: $token" \
+  http://169.254.169.254/latest/meta-data/instance-id)
+
+region=$(curl -sf \
+  -H "X-aws-ec2-metadata-token: $token" \
+  http://169.254.169.254/latest/meta-data/placement/region)
+
+asg_name=$(aws autoscaling describe-auto-scaling-instances \
+  --region "$region" \
+  --instance-ids "$instance_id" \
+  --query 'AutoScalingInstances[0].AutoScalingGroupName' \
+  --output text)
+
+if [[ -z "$asg_name" || "$asg_name" == "None" ]]; then
+  echo "WARNING: Could not resolve Auto Scaling group name, skipping lifecycle action."
+  exit 0
+fi
+
+echo "Completing warm pool lifecycle action for ${instance_id} in ${asg_name}..."
+if ! aws autoscaling complete-lifecycle-action \
+  --region "$region" \
+  --auto-scaling-group-name "$asg_name" \
+  --lifecycle-hook-name WarmPoolBootstrap \
+  --lifecycle-action-result CONTINUE \
+  --instance-id "$instance_id"; then
+  echo "WARNING: Failed to complete warm pool lifecycle action, continuing anyway."
+fi

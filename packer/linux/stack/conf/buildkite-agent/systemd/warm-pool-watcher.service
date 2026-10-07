@@ -1,0 +1,13 @@
+[Unit]
+Description=Buildkite Warm Pool Watcher
+Documentation=https://docs.aws.amazon.com/autoscaling/ec2/userguide/warm-pool-instance-lifecycle.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/local/bin/warm-pool-watcher
+
+[Install]
+WantedBy=multi-user.target

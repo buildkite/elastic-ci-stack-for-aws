@@ -108,19 +108,6 @@ if ! region=$(fetch_metadata "http://169.254.169.254/latest/meta-data/placement/
   exit 1
 fi
 
-lifecycle_state=$(
-  aws autoscaling describe-auto-scaling-instances \
-    --region "$region" \
-    --instance-ids "$instance_id" \
-    --query 'AutoScalingInstances[0].LifecycleState' \
-    --output text 2>/dev/null || true
-)
-
-if [[ "$lifecycle_state" == Warmed:* ]]; then
-  echo "Instance is in warm pool (state: $lifecycle_state), skipping termination."
-  exit 0
-fi
-
 echo "requesting instance termination..."
 # Try to terminate with capacity decrement first
 if terminate "$region" "$instance_id"; then

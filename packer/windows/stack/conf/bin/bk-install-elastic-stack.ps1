@@ -213,9 +213,6 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
 
 nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
-if ($Env:BUILDKITE_WARM_POOL_ENABLED -eq "true") {
-  nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_LAUNCHING_HOOK=WarmPoolBootstrap
-}
 Restart-Service lifecycled
 
 # wait for docker service and API to be ready
@@ -368,10 +365,39 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-if ($Env:BUILDKITE_WARM_POOL_ENABLED -eq "true") {
-  Write-Output "Warm pool enabled: skipping agent start (will start on InService transition)."
-} else {
+# An instance headed for the warm pool must not take jobs while parked. Which way this
+# instance is headed is per-launch, so read it from IMDS rather than the stack parameter:
+# a cold start or an empty warm pool goes straight to InService and must start now.
+$Token = (Invoke-WebRequest -UseBasicParsing -Method Put `
+  -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '30'} `
+  http://169.254.169.254/latest/api/token).content
+try {
+  $TargetLifecycleState = (Invoke-WebRequest -UseBasicParsing `
+    -Headers @{'X-aws-ec2-metadata-token' = $Token} `
+    http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state).content
+} catch {
+  $TargetLifecycleState = "InService"
+}
+
+if ($TargetLifecycleState -eq "InService") {
   Restart-Service buildkite-agent
+} else {
+  # nssm install defaults to automatic start, so the service is switched to manual here:
+  # a Stopped warm pool instance boots while still paused at Pending:Wait, and an
+  # automatic service would take jobs before the lifecycle hook completes.
+  Write-Output "Target lifecycle state is $TargetLifecycleState, deferring agent start to the InService transition."
+  nssm set buildkite-agent Start SERVICE_DEMAND_START
+
+  # Registered as a startup task, not just launched here: a Stopped warm pool instance is
+  # powered off and Windows user data has no <persist> tag, so nothing would re-run on the
+  # boot where the instance actually leaves the pool.
+  $WatcherAction = New-ScheduledTaskAction -Execute "powershell.exe" `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\buildkite-agent\bin\warm-pool-watcher.ps1"
+  $WatcherTrigger = New-ScheduledTaskTrigger -AtStartup
+  $WatcherPrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
+  Register-ScheduledTask -TaskName "BuildkiteWarmPoolWatcher" `
+    -Action $WatcherAction -Trigger $WatcherTrigger -Principal $WatcherPrincipal -Force
+  Start-ScheduledTask -TaskName "BuildkiteWarmPoolWatcher"
 }
 
 Write-Output "Configuring CloudWatch agent log retention..."
@@ -425,17 +451,11 @@ if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
   Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
 }
 
-if ($Env:BUILDKITE_WARM_POOL_ENABLED -eq "true" -and ![string]::IsNullOrEmpty($Env:BUILDKITE_ASG_NAME)) {
-  Write-Output "Completing warm pool lifecycle action..."
-  aws autoscaling complete-lifecycle-action `
-    --region "$Env:AWS_REGION" `
-    --auto-scaling-group-name "$Env:BUILDKITE_ASG_NAME" `
-    --lifecycle-hook-name WarmPoolBootstrap `
-    --lifecycle-action-result CONTINUE `
-    --instance-id "$Env:INSTANCE_ID" 2> $null
-  if (-not $?) {
-    Write-Output "WARNING: Failed to complete warm pool lifecycle action, continuing anyway."
-  }
+# Only the Warmed:Pending:Wait pause is completed here. The instance pauses a second time at
+# Pending:Wait when it leaves the pool, by which point this script has already run and Windows
+# user data does not re-run, so warm-pool-watcher completes that one.
+if ($TargetLifecycleState -ne "InService") {
+  powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
 }
 
 Set-PSDebug -Off

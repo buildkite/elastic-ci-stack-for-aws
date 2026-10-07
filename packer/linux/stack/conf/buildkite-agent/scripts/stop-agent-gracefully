@@ -8,11 +8,7 @@ LIFECYCLE_TRANSITION=${1:-}
 
 echo "Stopping buildkite-agent gracefully due to the lifecycle transition: ${LIFECYCLE_TRANSITION}"
 
-if [[ $LIFECYCLE_TRANSITION = "autoscaling:EC2_INSTANCE_LAUNCHING" ]]; then
-  echo "Instance transitioning to InService, starting buildkite-agent..."
-  systemctl start buildkite-agent
-  exit $?
-elif [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
+if [[ $LIFECYCLE_TRANSITION = "ec2:SPOT_INSTANCE_TERMINATION" ]]; then
   # Send SIGTERM to the main buildkite-agent process in a non-blocking manner
   # to start a graceful shutdown
   systemctl kill --kill-who=main --signal=SIGTERM buildkite-agent
