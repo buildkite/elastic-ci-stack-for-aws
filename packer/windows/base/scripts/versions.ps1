@@ -6,7 +6,7 @@ $AWS_CLI_WINDOWS_VERSION = "2.36.37"
 $SESSION_MANAGER_PLUGIN_VERSION = "1.2.835.0"
 
 # Development Tools
-$GIT_VERSION = "2.54.0"
+$GIT_VERSION = "2.55.0"
 
 # Container Tools
 $docker_compose_version = "5.6.0"
