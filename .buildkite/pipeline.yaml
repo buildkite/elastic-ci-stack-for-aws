@@ -127,7 +127,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
     plugins:
-      - docker-compose#v5.12.1:
+      - docker-compose#v5.15.0:
           run: fixperms-tests
           config: .buildkite/docker-compose.yml
 
