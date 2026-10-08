@@ -49,12 +49,26 @@ if [[ "$PREVIOUS_AGENT_VERSION" != "$CURRENT_AGENT_VERSION" ]]; then
   fi
 
   # Emit newest hop first to match chronological changelog order in reverse
-  AGENT_CHANGELOG_SECTION=""
-  for AGENT_VERSION in $(echo "$AGENT_VERSIONS" | sort -rV); do
+  AGENT_VERSIONS=$(echo "$AGENT_VERSIONS" | sort -rV)
+  NEWEST_AGENT_VERSION=$(echo "$AGENT_VERSIONS" | head -n 1)
+  OLDEST_AGENT_VERSION=$(echo "$AGENT_VERSIONS" | tail -n 1)
+  AGENT_VERSION_RANGE="v${NEWEST_AGENT_VERSION}"
+  if [[ "$OLDEST_AGENT_VERSION" != "$NEWEST_AGENT_VERSION" ]]; then
+    AGENT_VERSION_RANGE="v${OLDEST_AGENT_VERSION}–v${NEWEST_AGENT_VERSION}"
+  fi
+
+  # Combine every hop into a single collapsible section with a heading per version.
+  # Upstream notes are kept verbatim, with headings demoted two levels so they nest
+  # under the version heading.
+  AGENT_CHANGELOG_SECTION="<details>\n<summary><h3>Agent Changelog (${AGENT_VERSION_RANGE})</h3></summary>\n\n"
+  for AGENT_VERSION in $AGENT_VERSIONS; do
     echo "--- Fetching agent release notes for v${AGENT_VERSION}"
-    AGENT_RELEASE_NOTES=$(gh release view "v${AGENT_VERSION}" --repo "buildkite/agent" --json body -q .body)
-    AGENT_CHANGELOG_SECTION+="<details>\n  <summary><h3>Agent Changelog (v${AGENT_VERSION})</h3></summary>\n\n${AGENT_RELEASE_NOTES}\n</details>\n"
+    AGENT_RELEASE_NOTES=$(gh release view "v${AGENT_VERSION}" --repo "buildkite/agent" --json body -q .body \
+      | tr -d '\r' \
+      | sed -E 's/^(#+) /\1## /')
+    AGENT_CHANGELOG_SECTION+="### [v${AGENT_VERSION}](https://github.com/buildkite/agent/releases/tag/v${AGENT_VERSION})\n\n${AGENT_RELEASE_NOTES}\n\n"
   done
+  AGENT_CHANGELOG_SECTION+="</details>"
   CHANGELOG_BODY+="\n\n${AGENT_CHANGELOG_SECTION}"
 fi
 
