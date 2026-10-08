@@ -21,9 +21,13 @@ while true; do
 
   case "$state" in
   InService)
-    echo "Target lifecycle state is InService, starting buildkite-agent..."
-    systemctl start buildkite-agent
+    # The hook is completed before the agent starts, so a failure here cannot leave an agent
+    # taking jobs while the hook times out and ABANDON terminates the instance mid-job. If the
+    # agent then fails to start, buildkite-agent.service has FailureAction=poweroff-force.
+    echo "Target lifecycle state is InService, completing lifecycle action..."
     /usr/local/bin/complete-warm-pool-lifecycle-action
+    echo "Starting buildkite-agent..."
+    systemctl start buildkite-agent
     exit 0
     ;;
   Warmed:*)

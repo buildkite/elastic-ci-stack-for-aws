@@ -2836,6 +2836,9 @@ Resources:
 
   AgentWarmPool:
     Condition: WarmPoolEnabled
+    # The hook must exist before the pool, otherwise instances entering the pool are not paused
+    # and Auto Scaling stops them without waiting for user data to finish.
+    DependsOn: WarmPoolBootstrapLifecycleHook
     Type: AWS::AutoScaling::WarmPool
     Properties:
       AutoScalingGroupName: !Ref AgentAutoScaleGroup
@@ -2845,7 +2848,6 @@ Resources:
 
   WarmPoolBootstrapLifecycleHook:
     Condition: WarmPoolEnabled
-    DependsOn: AgentWarmPool
     Type: AWS::AutoScaling::LifecycleHook
     Properties:
       AutoScalingGroupName: !Ref AgentAutoScaleGroup

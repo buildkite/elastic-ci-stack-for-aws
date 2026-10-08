@@ -26,9 +26,13 @@ while ($true) {
   }
 
   if ($State -eq "InService") {
-    Write-Output "Target lifecycle state is InService, starting buildkite-agent..."
-    Start-Service buildkite-agent
+    # The hook is completed before the agent starts, so a failure here cannot leave an agent
+    # taking jobs while the hook times out and ABANDON terminates the instance mid-job.
+    Write-Output "Target lifecycle state is InService, completing lifecycle action..."
     powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
+
+    Write-Output "Starting buildkite-agent..."
+    Start-Service buildkite-agent
     break
   } elseif ($State -like "Warmed:*") {
     Start-Sleep -Seconds 5

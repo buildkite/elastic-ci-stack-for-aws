@@ -368,18 +368,52 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 # An instance headed for the warm pool must not take jobs while parked. Which way this
 # instance is headed is per-launch, so read it from IMDS rather than the stack parameter:
 # a cold start or an empty warm pool goes straight to InService and must start now.
-$Token = (Invoke-WebRequest -UseBasicParsing -Method Put `
-  -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '30'} `
-  http://169.254.169.254/latest/api/token).content
-try {
-  $TargetLifecycleState = (Invoke-WebRequest -UseBasicParsing `
-    -Headers @{'X-aws-ec2-metadata-token' = $Token} `
-    http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state).content
-} catch {
-  $TargetLifecycleState = "InService"
+#
+# AWS recommends polling this and retrying on errors, since a single transient failure that
+# fell back to InService would start an agent on a pool-bound instance and skip the hook.
+# See https://docs.aws.amazon.com/autoscaling/ec2/userguide/retrieving-target-lifecycle-state-through-imds.html
+function Get-TargetLifecycleState {
+  $MaxAttempts = 5
+  $WaitSeconds = 1
+
+  for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
+    try {
+      $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -TimeoutSec 5 `
+        -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} `
+        http://169.254.169.254/latest/api/token).content
+
+      return (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 `
+        -Headers @{'X-aws-ec2-metadata-token' = $Token} `
+        http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state).content
+    } catch {
+      # A 404 means the item is absent rather than unavailable: this ASG has no warm pool,
+      # so the instance is headed straight into service and retrying would not change that.
+      if ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 404) {
+        Write-Output "No target-lifecycle-state in metadata (no warm pool on this group), assuming InService."
+        return "InService"
+      }
+
+      Write-Output "Attempt $Attempt of $MaxAttempts to fetch target-lifecycle-state failed: $($_.Exception.Message)"
+      if ($Attempt -lt $MaxAttempts) {
+        Start-Sleep -Seconds $WaitSeconds
+        $WaitSeconds = [Math]::Min($WaitSeconds * 2, 30)
+      }
+    }
+  }
+
+  Write-Output "WARNING: Could not read target-lifecycle-state after $MaxAttempts attempts, assuming InService."
+  return "InService"
 }
 
+$TargetLifecycleState = Get-TargetLifecycleState
+Write-Output "Detected TargetLifecycleState=$TargetLifecycleState"
+
+# The hook pauses the instance at Pending:Wait on the way into service and, for a pool-bound
+# instance, again at Warmed:Pending:Wait. Both pauses are completed before the agent can take
+# jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
 if ($TargetLifecycleState -eq "InService") {
+  powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
+
   Restart-Service buildkite-agent
 } else {
   # nssm install defaults to automatic start, so the service is switched to manual here:
@@ -398,6 +432,10 @@ if ($TargetLifecycleState -eq "InService") {
   Register-ScheduledTask -TaskName "BuildkiteWarmPoolWatcher" `
     -Action $WatcherAction -Trigger $WatcherTrigger -Principal $WatcherPrincipal -Force
   Start-ScheduledTask -TaskName "BuildkiteWarmPoolWatcher"
+
+  # Completed last on this path so the watcher is already running before Auto Scaling is free
+  # to stop the instance and park it in the pool.
+  powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
 }
 
 Write-Output "Configuring CloudWatch agent log retention..."
@@ -449,13 +487,6 @@ if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
     }
 } else {
   Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
-}
-
-# Only the Warmed:Pending:Wait pause is completed here. The instance pauses a second time at
-# Pending:Wait when it leaves the pool, by which point this script has already run and Windows
-# user data does not re-run, so warm-pool-watcher completes that one.
-if ($TargetLifecycleState -ne "InService") {
-  powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
 }
 
 Set-PSDebug -Off
