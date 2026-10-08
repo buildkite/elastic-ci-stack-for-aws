@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.4.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.4.0) (2026-10-08)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.3.0...v7.4.0)
+
+### Changed
+- Update buildkite-agent to v4.3.0 [#1911](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1911) (@renovate[bot])
+- Combine Agent release notes into one changelog section [#1912](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1912) (@scadu)
+- Update aws-cli to v2.37.10 [#1907](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1907) (@renovate[bot])
+
+<details>
+<summary><h3>Agent Changelog (v4.3.0)</h3></summary>
+
+### [v4.3.0](https://github.com/buildkite/agent/releases/tag/v4.3.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### ✨ Added
+* Add `--git-mirrors-lfs-cache` (off by default) to cache Git LFS objects in Git mirrors, so checkouts on the same host don't download them again by @zhming0 in https://github.com/buildkite/agent/pull/4408
+##### 🐛 Fixed
+* Stop cache invalidation from deleting a cache entry that another job has just saved again by @ss1909 in https://github.com/buildkite/agent/pull/4442
+##### 🔧 Changed
+* Title replayed output "Cache exec saved" instead of "Cache hit saved" when `buildkite-agent cache exec` skips a command by @ss1909 in https://github.com/buildkite/agent/pull/4462
+* Skip the upload in `buildkite-agent cache save` when the cache store already has an identical archive by @buildkate in https://github.com/buildkite/agent/pull/4463
+##### 🏠 Internal
+* Speed up release jobs by building the release tools image once per build by @moskyb in https://github.com/buildkite/agent/pull/4457
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.2.1...v4.3.0
+
+</details>
+
+
 ## [v7.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.3.0) (2026-10-07)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.2.0...v7.3.0)
 
@@ -51,9 +83,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 </details>
 
-
-
-## [Unreleased]
 
 ## [v7.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.2.0) (2026-10-01)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.1.0...v7.2.0)
