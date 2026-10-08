@@ -54,7 +54,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
     plugins:
-      - docker-compose#v5.12.1:
+      - docker-compose#v5.15.0:
           run: fixperms-tests
           config: .buildkite/docker-compose.yml
 
@@ -72,7 +72,7 @@ steps:
       - "fixperms-tests"
     plugins:
       - &aws_role_plugin
-        aws-assume-role-with-web-identity#v1.7.0:
+        aws-assume-role-with-web-identity#v1.8.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
           session-tags:
             - organization_slug

@@ -30,14 +30,14 @@ steps:
       # - "me-south-1" – me-south-1 and me-central-1 are now (March 24, 2026) affected by military conflicts in the Middle East. me-south-1 is affected by the drone attack – https://web.archive.org/web/20260324134102/https://www.heise.de/en/news/AWS-New-disruptions-at-data-centers-in-Bahrain-after-drone-activity-11222079.html. Check https://status.aws.amazon.com/rss/multipleservices-me-south-1.rss for the current status.
       - "sa-east-1"
     plugins:
-      - aws-assume-role-with-web-identity#v1.7.0:
+      - aws-assume-role-with-web-identity#v1.8.0:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-elastic-stack-for-aws-ami-cleaner
           session-tags:
             - organization_slug
             - organization_id
             - pipeline_slug
             - build_branch
-      - docker-compose#v5.12.1:
+      - docker-compose#v5.15.0:
           run: ruby
           config: .buildkite/docker-compose.yml
           propagate-aws-auth-tokens: true

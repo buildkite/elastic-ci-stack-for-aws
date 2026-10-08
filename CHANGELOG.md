@@ -4,7 +4,104 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.3.0) (2026-10-07)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.2.0...v7.3.0)
+
+### Changed
+- Update buildkite-agent to v4.2.1 [#1903](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1903) (@renovate[bot])
+
+### Internal
+- Update changelog with v7.2.0 [#1901](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1901) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.2.0–v4.2.1)</h3></summary>
+
+### [v4.2.1](https://github.com/buildkite/agent/releases/tag/v4.2.1)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### ✨ Added
+* Show warnings sent by Buildkite, such as agent version support notices, at startup and in job logs by @moskyb in https://github.com/buildkite/agent/pull/4452
+* Add `buildkite-agent cache exec` to skip a command when its result is already cached by @ss1909 in https://github.com/buildkite/agent/pull/4436
+##### 🐛 Fixed
+* Run repository hooks from the job's working directory, so monorepos can keep hooks in subdirectories by @jamiemonserrate in https://github.com/buildkite/agent/pull/4441
+##### 🏠 Internal
+* Stop publishing releases from the 2022 deploytools image by @moskyb in https://github.com/buildkite/agent/pull/4454
+* Fix copying release binaries to /latest after the move to aws-cli v2 by @moskyb in https://github.com/buildkite/agent/pull/4456
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.2.0...v4.2.1
+
+### [v4.2.0](https://github.com/buildkite/agent/releases/tag/v4.2.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### ✨ Added
+* Add `--git-fetch-base-branch` (`BUILDKITE_GIT_FETCH_BASE_BRANCH`) to fetch the base branch during checkout, so commands in the job diff against its current tip by @jasonwbarnett in https://github.com/buildkite/agent/pull/4285
+##### 🏠 Internal
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4444 and https://github.com/buildkite/agent/pull/4450
+* Trigger agent overlay images from stable releases by @buildkate in https://github.com/buildkite/agent/pull/4443
+
+#### New Contributors
+* @jasonwbarnett made their first contribution in https://github.com/buildkite/agent/pull/4285
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.1.0...v4.2.0
+
+</details>
+
+
+
 ## [Unreleased]
+
+## [v7.2.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.2.0) (2026-10-01)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.1.0...v7.2.0)
+
+### Changed
+- Update the bundled Linux and Windows Agents from v4.0.8 to v4.1.0. This includes Agent v4.0.9, which redacts Buildkite tokens by prefix in job logs, and fixes intermittent Windows crashes caused by process handles being closed twice [#1900](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1900).
+
+### Fixed
+- Fix the Linux instance termination fallback that keeps desired capacity. It now passes `--no-should-decrement-desired-capacity`, so the AWS CLI no longer rejects the request and the Auto Scaling group replaces the instance [#1899](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1899).
+
+<details>
+<summary><h3>Agent Changelog (v4.0.9–v4.1.0)</h3></summary>
+
+### [v4.1.0](https://github.com/buildkite/agent/releases/tag/v4.1.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### 🐛 Fixed
+* Fix intermittent Windows crashes caused by process handles being closed twice by @moskyb in https://github.com/buildkite/agent/pull/4432
+##### 🔧 Changed
+* Report cache save and restore timings and sizes to Buildkite when `buildkite-agent cache save` and `buildkite-agent cache restore` complete by @buildkate in https://github.com/buildkite/agent/pull/4434
+* Add `buildkite.commit`, `buildkite.pull_request` and `buildkite.build_author` tracing attributes to job spans and OpenTelemetry resource attributes by @silesky in https://github.com/buildkite/agent/pull/4435
+##### 🏠 Internal
+* Source release notes from release PR description by @moskyb in https://github.com/buildkite/agent/pull/4429
+* Check backports against the v3 backport policy by @moskyb in https://github.com/buildkite/agent/pull/4433
+
+#### New Contributors
+* @silesky made their first contribution in https://github.com/buildkite/agent/pull/4435
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.0.9...v4.1.0
+
+### [v4.0.9](https://github.com/buildkite/agent/releases/tag/v4.0.9)
+
+<!-- Release notes generated using configuration in .github/release.yml at cd9a22c5d61ba439698c843527fe4e6ea6dbdae7 -->
+
+#### What's Changed
+##### 🔒 Security
+* A-1975: Redact Buildkite tokens by prefix in job logs by @zhming0 in https://github.com/buildkite/agent/pull/4425
+##### 🐛 Fixed
+* A-1915: Close the job log tmpfile once the job is done, not when the process exits by @zhming0 in https://github.com/buildkite/agent/pull/4422
+##### 🏠 Internal
+* Make the release skill use semver more effectively by @moskyb in https://github.com/buildkite/agent/pull/4428
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.0.8...v4.0.9
+
+</details>
 
 ## [v7.1.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.1.0) (2026-09-29)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.0.0...v7.1.0)
@@ -21,6 +118,109 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### New Contributors
 - @kurigashvili-benchling made their first contribution in [#1889](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1889).
+
+<details>
+<summary><h3>Agent Changelog (v4.0.4–v4.0.8)</h3></summary>
+
+### [v4.0.8](https://github.com/buildkite/agent/releases/tag/v4.0.8)
+
+<!-- Release notes generated using configuration in .github/release.yml at 8ba2456fdd43a2908725b7e8a7095aa5682a27e2 -->
+
+#### What's Changed
+##### 🔒 Security
+* Bump go-pipeline to v0.18.1 by @blaknite in https://github.com/buildkite/agent/pull/4413
+##### 🐛 Fixed
+* Redact captured job errors using the job’s registered secrets by @123sarahj123 in https://github.com/buildkite/agent/pull/4409
+* Fix agent API leader ping leak with runaway file descriptors by @valkum in https://github.com/buildkite/agent/pull/4411
+##### 🔧 Changed
+* Enable capture-error without an experiment flag by @hannahcancode in https://github.com/buildkite/agent/pull/4423
+##### 🏠 Internal
+* build(deps): bump github.com/urfave/cli/v3 from 3.12.0 to 3.13.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4414
+* build(deps): bump cloud.google.com/go/compute/metadata from 0.9.1 to 0.10.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4418
+* build(deps): bump cloud.google.com/go/kms from 1.34.0 to 1.35.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4417
+
+#### New Contributors
+* @valkum made their first contribution in https://github.com/buildkite/agent/pull/4411
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.0.7...v4.0.8
+
+### [v4.0.7](https://github.com/buildkite/agent/releases/tag/v4.0.7)
+
+<!-- Release notes generated using configuration in .github/release.yml at 06c2ff1b72e10967271fc63eebefb43da441beda -->
+
+#### What's Changed
+##### ✨ Added
+* Show cache restore keys, scopes, and policy outcomes in build logs by @ss1909 in https://github.com/buildkite/agent/pull/4401
+* Support provider-specific Git usernames for repository credentials by @sj26 in https://github.com/buildkite/agent/pull/4376
+##### 🐛 Fixed
+* Preserve Linux mount points during cache restore by @ss1909 in https://github.com/buildkite/agent/pull/4404
+* Explain cache cleanup failures on shared targets by @ss1909 in https://github.com/buildkite/agent/pull/4405
+##### 🏠 Internal
+* A-1899: add regression tests for annotation body whitespace preservation by @zhming0 in https://github.com/buildkite/agent/pull/4407
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.0.6...v4.0.7
+
+### [v4.0.6](https://github.com/buildkite/agent/releases/tag/v4.0.6)
+
+<!-- Release notes generated using configuration in .github/release.yml at 1c05d7686fb55bc166b75dd61e36e004fbc6c269 -->
+
+#### What's Changed
+##### 🐛 Fixed
+* A-1869: Mask username-only Git tokens in logs and spans by @zhming0 in https://github.com/buildkite/agent/pull/4400
+##### 🏠 Internal
+* Add experimental job error capture by @hannahcancode in https://github.com/buildkite/agent/pull/4399
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.0.5...v4.0.6
+
+### [v4.0.5](https://github.com/buildkite/agent/releases/tag/v4.0.5)
+
+<!-- Release notes generated using configuration in .github/release.yml at fd8331c7689af67576a5977d312ecf57053b6630 -->
+
+#### What's Changed
+##### 🐛 Fixed
+* SUP-8144: Fix Windows SSH key path corruption in GIT_SSH_COMMAND by @tomowatt in https://github.com/buildkite/agent/pull/4381
+* fix(cache): regenerate ZIP64 metadata when copying entries by @blaknite in https://github.com/buildkite/agent/pull/4377
+##### 🏠 Internal
+* Show promise-failure in job help by @123sarahj123 in https://github.com/buildkite/agent/pull/4387
+* build(deps): bump the container-images group across 4 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4388
+* build(deps): bump github.com/urfave/cli/v3 from 3.11.0 to 3.12.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4398
+* build(deps): bump cloud.google.com/go/kms from 1.33.0 to 1.34.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4396
+* build(deps): bump github.com/dustin/go-humanize from 1.0.1 to 1.1.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4397
+* build(deps): bump connectrpc.com/connect from 1.20.0 to 1.21.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4369
+* build(deps): bump cloud.google.com/go/compute/metadata from 0.9.0 to 0.9.1 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4395
+* Fix hidden subcommands appearing in help by @hannahcancode in https://github.com/buildkite/agent/pull/4386
+* Guide AI agents to use private repository for staff docs PRs by @karensawrey in https://github.com/buildkite/agent/pull/4353
+
+#### New Contributors
+* @hannahcancode made their first contribution in https://github.com/buildkite/agent/pull/4386
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.0.4...v4.0.5
+
+### [v4.0.4](https://github.com/buildkite/agent/releases/tag/v4.0.4)
+
+<!-- Release notes generated using configuration in .github/release.yml at 4d7fee22c2c0d87cd5cef31afa02c439a0e781c7 -->
+
+#### What's Changed
+##### 🐛 Fixed
+* Resolve relative submodule URLs for mirrors by @davido in https://github.com/buildkite/agent/pull/4287
+* Avoid blob filtering sparse reference-mirror checkouts by @maschwenk in https://github.com/buildkite/agent/pull/4358
+* Avoid SSH version warnings when SSH is not installed by @buildkate in https://github.com/buildkite/agent/pull/4379
+* Set last hook exit status for unwrapped hooks by @francoiscampbell in https://github.com/buildkite/agent/pull/4286
+##### 🏠 Internal
+* Remove the agent xgboost metadata experiment by @pda in https://github.com/buildkite/agent/pull/4357
+* build(deps): bump the container-images group across 2 directories with 1 update by @dependabot[bot] in https://github.com/buildkite/agent/pull/4361
+* build(deps): bump github.com/lestrrat-go/jwx/v3 from 3.2.0 to 3.3.0 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4368
+* build(deps): bump the cloud-providers group with 10 updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4367
+
+#### New Contributors
+* @davido made their first contribution in https://github.com/buildkite/agent/pull/4287
+* @maschwenk made their first contribution in https://github.com/buildkite/agent/pull/4358
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.0.3...v4.0.4
+
+</details>
 
 ## [v7.0.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.0.0) (2026-09-18)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.4...v7.0.0)
