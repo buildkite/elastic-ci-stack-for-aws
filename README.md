@@ -228,6 +228,12 @@ make packer-base-ubuntu2404-arm64.output packer-ubuntu2404-arm64.output
 
 **Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
+### Release builds
+
+Branch and PR builds use `if_changed` to select affected AMI builds and tests.
+Pushing a release tag builds and tests all final AMIs and publishes the
+CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
+
 ## Support Policy
 
 We provide support for security and bug fixes on the current major release only.
