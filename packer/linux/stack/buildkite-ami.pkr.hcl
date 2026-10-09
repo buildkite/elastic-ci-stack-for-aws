@@ -115,12 +115,19 @@ source "amazon-ebs" "elastic-ci-stack-ami" {
     delete_on_termination = true
   }
 
+  # The amazon plugin also copies run_tags to the AMI and its snapshots. `tags`
+  # below overwrites Name, BuildNumber and Purpose there, but ManagedBy stays,
+  # so never select builders by ManagedBy alone.
   run_tags = {
-    Name = "Packer Builder" // marks resources for deletion in cleanup.sh
+    Name        = "Packer Builder" // cleanup.sh and cleanup-packer.sh match builders on this
+    ManagedBy   = "elastic-ci-stack-for-aws"
+    Purpose     = "disposable-ci"
+    BuildNumber = var.build_number
   }
 
   tags = {
     Name         = var.is_cis ? "${local.component}-linux-${var.arch}" : "elastic-ci-stack-linux-${var.os_distro}-${var.arch}"
+    Purpose      = "ami"
     OSVersion    = local.os_version
     Distro       = var.os_distro
     BuildNumber  = var.build_number

@@ -80,7 +80,7 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_insecure = true
   winrm_use_ssl  = true
   winrm_port     = 5986
-  winrm_timeout  = "60m"
+  winrm_timeout  = "20m"
   winrm_username = "Administrator"
 
   launch_block_device_mappings {
@@ -90,8 +90,19 @@ source "amazon-ebs" "elastic-ci-stack" {
     delete_on_termination = true
   }
 
+  # The amazon plugin also copies run_tags to the AMI and its snapshots. `tags`
+  # below overwrites Name, BuildNumber and Purpose there, but ManagedBy stays,
+  # so never select builders by ManagedBy alone.
+  run_tags = {
+    Name        = "Packer Builder" // cleanup.sh and cleanup-packer.sh match builders on this
+    ManagedBy   = "elastic-ci-stack-for-aws"
+    Purpose     = "disposable-ci"
+    BuildNumber = var.build_number
+  }
+
   tags = {
     Name         = "elastic-ci-stack-windows"
+    Purpose      = "ami"
     OSVersion    = "Windows Server 2022"
     BuildNumber  = var.build_number
     AgentVersion = var.agent_version

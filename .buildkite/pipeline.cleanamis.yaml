@@ -1,11 +1,11 @@
 # Pipeline: https://buildkite.com/buildkite/elastic-stack-for-aws-ami-cleaner
+# Set DRY_RUN to preview; leave it unset to delete. See .buildkite/README.md.
 steps:
   - name: ":broom: Delete AMIs ({{matrix}})"
     command: .buildkite/steps/clean-old-amis
     agents:
       queue: "oss-deploy"
     env:
-      # DRY_RUN: true
       AWS_REGION: "{{matrix}}"
     # list of regions should match .buildkite/steps/copy.sh
     matrix:
@@ -42,3 +42,21 @@ steps:
           config: .buildkite/docker-compose.yml
           propagate-aws-auth-tokens: true
           mount-buildkite-agent: true
+
+  # Tagged builders older than 24h only; AMIs and snapshots are untouched.
+  # Runs on the host: Bash 4+, AWS CLI v2 and GNU date required.
+  - name: ":broom: Terminate abandoned Packer builders (us-east-1)"
+    command: .buildkite/steps/cleanup-packer.sh
+    timeout_in_minutes: 15
+    agents:
+      queue: "oss-deploy"
+    env:
+      AWS_REGION: "us-east-1"
+    plugins:
+      - aws-assume-role-with-web-identity#v1.8.0:
+          role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-elastic-stack-for-aws-ami-cleaner
+          session-tags:
+            - organization_slug
+            - organization_id
+            - pipeline_slug
+            - build_branch

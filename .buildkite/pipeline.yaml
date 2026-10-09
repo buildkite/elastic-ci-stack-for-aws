@@ -48,6 +48,16 @@ steps:
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
+      - name: ":broom: Cleanup tests"
+        command:
+          - .buildkite/steps/test-cleanup-scripts.sh
+        agents:
+          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+        plugins:
+          - docker-compose#v5.15.0:
+              run: ruby
+              config: .buildkite/docker-compose.yml
+
   - id: "fixperms-tests"
     name: ":go: fixperms tests"
     agents:
