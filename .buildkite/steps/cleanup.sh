@@ -19,6 +19,11 @@ else
   cutoff_date_milli=$(date --date='-1 days' +%s%3N)
 fi
 
+failed=0
+
+# First, so failures in the cleanup below can't stop builders being reclaimed.
+"$(dirname "${BASH_SOURCE[0]}")/cleanup-packer.sh" || failed=1
+
 echo "--- Cleaning up resources older than ${cutoff_date}"
 
 echo "--- Deleting test managed secrets buckets created"
@@ -62,9 +67,4 @@ aws cloudformation describe-stacks \
   | grep -E 'buildkite-elastic-ci-stack-service-role-[[:digit:]]+' \
   | xargs -n1 -t -I% aws cloudformation delete-stack --stack-name "%"
 
-echo "--- Deleting old packer builders"
-aws ec2 describe-instances \
-  --filters "Name=tag:Name,Values=Packer Builder" \
-  --query "$(printf 'Reservations[].Instances[?LaunchTime<`%s`].[InstanceId]' "$cutoff_date")" \
-  --output text \
-  | xargs -n1 -t -I% aws ec2 terminate-instances --instance-ids "%"
+exit "$failed"
