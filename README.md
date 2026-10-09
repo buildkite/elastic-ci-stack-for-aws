@@ -245,7 +245,9 @@ CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`
 
 ## Support Policy
 
-We provide support for security and bug fixes on the current major release only.
+We provide support for security and bug fixes on the current major release (v7) only.
+Security fixes will also be backported to v6. New features and non-security bug
+fixes will not be backported to v6.
 
 If there are any changes in the main branch since the last tagged release, we
 aim to publish a new tagged release of this template at the end of each month.
