@@ -650,8 +650,99 @@ EOF
 echo Reloading systemctl services...
 systemctl daemon-reload
 
-echo Starting buildkite-agent...
-systemctl enable --now buildkite-agent
+# An instance headed for the warm pool must not take jobs while parked. On a stack with a
+# warm pool, which way this instance is headed is per-launch, so read it from IMDS rather
+# than assuming the pool: a cold start or an empty warm pool goes straight to InService and
+# must start now.
+#
+# AWS recommends polling this and retrying on errors, since a single transient failure that
+# fell back to InService would start an agent on a pool-bound instance and skip the hook.
+# See https://docs.aws.amazon.com/autoscaling/ec2/userguide/retrieving-target-lifecycle-state-through-imds.html
+fetch_target_lifecycle_state() {
+  local max_attempts=5
+  local timeout=2
+  local wait_time=1
+  local max_wait=30
+  local attempt=1
+  local token http_code
+
+  # As in fetch_metadata_with_retry, the curl calls are guarded by `if` rather than `set +e`,
+  # because the ERR trap still fires for a failed command substitution assignment under `set -E`.
+  while [[ $attempt -le $max_attempts ]]; do
+    if token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+      --max-time "$timeout" \
+      --fail --silent --show-error \
+      --location http://169.254.169.254/latest/api/token 2>&1); then
+
+      if TARGET_LIFECYCLE_STATE=$(curl -H "X-aws-ec2-metadata-token: $token" \
+        --max-time "$timeout" \
+        --fail --silent --show-error \
+        --location http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state 2>&1); then
+        echo "Detected TARGET_LIFECYCLE_STATE=$TARGET_LIFECYCLE_STATE"
+        return 0
+      fi
+
+      # A 404 means the item is absent rather than unavailable: this ASG has no warm pool,
+      # so the instance is headed straight into service and retrying would not change that.
+      if http_code=$(curl -H "X-aws-ec2-metadata-token: $token" \
+        --max-time "$timeout" \
+        --silent --output /dev/null --write-out '%{http_code}' \
+        --location http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state 2>/dev/null) \
+        && [[ "$http_code" == "404" ]]; then
+        echo "No target-lifecycle-state in metadata (no warm pool on this group), assuming InService."
+        TARGET_LIFECYCLE_STATE=InService
+        return 0
+      fi
+    fi
+
+    echo "Attempt $attempt of $max_attempts to fetch target-lifecycle-state failed."
+
+    if [[ $attempt -lt $max_attempts ]]; then
+      sleep "$wait_time"
+      wait_time=$((wait_time * 2))
+      if [[ $wait_time -gt $max_wait ]]; then
+        wait_time=$max_wait
+      fi
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  echo "WARNING: Could not read target-lifecycle-state after $max_attempts attempts, assuming InService."
+  TARGET_LIFECYCLE_STATE=InService
+}
+
+# Set on the warm path, where the lifecycle action is completed after the status file is
+# written rather than here. See the end of this script.
+COMPLETE_LIFECYCLE_ACTION_AFTER_BOOTSTRAP=false
+
+# Without a warm pool there is no lifecycle hook and no pool-bound instance, so none of the
+# IMDS and Auto Scaling calls below have anything to do. Skipping them keeps every launch of
+# a default stack free of the retries and warnings their no-op responses would produce.
+if [[ "${WARM_POOL_ENABLED:-false}" != "true" ]]; then
+  echo Starting buildkite-agent...
+  systemctl enable --now buildkite-agent
+else
+  fetch_target_lifecycle_state
+
+  # The hook pauses the instance at Pending:Wait on the way into service and, for a pool-bound
+  # instance, again at Warmed:Pending:Wait. Both pauses are completed before the agent can take
+  # jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
+  if [[ "$TARGET_LIFECYCLE_STATE" == "InService" ]]; then
+    /usr/local/bin/complete-warm-pool-lifecycle-action
+
+    echo Starting buildkite-agent...
+    systemctl enable --now buildkite-agent
+  else
+    # Deliberately left disabled: a Stopped warm pool instance boots while still paused at
+    # Pending:Wait, and an enabled unit would take jobs before the lifecycle hook completes.
+    # warm-pool-watcher starts the agent once IMDS reports InService.
+    echo "Target lifecycle state is ${TARGET_LIFECYCLE_STATE}, deferring agent start to the InService transition."
+    systemctl enable --now warm-pool-watcher.service
+
+    COMPLETE_LIFECYCLE_ACTION_AFTER_BOOTSTRAP=true
+  fi
+fi
 
 echo Configuring CloudWatch agent log retention...
 if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
@@ -692,5 +783,15 @@ else
   echo "Skipping cfn-signal (not deployed by CloudFormation)"
 fi
 
-# Record bootstrap as complete (this should be the last step in this file)
+# Record bootstrap as complete (this must happen before the warm pool lifecycle action is
+# completed below, and nothing else belongs after it)
 echo "Completed" >"$STATUS_FILE"
+
+# Completing the Warmed:Pending:Wait action frees Auto Scaling to stop the instance, and it
+# does not wait for user data to finish. Completed here, after the status file is written, so
+# that a stop cannot land while the file still reads "Started" and fail check_status on the
+# boot where the instance leaves the pool. warm-pool-watcher is already running by now, so it
+# picks up the InService transition whenever the instance is started again.
+if [[ "$COMPLETE_LIFECYCLE_ACTION_AFTER_BOOTSTRAP" == "true" ]]; then
+  /usr/local/bin/complete-warm-pool-lifecycle-action
+fi

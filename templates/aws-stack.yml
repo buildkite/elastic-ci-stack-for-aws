@@ -157,6 +157,11 @@ Metadata:
         - ScaleUpMinSize
         - ScaleDownSchedule
         - ScaleDownMinSize
+        - WarmPoolEnabled
+        - WarmPoolState
+        - WarmPoolBootstrapTimeout
+        - WarmPoolMinSize
+        - WarmPoolMaxGroupPreparedCapacity
 
       - Label:
           default: Cost Allocation Configuration
@@ -331,6 +336,49 @@ Parameters:
     Type: Number
     Default: 0
     MinValue: 0
+
+  WarmPoolEnabled:
+    Type: String
+    Description: Enable ASG warm pool to keep pre-initialized instances ready for faster job starts.
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "false"
+
+  WarmPoolState:
+    Type: String
+    Description: >
+      State of instances in the warm pool. Stopped is cheapest. Running avoids OS boot time on scale-out.
+      Hibernated is not currently offered: it additionally requires HibernationOptions in the launch template
+      and an encrypted EBS root volume, and may be supported in a future update.
+    AllowedValues:
+      - Stopped
+      - Running
+    Default: Stopped
+
+  WarmPoolBootstrapTimeout:
+    Type: Number
+    Description: Seconds to wait for bootstrap to complete before abandoning the warm pool instance. Increase if your bootstrap script takes longer than 15 minutes.
+    Default: 900
+    MinValue: 60
+    MaxValue: 3600
+
+  WarmPoolMinSize:
+    Type: Number
+    Description: >
+      Minimum number of instances to keep pre-initialized in the warm pool at all times.
+      This is a floor, not a cap - the pool can grow up to MaxGroupPreparedCapacity.
+    Default: 0
+    MinValue: 0
+
+  WarmPoolMaxGroupPreparedCapacity:
+    Type: Number
+    Description: >
+      Maximum total prepared capacity (warm pool + active). Set to -1 to use MaxSize minus DesiredCapacity -
+      WARNING: with a high MaxSize this can pre-provision many instances and incur significant cost
+      (EBS storage for a Stopped pool, full compute for a Running one). Set an explicit value to cap the pool size.
+    MinValue: -1
+    Default: -1
 
   ScaleOutCooldownPeriod:
     Description: Cooldown period in seconds before allowing another scale-out event. Prevents rapid scaling and reduces costs from frequent instance launches.
@@ -1221,6 +1269,17 @@ Rules:
               - !Ref PipelineSigningKMSKeySpec
               - "none"
         AssertDescription: "You must provide either a PipelineSigningKMSKeyId, or select a PipelineSigningKMSKeySpec, but not both"
+  WarmPoolRequiresOnDemand:
+    RuleCondition:
+      !Equals
+        - !Ref WarmPoolEnabled
+        - "true"
+    Assertions:
+      - Assert:
+          !Equals
+            - !Ref OnDemandPercentage
+            - "100"
+        AssertDescription: "Warm pools do not support Spot Instances in a mixed instances group. Set OnDemandPercentage to 100 when WarmPoolEnabled is true"
 
 Outputs:
   VpcId:
@@ -1640,6 +1699,12 @@ Conditions:
       !And
         - !Condition HasVariableSize
         - !Not [ !Condition IsLambdaArchitectureArm64 ]
+
+    WarmPoolEnabled:
+      !Equals [ !Ref WarmPoolEnabled, "true" ]
+
+    WarmPoolMaxPreparedCapacitySet:
+      !Not [ !Equals [ !Ref WarmPoolMaxGroupPreparedCapacity, -1 ] ]
 
 Mappings:
   ECRManagedPolicy:
@@ -2149,6 +2214,7 @@ Resources:
           - Sid: TerminateInstance
             Effect: Allow
             Action:
+              - autoscaling:CompleteLifecycleAction
               - autoscaling:SetInstanceHealth
               - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
@@ -2457,6 +2523,7 @@ Resources:
                   $Env:AWS_REGION="${AWS::Region}"
                   $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
                   $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
+                  $Env:WARM_POOL_ENABLED="${WarmPoolEnabled}"
                   powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
                   </powershell>
                 - LocalSecretsBucket: !If
@@ -2573,6 +2640,7 @@ Resources:
                   RESOURCE_LIMITS_IO_WEIGHT="${ResourceLimitsIOWeight}" \
                   ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}" \
                   EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}" \
+                  WARM_POOL_ENABLED="${WarmPoolEnabled}" \
                     /usr/local/bin/bk-install-elastic-stack.sh
                   --==BOUNDARY==--
                 - LocalSecretsBucket: !If
@@ -2767,6 +2835,28 @@ Resources:
       Recurrence: !Ref ScaleDownSchedule
       MinSize: !Ref ScaleDownMinSize
       TimeZone: !Ref ScheduleTimezone
+
+  AgentWarmPool:
+    Condition: WarmPoolEnabled
+    # The hook must exist before the pool, otherwise instances entering the pool are not paused
+    # and Auto Scaling stops them without waiting for user data to finish.
+    DependsOn: WarmPoolBootstrapLifecycleHook
+    Type: AWS::AutoScaling::WarmPool
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      MinSize: !Ref WarmPoolMinSize
+      MaxGroupPreparedCapacity: !If [ WarmPoolMaxPreparedCapacitySet, !Ref WarmPoolMaxGroupPreparedCapacity, !Ref "AWS::NoValue" ]
+      PoolState: !Ref WarmPoolState
+
+  WarmPoolBootstrapLifecycleHook:
+    Condition: WarmPoolEnabled
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AgentAutoScaleGroup
+      LifecycleHookName: WarmPoolBootstrap
+      LifecycleTransition: "autoscaling:EC2_INSTANCE_LAUNCHING"
+      DefaultResult: ABANDON
+      HeartbeatTimeout: !Ref WarmPoolBootstrapTimeout
 
   AsgProcessSuspenderRole:
     Type: AWS::IAM::Role

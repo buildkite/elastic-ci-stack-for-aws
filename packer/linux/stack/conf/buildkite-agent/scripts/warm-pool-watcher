@@ -1,0 +1,41 @@
+#!/bin/bash
+set -euo pipefail
+
+target_lifecycle_state() {
+  local token
+  token=$(curl -sf -X PUT \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 30" \
+    http://169.254.169.254/latest/api/token) || return 1
+
+  curl -sf \
+    -H "X-aws-ec2-metadata-token: $token" \
+    http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state
+}
+
+while true; do
+  if ! state=$(target_lifecycle_state); then
+    echo "Could not read target-lifecycle-state, retrying..."
+    sleep 5
+    continue
+  fi
+
+  case "$state" in
+  InService)
+    # The hook is completed before the agent starts, so a failure here cannot leave an agent
+    # taking jobs while the hook times out and ABANDON terminates the instance mid-job. If the
+    # agent then fails to start, buildkite-agent.service has FailureAction=poweroff-force.
+    echo "Target lifecycle state is InService, completing lifecycle action..."
+    /usr/local/bin/complete-warm-pool-lifecycle-action
+    echo "Starting buildkite-agent..."
+    systemctl start buildkite-agent
+    exit 0
+    ;;
+  Warmed:*)
+    sleep 5
+    ;;
+  *)
+    echo "Unexpected target lifecycle state '${state}', exiting without starting the agent."
+    exit 0
+    ;;
+  esac
+done

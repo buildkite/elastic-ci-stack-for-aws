@@ -1,0 +1,81 @@
+#!/bin/bash
+set -euo pipefail
+
+MAX_ATTEMPTS=3
+
+backoff() {
+  if [[ "$1" -lt "$MAX_ATTEMPTS" ]]; then
+    sleep $(($1 * 2))
+  fi
+}
+
+metadata() {
+  local attempt token value
+  for attempt in $(seq "$MAX_ATTEMPTS"); do
+    if token=$(curl -sf -X PUT --max-time 5 \
+      -H "X-aws-ec2-metadata-token-ttl-seconds: 30" \
+      http://169.254.169.254/latest/api/token); then
+      if value=$(curl -sf --max-time 5 \
+        -H "X-aws-ec2-metadata-token: $token" \
+        "http://169.254.169.254/latest/meta-data/$1"); then
+        echo "$value"
+        return 0
+      fi
+    fi
+
+    echo "Attempt ${attempt} of ${MAX_ATTEMPTS} to read metadata '$1' failed." >&2
+    backoff "$attempt"
+  done
+
+  return 1
+}
+
+if ! instance_id=$(metadata instance-id) || ! region=$(metadata placement/region); then
+  echo "WARNING: Could not read instance metadata, skipping lifecycle action."
+  exit 0
+fi
+
+asg_name=""
+for attempt in $(seq "$MAX_ATTEMPTS"); do
+  if asg_name=$(aws autoscaling describe-auto-scaling-instances \
+    --region "$region" \
+    --instance-ids "$instance_id" \
+    --query 'AutoScalingInstances[0].AutoScalingGroupName' \
+    --output text 2>&1); then
+    break
+  fi
+
+  echo "Attempt ${attempt} of ${MAX_ATTEMPTS} to resolve Auto Scaling group name failed: ${asg_name}"
+  asg_name=""
+  backoff "$attempt"
+done
+
+if [[ -z "$asg_name" || "$asg_name" == "None" ]]; then
+  echo "WARNING: Could not resolve Auto Scaling group name, skipping lifecycle action."
+  exit 0
+fi
+
+echo "Completing warm pool lifecycle action for ${instance_id} in ${asg_name}..."
+for attempt in $(seq "$MAX_ATTEMPTS"); do
+  if output=$(aws autoscaling complete-lifecycle-action \
+    --region "$region" \
+    --auto-scaling-group-name "$asg_name" \
+    --lifecycle-hook-name WarmPoolBootstrap \
+    --lifecycle-action-result CONTINUE \
+    --instance-id "$instance_id" 2>&1); then
+    echo "Completed warm pool lifecycle action."
+    exit 0
+  fi
+
+  # Expected on stacks without a warm pool, and on the initial MinSize instances that
+  # launch before the hook exists. Not a failure, so do not retry it.
+  if [[ "$output" == *"No active Lifecycle Action found"* ]]; then
+    echo "No pending lifecycle action, nothing to complete."
+    exit 0
+  fi
+
+  echo "Attempt ${attempt} of ${MAX_ATTEMPTS} to complete lifecycle action failed: ${output}"
+  backoff "$attempt"
+done
+
+echo "WARNING: Failed to complete warm pool lifecycle action after ${MAX_ATTEMPTS} attempts."

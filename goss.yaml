@@ -14,6 +14,9 @@ file:
   /etc/systemd/system/refresh_authorized_keys.timer:
     exists: true
 
+  /etc/systemd/system/warm-pool-watcher.service:
+    exists: true
+
   /home/ec2-user/.ssh/authorized_keys:
     exists: true
     contains: ["!packer"]
@@ -35,6 +38,14 @@ file:
     group: buildkite-agent
 
   /usr/local/bin/stop-agent-gracefully:
+    exists: true
+    mode: "0755"
+
+  /usr/local/bin/warm-pool-watcher:
+    exists: true
+    mode: "0755"
+
+  /usr/local/bin/complete-warm-pool-lifecycle-action:
     exists: true
     mode: "0755"
 
