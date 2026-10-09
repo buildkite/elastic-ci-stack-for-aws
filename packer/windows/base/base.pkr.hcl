@@ -78,8 +78,19 @@ source "amazon-ebs" "buildkite-base" {
     delete_on_termination = true
   }
 
+  # The amazon plugin also copies run_tags to the AMI and its snapshots. `tags`
+  # below overwrites Name, BuildNumber and Purpose there, but ManagedBy stays,
+  # so never select builders by ManagedBy alone.
+  run_tags = {
+    Name        = "Packer Builder" // cleanup.sh and cleanup-packer.sh match builders on this
+    ManagedBy   = "elastic-ci-stack-for-aws"
+    Purpose     = "disposable-ci"
+    BuildNumber = var.build_number
+  }
+
   tags = {
     Name        = "buildkite-base-windows"
+    Purpose     = "ami"
     OSVersion   = "Windows Server 2022"
     BuildNumber = var.build_number
     IsReleased  = var.is_released
