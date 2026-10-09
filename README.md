@@ -253,6 +253,12 @@ Both cleaners preserve the existing `DRY_RUN` behavior: any set value, including
 
 To delete, start a new build on `main` without `DRY_RUN`, then unblock **Run AMI cleaning build?**. This runs both cleanup steps, just like the scheduled build. The 24-hour age limit always applies. `DRY_RUN` only controls Packer cleanup in the normal build pipeline; it does not make the rest of `cleanup.sh` read-only.
 
+### Release builds
+
+Branch and PR builds use `if_changed` to select affected AMI builds and tests.
+Pushing a release tag builds and tests all final AMIs and publishes the
+CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
+
 ## Support Policy
 
 We provide support for security and bug fixes on the current major release only.
