@@ -1,5 +1,8 @@
 <h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
+> [!WARNING]
+> Elastic CI Stack for AWS v7 is now available. New features will only be developed and released for v7, and will not be backported to v6. Security fixes will continue to be backported to v6. See the [v6 to v7 upgrade guide](https://buildkite.com/docs/agent/self-hosted/aws/elastic-ci-stack/ec2-linux-and-windows/v6-v7-upgrade-guide) for details on migrating.
+
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=main)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack/builds/latest?branch=main)
 
 ## Buildkite Elastic CI Stack for AWS
