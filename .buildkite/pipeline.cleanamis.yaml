@@ -1,5 +1,5 @@
 # Pipeline: https://buildkite.com/buildkite/elastic-stack-for-aws-ami-cleaner
-# Set DRY_RUN to preview; leave it unset to delete. See README.md.
+# Set DRY_RUN to preview; leave it unset to delete. See .buildkite/README.md.
 steps:
   - name: ":broom: Delete AMIs ({{matrix}})"
     command: .buildkite/steps/clean-old-amis

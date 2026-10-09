@@ -234,25 +234,6 @@ make packer-base-ubuntu2404-arm64.output packer-ubuntu2404-arm64.output
 
 **Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
-### Cleaning up AMIs and Packer builders
-
-The [AMI cleaner pipeline](https://buildkite.com/buildkite/elastic-stack-for-aws-ami-cleaner) runs [`.buildkite/pipeline.cleanamis.yaml`](.buildkite/pipeline.cleanamis.yaml) every Thursday at 02:30 UTC. Scheduled runs leave `DRY_RUN` unset and skip the block step. It has two cleanup steps:
-
-- `clean-old-amis` deregisters eligible old `buildkite-stack-*` AMIs and their snapshots across its configured regions, using its existing retention rules. Its existing IAM permissions are separate from the Packer builder step's checks.
-- `cleanup-packer.sh` terminates Packer builder instances in `us-east-1` that are older than 24 hours, including stopped ones. It only touches instances tagged `Name=Packer Builder`, `ManagedBy=elastic-ci-stack-for-aws`, `Purpose=disposable-ci` and `BuildNumber`, and refuses to run outside account `172840064832` and `us-east-1`. It never deletes base or stack AMIs or snapshots. Builder volumes go with the instance because they're created with `DeleteOnTermination=true`.
-
-Packer copies builder tags onto the AMIs it creates, so the templates set `Purpose=ami` on output images and snapshots to replace `Purpose=disposable-ci`. `ManagedBy` stays on AMIs, so nothing should select builders by `ManagedBy` alone.
-
-The cleanup step at the end of each normal build still terminates old Packer builders as before, so builders are usually removed sooner while the main pipeline builds regularly. The weekly Packer builder step is the fallback for builds that never reach that step: with successful weekly runs, an abandoned builder can live for up to about 8 days (24 hours plus the weekly interval).
-
-Both cleaners preserve the existing `DRY_RUN` behavior: any set value, including `false` or an empty string, previews; leaving it unset deletes eligible resources. To preview:
-
-1. Select **New Build** on the AMI cleaner pipeline, using the `main` branch, and set `DRY_RUN=true` under **Options → Environment Variables**.
-2. Unblock **Run AMI cleaning build?**.
-3. Read each job's log. AMI jobs mark candidates with `[DRY RUN]` and annotate a summary per region. The Packer builder job lists the instances it would terminate.
-
-To delete, start a new build on `main` without `DRY_RUN`, then unblock **Run AMI cleaning build?**. This runs both cleanup steps, just like the scheduled build. The 24-hour age limit always applies. `DRY_RUN` only controls Packer cleanup in the normal build pipeline; it does not make the rest of `cleanup.sh` read-only.
-
 ### Release builds
 
 Branch and PR builds use `if_changed` to select affected AMI builds and tests.
