@@ -80,7 +80,7 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_insecure = true
   winrm_use_ssl  = true
   winrm_port     = 5986
-  winrm_timeout  = "60m"
+  winrm_timeout  = "20m"
   winrm_username = "Administrator"
 
   launch_block_device_mappings {

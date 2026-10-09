@@ -202,6 +202,7 @@ steps:
     command:
       - .buildkite/steps/ensure_ami_metadata.py windows amd64
       - .buildkite/steps/launch.sh windows amd64
+    timeout_in_minutes: 75
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
@@ -234,6 +235,7 @@ steps:
   - id: "delete-windows-amd64"
     name: ":cloudformation: :windows: AMD64 Delete"
     command: .buildkite/steps/delete.sh windows amd64
+    timeout_in_minutes: 75
     allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -286,6 +288,7 @@ steps:
     command:
       - .buildkite/steps/ensure_ami_metadata.py linux amd64
       - .buildkite/steps/launch.sh linux
+    timeout_in_minutes: 75
     retry: { automatic: { limit: 3 } }
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -318,6 +321,7 @@ steps:
   - id: "delete-linux-amd64"
     name: ":cloudformation: :linux: AMD64 Delete"
     command: .buildkite/steps/delete.sh linux amd64
+    timeout_in_minutes: 75
     allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -370,6 +374,7 @@ steps:
     command:
       - .buildkite/steps/ensure_ami_metadata.py linux arm64
       - .buildkite/steps/launch.sh linux arm64
+    timeout_in_minutes: 75
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     artifact_paths: "build/aws-stack.yml"
@@ -401,6 +406,7 @@ steps:
   - id: "delete-linux-arm64"
     name: ":cloudformation: :linux: ARM64 Delete"
     command: .buildkite/steps/delete.sh linux arm64
+    timeout_in_minutes: 75
     allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -452,6 +458,7 @@ steps:
     command:
       - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 amd64
       - .buildkite/steps/launch.sh ubuntu2404 amd64
+    timeout_in_minutes: 75
     retry: { automatic: { limit: 3 } }
     # Ubuntu's image is larger than AL2023: the 10GB test default leaves under the
     # 5GiB docker-low-disk-gc cutoff free, which marks the fresh instance unhealthy.
@@ -488,6 +495,7 @@ steps:
   - id: "delete-ubuntu2404-amd64"
     name: ":cloudformation: :ubuntu: AMD64 Delete"
     command: .buildkite/steps/delete.sh ubuntu2404 amd64
+    timeout_in_minutes: 75
     allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -539,6 +547,7 @@ steps:
     command:
       - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 arm64
       - .buildkite/steps/launch.sh ubuntu2404 arm64
+    timeout_in_minutes: 75
     # Ubuntu's image is larger than AL2023: the 10GB test default leaves under the
     # 5GiB docker-low-disk-gc cutoff free, which marks the fresh instance unhealthy.
     env:
@@ -574,6 +583,7 @@ steps:
   - id: "delete-ubuntu2404-arm64"
     name: ":cloudformation: :ubuntu: ARM64 Delete"
     command: .buildkite/steps/delete.sh ubuntu2404 arm64
+    timeout_in_minutes: 75
     allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -626,6 +636,7 @@ steps:
     command:
       - .buildkite/steps/ensure_ami_metadata.py linux amd64 cis
       - .buildkite/steps/launch.sh linux amd64 cis
+    timeout_in_minutes: 75
     retry: { automatic: { limit: 3 } }
     env:
       ROOT_VOLUME_SIZE: "15"
@@ -660,6 +671,7 @@ steps:
   - id: "delete-linux-amd64-cis"
     name: ":cloudformation: :linux: AMD64 CIS Delete"
     command: .buildkite/steps/delete.sh linux amd64 cis
+    timeout_in_minutes: 75
     allow_dependency_failure: true
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -677,6 +689,7 @@ steps:
   - id: "delete-service-role-stack"
     name: ":aws-iam: :cloudformation: Delete"
     command: .buildkite/steps/delete-service-role-stack.sh
+    timeout_in_minutes: 75
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
@@ -732,6 +745,7 @@ steps:
   - id: cleanup
     name: ":broom: Cleanup"
     command: .buildkite/steps/cleanup.sh
+    timeout_in_minutes: 150
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
