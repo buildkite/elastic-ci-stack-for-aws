@@ -650,9 +650,10 @@ EOF
 echo Reloading systemctl services...
 systemctl daemon-reload
 
-# An instance headed for the warm pool must not take jobs while parked. Which way this
-# instance is headed is per-launch, so read it from IMDS rather than the stack parameter:
-# a cold start or an empty warm pool goes straight to InService and must start now.
+# An instance headed for the warm pool must not take jobs while parked. On a stack with a
+# warm pool, which way this instance is headed is per-launch, so read it from IMDS rather
+# than assuming the pool: a cold start or an empty warm pool goes straight to InService and
+# must start now.
 #
 # AWS recommends polling this and retrying on errors, since a single transient failure that
 # fell back to InService would start an agent on a pool-bound instance and skip the hook.
@@ -711,26 +712,36 @@ fetch_target_lifecycle_state() {
   TARGET_LIFECYCLE_STATE=InService
 }
 
-fetch_target_lifecycle_state
+# Set on the warm path, where the lifecycle action is completed after the status file is
+# written rather than here. See the end of this script.
+COMPLETE_LIFECYCLE_ACTION_AFTER_BOOTSTRAP=false
 
-# The hook pauses the instance at Pending:Wait on the way into service and, for a pool-bound
-# instance, again at Warmed:Pending:Wait. Both pauses are completed here before the agent can
-# take jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
-if [[ "$TARGET_LIFECYCLE_STATE" == "InService" ]]; then
-  /usr/local/bin/complete-warm-pool-lifecycle-action
-
+# Without a warm pool there is no lifecycle hook and no pool-bound instance, so none of the
+# IMDS and Auto Scaling calls below have anything to do. Skipping them keeps every launch of
+# a default stack free of the retries and warnings their no-op responses would produce.
+if [[ "${WARM_POOL_ENABLED:-false}" != "true" ]]; then
   echo Starting buildkite-agent...
   systemctl enable --now buildkite-agent
 else
-  # Deliberately left disabled: a Stopped warm pool instance boots while still paused at
-  # Pending:Wait, and an enabled unit would take jobs before the lifecycle hook completes.
-  # warm-pool-watcher starts the agent once IMDS reports InService.
-  echo "Target lifecycle state is ${TARGET_LIFECYCLE_STATE}, deferring agent start to the InService transition."
-  systemctl enable --now warm-pool-watcher.service
+  fetch_target_lifecycle_state
 
-  # Completed last on this path so the watcher is already running before Auto Scaling is free
-  # to stop the instance and park it in the pool.
-  /usr/local/bin/complete-warm-pool-lifecycle-action
+  # The hook pauses the instance at Pending:Wait on the way into service and, for a pool-bound
+  # instance, again at Warmed:Pending:Wait. Both pauses are completed before the agent can take
+  # jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
+  if [[ "$TARGET_LIFECYCLE_STATE" == "InService" ]]; then
+    /usr/local/bin/complete-warm-pool-lifecycle-action
+
+    echo Starting buildkite-agent...
+    systemctl enable --now buildkite-agent
+  else
+    # Deliberately left disabled: a Stopped warm pool instance boots while still paused at
+    # Pending:Wait, and an enabled unit would take jobs before the lifecycle hook completes.
+    # warm-pool-watcher starts the agent once IMDS reports InService.
+    echo "Target lifecycle state is ${TARGET_LIFECYCLE_STATE}, deferring agent start to the InService transition."
+    systemctl enable --now warm-pool-watcher.service
+
+    COMPLETE_LIFECYCLE_ACTION_AFTER_BOOTSTRAP=true
+  fi
 fi
 
 echo Configuring CloudWatch agent log retention...
@@ -772,5 +783,15 @@ else
   echo "Skipping cfn-signal (not deployed by CloudFormation)"
 fi
 
-# Record bootstrap as complete (this should be the last step in this file)
+# Record bootstrap as complete (this must happen before the warm pool lifecycle action is
+# completed below, and nothing else belongs after it)
 echo "Completed" >"$STATUS_FILE"
+
+# Completing the Warmed:Pending:Wait action frees Auto Scaling to stop the instance, and it
+# does not wait for user data to finish. Completed here, after the status file is written, so
+# that a stop cannot land while the file still reads "Started" and fail check_status on the
+# boot where the instance leaves the pool. warm-pool-watcher is already running by now, so it
+# picks up the InService transition whenever the instance is started again.
+if [[ "$COMPLETE_LIFECYCLE_ACTION_AFTER_BOOTSTRAP" == "true" ]]; then
+  /usr/local/bin/complete-warm-pool-lifecycle-action
+fi

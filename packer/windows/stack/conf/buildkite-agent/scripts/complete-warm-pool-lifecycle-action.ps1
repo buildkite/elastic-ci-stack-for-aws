@@ -15,7 +15,9 @@ function Get-Metadata {
         -Headers @{'X-aws-ec2-metadata-token' = $Token} `
         "http://169.254.169.254/latest/meta-data/$Path").content
     } catch {
-      Write-Output "Attempt $Attempt of $MaxAttempts to read metadata '$Path' failed: $($_.Exception.Message)"
+      # Write-Host, not Write-Output: anything a function writes to the output stream becomes
+      # part of its return value, so a logged line here would be returned alongside the value.
+      Write-Host "Attempt $Attempt of $MaxAttempts to read metadata '$Path' failed: $($_.Exception.Message)"
       if ($Attempt -lt $MaxAttempts) { Start-Sleep -Seconds ($Attempt * 2) }
     }
   }
