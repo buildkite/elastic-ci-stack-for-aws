@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs cleanup-packer.sh against a stub aws on PATH. The stub
+# Runs cleanup-packer.sh and cleanup.sh against a stub aws on PATH. The stub
 # answers only the calls the scripts should make; any other call fails the
 # test. Needs Bash 4.4+ and GNU date.
 set -euo pipefail
@@ -35,6 +35,12 @@ case "$*" in
   printf '%b' "${STUB_INSTANCES:-}"
   ;;
 "ec2 terminate-instances --region us-east-1 --instance-ids "*) ;;
+"s3api list-buckets --output text --query "*) ;;
+"logs describe-log-groups --log-group-name-prefix /aws/lambda/buildkite-aws-stack-test- "*) ;;
+"cloudformation describe-stacks --output text --query Stacks[?CreationTime<"*) printf '%b' "${STUB_STACKS:-}" ;;
+"cloudformation describe-stacks --output text --query Stacks[].[StackName]") printf '%b' "${STUB_LIVE_STACKS:-}" ;;
+"cloudformation delete-stack --stack-name "*) ;;
+"cloudformation wait stack-delete-complete --stack-name "*) ;;
 *)
   echo "$*" >>"$STUB_DIR/unexpected"
   echo "unexpected aws call: $*" >&2
@@ -70,6 +76,13 @@ fail() {
 called() { grep -q -E "$1" "$STUB_DIR/calls"; }
 expect_call() { called "$1" || fail "missing call matching: $1"; }
 expect_no_call() { ! called "$1" || fail "unexpected call matching: $1"; }
+# Fails unless the first call matching $1 comes before the first matching $2.
+expect_order() {
+  local a b
+  a="$(grep -n -m1 -E "$1" "$STUB_DIR/calls" | cut -d: -f1 || true)"
+  b="$(grep -n -m1 -E "$2" "$STUB_DIR/calls" | cut -d: -f1 || true)"
+  [[ -n "$a" && -n "$b" && "$a" -lt "$b" ]] || fail "expected '$1' before '$2'"
+}
 
 instances="i-old\t${old}\ni-young\t${young}\n"
 
@@ -106,6 +119,42 @@ done
 
 check "packer: unreadable launch time fails without terminating" 1 cleanup-packer.sh STUB_INSTANCES="i-odd\tnot-a-date\n${instances}"
 expect_no_call 'terminate-instances'
+
+# --- cleanup.sh --------------------------------------------------------------
+
+stacks="buildkite-aws-stack-test-linux-amd64-10\nbuildkite-aws-stack-test-linux-amd64-cis-10\nbuildkite-elastic-ci-stack-service-role-10\n"
+
+# After the waits, only the role and an unrelated stack are live.
+check "cleanup: builders first, then test stacks deleted and waited for before roles" 0 cleanup.sh \
+  STUB_INSTANCES="$instances" STUB_STACKS="$stacks" \
+  STUB_LIVE_STACKS="buildkite-elastic-ci-stack-service-role-10\nbuildkite-aws-stack\n"
+expect_order '^ec2 terminate-instances' '^s3api list-buckets'
+for stack in buildkite-aws-stack-test-linux-amd64-10 buildkite-aws-stack-test-linux-amd64-cis-10; do
+  expect_order "^cloudformation wait stack-delete-complete --stack-name ${stack}$" \
+    '^cloudformation describe-stacks --output text --query Stacks\[\]'
+done
+expect_order '^cloudformation describe-stacks --output text --query Stacks\[\]' \
+  '^cloudformation delete-stack --stack-name buildkite-elastic-ci-stack-service-role-10$'
+
+# The old role's build has a test stack younger than the cutoff, so it only
+# shows up in the unfiltered listing.
+check "cleanup: a live younger test stack keeps every service role" 0 cleanup.sh \
+  STUB_STACKS="buildkite-elastic-ci-stack-service-role-10\n" \
+  STUB_LIVE_STACKS="buildkite-elastic-ci-stack-service-role-10\nbuildkite-aws-stack-test-windows-amd64-10\n"
+expect_no_call 'delete-stack'
+
+for failing in 'cloudformation describe-stacks' \
+  'cloudformation delete-stack --stack-name buildkite-aws-stack-test-linux-amd64-10$' \
+  'cloudformation wait stack-delete-complete --stack-name buildkite-aws-stack-test-linux-amd64-cis-10$' \
+  'cloudformation describe-stacks --output text --query Stacks\[\]'; do
+  check "cleanup: ${failing} failure keeps every service role" 1 cleanup.sh \
+    STUB_STACKS="$stacks" STUB_FAIL="^${failing}"
+  expect_no_call 'delete-stack --stack-name buildkite-elastic-ci-stack-service-role-'
+done
+
+check "cleanup: Packer failure doesn't stop the rest, but fails the run" 1 cleanup.sh \
+  STUB_STACKS="$stacks" STUB_FAIL='^ec2 describe-instances'
+expect_call '^cloudformation delete-stack --stack-name buildkite-elastic-ci-stack-service-role-10$'
 
 if [[ "$failures" -gt 0 ]]; then
   echo "${failures} check(s) failed"
