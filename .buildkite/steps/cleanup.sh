@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016
-set -uxo pipefail
+set -uo pipefail
 
 ########################################################
 # We make an attempt to clean up the specific resources created during this pipeline elsewhere. However
