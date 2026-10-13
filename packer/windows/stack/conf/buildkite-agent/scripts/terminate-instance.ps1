@@ -8,23 +8,25 @@ $Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-tok
 Write-Output "$(Get-Date) terminate-instance: requesting instance termination..."
 aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
 
-# If autoscaling request was successful, we will terminate the instance, otherwise, if
-# BuildkiteTerminateInstanceAfterJob is set to true, we will mark the instance as unhealthy
-# so that the ASG will terminate it despite scale-in protection. Otherwise, we should not
-# terminate the instance, so we need to retart the agent.
+# The agent service does not restart after it exits, so the instance must be
+# replaced if it can't be removed. If the ASG can't decrement (we're already at
+# minSize), terminate without decrementing so the ASG launches a replacement.
+# If that also fails, mark the instance unhealthy so the ASG replaces it
+# despite scale-in protection.
 if ($lastexitcode -eq 0) {
   Write-Output "$(Get-Date) terminate-instance: terminating instance..."
 } else {
-  Write-Output "$(Get-Date) terminate-instance: ASG could not decrement (we're already at minSize)"
-  if ($Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB -eq "true") {
-    Write-Output "$(Get-Date) terminate-instance: marking instance as unhealthy"
+  Write-Output "$(Get-Date) terminate-instance: ASG could not decrement (we're already at minSize), terminating without decrement..."
+  aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--no-should-decrement-desired-capacity" 2> $null
+
+  if ($lastexitcode -eq 0) {
+    Write-Output "$(Get-Date) terminate-instance: terminating instance (ASG will launch a replacement)..."
+  } else {
+    Write-Output "$(Get-Date) terminate-instance: termination failed, marking instance as unhealthy"
     aws autoscaling set-instance-health `
       --instance-id "$InstanceId" `
       --region "$Region" `
       --health-status Unhealthy
-  } else {
-    Write-Output "$(Get-Date) terminate-instance: restarting agent..."
-    nssm start buildkite-agent
   }
 }
 
