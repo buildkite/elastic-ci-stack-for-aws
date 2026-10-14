@@ -41,33 +41,23 @@ function Invoke-AwsCommand {
 $InstanceId = Get-Metadata "instance-id"
 $Region = Get-Metadata "placement/region"
 
+# Exits non-zero on a real failure so that callers do not start the agent on an instance whose
+# lifecycle action is still pending: the hook would time out and ABANDON would terminate it
+# mid-job. Being abandoned before taking work is the better outcome.
 if ([string]::IsNullOrEmpty($InstanceId) -or [string]::IsNullOrEmpty($Region)) {
-  Write-Output "WARNING: Could not read instance metadata, skipping lifecycle action."
-  exit 0
+  Write-Output "ERROR: Could not read instance metadata, cannot complete lifecycle action."
+  exit 1
 }
 
-$AsgName = $null
-for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
-  $Result = Invoke-AwsCommand {
-    aws autoscaling describe-auto-scaling-instances `
-      --region "$Region" `
-      --instance-ids "$InstanceId" `
-      --query 'AutoScalingInstances[0].AutoScalingGroupName' `
-      --output text
-  }
+# The launch template enables instance metadata tags and Auto Scaling tags its instances with
+# aws:autoscaling:groupName, so the group name is available locally. Reading it here avoids an
+# Auto Scaling API call on the path to the agent starting, which matters more on Windows where
+# the CLI is slower to start, and spares the account's rate limit during a scale-out burst.
+$AsgName = Get-Metadata "tags/instance/aws:autoscaling:groupName"
 
-  if ($Result.ExitCode -eq 0) {
-    $AsgName = $Result.Output
-    break
-  }
-
-  Write-Output "Attempt $Attempt of $MaxAttempts to resolve Auto Scaling group name failed: $($Result.Output)"
-  if ($Attempt -lt $MaxAttempts) { Start-Sleep -Seconds ($Attempt * 2) }
-}
-
-if ([string]::IsNullOrEmpty($AsgName) -or $AsgName -eq "None") {
-  Write-Output "WARNING: Could not resolve Auto Scaling group name, skipping lifecycle action."
-  exit 0
+if ([string]::IsNullOrEmpty($AsgName)) {
+  Write-Output "ERROR: Could not resolve Auto Scaling group name, cannot complete lifecycle action."
+  exit 1
 }
 
 Write-Output "Completing warm pool lifecycle action for $InstanceId in $AsgName..."
@@ -86,8 +76,9 @@ for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
     exit 0
   }
 
-  # Expected on stacks without a warm pool, and on the initial MinSize instances that
-  # launch before the hook exists. Not a failure, so do not retry it.
+  # Expected on the initial MinSize instances, which launch before the hook exists. This
+  # script only runs on a warm pool stack, so there is no pending action to find on those.
+  # Not a failure, so do not retry it.
   if ($Result.Output -match "No active Lifecycle Action found") {
     Write-Output "No pending lifecycle action, nothing to complete."
     exit 0
@@ -97,4 +88,5 @@ for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
   if ($Attempt -lt $MaxAttempts) { Start-Sleep -Seconds ($Attempt * 2) }
 }
 
-Write-Output "WARNING: Failed to complete warm pool lifecycle action after $MaxAttempts attempts."
+Write-Output "ERROR: Failed to complete warm pool lifecycle action after $MaxAttempts attempts."
+exit 1

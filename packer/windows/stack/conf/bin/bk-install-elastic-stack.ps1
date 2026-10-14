@@ -390,13 +390,6 @@ function Get-TargetLifecycleState {
         -Headers @{'X-aws-ec2-metadata-token' = $Token} `
         http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state).content
     } catch {
-      # A 404 means the item is absent rather than unavailable: this ASG has no warm pool,
-      # so the instance is headed straight into service and retrying would not change that.
-      if ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 404) {
-        Write-Host "No target-lifecycle-state in metadata (no warm pool on this group), assuming InService."
-        return "InService"
-      }
-
       Write-Host "Attempt $Attempt of $MaxAttempts to fetch target-lifecycle-state failed: $($_.Exception.Message)"
       if ($Attempt -lt $MaxAttempts) {
         Start-Sleep -Seconds $WaitSeconds
@@ -405,9 +398,18 @@ function Get-TargetLifecycleState {
     }
   }
 
-  Write-Host "WARNING: Could not read target-lifecycle-state after $MaxAttempts attempts, assuming InService."
-  return "InService"
+  # Failing closed: an unreadable state is treated as pool-bound rather than InService. Assuming
+  # InService on a pool-bound instance completes the Warmed:Pending:Wait action and starts the
+  # agent, which then takes jobs while parked on a Running pool, or starts before the hook
+  # completes on the boot that leaves a Stopped pool. The watcher path is safe either way: an
+  # instance actually headed into service is picked up on the watcher's first poll.
+  Write-Host "WARNING: Could not read target-lifecycle-state after $MaxAttempts attempts, deferring to the watcher."
+  return "Unknown"
 }
+
+# Set on the warm path, where the lifecycle action is completed at the end of this script
+# rather than here. See the end of this script.
+$CompleteLifecycleActionAfterBootstrap = $false
 
 # Without a warm pool there is no lifecycle hook and no pool-bound instance, so none of the
 # IMDS and Auto Scaling calls below have anything to do. Skipping them keeps every launch of
@@ -422,7 +424,14 @@ if ($Env:WARM_POOL_ENABLED -ne "true") {
   # instance, again at Warmed:Pending:Wait. Both pauses are completed before the agent can take
   # jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
   if ($TargetLifecycleState -eq "InService") {
+    # The agent is not started when the hook could not be completed, so that the instance is
+    # abandoned at the hook timeout rather than terminated mid-job.
     powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
+
+    if ($lastexitcode -ne 0) {
+      Write-Output "Could not complete lifecycle action, not starting the agent."
+      Exit 1
+    }
 
     Restart-Service buildkite-agent
   } else {
@@ -443,9 +452,7 @@ if ($Env:WARM_POOL_ENABLED -ne "true") {
       -Action $WatcherAction -Trigger $WatcherTrigger -Principal $WatcherPrincipal -Force
     Start-ScheduledTask -TaskName "BuildkiteWarmPoolWatcher"
 
-    # Completed last on this path so the watcher is already running before Auto Scaling is free
-    # to stop the instance and park it in the pool.
-    powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
+    $CompleteLifecycleActionAfterBootstrap = $true
   }
 }
 
@@ -498,6 +505,21 @@ if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
     }
 } else {
   Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
+}
+
+# Completing the Warmed:Pending:Wait action frees Auto Scaling to stop the instance, and it does
+# not wait for user data to finish. Completed here, last, because Windows user data never
+# re-runs: a stop landing earlier would mean the CloudWatch log retention above was never
+# applied on this instance, and with a warm pool most instances come from the pool. The watcher
+# is already running by now, so it picks up the InService transition on the next start.
+if ($CompleteLifecycleActionAfterBootstrap) {
+  powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
+
+  # The agent is not started on this path in any case, so a failure here never leaves an agent
+  # taking jobs: the instance is abandoned at the hook timeout instead.
+  if ($lastexitcode -ne 0) {
+    Write-Output "WARNING: Could not complete the warm pool lifecycle action, instance will be abandoned."
+  }
 }
 
 Set-PSDebug -Off

@@ -21,11 +21,25 @@ while true; do
 
   case "$state" in
   InService)
-    # The hook is completed before the agent starts, so a failure here cannot leave an agent
-    # taking jobs while the hook times out and ABANDON terminates the instance mid-job. If the
-    # agent then fails to start, buildkite-agent.service has FailureAction=poweroff-force.
-    echo "Target lifecycle state is InService, completing lifecycle action..."
-    /usr/local/bin/complete-warm-pool-lifecycle-action
+    # cloud-final re-runs every user-data part on each boot, not just the bootstrap, and only
+    # the bootstrap is guarded by its status file. bk-configure-docker.sh restarts Docker
+    # unconditionally, and buildkite-agent.service is only ordered After=docker.service, so an
+    # agent started before cloud-init finishes can lose the daemon under the first job. Waiting
+    # here rather than in the unit is deliberate: the bootstrap starts this service from inside
+    # cloud-final, so ExecStartPre=cloud-init status --wait would deadlock, and
+    # After=cloud-final.service would be an ordering cycle via multi-user.target on Ubuntu.
+    echo "Target lifecycle state is InService, waiting for cloud-init to finish..."
+    cloud-init status --wait >/dev/null || true
+
+    # The agent is not started when the hook could not be completed: the instance is abandoned
+    # at the hook timeout instead of being terminated mid-job. If the agent itself then fails
+    # to start, buildkite-agent.service has FailureAction=poweroff-force.
+    echo "Completing lifecycle action..."
+    if ! /usr/local/bin/complete-warm-pool-lifecycle-action; then
+      echo "Could not complete lifecycle action, not starting the agent."
+      exit 1
+    fi
+
     echo "Starting buildkite-agent..."
     systemctl start buildkite-agent
     exit 0

@@ -339,7 +339,10 @@ Parameters:
 
   WarmPoolEnabled:
     Type: String
-    Description: Enable ASG warm pool to keep pre-initialized instances ready for faster job starts.
+    Description: >
+      Enable ASG warm pool to keep pre-initialized instances ready for faster job starts.
+      Instances using a custom InstanceRoleARN must be granted autoscaling:CompleteLifecycleAction
+      separately, otherwise every launch is abandoned when the bootstrap lifecycle hook times out.
     AllowedValues:
       - "true"
       - "false"
@@ -349,6 +352,9 @@ Parameters:
     Type: String
     Description: >
       State of instances in the warm pool. Stopped is cheapest. Running avoids OS boot time on scale-out.
+      Stopped cannot be combined with EnableInstanceStorage, because instance storage is erased when an
+      instance is stopped. A Stopped pool caches the EBS root volume, so leaving instance storage disabled
+      is also what lets it cache Docker images.
       Hibernated is not currently offered: it additionally requires HibernationOptions in the launch template
       and an encrypted EBS root volume, and may be supported in a future update.
     AllowedValues:
@@ -1137,6 +1143,7 @@ Parameters:
       Mount available NVMe Instance Storage at /mnt/ephemeral, and use it to store docker images and
       containers, and the build working directory. You must ensure that the instance types have
       instance storage available for this to have any effect. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-store-volumes.html
+      Cannot be combined with WarmPoolState=Stopped, as instance storage is erased when an instance is stopped.
     AllowedValues:
       - "true"
       - "false"
@@ -1280,6 +1287,22 @@ Rules:
             - !Ref OnDemandPercentage
             - "100"
         AssertDescription: "Warm pools do not support Spot Instances in a mixed instances group. Set OnDemandPercentage to 100 when WarmPoolEnabled is true"
+  StoppedWarmPoolRejectsInstanceStorage:
+    RuleCondition:
+      !And
+        - !Equals
+            - !Ref WarmPoolEnabled
+            - "true"
+        - !Equals
+            - !Ref EnableInstanceStorage
+            - "true"
+    Assertions:
+      - Assert:
+          !Not
+            - !Equals
+                - !Ref WarmPoolState
+                - "Stopped"
+        AssertDescription: "A Stopped warm pool cannot be used with EnableInstanceStorage. Instance storage is erased when an instance is stopped, and its required mounts then fail on the boot that leaves the pool. Use WarmPoolState=Running, or set EnableInstanceStorage to false"
 
 Outputs:
   VpcId:

@@ -664,7 +664,7 @@ fetch_target_lifecycle_state() {
   local wait_time=1
   local max_wait=30
   local attempt=1
-  local token http_code
+  local token
 
   # As in fetch_metadata_with_retry, the curl calls are guarded by `if` rather than `set +e`,
   # because the ERR trap still fires for a failed command substitution assignment under `set -E`.
@@ -679,18 +679,6 @@ fetch_target_lifecycle_state() {
         --fail --silent --show-error \
         --location http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state 2>&1); then
         echo "Detected TARGET_LIFECYCLE_STATE=$TARGET_LIFECYCLE_STATE"
-        return 0
-      fi
-
-      # A 404 means the item is absent rather than unavailable: this ASG has no warm pool,
-      # so the instance is headed straight into service and retrying would not change that.
-      if http_code=$(curl -H "X-aws-ec2-metadata-token: $token" \
-        --max-time "$timeout" \
-        --silent --output /dev/null --write-out '%{http_code}' \
-        --location http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state 2>/dev/null) \
-        && [[ "$http_code" == "404" ]]; then
-        echo "No target-lifecycle-state in metadata (no warm pool on this group), assuming InService."
-        TARGET_LIFECYCLE_STATE=InService
         return 0
       fi
     fi
@@ -708,8 +696,13 @@ fetch_target_lifecycle_state() {
     attempt=$((attempt + 1))
   done
 
-  echo "WARNING: Could not read target-lifecycle-state after $max_attempts attempts, assuming InService."
-  TARGET_LIFECYCLE_STATE=InService
+  # Failing closed: an unreadable state is treated as pool-bound rather than InService. Assuming
+  # InService on a pool-bound instance completes the Warmed:Pending:Wait action and enables the
+  # agent, which then takes jobs while parked on a Running pool, or starts before the hook
+  # completes on the boot that leaves a Stopped pool. The watcher path is safe either way: an
+  # instance actually headed into service is picked up on the watcher's first poll.
+  echo "WARNING: Could not read target-lifecycle-state after $max_attempts attempts, deferring to warm-pool-watcher."
+  TARGET_LIFECYCLE_STATE=Unknown
 }
 
 # Set on the warm path, where the lifecycle action is completed after the status file is
@@ -729,6 +722,9 @@ else
   # instance, again at Warmed:Pending:Wait. Both pauses are completed before the agent can take
   # jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
   if [[ "$TARGET_LIFECYCLE_STATE" == "InService" ]]; then
+    # A failure here is fatal by way of the ERR trap, so the agent below is never started on an
+    # instance whose lifecycle action is still pending: it is abandoned at the hook timeout
+    # rather than terminated mid-job.
     /usr/local/bin/complete-warm-pool-lifecycle-action
 
     echo Starting buildkite-agent...
@@ -792,6 +788,10 @@ echo "Completed" >"$STATUS_FILE"
 # that a stop cannot land while the file still reads "Started" and fail check_status on the
 # boot where the instance leaves the pool. warm-pool-watcher is already running by now, so it
 # picks up the InService transition whenever the instance is started again.
+#
+# A failure here is left to the ERR trap, which marks the instance unhealthy. The agent is not
+# started on this path in any case, so the instance never takes a job: it is abandoned at the
+# hook timeout instead of sitting in the pool with an action nothing will ever complete.
 if [[ "$COMPLETE_LIFECYCLE_ACTION_AFTER_BOOTSTRAP" == "true" ]]; then
   /usr/local/bin/complete-warm-pool-lifecycle-action
 fi
