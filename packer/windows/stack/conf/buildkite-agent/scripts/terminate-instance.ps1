@@ -1,12 +1,18 @@
 Start-Transcript -path C:\buildkite-agent\terminate-instance.log -append
 
-$Token = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+# NSSM kills this hook after 60s. Bound every network call so the fallbacks,
+# including the shutdown, still run if IMDS or Auto Scaling is unresponsive.
+$Env:AWS_RETRY_MODE = "standard"
+$Env:AWS_MAX_ATTEMPTS = "2"
+$AwsTimeouts = @("--cli-connect-timeout", "2", "--cli-read-timeout", "3")
 
-$InstanceId = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
-$Region = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
+$Token = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+
+$InstanceId = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
+$Region = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
 
 Write-Output "$(Get-Date) terminate-instance: requesting instance termination..."
-aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
+aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" @AwsTimeouts 2> $null
 
 # The agent service does not restart after it exits, so the instance must be
 # replaced if it can't be removed. If the ASG can't decrement (we're already at
@@ -17,7 +23,7 @@ if ($lastexitcode -eq 0) {
   Write-Output "$(Get-Date) terminate-instance: terminating instance..."
 } else {
   Write-Output "$(Get-Date) terminate-instance: ASG could not decrement (we're already at minSize), terminating without decrement..."
-  aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--no-should-decrement-desired-capacity" 2> $null
+  aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--no-should-decrement-desired-capacity" @AwsTimeouts 2> $null
 
   if ($lastexitcode -eq 0) {
     Write-Output "$(Get-Date) terminate-instance: terminating instance (ASG will launch a replacement)..."
@@ -26,7 +32,8 @@ if ($lastexitcode -eq 0) {
     aws autoscaling set-instance-health `
       --instance-id "$InstanceId" `
       --region "$Region" `
-      --health-status Unhealthy
+      --health-status Unhealthy `
+      @AwsTimeouts
 
     # Last resort: the agent won't restart, so shut down and let the ASG
     # replace the stopped instance despite scale-in protection.
