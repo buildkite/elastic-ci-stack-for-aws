@@ -1,5 +1,8 @@
 <h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
+> [!WARNING]
+> Elastic CI Stack for AWS v7 is now available. New features will only be developed and released for v7, and will not be backported to v6. Security fixes will continue to be backported to v6. See the [v6 to v7 upgrade guide](https://buildkite.com/docs/agent/self-hosted/aws/elastic-ci-stack/ec2-linux-and-windows/v6-v7-upgrade-guide) for details on migrating.
+
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=main)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack/builds/latest?branch=main)
 
 ## Buildkite Elastic CI Stack for AWS
@@ -242,7 +245,9 @@ CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`
 
 ## Support Policy
 
-We provide support for security and bug fixes on the current major release only.
+We provide support for security and bug fixes on the current major release (v7) only.
+Security fixes will also be backported to v6. New features and non-security bug
+fixes will not be backported to v6.
 
 If there are any changes in the main branch since the last tagged release, we
 aim to publish a new tagged release of this template at the end of each month.

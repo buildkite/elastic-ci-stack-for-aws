@@ -2,11 +2,11 @@ module github.com/buildkite/elastic-ci-stack-for-aws/v6
 
 go 1.26.0
 
-toolchain go1.26.5
+toolchain go1.27.2
 
 require (
 	github.com/google/go-cmp v0.7.0
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 )
 
 require golang.org/x/sync v0.23.0
