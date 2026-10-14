@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.5.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.5.0) (2026-10-13)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.4.0...v7.5.0)
+
+### Changed
+- Bump s3 secrets helper to 2.9.0 [#1922](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1922) (@scadu)
+- Update module golang.org/x/sys to v0.49.0 [#1920](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1920) (@renovate[bot])
+- Update go toolchain directive to v1.27.2 [#1917](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1917) (@renovate[bot])
+- Update golang Docker tag to v1.27 [#1918](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1918) (@renovate[bot])
+- Update buildkite/buildkite-agent-scaler to v1.16.0 [#1916](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1916) (@renovate[bot])
+- Update buildkite-agent to v4.4.0 [#1915](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1915) (@renovate[bot])
+
+### Internal
+- Add v7 support policy banner to README [#1913](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1913) (@petetomasik)
+- Fix release steps being skipped by change filtering [#1887](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1887) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.4.0)</h3></summary>
+
+### [v4.4.0](https://github.com/buildkite/agent/releases/tag/v4.4.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### 🐛 Fixed
+* Stop leaking `BUILDKITE_JOB_LOG_TMPFILE` between jobs when `enable-job-log-tmpfile` is set and the agent runs with `--spawn` by @isaacsu in https://github.com/buildkite/agent/pull/4484
+* Treat Windows paths such as `C:\tools\runner.exe` as absolute when resolving commands by @tomowatt in https://github.com/buildkite/agent/pull/4382
+##### 🔧 Changed
+* Redact Buildkite tokens by prefix in errors reported by the experimental `buildkite-agent job capture-error` by @123sarahj123 in https://github.com/buildkite/agent/pull/4468
+* Show the `buildkite-agent cache exec` restore report inside the replay or run group, instead of in a separate group by @ss1909 in https://github.com/buildkite/agent/pull/4483
+* Explain how to fix `buildkite-agent cache save` and `cache restore` on hosted agents when they run inside a Docker plugin container by @buildkate in https://github.com/buildkite/agent/pull/4492
+##### 🏠 Internal
+* Remove repository docs that duplicate the public docs site by @zhming0 in https://github.com/buildkite/agent/pull/4467
+* Move Git LFS fetch and checkout helpers into git_lfs.go by @zhming0 in https://github.com/buildkite/agent/pull/4493
+* Move finishMirrorUpdate into checkout_mirror.go by @zhming0 in https://github.com/buildkite/agent/pull/4494
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.3.0...v4.4.0
+
+</details>
+
+
+## [v7.4.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.4.0) (2026-10-08)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.3.0...v7.4.0)
+
+### Changed
+- Update buildkite-agent to v4.3.0 [#1911](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1911) (@renovate[bot])
+- Update Git for Windows to v2.55.0 [#1910](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1910) (@renovate[bot])
+- Update Docker Compose to v5.6.0 [#1909](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1909) (@renovate[bot])
+- Update aws-cli to v2.37.10 [#1907](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1907) (@renovate[bot])
+
+### Internal
+- Combine Agent release notes into one changelog section [#1912](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1912) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.3.0)</h3></summary>
+
+### [v4.3.0](https://github.com/buildkite/agent/releases/tag/v4.3.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### ✨ Added
+* Add `--git-mirrors-lfs-cache` (off by default) to cache Git LFS objects in Git mirrors, so checkouts on the same host don't download them again by @zhming0 in https://github.com/buildkite/agent/pull/4408
+##### 🐛 Fixed
+* Stop cache invalidation from deleting a cache entry that another job has just saved again by @ss1909 in https://github.com/buildkite/agent/pull/4442
+##### 🔧 Changed
+* Title replayed output "Cache exec saved" instead of "Cache hit saved" when `buildkite-agent cache exec` skips a command by @ss1909 in https://github.com/buildkite/agent/pull/4462
+* Skip the upload in `buildkite-agent cache save` when the cache store already has an identical archive by @buildkate in https://github.com/buildkite/agent/pull/4463
+##### 🏠 Internal
+* Speed up release jobs by building the release tools image once per build by @moskyb in https://github.com/buildkite/agent/pull/4457
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.2.1...v4.3.0
+
+</details>
+
+
 ## [v7.3.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.3.0) (2026-10-07)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.2.0...v7.3.0)
 
