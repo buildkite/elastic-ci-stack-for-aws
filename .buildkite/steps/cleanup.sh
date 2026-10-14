@@ -32,7 +32,7 @@ aws s3api list-buckets \
   --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date")" \
   | xargs -n1 \
   | grep -E 'buildkite-aws-stack-test-.*-managedsecretsbucket' \
-  | xargs -n1 -t -I% aws s3 rb s3://% --force
+  | xargs -t -I% aws s3 rb s3://% --force
 
 echo "--- Deleting test managed secrets logging buckets created"
 aws s3api list-buckets \
@@ -40,16 +40,16 @@ aws s3api list-buckets \
   --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date")" \
   | xargs -n1 \
   | grep -E 'buildkite-aws-stack-test--managedsecretsloggingbuc' \
-  | xargs -n1 -t -I% aws s3 rb s3://% --force
+  | xargs -t -I% aws s3 rb s3://% --force
 
 # Do this before deleting the stacks so we don't race with stack-managed log
 # groups
-echo "--- Deleting old lambda logs after ${cutoff_date_milli}"
+echo "--- Deleting Lambda log groups older than one day"
 aws logs describe-log-groups \
   --log-group-name-prefix "/aws/lambda/buildkite-aws-stack-test-" \
   --query "$(printf 'logGroups[?creationTime<`%s`].[logGroupName]' "$cutoff_date_milli")" \
   --output text \
-  | xargs -n1 -t -I% aws logs delete-log-group --log-group-name "%"
+  | xargs -t -I% aws logs delete-log-group --log-group-name "%"
 
 echo "--- Deleting old cloudformation stacks for test stacks"
 # Test stacks are deleted through their build's service role, so no role may be
