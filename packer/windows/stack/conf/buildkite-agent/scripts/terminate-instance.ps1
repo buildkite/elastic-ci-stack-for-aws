@@ -1,9 +1,9 @@
 Start-Transcript -path C:\buildkite-agent\terminate-instance.log -append
 
-$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
+$Token = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
 
-$InstanceId = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
-$Region = (Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
+$InstanceId = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
+$Region = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
 
 Write-Output "$(Get-Date) terminate-instance: requesting instance termination..."
 aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" 2> $null
@@ -27,6 +27,15 @@ if ($lastexitcode -eq 0) {
       --instance-id "$InstanceId" `
       --region "$Region" `
       --health-status Unhealthy
+
+    # Last resort: the agent won't restart, so shut down and let the ASG
+    # replace the stopped instance despite scale-in protection.
+    if ($lastexitcode -ne 0) {
+      Write-Output "$(Get-Date) terminate-instance: could not mark instance unhealthy, shutting down"
+      Stop-Transcript
+      shutdown /s /f /t 0
+      exit 0
+    }
   }
 }
 
