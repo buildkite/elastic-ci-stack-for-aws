@@ -309,32 +309,8 @@ If ($Env:BUILDKITE_WINDOWS_ADMINISTRATOR -eq "true") {
 # terminate-instance.ps1 runs as this user and shuts the instance down as a last
 # resort. Non-administrators can't shut down Windows Server by default, so grant
 # the right explicitly. The instance role can already terminate this instance.
-$UserSid = (Get-LocalUser -Name $UserName).SID.Value
-$RightsExport = "$Env:TEMP\user-rights-export.inf"
-$RightsConfig = "$Env:TEMP\user-rights.inf"
-$RightsDb = "$Env:TEMP\user-rights.sdb"
-secedit /export /cfg $RightsExport /areas USER_RIGHTS | out-null
-If ($lastexitcode -ne 0 -or !(Test-Path $RightsExport)) {
-  # Without the current list, configuring the right would replace it entirely
-  Write-Output "Warning: failed to export user rights, not granting $UserName the right to shut down the system"
-} Else {
-  $ShutdownRight = Select-String -Path $RightsExport -Pattern '^SeShutdownPrivilege\s*=\s*(.*)$'
-  $ShutdownAccounts = @(If ($ShutdownRight) { $ShutdownRight.Matches[0].Groups[1].Value }) + "*$UserSid"
-  Set-Content -Path $RightsConfig -Encoding Unicode -Value @"
-[Unicode]
-Unicode=yes
-[Version]
-signature="`$CHICAGO`$"
-Revision=1
-[Privilege Rights]
-SeShutdownPrivilege = $($ShutdownAccounts -join ",")
-"@
-  secedit /configure /db $RightsDb /cfg $RightsConfig /areas USER_RIGHTS | out-null
-  If ($lastexitcode -ne 0) {
-    Write-Output "Warning: failed to grant $UserName the right to shut down the system (secedit exit code $lastexitcode)"
-  }
-}
-Remove-Item -Path $RightsExport, $RightsConfig, $RightsDb -ErrorAction SilentlyContinue
+. C:\buildkite-agent\bin\bk-user-rights.ps1
+[BkUserRights]::Add((Get-LocalUser -Name $UserName).SID.Value, "SeShutdownPrivilege")
 
 # Set JWKS key file permissions now that the buildkite-agent user exists
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
