@@ -50,6 +50,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 - Update buildkite-agent to v4.3.0 [#1911](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1911) (@renovate[bot])
+- Update Git for Windows to v2.55.0 [#1910](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1910) (@renovate[bot])
+- Update Docker Compose to v5.6.0 [#1909](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1909) (@renovate[bot])
 - Update aws-cli to v2.37.10 [#1907](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1907) (@renovate[bot])
 
 ### Internal
