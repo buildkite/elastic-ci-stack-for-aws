@@ -9,4 +9,4 @@ require (
 	golang.org/x/sys v0.49.0
 )
 
-require golang.org/x/sync v0.23.0
+require golang.org/x/sync v0.24.0
