@@ -20,7 +20,10 @@ Write-Output "$(Get-Date) terminate-instance: requesting instance termination...
 # immediately. Stop retrying after 15s to leave time for the fallbacks below.
 $Backoff = 1
 while ($true) {
-  $Output = (aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" @AwsTimeouts 2>&1 | ForEach-Object { "$_" }) -join "`n"
+  # Windows PowerShell wraps each stderr line in an ErrorRecord, which renders a
+  # blank line as "System.Management.Automation.RemoteException", so use the
+  # exception message for those.
+  $Output = (aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" @AwsTimeouts 2>&1 | ForEach-Object { if ($_ -is [Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } }) -join "`n"
   if ($lastexitcode -eq 0) { break }
   Write-Output "$(Get-Date) terminate-instance: termination with capacity decrement failed: $($Output.Trim())"
   if ($Output -notmatch '\((Throttling|ResourceContention|ScalingActivityInProgress)\)' -or $Stopwatch.Elapsed.TotalSeconds + $Backoff -gt 15) { break }
