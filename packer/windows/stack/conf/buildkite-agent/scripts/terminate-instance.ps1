@@ -58,8 +58,9 @@ if ($lastexitcode -eq 0) {
     # replace the stopped instance despite scale-in protection.
     if ($lastexitcode -ne 0) {
       Write-Output "$(Get-Date) terminate-instance: could not mark instance unhealthy, shutting down"
-      Stop-Transcript
       shutdown /s /f /t 0
+      Write-Output "$(Get-Date) terminate-instance: shutdown exited with code $lastexitcode"
+      Stop-Transcript
       exit 0
     }
   }
