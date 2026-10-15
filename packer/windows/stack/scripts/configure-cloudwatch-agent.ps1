@@ -10,5 +10,9 @@ Write-Output "Starting amazon cloudwatch agent..."
 & 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a fetch-config -m ec2 -c file:C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json -s
 
 # The base AMI sets the agent to manual start, so it wouldn't start on boot.
-Write-Output "Setting amazon cloudwatch agent start type to automatic..."
-Set-Service -Name AmazonCloudWatchAgent -StartupType Automatic
+# Delay the start: during boot the agent can miss the 30s service start
+# timeout, and nothing retries it. See
+# https://repost.aws/knowledge-center/cloudwatch-startup-reboot-errors
+Write-Output "Setting amazon cloudwatch agent start type to delayed automatic..."
+sc.exe config AmazonCloudWatchAgent start= delayed-auto
+if ($LASTEXITCODE -ne 0) { throw "Failed to set the amazon cloudwatch agent start type" }
