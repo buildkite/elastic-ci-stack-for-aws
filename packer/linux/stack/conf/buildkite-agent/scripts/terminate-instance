@@ -16,6 +16,27 @@ terminate_without_decrement() {
     --no-should-decrement-desired-capacity
 }
 
+# Retry errors that clear on their own, such as throttling when many instances
+# scale in together, so the ASG doesn't launch an unnecessary replacement.
+# Other errors, such as the ValidationError at minSize, fail immediately.
+terminate_with_retry() {
+  local output
+  local backoff=1
+  local deadline=$((SECONDS + 15))
+  local retryable='\((Throttling|ResourceContention|ScalingActivityInProgress)\)'
+
+  until output=$(terminate "$1" "$2" 2>&1); do
+    echo "Termination with capacity decrement failed: ${output}"
+    if [[ ! "$output" =~ $retryable ]] || ((SECONDS + backoff > deadline)); then
+      return 1
+    fi
+    echo "Retrying in ${backoff}s..."
+    sleep "$backoff"
+    backoff=$((backoff * 2))
+  done
+  echo "$output"
+}
+
 mark_as_unhealthy() {
   aws autoscaling set-instance-health \
     --region "$1" \
@@ -110,7 +131,7 @@ fi
 
 echo "requesting instance termination..."
 # Try to terminate with capacity decrement first
-if terminate "$region" "$instance_id"; then
+if terminate_with_retry "$region" "$instance_id"; then
   echo "Successfully terminated instance with desired capacity decremented"
 else
   # If that fails (e.g., desired == min), try without decrementing

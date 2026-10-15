@@ -1,4 +1,5 @@
 Start-Transcript -path C:\buildkite-agent\terminate-instance.log -append
+$Stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
 # NSSM kills this hook after 60s. Bound every network call so the fallbacks,
 # including the shutdown, still run if IMDS or Auto Scaling is unresponsive.
@@ -12,17 +13,35 @@ $InstanceId = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Headers @{'X-aw
 $Region = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/placement/region).content
 
 Write-Output "$(Get-Date) terminate-instance: requesting instance termination..."
-aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" @AwsTimeouts 2> $null
+
+# Retry errors that clear on their own, such as throttling when many instances
+# scale in together, so the ASG doesn't launch an unnecessary replacement.
+# Other errors, such as the ValidationError at minSize, fall through
+# immediately. Stop retrying after 15s to leave time for the fallbacks below.
+$Backoff = 1
+while ($true) {
+  # Windows PowerShell wraps each stderr line in an ErrorRecord, which renders a
+  # blank line as "System.Management.Automation.RemoteException", so use the
+  # exception message for those.
+  $Output = (aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" @AwsTimeouts 2>&1 | ForEach-Object { if ($_ -is [Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } }) -join "`n"
+  if ($lastexitcode -eq 0) { break }
+  Write-Output "$(Get-Date) terminate-instance: termination with capacity decrement failed: $($Output.Trim())"
+  if ($Output -notmatch '\((Throttling|ResourceContention|ScalingActivityInProgress)\)' -or $Stopwatch.Elapsed.TotalSeconds + $Backoff -gt 15) { break }
+  Write-Output "$(Get-Date) terminate-instance: retrying in ${Backoff}s..."
+  Start-Sleep -Seconds $Backoff
+  $Backoff *= 2
+}
 
 # The agent service does not restart after it exits, so the instance must be
-# replaced if it can't be removed. If the ASG can't decrement (we're already at
-# minSize), terminate without decrementing so the ASG launches a replacement.
-# If that also fails, mark the instance unhealthy so the ASG replaces it
-# despite scale-in protection.
+# replaced if it can't be removed. If the ASG can't decrement (for example,
+# we're already at minSize), terminate without decrementing so the ASG
+# launches a replacement. If that also fails, mark the instance unhealthy so
+# the ASG replaces it despite scale-in protection.
 if ($lastexitcode -eq 0) {
+  Write-Output $Output
   Write-Output "$(Get-Date) terminate-instance: terminating instance..."
 } else {
-  Write-Output "$(Get-Date) terminate-instance: ASG could not decrement (we're already at minSize), terminating without decrement..."
+  Write-Output "$(Get-Date) terminate-instance: terminating without decrement..."
   aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--no-should-decrement-desired-capacity" @AwsTimeouts 2> $null
 
   if ($lastexitcode -eq 0) {
