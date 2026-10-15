@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.6.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.6.0) (2026-10-15)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.5.0...v7.6.0)
+
+### Changed
+- Update buildkite-agent to v4.5.0 [#1927](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1927) (@renovate[bot])
+- Update module golang.org/x/sync to v0.24.0 [#1919](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1919) (@renovate[bot])
+
+### Internal
+- Add missing v7.4.0 bundled-tool entries to changelog [#1926](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1926) (@scadu)
+- Add release notes for v7.5.0, backfill v7.4.0 [#1925](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1925) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.5.0)</h3></summary>
+
+### [v4.5.0](https://github.com/buildkite/agent/releases/tag/v4.5.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### 🔒 Security
+* Add `--protected-environment-variables` and `--protect-dangerous-git-environment-variables` to stop jobs from setting chosen environment variables, such as `GIT_SSH_COMMAND` by @moskyb in https://github.com/buildkite/agent/pull/4503
+* Check out plugins pinned to a full commit SHA at that commit, even when a branch has the same name by @jasonwbarnett in https://github.com/buildkite/agent/pull/4458
+* Apply plugin and repository allowlists to job environment variables regardless of case on Windows, and refuse jobs with names that only differ by case by @moskyb in https://github.com/buildkite/agent/pull/4498
+* Mask URL credentials and query strings in errors captured with `buildkite-agent job capture-error` by @pinzonjulian in https://github.com/buildkite/agent/pull/4485
+##### 🐛 Fixed
+* Always download `buildkite-agent cache restore` archives inside the restore's temporary directory by @jamiemonserrate in https://github.com/buildkite/agent/pull/4440
+* Check the repository against `--allowed-repositories` before checkout starts by @jamiemonserrate in https://github.com/buildkite/agent/pull/4439
+* Fix fetching branches with quotes in their names when `BUILDKITE_COMMIT` is `HEAD` by @isaacsu in https://github.com/buildkite/agent/pull/4512
+* Build the branch rather than a tag with the same name when `BUILDKITE_COMMIT` is `HEAD` by @isaacsu in https://github.com/buildkite/agent/pull/4513
+##### 🔧 Changed
+* Remove `--context` from `buildkite-agent job capture-error`; put all important details in `--message` instead by @pinzonjulian in https://github.com/buildkite/agent/pull/4478
+* Truncate messages captured with `buildkite-agent job capture-error` to 1,000 characters by @123sarahj123 in https://github.com/buildkite/agent/pull/4465
+##### 🏠 Internal
+* Tell robot reviewers how to check release PRs by @moskyb in https://github.com/buildkite/agent/pull/4461
+* Tell agents how to label PRs by @moskyb in https://github.com/buildkite/agent/pull/4499
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4506 and https://github.com/buildkite/agent/pull/4510
+
+#### New Contributors
+* @pinzonjulian made their first contribution in https://github.com/buildkite/agent/pull/4478
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.4.0...v4.5.0
+
+</details>
+
+
 ## [v7.5.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.5.0) (2026-10-13)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.4.0...v7.5.0)
 
