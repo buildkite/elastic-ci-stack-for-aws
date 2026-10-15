@@ -306,6 +306,12 @@ If ($Env:BUILDKITE_WINDOWS_ADMINISTRATOR -eq "true") {
   Add-LocalGroupMember -Group "Administrators" -Member $UserName | out-null
 }
 
+# terminate-instance.ps1 runs as this user and shuts the instance down as a last
+# resort. Non-administrators can't shut down Windows Server by default, so grant
+# the right explicitly. The instance role can already terminate this instance.
+. C:\buildkite-agent\bin\bk-user-rights.ps1
+[BkUserRights]::Add((Get-LocalUser -Name $UserName).SID.Value, "SeShutdownPrivilege")
+
 # Set JWKS key file permissions now that the buildkite-agent user exists
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
   $keyfile = "C:\buildkite-agent\signing-key.json"
@@ -356,10 +362,10 @@ If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Pat
 nssm set buildkite-agent AppEnvironmentExtra +BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-nssm set buildkite-agent AppExit Default Restart
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
-
-nssm set buildkite-agent AppRestartDelay 10000
+# Don't restart the agent when it exits. NSSM runs the Exit/Post hook
+# asynchronously, so a restart can't wait for terminate-instance.ps1 and the
+# agent would accept jobs on an instance that is terminating (#753).
+nssm set buildkite-agent AppExit Default Exit
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
