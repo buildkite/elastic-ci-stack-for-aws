@@ -33,6 +33,55 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 </details>
 
 
+## [v7.7.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.7.0) (2026-10-16)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.6.0...v7.7.0)
+
+### Changed
+- Update buildkite-agent to v4.6.0 [#1931](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1931) (@renovate[bot])
+- Start the CloudWatch agent on boot on Windows [#1930](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1930) (@petetomasik)
+
+### Fixed
+- Stop restarting the Windows agent after it exits [#1924](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1924) (@petetomasik)
+- Retry transient errors before terminating without decrement [#1929](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1929) (@petetomasik)
+- Log the Windows shutdown fallback result and ship Windows instance logs to CloudWatch [#1930](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1930) (@petetomasik)
+
+### Internal
+- Update changelog for v7.6.0 [#1928](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1928) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.6.0)</h3></summary>
+
+### [v4.6.0](https://github.com/buildkite/agent/releases/tag/v4.6.0)
+
+#### What's Changed
+##### 🔒 Security
+* Stop running Git hooks from shared mirrors when `git-mirrors-path` is set, so anyone who can write to a mirror can't run code in the next job that updates it. Hooks put in a mirror on purpose no longer run by @isaacsu in https://github.com/buildkite/agent/pull/4501
+##### ✨ Added
+Job errors are an experimental feature that's only enabled for Buildkite's own pipelines. It isn't available to other organizations, and it may change or be removed.
+
+* Report failed local Git commands in the default checkout as job errors when a step sets `BUILDKITE_CAPTURE_GIT_ERRORS: "true"` by @pinzonjulian in https://github.com/buildkite/agent/pull/4486
+* Report failed Git fetches and clones as job errors, with codes for missing refs, rejected credentials and network failures by @pinzonjulian in https://github.com/buildkite/agent/pull/4487
+* Report checkout failures outside Git commands as job errors, such as checkout and lock timeouts, invalid refs and a missing `git-lfs` by @pinzonjulian in https://github.com/buildkite/agent/pull/4488
+* Add the experimental `BUILDKITE_CAPTURE_AGENT_ERRORS` opt-in for reporting failures the agent observes as job errors, and warn when the experimental `buildkite-agent job capture-error` is given a code starting with the reserved `buildkite.` prefix by @pinzonjulian in https://github.com/buildkite/agent/pull/4464
+* Report failed hooks as job errors, with the end of their output by @pinzonjulian in https://github.com/buildkite/agent/pull/4469
+* Report failed commands as job errors, with the end of their output by @pinzonjulian in https://github.com/buildkite/agent/pull/4470
+* Report secret and plugin failures as job errors by @pinzonjulian in https://github.com/buildkite/agent/pull/4471
+* Report failed pipeline uploads, secret and OIDC token requests, and Git credential lookups as job errors by @pinzonjulian in https://github.com/buildkite/agent/pull/4472
+* Report failed artifact uploads and downloads, and cache saves and restores, as job errors by @pinzonjulian in https://github.com/buildkite/agent/pull/4473
+* Report why the agent refused a job as a job error, such as a signature that doesn't verify or a value an allowlist refuses, and report Kubernetes containers that never connect or are lost by @pinzonjulian in https://github.com/buildkite/agent/pull/4474
+##### 🐛 Fixed
+* Correct the `--cancel-cleanup-timeout` help text: it gives a stopping agent time to upload the job log, not artifacts by @scadu in https://github.com/buildkite/agent/pull/4514
+##### 🔧 Changed
+* Stop sending experimental `buildkite-agent job capture-error` reports for a job once Buildkite refuses one because the job's error quota is full or error capture isn't available by @123sarahj123 in https://github.com/buildkite/agent/pull/4497
+##### 🏠 Internal
+* Treat breaking experimental surface as a minor release change by @moskyb in https://github.com/buildkite/agent/pull/4517
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.5.0...v4.6.0
+
+</details>
+
+
 ## [v7.6.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.6.0) (2026-10-15)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.5.0...v7.6.0)
 
