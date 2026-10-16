@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.7](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.7) (2026-10-16)
+
+### What's Changed
+* Update v6 default agent to v3.138.1 by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1932
+
+
+**Full Changelog**: https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.6...v6.71.7
+
+<details>
+<summary><h3>Agent Changelog (v3.138.1)</h3></summary>
+
+### [v3.138.1](https://github.com/buildkite/agent/releases/tag/v3.138.1)
+
+#### What's Changed
+##### 🔒 Security
+* Stop running git hooks from shared mirrors when the agent updates them with `git-mirrors-path` set by @isaacsu in https://github.com/buildkite/agent/pull/4520
+##### 🐛 Fixed
+* Stop leaking `BUILDKITE_JOB_LOG_TMPFILE` between jobs when `--enable-job-log-tmpfile` is used with `--spawn` by @isaacsu in https://github.com/buildkite/agent/pull/4491
+* Prevent possible Windows agent crashes when a job is terminated more than once by @moskyb in https://github.com/buildkite/agent/pull/4431
+##### 🏠 Internal
+* Various internal CI and release tooling changes by @moskyb in https://github.com/buildkite/agent/pull/4431, https://github.com/buildkite/agent/pull/4430 and https://github.com/buildkite/agent/pull/4455
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4298, https://github.com/buildkite/agent/pull/4335, https://github.com/buildkite/agent/pull/4389, https://github.com/buildkite/agent/pull/4362, https://github.com/buildkite/agent/pull/4508 and https://github.com/buildkite/agent/pull/4509
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.138.0...v3.138.1
+
+</details>
+
+
 ## [v7.7.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.7.0) (2026-10-16)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.6.0...v7.7.0)
 
