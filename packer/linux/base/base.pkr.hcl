@@ -136,8 +136,19 @@ source "amazon-ebs" "buildkite-base-ami" {
   }
   imds_support = "v2.0"
 
+  # The amazon plugin also copies run_tags to the AMI and its snapshots. `tags`
+  # below overwrites Name, BuildNumber and Purpose there, but ManagedBy stays,
+  # so never select builders by ManagedBy alone.
+  run_tags = {
+    Name        = "Packer Builder" // cleanup.sh and cleanup-packer.sh match builders on this
+    ManagedBy   = "elastic-ci-stack-for-aws"
+    Purpose     = "disposable-ci"
+    BuildNumber = var.build_number
+  }
+
   tags = {
     Name        = "${local.ami_prefix}-${var.arch}"
+    Purpose     = "ami"
     OSVersion   = local.os_version
     Distro      = var.os_distro
     BuildNumber = var.build_number
