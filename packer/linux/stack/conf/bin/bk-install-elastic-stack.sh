@@ -723,8 +723,9 @@ else
   # jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
   if [[ "$TARGET_LIFECYCLE_STATE" == "InService" ]]; then
     # A failure here is fatal by way of the ERR trap, so the agent below is never started on an
-    # instance whose lifecycle action is still pending: it is abandoned at the hook timeout
-    # rather than terminated mid-job.
+    # instance whose lifecycle action is still pending. on_error marks the instance unhealthy
+    # and fails the cfn-signal, and the cloud-final drop-in powers it off, so it is gone well
+    # before the hook times out rather than being terminated mid-job.
     /usr/local/bin/complete-warm-pool-lifecycle-action
 
     echo Starting buildkite-agent...

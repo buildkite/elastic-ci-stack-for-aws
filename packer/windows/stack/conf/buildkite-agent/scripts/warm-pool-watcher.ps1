@@ -4,11 +4,11 @@ Start-Transcript -path C:\buildkite-agent\warm-pool-watcher.log -append
 
 function Get-TargetLifecycleState {
   try {
-    $Token = (Invoke-WebRequest -UseBasicParsing -Method Put `
+    $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -TimeoutSec 5 `
       -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '30'} `
       http://169.254.169.254/latest/api/token).content
 
-    return (Invoke-WebRequest -UseBasicParsing `
+    return (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 `
       -Headers @{'X-aws-ec2-metadata-token' = $Token} `
       http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state).content
   } catch {
