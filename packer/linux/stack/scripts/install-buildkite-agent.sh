@@ -73,6 +73,7 @@ sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 echo "Adding systemd service template..."
 sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent.service /etc/systemd/system/buildkite-agent.service
+sudo cp /tmp/conf/buildkite-agent/systemd/warm-pool-watcher.service /etc/systemd/system/warm-pool-watcher.service
 
 echo "Adding cloud-init failure safety check..."
 sudo mkdir -p /etc/systemd/system/cloud-final.service.d/
@@ -85,6 +86,12 @@ sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/s
 sudo chmod 755 /usr/local/bin/stop-agent-gracefully
 sudo cp /tmp/conf/buildkite-agent/scripts/terminate-instance /usr/local/bin/terminate-instance
 sudo chmod 755 /usr/local/bin/terminate-instance
+
+echo "Adding warm pool scripts..."
+sudo cp /tmp/conf/buildkite-agent/scripts/warm-pool-watcher /usr/local/bin/warm-pool-watcher
+sudo chmod 755 /usr/local/bin/warm-pool-watcher
+sudo cp /tmp/conf/buildkite-agent/scripts/complete-warm-pool-lifecycle-action /usr/local/bin/complete-warm-pool-lifecycle-action
+sudo chmod 755 /usr/local/bin/complete-warm-pool-lifecycle-action
 
 echo "Copying built-in plugins..."
 sudo mkdir -p /usr/local/buildkite-aws-stack/plugins
