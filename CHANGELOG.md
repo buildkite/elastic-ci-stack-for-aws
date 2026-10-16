@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Changed
+- Update the bundled Linux and Windows agents from v3.138.0 to [v3.138.1](https://github.com/buildkite/agent/releases/tag/v3.138.1). This stops agents running git hooks from shared mirrors when updating them with `git-mirrors-path` set, stops `BUILDKITE_JOB_LOG_TMPFILE` leaking between jobs with `--spawn`, and prevents possible Windows agent crashes when a job is terminated more than once.
 - Update the bundled Linux and Windows agents from v3.137.2 to [v3.138.0](https://github.com/buildkite/agent/releases/tag/v3.138.0), the latest stable Agent v3 release. Stack v6's default `stable` agent uses the pinned v3 binary from the upstream `oldstable` download channel.
 
 ### Fixed
