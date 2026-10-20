@@ -1,6 +1,7 @@
 x-if-changed-patterns:
   - &if_changed_base_linux
     include:
+      - "packer/trust/**"
       - "packer/linux/base/**"
       - "packer/linux/shared/**"
       - ".buildkite/steps/packer.sh"
@@ -8,6 +9,7 @@ x-if-changed-patterns:
 
   - &if_changed_base_windows
     include:
+      - "packer/trust/**"
       - "packer/windows/base/**"
       - "packer/windows/shared/**"
       - ".buildkite/steps/packer.sh"

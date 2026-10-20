@@ -1,0 +1,71 @@
+# eMudhra trust remediation (20 October 2026)
+
+Source: https://emudhra.we-have-a-problem.com/ (consulted 21 October 2026).
+`roots/*.crt` are the four affected trust anchors from the incident's `roots.json`;
+the SHA-256 DER fingerprints are pinned in both validators. The two newer roots
+(TLS and code signing G3) are Microsoft-specific. `chains/*.pem` are the twelve
+published TLS chains from `chains.zip`, captured 20 October 2026. They contain
+public certificates only. `isrg-root-x1.crt` is the unrelated positive control from
+https://letsencrypt.org/certs/isrgrootx1.pem (fingerprint pinned in unit tests).
+
+## Coverage
+
+- Stable Buildkite agent: 4.7.0 on both platforms. Unstable/latest is intentionally
+  unchanged; it tracks main, which already includes the incident fix. No Buildkite
+  CLI is installed by this repository; none is introduced.
+- AL2023 (including the fixed CIS source AMI): update the CA/p11-kit packages from
+  `--releasever=latest`, not just the source AMI's locked repository snapshot;
+  explicitly blocklist the affected roots and regenerate the extracted stores.
+- Ubuntu 24.04: require at least the vendor-patched
+  `20260816ubuntu0.24.04.1` CA package; persist the incident's two documented root
+  exclusions and regenerate the store. Both architectures use the same script.
+- Windows: put all four affected roots in LocalMachine/Disallowed **before**
+  Chocolatey/other HTTPS downloads. Do not depend on online revocation or assume a
+  recent Server 2022 AMI received the Microsoft disallowed-list update.
+- Git for Windows uses its own OpenSSL CA bundle; remove the affected roots there,
+  independently of Windows CryptoAPI. Do not change Git's TLS backend.
+- AWS CLI 2.37.10 bundles `awscli/botocore/cacert.pem` on both platforms
+  ([source](https://github.com/aws/aws-cli/blob/2.37.10/awscli/botocore/httpsession.py)).
+  Filter and validate that actual installed file, not just the OS store. This is
+  a local incident workaround: reinstalling/upgrading AWS CLI or Git can replace
+  the file and requires reapplying/validating the remediation.
+- s3secrets-helper 2.9.0 uses the AWS SDK's default Go HTTP transport
+  ([source](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/blob/v2.9.0/s3secrets-helper/s3/s3.go)).
+  lifecycled 3.6.0 similarly uses default AWS sessions
+  ([source](https://github.com/buildkite/lifecycled/blob/v3.6.0/cmd/lifecycled/main.go)).
+  Neither installs an embedded trust bundle in this stack. Their default trust is
+  the OS store (Go CryptoAPI on Windows); no speculative version bump is made.
+  This is a source assessment, not per-binary endpoint validation.
+
+Root removal also distrusts unrelated certificates issued beneath those roots.
+Custom CA bundles, TLS overrides, user-installed runtimes, container images,
+plugins and customer workloads are not covered by host trust changes. This is
+not a claim that every bundled or workload HTTPS client is remediated.
+
+## Validation and rebuilding
+
+Provisioning fails if offline checks fail. Linux goss validates the effective
+system bundle, AWS CLI bundle and stable agent version. Windows provisioning and
+hosted Windows tests validate explicit distrust/positive CryptoAPI control, both
+embedded bundles, all twelve TLS chains and the stable agent pin. The offline
+OpenSSL checks use the fixed capture timestamp and require issuer-not-found
+(error 20), not just any error; ISRG Root X1 must still validate. No negative live
+endpoint or unreliable internet-dependent unit test is used.
+
+Local unit command (OpenSSL 3 and Python 3, on a remediated Linux system):
+
+```sh
+python3 -m unittest discover -s tests/trust -v
+```
+
+Shared trust inputs invalidate **both base caches**, and the existing packer
+filters select all final images. Rebuild fresh bases **and** final images for
+AL2023 AMD64/ARM64, Ubuntu AMD64/ARM64, Windows AMD64 and private CIS AL2023 AMD64.
+Do not reuse an old cached/custom `BASE_AMI_ID`. Package updates happen in the
+base layer; merely rebuilding final images is insufficient.
+
+Local Docker validation does not prove EC2 AMI behavior or CIS hardening
+compatibility. Windows Server/CryptoAPI/PowerShell 5.1, the installed Windows Git
+and AWS CLI layout, real agent binaries and all hosted image checks still need
+validation before release. The offline root checks cover code-signing anchors,
+not end-to-end Authenticode execution policy behavior.

@@ -101,8 +101,14 @@ build {
     source      = "scripts/versions.ps1"
   }
 
+  provisioner "file" {
+    destination = "C:/Windows/Temp/"
+    source      = "../../trust"
+  }
+
   provisioner "powershell" {
     scripts = [
+      "scripts/remediate-trust.ps1",
       "scripts/install-utils.ps1",
       "scripts/install-cloudwatch-agent.ps1",
       "scripts/install-lifecycled.ps1",
