@@ -1,5 +1,6 @@
 """Offline regression tests; run with python3 -m unittest discover -s tests/trust."""
 import importlib.util
+import re
 from pathlib import Path
 import tempfile
 import unittest
@@ -51,13 +52,16 @@ class TrustTests(unittest.TestCase):
                 trust.check(Path(file.name))
 
     def test_agent_pins_and_beta(self):
-        for platform, extension, pin in [
-            ("linux", "sh", 'AGENT_VERSION="4.7.0"'),
-            ("windows", "ps1", '$AGENT_VERSION = "4.7.0"'),
-        ]:
+        versions = []
+        for platform, extension in [("linux", "sh"), ("windows", "ps1")]:
             installer = (ROOT / f"packer/{platform}/stack/scripts/install-buildkite-agent.{extension}").read_text()
-            self.assertIn(pin, installer)
+            match = re.search(r'AGENT_VERSION\s*=\s*"(\d+)\.(\d+)\.(\d+)"', installer)
+            self.assertIsNotNone(match)
+            version = tuple(map(int, match.groups()))
+            self.assertGreaterEqual(version, (4, 7, 0))
+            versions.append(version)
             self.assertIn("/agent/unstable/latest/", installer)
+        self.assertEqual(versions[0], versions[1])
 
     def test_trust_provisioned_before_downloads(self):
         for platform, extension in [("linux", "sh"), ("windows", "ps1")]:

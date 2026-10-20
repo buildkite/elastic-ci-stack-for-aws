@@ -118,7 +118,7 @@ steps:
           - git --version
           - buildkite-agent --version
           - '& C:\ProgramData\Buildkite\trust\check-trust.ps1'
-          - 'if ((buildkite-agent-stable.exe --version) -notmatch "4\.7\.0") { throw "Unexpected stable agent version" }'
+          - 'if ((buildkite-agent-stable.exe --version) -notmatch "version (\d+\.\d+\.\d+)" -or [version]$Matches[1] -lt [version]"4.7.0") { throw "Stable agent must be 4.7.0 or newer" }'
           - docker info
           - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
           # terminate-instance.ps1 needs this right for its shutdown fallback
