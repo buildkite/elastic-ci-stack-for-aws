@@ -130,6 +130,9 @@ esac
 unzip -qq awscliv2.zip
 sudo ./aws/install
 popd
+# AWS CLI v2 has an embedded CA bundle; OS distrust does not cover it.
+sudo python3 /usr/local/share/buildkite-trust/check-trust.py --sanitize \
+  /usr/local/aws-cli/v2/current/dist/awscli/botocore/cacert.pem
 
 echo "Installing git lfs ${GIT_LFS_VERSION}..."
 pushd "$(mktemp -d -p /var/tmp)"

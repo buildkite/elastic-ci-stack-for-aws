@@ -12,3 +12,7 @@ grep -rl '^#!/.*sh' . | while read -r file; do
   docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d "$file"
   echo -e "Ok.\\n"
 done
+
+# No network: validate committed certificate fixtures and configuration invariants.
+docker run --rm -v "$PWD:/src:ro" -w /src python:3.12-bookworm \
+  python3 -m unittest discover -s tests/trust -v

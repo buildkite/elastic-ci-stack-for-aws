@@ -4,9 +4,9 @@ VERSION = $(shell git describe --tags --candidates=1)
 SHELL = /bin/bash -o pipefail
 
 PACKER_VERSION ?= 1.11.2
-PACKER_LINUX_BASE_FILES = $(shell find packer/linux/base packer/linux/shared)
+PACKER_LINUX_BASE_FILES = $(shell find packer/linux/base packer/linux/shared packer/trust)
 PACKER_LINUX_STACK_FILES = $(shell find packer/linux/stack packer/linux/shared)
-PACKER_WINDOWS_BASE_FILES = $(shell find packer/windows/base)
+PACKER_WINDOWS_BASE_FILES = $(shell find packer/windows/base packer/trust)
 PACKER_WINDOWS_STACK_FILES = $(shell find packer/windows/stack)
 
 # Allow passing an existing golden base AMI into packer via `BASE_AMI_ID` env var
