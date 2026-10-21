@@ -25,6 +25,9 @@ Write-Output "Installing Git for Windows"
 choco install -y git --version=$GIT_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
+# Git and AWS CLI use embedded PEM bundles, not the Windows certificate store.
+& 'C:\ProgramData\Buildkite\trust\check-trust.ps1' -Sanitize
+
 Write-Output "Installing nssm"
 choco install -y nssm
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
