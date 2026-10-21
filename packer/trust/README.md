@@ -2,11 +2,8 @@
 
 Source: https://emudhra.we-have-a-problem.com/ (consulted 21 October 2026).
 `roots/*.crt` are the four affected trust anchors from the incident's `roots.json`;
-the SHA-256 DER fingerprints are pinned in both validators. The two newer roots
-(TLS and code signing G3) are Microsoft-specific. `chains/*.pem` are the twelve
-published TLS chains from `chains.zip`, captured 20 October 2026. They contain
-public certificates only. `isrg-root-x1.crt` is the unrelated positive control from
-https://letsencrypt.org/certs/isrgrootx1.pem (fingerprint pinned in unit tests).
+the SHA-256 DER fingerprints are pinned in both validators. These public
+certificates are needed to install explicit distrust, not to grant trust.
 
 ## Coverage
 
@@ -44,15 +41,21 @@ not a claim that every bundled or workload HTTPS client is remediated.
 
 ## Validation and rebuilding
 
-Provisioning fails if offline checks fail. Linux goss validates the effective
-system bundle, AWS CLI bundle and stable agent version. Windows provisioning and
-hosted Windows tests validate explicit distrust/positive CryptoAPI control, both
-embedded bundles, all twelve TLS chains and the stable agent pin. The offline
-OpenSSL checks use the fixed capture timestamp and require issuer-not-found
-(error 20), not just any error; ISRG Root X1 must still validate. No negative live
-endpoint or unreliable internet-dependent unit test is used.
+Provisioning fails if affected roots remain in the effective Linux system bundle
+or the AWS CLI/Git PEM bundles, or if Windows explicit distrust is missing.
+Nonempty-bundle and stable-agent-version checks run in the hosted image tests.
+The unrelated certificate in `tests/trust` exercises preservation of safe roots
+in local unit tests; it is not copied into images.
 
-Local unit command (OpenSSL 3 and Python 3, on a remediated Linux system):
+[Build 6893](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack/builds/6893)
+qualified fresh base/final images and runtime behavior for all six variants using
+the twelve published incident chains, issuer-not-found checks at the capture date,
+and an unrelated positive trust control. Those incident-specific chain fixtures
+and checks were subsequently removed; ongoing image checks retain only the
+blocked-root guards. The full qualification suite remains in that build's commit
+(`70ed5d305d43da6b686796aa1c7b82ef062ad193`).
+
+Local unit command (Python 3, no network required):
 
 ```sh
 python3 -m unittest discover -s tests/trust -v
@@ -64,8 +67,6 @@ AL2023 AMD64/ARM64, Ubuntu AMD64/ARM64, Windows AMD64 and private CIS AL2023 AMD
 Do not reuse an old cached/custom `BASE_AMI_ID`. Package updates happen in the
 base layer; merely rebuilding final images is insufficient.
 
-Local Docker validation does not prove EC2 AMI behavior or CIS hardening
-compatibility. Windows Server/CryptoAPI/PowerShell 5.1, the installed Windows Git
-and AWS CLI layout, real agent binaries and all hosted image checks still need
-validation before release. The offline root checks cover code-signing anchors,
-not end-to-end Authenticode execution policy behavior.
+Changes to provisioning still require fresh image validation before release.
+The root checks cover code-signing anchors, not end-to-end Authenticode execution
+policy behavior.
