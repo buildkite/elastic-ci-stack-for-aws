@@ -88,7 +88,7 @@ if ($usableListener) {
     if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
 
     winrm set winrm/config/client `
-      '@{SkipCACheck="true"; SkipCNCheck="true"; TrustedHosts="*"}'
+      '@{TrustedHosts="*"}'
     if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
 
     netsh advfirewall firewall add rule `

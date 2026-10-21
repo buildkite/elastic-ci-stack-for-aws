@@ -46,7 +46,13 @@ function New-Item {
 }
 function Set-Content { param($Path,$Value,$Encoding) $script:written=$Value }
 function hostname { 'MOCK-HOST' }
-function winrm { $global:LASTEXITCODE = $script:nativeExit }
+function winrm {
+  if (($args -join ' ') -match 'SkipCACheck|SkipCNCheck') {
+    $global:LASTEXITCODE = 1
+  } else {
+    $global:LASTEXITCODE = $script:nativeExit
+  }
+}
 function netsh { $global:LASTEXITCODE = 0 }
 $cases = @(
   @{Name='same instance preserves';Marker='i-0123456789abcdef0';Valid=$true;Fails=$false;Exit=0;Expected=0;Throws=$false},
