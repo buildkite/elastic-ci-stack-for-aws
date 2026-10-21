@@ -8,14 +8,22 @@ Write-Host "=== User Data: Configuring WinRM HTTPS w/ Self-Signed Cert ==="
 # an AMI clone. Do not reuse a pre-Sysprep listener just because its certificate
 # still appears valid. Require IMDSv2 identity before changing any listener.
 $metadataUrl = 'http://169.254.169.254/latest'
-$metadataToken = Invoke-RestMethod -UseBasicParsing -Method Put `
-  -Uri "$metadataUrl/api/token" `
-  -Headers @{ 'X-aws-ec2-metadata-token-ttl-seconds' = '60' } -TimeoutSec 30
-$instanceId = Invoke-RestMethod -UseBasicParsing `
-  -Uri "$metadataUrl/meta-data/instance-id" `
-  -Headers @{ 'X-aws-ec2-metadata-token' = $metadataToken } -TimeoutSec 30
-if ($instanceId -notmatch '^i-[0-9a-f]+$') {
-  throw 'Could not determine the EC2 instance ID; refusing to replace the WinRM listener.'
+for ($attempt = 1; $attempt -le 5; $attempt++) {
+  try {
+    $metadataToken = Invoke-RestMethod -UseBasicParsing -Method Put `
+      -Uri "$metadataUrl/api/token" `
+      -Headers @{ 'X-aws-ec2-metadata-token-ttl-seconds' = '60' } -TimeoutSec 10
+    $instanceId = ([string](Invoke-RestMethod -UseBasicParsing `
+      -Uri "$metadataUrl/meta-data/instance-id" `
+      -Headers @{ 'X-aws-ec2-metadata-token' = $metadataToken } -TimeoutSec 10)).Trim()
+    if ($instanceId -notmatch '^i-[0-9a-f]+$') {
+      throw 'Could not determine the EC2 instance ID; refusing to replace the WinRM listener.'
+    }
+    break
+  } catch {
+    if ($attempt -eq 5) { throw }
+    Start-Sleep -Seconds 5
+  }
 }
 $listenerStateDir = Join-Path $env:ProgramData 'Buildkite\Packer'
 $listenerInstanceFile = Join-Path $listenerStateDir 'winrm-instance-id'
@@ -65,31 +73,38 @@ if ($usableListener) {
     -CertificateThumbPrint $cert.Thumbprint `
     -Force
 
-  winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-  if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
-  winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
-  if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
+  # Windows PowerShell 5.1 can turn native stderr into error records. Use
+  # explicit exit codes for these commands, retaining Stop for cmdlets.
+  try {
+    $ErrorActionPreference = 'Continue'
+    winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+    if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
+    winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
+    if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
 
-  winrm set winrm/config/service/auth '@{Basic="true"}'
-  if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
-  winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-  if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
+    winrm set winrm/config/service/auth '@{Basic="true"}'
+    if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
+    winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+    if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
 
-  winrm set winrm/config/client `
-    '@{SkipCACheck="true"; SkipCNCheck="true"; TrustedHosts="*"}'
-  if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
+    winrm set winrm/config/client `
+      '@{SkipCACheck="true"; SkipCNCheck="true"; TrustedHosts="*"}'
+    if ($LASTEXITCODE -ne 0) { throw "WinRM configuration failed with exit code $LASTEXITCODE" }
 
-  netsh advfirewall firewall add rule `
-    name="WinRM HTTP" protocol=TCP dir=in localport=5985 action=allow
-  if ($LASTEXITCODE -ne 0) { throw "WinRM firewall configuration failed with exit code $LASTEXITCODE" }
-  netsh advfirewall firewall add rule `
-    name="WinRM HTTPS" protocol=TCP dir=in localport=5986 action=allow
+    netsh advfirewall firewall add rule `
+      name="WinRM HTTP" protocol=TCP dir=in localport=5985 action=allow
+    if ($LASTEXITCODE -ne 0) { throw "WinRM firewall configuration failed with exit code $LASTEXITCODE" }
+    netsh advfirewall firewall add rule `
+      name="WinRM HTTPS" protocol=TCP dir=in localport=5986 action=allow
 
-  # Write only after configuration succeeds. A missing/mismatched marker must
-  # never cause an inherited listener to be accepted on the next boot.
-  if ($LASTEXITCODE -ne 0) {
-    throw "WinRM firewall configuration failed with exit code $LASTEXITCODE"
+    if ($LASTEXITCODE -ne 0) {
+      throw "WinRM firewall configuration failed with exit code $LASTEXITCODE"
+    }
+  } finally {
+    $ErrorActionPreference = 'Stop'
   }
+
+  # Record ownership only after all configuration commands succeed.
   New-Item -Path $listenerStateDir -ItemType Directory -Force | Out-Null
   Set-Content -Path $listenerInstanceFile -Value $instanceId -Encoding ASCII
 }
