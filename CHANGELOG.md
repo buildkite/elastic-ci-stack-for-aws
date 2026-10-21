@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.8.0) (2026-10-21)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.7.0...v7.8.0)
+
+### Security
+- Remediate compromised eMudhra certificate chains in Linux and Windows image trust stores, including the separate AWS CLI and Git for Windows CA bundles [#1939](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1939) (@omehegan).
+
+### Changed
+- Update the stable Buildkite agent from v4.6.0 to v4.7.0 [#1939](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1939) (@omehegan).
+
+### Fixed
+- Fix Windows image reboot and WinRM provisioning races, and validate Docker before publishing the base image [#1941](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1941) (@omehegan).
+
+### Internal
+- Update changelogs for v7.7.0 and v6.71.7 [#1933](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1933), [#1934](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1934) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v4.7.0)</h3></summary>
+
+### [v4.7.0](https://github.com/buildkite/agent/releases/tag/v4.7.0)
+
+#### Important security update
+
+**Upgrade to v4.7.0 promptly.** This release addresses [compromised eMudhra certificate chains](https://emudhra.we-have-a-problem.com/) (CVE-2026-111943) by building the agent with Go 1.26.10, which rejects the affected chains, including alternate cross-signed paths.
+
+Installing the updated agent is required to receive this protection. It doesn't update OS, container or custom trust stores, or protect external tools run by jobs; remediate those separately.
+
+#### What's Changed
+##### 🔒 Security
+* Reject compromised eMudhra certificate chains (CVE-2026-111943) by building with Go 1.26.10 by @duckalini in https://github.com/buildkite/agent/pull/4550
+* Prevent artifact downloads escaping their destination through directory symlinks by @isaacsu in https://github.com/buildkite/agent/pull/4541
+* Add opt-in `--git-commit-verification=fail-closed` to reject checkouts when commit verification can't succeed by @dahtey-bk in https://github.com/buildkite/agent/pull/4530
+* Protect `GIT_ALLOW_PROTOCOL` when `--protect-dangerous-git-environment-variables` is enabled and list the protected variables in help by @moskyb in https://github.com/buildkite/agent/pull/4527
+##### 🐛 Fixed
+* Redact secrets containing apostrophes in `buildkite-agent secret get --format env` output in build logs by @isaacsu in https://github.com/buildkite/agent/pull/4531
+* Honour the agent's `BUILDKITE_CAPTURE_AGENT_ERRORS` setting when it's protected from job overrides by @123sarahj123 in https://github.com/buildkite/agent/pull/4524
+##### 🔧 Changed
+* Show the `cache` command in `buildkite-agent --help` by @ss1909 in https://github.com/buildkite/agent/pull/4482
+##### 🏠 Internal
+* Replace deprecated HTTP/2 transport configuration by @isaacsu in https://github.com/buildkite/agent/pull/4542
+* Add a pipeline to close stale issues and PRs by @moskyb in https://github.com/buildkite/agent/pull/4544
+* Run stale issue and PR cleanup on elastic runners by @moskyb in https://github.com/buildkite/agent/pull/4546
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4536, https://github.com/buildkite/agent/pull/4535, https://github.com/buildkite/agent/pull/4419, https://github.com/buildkite/agent/pull/4537, https://github.com/buildkite/agent/pull/4447, https://github.com/buildkite/agent/pull/4545, https://github.com/buildkite/agent/pull/4504, https://github.com/buildkite/agent/pull/4505, https://github.com/buildkite/agent/pull/4540 and https://github.com/buildkite/agent/pull/4416
+
+#### New Contributors
+* @dahtey-bk made their first contribution in https://github.com/buildkite/agent/pull/4530
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.6.0...v4.7.0
+
+</details>
+
+
 ## [v6.71.7](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.7) (2026-10-16)
 
 ### What's Changed
