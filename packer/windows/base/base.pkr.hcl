@@ -110,8 +110,9 @@ build {
     ]
   }
 
+  # Install Containers once, then let Packer initiate and wait for the reboot.
   provisioner "windows-restart" {
-    restart_command = "C:/packer-temp/scripts/enable-containers.ps1"
+    restart_timeout = "20m"
     timeout         = "20m"
   }
 
@@ -120,6 +121,11 @@ build {
       "scripts/install-docker.ps1",
       "scripts/install-session-manager-plugin.ps1"
     ]
+  }
+
+  # Independently verify installation before allowing this base to be published.
+  provisioner "powershell" {
+    script = "scripts/validate-docker.ps1"
   }
 
   # Cleanup and sysprep

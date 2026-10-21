@@ -4,6 +4,6 @@ Write-Host "=== Enabling Windows Containers feature ==="
 
 Install-WindowsFeature -Name Containers -IncludeAllSubFeature -ErrorAction Stop
 
-Write-Host "Containers feature is installed, rebooting in 5s"
-Start-Sleep -Seconds 5
-Restart-Computer -Force
+# Packer's windows-restart provisioner owns the reboot and waits for WinRM.
+# Rebooting here can leave the next provisioner using a stale connection.
+Write-Host "Containers feature is installed; Packer will restart the machine."
