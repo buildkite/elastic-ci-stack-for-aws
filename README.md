@@ -254,8 +254,7 @@ also needs a running SSM Agent and network access to the SSM endpoints. Packer s
 uses WinRM; the profile is not part of the resulting AMI.
 
 The profile is optional for local builds. Windows CI builds use `packer-ssm`, which
-must first be provisioned by applying the Terraform configuration in
-[`buildkite/aws-buildkite-dist`](https://github.com/buildkite/aws-buildkite-dist/pull/183).
+must exist in the build account before the builds run.
 
 ### Release builds
 
