@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+STAGING_DIR="${STAGING_DIR:?STAGING_DIR must be set by Packer}"
 # shellcheck disable=SC1091
-source "/tmp/distro.sh"
+source "${STAGING_DIR}/distro.sh"
 
 echo "Installing cloudwatch agent..."
 case "${OS_DISTRO}" in
