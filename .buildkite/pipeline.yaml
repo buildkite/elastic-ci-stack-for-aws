@@ -209,6 +209,8 @@ steps:
       - aws --version
       - jq --version
       - git --version
+      - '& C:\ProgramData\Buildkite\trust\check-trust.ps1'
+      - 'if ((buildkite-agent-stable.exe --version) -notmatch "version (\d+\.\d+\.\d+)" -or [version]$$Matches[1] -lt [version]"3.138.2" -or ([version]$$Matches[1]).Major -ne 3) { throw "Stable agent must be v3, version 3.138.2 or newer" }'
       - docker info
       - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
     timeout_in_minutes: 5

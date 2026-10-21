@@ -107,6 +107,15 @@ process:
     running: true
 
 command:
+  python3 /usr/local/share/buildkite-trust/check-trust.py:
+    exit-status: 0
+
+  python3 /usr/local/share/buildkite-trust/check-trust.py /usr/local/aws-cli/v2/current/dist/awscli/botocore/cacert.pem:
+    exit-status: 0
+
+  "test $(printf '%s\\n' 3.138.2 $(buildkite-agent-stable --version | awk '{print $3}') | sort -V | head -n1) = 3.138.2 && buildkite-agent-stable --version | grep -Eq 'version 3[.]'":
+    exit-status: 0
+
   # Ubuntu 24.04 ships OpenSSH as a socket-activated unit (ssh.socket); there is
   # no persistent sshd process and no sshd.service like on Amazon Linux. Assert
   # the socket is enabled at boot and active (the port 22 checks cover reach).
