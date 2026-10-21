@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.8](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.8) (2026-10-21)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.7...v6.71.8)
+
+### Security
+- Remediate compromised eMudhra certificate chains in Linux and Windows image trust stores, including the separate AWS CLI and Git for Windows CA bundles [#1944](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1944) (@scadu).
+
+### Changed
+- Update the stable Buildkite agent from v3.138.1 to v3.138.2 [#1944](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1944) (@scadu).
+
+### Fixed
+- Fix Windows image reboot and WinRM provisioning races, and validate Docker before publishing the base image [#1944](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1944) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v3.138.2)</h3></summary>
+
+### [v3.138.2](https://github.com/buildkite/agent/releases/tag/v3.138.2)
+
+#### Important security update
+
+**Upgrade to v3.138.2 promptly.** This release addresses [compromised eMudhra certificate chains](https://emudhra.we-have-a-problem.com/) (CVE-2026-111943) by building the agent with Go 1.26.10, which rejects the affected chains, including alternate cross-signed paths.
+
+Installing the updated agent is required to receive this protection. It doesn't update OS, container or custom trust stores, or protect external tools run by jobs; remediate those separately.
+
+#### What's Changed
+##### 🔒 Security
+* Reject compromised eMudhra certificate chains (CVE-2026-111943) by building with Go 1.26.10 by @moskyb in https://github.com/buildkite/agent/pull/4551
+* Prevent artifact downloads escaping their destination through directory symlinks, unless the `allow-artifact-path-traversal` experiment is enabled by @isaacsu in https://github.com/buildkite/agent/pull/4548
+* Update `github.com/lestrrat-go/jwx/v3` to 3.3.0 to fix JSON member-name escaping (GHSA-4cf7-xm37-g63h) by @dependabot[bot] in https://github.com/buildkite/agent/pull/4366
+* Update `github.com/klauspost/compress` to fix a zstd decoder crash on crafted input ([GHSA-fpmh-frq8-7rj8](https://github.com/klauspost/compress/security/advisories/GHSA-fpmh-frq8-7rj8)) by @dependabot[bot] in https://github.com/buildkite/agent/pull/4345
+##### 🏠 Internal
+* Replace deprecated HTTP/2 transport configuration to unblock dependency upgrades by @isaacsu in https://github.com/buildkite/agent/pull/4547
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4301, https://github.com/buildkite/agent/pull/4392, https://github.com/buildkite/agent/pull/4391, https://github.com/buildkite/agent/pull/4365, https://github.com/buildkite/agent/pull/4543, https://github.com/buildkite/agent/pull/4393 and https://github.com/buildkite/agent/pull/4549
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.138.1...v3.138.2
+
+</details>
+
 ## [v7.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.8.0) (2026-10-21)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.7.0...v7.8.0)
 
