@@ -116,8 +116,9 @@ build {
     ]
   }
 
+  # Install Containers once, then let Packer initiate and wait for the reboot.
   provisioner "windows-restart" {
-    restart_command = "C:/packer-temp/scripts/enable-containers.ps1"
+    restart_timeout = "20m"
     timeout         = "20m"
   }
 
