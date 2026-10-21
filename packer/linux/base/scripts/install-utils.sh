@@ -3,10 +3,11 @@
 set -euo pipefail
 
 # Source centralized version definitions
+STAGING_DIR="${STAGING_DIR:?STAGING_DIR must be set by Packer}"
 # shellcheck disable=SC1091
-source "/tmp/versions.sh"
+source "${STAGING_DIR}/versions.sh"
 # shellcheck disable=SC1091
-source "/tmp/distro.sh"
+source "${STAGING_DIR}/distro.sh"
 
 case $(uname -m) in
 x86_64)
@@ -149,4 +150,4 @@ sudo curl -Lsf -o /usr/local/bin/dgoss \
 sudo chmod 755 /usr/local/bin/dgoss
 
 echo "Adding authorized keys systemd units..."
-sudo cp /tmp/conf/ssh/systemd/* /etc/systemd/system
+sudo cp "${STAGING_DIR}/conf/ssh/systemd/"* /etc/systemd/system
