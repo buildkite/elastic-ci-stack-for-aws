@@ -123,6 +123,11 @@ build {
     ]
   }
 
+  # Independently verify installation before allowing this base to be published.
+  provisioner "powershell" {
+    script = "scripts/validate-docker.ps1"
+  }
+
   # Cleanup and sysprep
   provisioner "powershell" {
     inline = [
