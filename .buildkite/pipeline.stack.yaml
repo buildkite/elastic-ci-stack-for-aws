@@ -87,6 +87,7 @@ steps:
         timeout_in_minutes: 60
         env:
           AMI_PUBLIC: true
+          PKR_VAR_iam_instance_profile: "packer-ssm"
         retry: { automatic: { limit: 3 } }
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
