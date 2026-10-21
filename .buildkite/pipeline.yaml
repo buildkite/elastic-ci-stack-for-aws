@@ -64,6 +64,7 @@ steps:
     timeout_in_minutes: 40
     env:
       AMI_PUBLIC: false
+      PKR_VAR_iam_instance_profile: "packer-ssm"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if_changed: *if_changed_base_windows

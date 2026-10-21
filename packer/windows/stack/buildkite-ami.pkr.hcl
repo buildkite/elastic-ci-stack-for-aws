@@ -55,6 +55,12 @@ variable "ami_users" {
   default     = []
 }
 
+variable "iam_instance_profile" {
+  type        = string
+  description = "Optional instance profile for the Windows image build instance."
+  default     = ""
+}
+
 data "amazon-ami" "windows-server-2022" {
   filters = {
     name                = "Windows_Server-2022-English-Full-Base-*"
@@ -82,6 +88,8 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_port     = 5986
   winrm_timeout  = "60m"
   winrm_username = "Administrator"
+
+  iam_instance_profile = var.iam_instance_profile
 
   launch_block_device_mappings {
     volume_type           = "gp3"
