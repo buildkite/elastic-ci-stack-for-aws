@@ -6,7 +6,7 @@
 [submodule "plugins/ecr"]
 	path = plugins/ecr
 	url = https://github.com/buildkite-plugins/ecr-buildkite-plugin.git
-	branch = v2.11.0
+	branch = v2.12.0
 
 [submodule "plugins/docker-login"]
 	path = plugins/docker-login
