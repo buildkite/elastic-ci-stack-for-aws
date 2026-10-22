@@ -102,6 +102,9 @@ trap {
   Write-Warning "Bootstrap failed at line $($_.InvocationInfo.ScriptLineNumber): $_"
   if (-not $BootstrapCompleted -and -not $AgentStarted) {
     try {
+      # Allow file collection and the default 5s CloudWatch flush interval before
+      # ABANDON can terminate this instance. This is best-effort, not delivery confirmation.
+      Start-Sleep -Seconds 10
       Initialize-InstanceIdentity
       if (-not (Complete-InstanceLaunch -Result ABANDON -Deadline (Get-Date).AddSeconds(30))) {
         Write-Warning 'Bootstrap recovery unconfirmed; a pending launch will time out.'

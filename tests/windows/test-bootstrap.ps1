@@ -144,6 +144,31 @@ try {
         } elseif ($testState.signaled) { throw "Failed bootstrap signaled success: $($case.Name)" }
         Write-Host "PASS: $($case.Name)"
     }
+
+    # Execute the template's userdata wrapper with a real child PowerShell process.
+    # Service/AWS mocks alone cannot catch lost native stderr or log encoding errors.
+    $template = Get-Content (Join-Path $PSScriptRoot '../../templates/aws-stack.yml') -Raw
+    $wrapper = [regex]::Match($template, '(?s)<powershell>(.*?)</powershell>').Groups[1].Value
+    $wrapper = $wrapper -replace '\$\{[^}]+\}', 'fixture'
+    $fixture = Join-Path $scratch 'logging-child.ps1'
+    $log = Join-Path $scratch 'bootstrap.log'
+    Set-Content -Path $fixture -Encoding utf8 -Value @'
+Write-Output ('bootstrap stdout caf' + [char]0xE9)
+Write-Warning 'bootstrap warning'
+[Console]::Error.WriteLine('bootstrap stderr')
+exit 7
+'@
+    $wrapper = $wrapper.Replace('powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1', "& '$((Get-Process -Id $PID).Path)' -NoProfile -File '$fixture'")
+    $wrapper = $wrapper.Replace('C:\buildkite-agent\elastic-stack.log', "'$log'")
+    $wrapperFile = Join-Path $scratch 'userdata.ps1'
+    Set-Content -Path $wrapperFile -Value $wrapper
+    & $wrapperFile
+    if ($LASTEXITCODE -ne 7) { throw 'Userdata did not preserve the bootstrap exit code' }
+    $logged = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($log))
+    foreach ($message in @(('bootstrap stdout caf' + [char]0xE9), 'bootstrap warning', 'bootstrap stderr')) {
+        if (-not $logged.Contains($message)) { throw "Missing UTF-8 bootstrap log message: $message" }
+    }
+    Write-Host 'PASS: userdata preserves bootstrap stdout, warnings, stderr, UTF-8, and exit code'
 } finally {
     Remove-PSDrive C
     Remove-Item $scratch -Recurse -Force

@@ -322,6 +322,10 @@ Provide Buildkite with logs from CloudWatch Logs:
 /buildkite/system/{instance-id}
 ```
 
+Windows also collects EC2Launch v2 activity in `/buildkite/EC2Launch`, user data output in `/buildkite/EC2Launch/UserdataExecution`, user data errors in `/buildkite/EC2Launch/UserdataExecution/error`, and CloudWatch agent diagnostics in `/buildkite/cloudwatch-agent`. Each uses the instance ID as the log stream name. The bootstrap log in `/buildkite/elastic-stack` includes standard output, errors, and diagnostic streams, encoded as UTF-8.
+
+Windows user data attempts to start CloudWatch logging before bootstrap. On a bootstrap failure, it allows ten seconds for log collection before attempting to abandon the launch. Delivery is best-effort: an unavailable CloudWatch endpoint, a launch timeout, or abrupt instance termination can still prevent logs from uploading. User data output and error collectors follow the newest matching EC2Launch temporary files; generated user data scripts are not collected because they can contain credentials.
+
 ### Collect logs via script
 
 [`utils/log-collector`](utils/log-collector) pulls your stack's CloudWatch logs into a tarball you can send to support.

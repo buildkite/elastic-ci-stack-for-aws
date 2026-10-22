@@ -2477,7 +2477,16 @@ Resources:
                   $Env:AWS_REGION="${AWS::Region}"
                   $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
                   $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
-                  powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
+                  & {
+                    # Do not wait until the end of bootstrap to start collecting failure logs.
+                    try {
+                      Start-Service AmazonCloudWatchAgent -ErrorAction Stop
+                    } catch {
+                      Write-Warning "Could not start CloudWatch logging before bootstrap: $_"
+                    }
+                    powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1
+                  } *>&1 | Out-File -FilePath C:\buildkite-agent\elastic-stack.log -Append -Encoding utf8
+                  exit $LASTEXITCODE
                   </powershell>
                 - LocalSecretsBucket: !If
                     - CreateSecretsBucket
