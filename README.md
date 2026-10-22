@@ -104,6 +104,18 @@ Buildkite marks agents that stop sending heartbeats as lost and fails their runn
 
 Agent service failures and out-of-memory kills within the service also trigger instance replacement, interrupting all jobs on that instance. Normal graceful shutdown lets running jobs finish.
 
+## Windows launch protection
+
+Windows instances remain in Auto Scaling's `Pending:Wait` state until bootstrap finishes configuration, starts the required services, and successfully starts the Buildkite Agent service. Bootstrap then completes the launch hook with `CONTINUE`. This checks service startup, not agent registration with the Buildkite API.
+
+`WindowsLaunchTimeout` defaults to 900 seconds (15 minutes). If bootstrap never runs, hangs, or cannot complete the launch hook, Auto Scaling abandons the launch when the hook times out. Bootstrap also attempts to abandon failed launches explicitly. Use the template and Windows AMI from the same release; older Windows AMIs do not complete this hook.
+
+The Windows CloudFormation creation timeout defaults to 30 minutes and can be overridden with `InstanceCreationTimeout`. A successful launch sends a CloudFormation success signal. An individual bootstrap failure does not send a failure signal, allowing a replacement to succeed while CloudFormation is still waiting. Persistent failures cause stack creation to fail through its timeout. Linux signaling and timeout defaults are unchanged.
+
+Bootstrap records configuration status in `C:\buildkite-agent\elastic-stack-bootstrap-status`. A repeated invocation skips completed configuration and rejects incomplete configuration rather than resuming it. This is not a reboot recovery mechanism: the existing NSSM exit hook requests instance termination when the agent exits or its service is stopped.
+
+If supplying `InstanceRoleARN`, grant `autoscaling:CompleteLifecycleAction` for the stack's Auto Scaling group, in addition to the existing instance-role permissions. The stack-created role includes this permission.
+
 ## Scheduled Scaling
 
 The Elastic CI Stack supports time-based scaling to automatically adjust the minimum number of instances based on your team's working hours. This feature helps optimize costs by scaling down during off-hours while allowing users the ability to proactively scale up capacity ahead of expected increasing capacity requirements.
