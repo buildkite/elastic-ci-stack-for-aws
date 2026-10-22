@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.9.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.0) (2026-10-22)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.8.0...v7.9.0)
+
+### Changed
+- Update the stable Buildkite agent from v4.7.0 to v4.8.0 [#1940](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1940) (@renovate[bot]).
+- Update the Buildkite agent scaler from v1.16.0 to v1.16.1 [#1948](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1948) (@renovate[bot]).
+- Update AWS CLI to v2.38.4 and Session Manager plugin to v1.2.896.0 [#1952](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1952), [#1951](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1951) (@renovate[bot]).
+- Update Docker Compose to v5.6.1 and Buildx to v0.38.1 [#1953](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1953), [#1955](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1955) (@renovate[bot]).
+- Update Linux binfmt emulation to qemu-v10.2.3-68 [#1957](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1957) (@renovate[bot]).
+- Update lifecycled to v3.7.0 [#1954](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1954) (@renovate[bot]).
+- Update Git for Windows to v2.56.0 [#1956](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1956) (@renovate[bot]).
+- Update bundled S3 secrets hooks and helper to v2.9.1 [#1958](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1958) (@scadu).
+- Update bundled ECR plugin to v2.12.0 and Docker login plugin to v3.1.0 [#1961](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1961), [#1960](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1960) (@renovate[bot]).
+
+### Fixed
+- Fix Windows CA bundle sanitization and checks for Git 2.56's native layout, check the separate MSYS CA bundle, and discover Git's native binary directory for PATH [#1959](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1959) (@scadu).
+
+### Internal
+- Automate bundled plugin updates with Renovate and document manual S3 secrets updates [#1958](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1958) (@scadu).
+- Update the Go toolchain to v1.27.3 [#1950](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1950) (@renovate[bot]).
+- Update CI plugins aws-assume-role-with-web-identity to v1.8.1 and docker-compose to v5.16.0 [#1947](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1947), [#1953](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1953) (@renovate[bot]).
+- Update changelogs for v7.8.0 and v6.71.8 [#1945](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1945), [#1946](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1946) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v4.8.0)</h3></summary>
+
+### [v4.8.0](https://github.com/buildkite/agent/releases/tag/v4.8.0)
+
+#### What's Changed
+##### ✨ Added
+* Add the `program-status` experiment to show program status in job logs and report job and upload progress by @wolfeidau in https://github.com/buildkite/agent/pull/4534
+##### 🔧 Changed
+* Upgrade to Go 1.27.3: macOS binaries now require macOS 13 or later; big-endian Linux `ppc64` binaries require ELFv2 support (kernel 3.13 or a compatible backport). `ppc64le` is unaffected by @isaacsu in https://github.com/buildkite/agent/pull/4559
+##### 🏠 Internal
+* Check cancellation results in integration tests by @isaacsu in https://github.com/buildkite/agent/pull/4558
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4557
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.7.0...v4.8.0
+
+</details>
+
+
 ## [v6.71.8](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.8) (2026-10-21)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.7...v6.71.8)
 
