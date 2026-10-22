@@ -6,6 +6,9 @@
   "schedule": [
     "monthly"
   ],
+  "git-submodules": {
+    "enabled": true
+  },
   "customManagers": [
     {
       "customType": "regex",
@@ -249,6 +252,18 @@
       "matchManagers": ["custom.regex"],
       "ignoreUnstable": true,
       "respectLatest": true
+    },
+    {
+      "matchManagers": ["git-submodules"],
+      "matchDepNames": ["plugins/secrets"],
+      "groupName": "s3-secrets",
+      "separateMajorMinor": false
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["buildkite/elastic-ci-stack-s3-secrets-hooks"],
+      "groupName": "s3-secrets",
+      "separateMajorMinor": false
     }
   ]
 }
