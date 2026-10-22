@@ -11,4 +11,4 @@
 [submodule "plugins/docker-login"]
 	path = plugins/docker-login
 	url = https://github.com/buildkite-plugins/docker-login-buildkite-plugin.git
-	branch = v3.0.0
+	branch = v3.1.0
