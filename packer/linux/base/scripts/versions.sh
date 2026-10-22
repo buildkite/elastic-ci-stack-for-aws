@@ -17,4 +17,4 @@ export DOCKER_BINFMT_IMAGE="tonistiigi/binfmt:qemu-v7.0.0-28@sha256:66e11bea77a5
 
 # Buildkite Tools
 export S3_SECRETS_HELPER_VERSION="2.9.0"
-export LIFECYCLED_VERSION="v3.6.0"
+export LIFECYCLED_VERSION="v3.7.0"
