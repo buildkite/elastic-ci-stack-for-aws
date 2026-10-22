@@ -3,7 +3,7 @@
 # This file is sourced by installation scripts
 
 # Core Tools
-export AWS_CLI_LINUX_VERSION="2.37.10"
+export AWS_CLI_LINUX_VERSION="2.38.4"
 export SESSION_MANAGER_PLUGIN_VERSION="1.2.896.0"
 
 # Development Tools
