@@ -4,7 +4,7 @@
 
 # Core Tools
 export AWS_CLI_LINUX_VERSION="2.37.10"
-export SESSION_MANAGER_PLUGIN_VERSION="1.2.835.0"
+export SESSION_MANAGER_PLUGIN_VERSION="1.2.896.0"
 
 # Development Tools
 export GIT_LFS_VERSION="3.8.0"
