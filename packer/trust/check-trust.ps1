@@ -32,9 +32,14 @@ foreach ($file in $roots) {
 Write-Output 'PASS: Windows explicit distrust of affected roots'
 if ($SystemOnly) { return }
 
+# Git 2.56 moved its native prefix from mingw64 to ucrt64. Check every
+# installed native bundle, plus the separate bundle used by MSYS tools.
+$gitBundles = @(Get-ChildItem 'C:\Program Files\Git\*\etc\ssl\certs\ca-bundle.crt')
+if ($gitBundles.Count -lt 1) { throw 'Missing native Git CA bundle' }
 $bundles = @(
-    'C:\Program Files\Git\mingw64\etc\ssl\certs\ca-bundle.crt',
-    'C:\Program Files\Amazon\AWSCLIV2\awscli\botocore\cacert.pem'
+    $gitBundles.FullName
+    (Get-Item 'C:\Program Files\Git\usr\ssl\certs\ca-bundle.crt').FullName
+    (Get-Item 'C:\Program Files\Amazon\AWSCLIV2\awscli\botocore\cacert.pem').FullName
 )
 foreach ($bundle in $bundles) {
     # Read/write the target (not a symlink). This preserves the unrelated roots

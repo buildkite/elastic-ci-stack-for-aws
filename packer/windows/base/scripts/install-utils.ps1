@@ -25,7 +25,7 @@ Write-Output "Installing Git for Windows"
 choco install -y git --version=$GIT_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-# Git and AWS CLI use embedded PEM bundles, not the Windows certificate store.
+# Sanitize Git and AWS CLI's embedded PEM bundles independently of Windows trust.
 & 'C:\ProgramData\Buildkite\trust\check-trust.ps1' -Sanitize
 
 Write-Output "Installing nssm"
@@ -45,9 +45,12 @@ Update-SessionEnvironment
 # the desired GNU coreutils '/usr/bin/sort.exe' included in Git for Windows.
 # 'C:\Windows\system32\sort.exe' appends '\r\n' for each line of output instead of just '\n'.
 # The unexpected '\r' breaks the parsing of some buildkite plugins including the docker-login plugin.
-Write-Output "Prepending 'gitinstall\mingw64\bin' and 'gitinstall\usr\bin' to the system's PATH"
+$gitExecPath = & 'C:\Program Files\Git\cmd\git.exe' --exec-path
+If ($lastexitcode -ne 0) { Exit $lastexitcode }
+$gitBin = Join-Path (Split-Path (Split-Path $gitExecPath)) 'bin'
+Write-Output "Prepending '$gitBin' and 'C:\Program Files\Git\usr\bin' to the system's PATH"
 $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).Path
-$newpath = "C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;$oldpath"
+$newpath = "$gitBin;C:\Program Files\Git\usr\bin;$oldpath"
 Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newpath
 
 # Set autocrlf to false so we don't end up with mismatched line endings

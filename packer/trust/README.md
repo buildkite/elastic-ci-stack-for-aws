@@ -19,8 +19,11 @@ certificates are needed to install explicit distrust, not to grant trust.
 - Windows: put all four affected roots in LocalMachine/Disallowed **before**
   Chocolatey/other HTTPS downloads. Do not depend on online revocation or assume a
   recent Server 2022 AMI received the Microsoft disallowed-list update.
-- Git for Windows uses its own OpenSSL CA bundle; remove the affected roots there,
-  independently of Windows CryptoAPI. Do not change Git's TLS backend.
+- Git for Windows ships native OpenSSL and MSYS CA bundles; remove the affected
+  roots from both, independently of Windows CryptoAPI. Discover the native bundle
+  under the installed prefix (`mingw64` before Git 2.56, `ucrt64` from 2.56), and
+  require the separate `usr/ssl/certs/ca-bundle.crt` bundle too. Do not change
+  Git's TLS backend.
 - AWS CLI 2.37.10 bundles `awscli/botocore/cacert.pem` on both platforms
   ([source](https://github.com/aws/aws-cli/blob/2.37.10/awscli/botocore/httpsession.py)).
   Filter and validate that actual installed file, not just the OS store. This is
@@ -60,6 +63,16 @@ Local unit command (Python 3, no network required):
 ```sh
 python3 -m unittest discover -s tests/trust -v
 ```
+
+Windows PEM bundle regression tests (PowerShell 7, fresh process):
+
+```sh
+pwsh -NoProfile -File tests/windows/test-trust.ps1
+```
+
+These tests exercise real PEM filtering and file writes for both Git layouts,
+but simulate Windows discovery and distrust-store lookup and use an empty custom
+chain trust store. They do not replace fresh Windows image validation.
 
 Shared trust inputs invalidate **both base caches**, and the existing packer
 filters select all final images. Rebuild fresh bases **and** final images for
