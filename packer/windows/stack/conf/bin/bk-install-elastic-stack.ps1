@@ -5,34 +5,135 @@ Set-PSDebug -Trace 2
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
-function on_error {
-  $errorLine=$_.InvocationInfo.ScriptLineNumber
-  $errorMessage=$_.Exception
+$StatusFile = 'C:\buildkite-agent\elastic-stack-bootstrap-status'
+$BootstrapCompleted = $false
+$AgentStarted = $false
+$InstanceIdentity = $null
+$LaunchDeadline = $null
 
-  $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
-  $instance_id=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
+function Initialize-InstanceIdentity {
+  if ($script:InstanceIdentity) { return }
+  $Token = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).Content
+  $Identity = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/dynamic/instance-identity/document).Content | ConvertFrom-Json
+  $Env:INSTANCE_ID = $Identity.instanceId
+  # pendingTime precedes the launch hook: use a conservative deadline that includes
+  # Windows setup, not a fresh timeout starting when this script runs.
+  $script:LaunchDeadline = ([DateTimeOffset]::Parse($Identity.pendingTime)).AddSeconds([int]$Env:BUILDKITE_LAUNCH_TIMEOUT)
+  $script:InstanceIdentity = $Identity
+}
 
-  aws autoscaling set-instance-health `
-    --instance-id "$instance_id" `
-    --health-status Unhealthy
-
-  if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
-    cfn-signal `
-      --region "$Env:AWS_REGION" `
-      --stack "$Env:BUILDKITE_STACK_NAME" `
-      --reason "Error on line ${errorLine}: $errorMessage" `
-      --resource "AgentAutoScaleGroup" `
-      --exit-code 1
-  } else {
-    Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
+function Invoke-AutoScaling {
+  param([string[]]$Arguments)
+  # Retry at the lifecycle boundary, not inside the CLI. Bound each request so a
+  # network outage cannot prevent the launch deadline from taking effect.
+  $PreviousAttempts = $Env:AWS_MAX_ATTEMPTS
+  $Env:AWS_MAX_ATTEMPTS = '1'
+  try {
+    $ErrorActionPreference = 'Continue' # Capture native stderr in Windows PowerShell 5.1.
+    $Output = aws autoscaling @Arguments --region "$Env:AWS_REGION" --output json --no-cli-pager --cli-connect-timeout 2 --cli-read-timeout 3 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "Auto Scaling $($Arguments[0]) failed: $Output" }
+    return ($Output -join "`n")
+  } finally {
+    $Env:AWS_MAX_ATTEMPTS = $PreviousAttempts
   }
 }
 
-trap {on_error}
+function Complete-InstanceLaunch {
+  param([ValidateSet('CONTINUE', 'ABANDON')][string]$Result, [DateTimeOffset]$Deadline)
+  $Backoff = 1
+  $RetryAllowed = $true
+  do {
+    $ActionAttempted = $false
+    try {
+      $Instance = (Invoke-AutoScaling -Arguments @('describe-auto-scaling-instances', '--instance-ids', $Env:INSTANCE_ID) | ConvertFrom-Json).AutoScalingInstances | Select-Object -First 1
+      if (-not $Instance -or $Instance.LifecycleState -like 'Terminating*') {
+        Write-Warning 'Instance is absent or terminating; no launch action to complete.'
+        return $false
+      }
+      if ($Instance.LifecycleState -eq 'InService') {
+        if ($Result -eq 'ABANDON') {
+          if (-not $RetryAllowed) { return $false }
+          $ActionAttempted = $true
+          Invoke-AutoScaling -Arguments @('set-instance-health', '--instance-id', $Env:INSTANCE_ID, '--health-status', 'Unhealthy') | Out-Null
+        }
+        return $true
+      }
+      # Reconcile an unsuccessful completion call before deciding whether to retry.
+      # A missing lifecycle action alone is not confirmation of a successful launch.
+      if (([DateTimeOffset](Get-Date)) -ge $Deadline.AddSeconds(-10)) { return $false }
+      if ($Instance.LifecycleState -eq 'Pending:Wait') {
+        if (-not $RetryAllowed) { return $false }
+        $ActionAttempted = $true
+        Invoke-AutoScaling -Arguments @('complete-lifecycle-action', '--instance-id', $Env:INSTANCE_ID,
+          '--auto-scaling-group-name', $Instance.AutoScalingGroupName,
+          '--lifecycle-hook-name', $Env:BUILDKITE_LAUNCH_HOOK_NAME, '--lifecycle-action-result', $Result) | Out-Null
+        return $true
+      }
+    } catch {
+      Write-Warning $_
+      $RetryAllowed = $_.Exception.Message -match 'Throttl|ResourceContention|ScalingActivityInProgress|RequestTimeout|ServiceUnavailable|InternalError|timed? ?out|connect|endpoint|connection'
+      if (-not $RetryAllowed -and -not $ActionAttempted) { return $false }
+    }
+    if (([DateTimeOffset](Get-Date)).AddSeconds($Backoff + 10) -ge $Deadline) { return $false }
+    Start-Sleep -Seconds $Backoff
+    $Backoff = [Math]::Min($Backoff * 2, 15)
+  } while ($true)
+}
 
-$Token = (Invoke-WebRequest -UseBasicParsing -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
-$Env:INSTANCE_ID=(Invoke-WebRequest -UseBasicParsing -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/meta-data/instance-id).content
+function Complete-StackBootstrap {
+  # Configuration is already complete. Neither callback may invoke the bootstrap
+  # failure handler or stop an agent that could now be processing a job.
+  try {
+    Initialize-InstanceIdentity
+    if (-not (Complete-InstanceLaunch -Result CONTINUE -Deadline $script:LaunchDeadline)) {
+      Write-Warning 'Launch completion unconfirmed; leaving recovery to the launch hook timeout.'
+      return
+    }
+    if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq 'cloudformation') {
+      cfn-signal --region "$Env:AWS_REGION" --stack "$Env:BUILDKITE_STACK_NAME" --resource AgentAutoScaleGroup --exit-code 0
+      if ($LASTEXITCODE -ne 0) { Write-Warning 'CloudFormation success signal failed.' }
+    }
+  } catch {
+    Write-Warning "Configuration completed, but AWS acknowledgment failed: $_"
+  }
+}
+
+trap {
+  Write-Warning "Bootstrap failed at line $($_.InvocationInfo.ScriptLineNumber): $_"
+  if (-not $BootstrapCompleted -and -not $AgentStarted) {
+    try {
+      # Allow file collection and the default 5s CloudWatch flush interval before
+      # ABANDON can terminate this instance. This is best-effort, not delivery confirmation.
+      Start-Sleep -Seconds 10
+      Initialize-InstanceIdentity
+      if (-not (Complete-InstanceLaunch -Result ABANDON -Deadline (Get-Date).AddSeconds(30))) {
+        Write-Warning 'Bootstrap recovery unconfirmed; a pending launch will time out.'
+      }
+    } catch {
+      Write-Warning "Could not report bootstrap failure: $_"
+    }
+  }
+  # Do not fail CloudFormation on one bad launch: allow a replacement to succeed
+  # within the creation timeout. Always retain the original failure in the log.
+  exit 1
+}
+
+if (Test-Path $StatusFile) {
+  $Status = (Get-Content -Raw $StatusFile).Trim()
+  if ($Status -ne 'Completed') { throw "Previous bootstrap did not complete (status: $Status)." }
+  $BootstrapCompleted = $true
+  Complete-StackBootstrap
+  exit 0
+}
+Set-Content -Path $StatusFile -Value Started
+icacls $StatusFile /inheritance:r /grant:r '*S-1-5-18:F' '*S-1-5-32-544:F'
+if ($LASTEXITCODE -ne 0) { throw 'Could not protect the bootstrap status file.' }
+
+Initialize-InstanceIdentity
+powershell -NoProfile -File C:\buildkite-agent\bin\bk-configure-docker.ps1
+if ($LASTEXITCODE -ne 0) { throw 'Docker configuration failed.' }
 $DOCKER_VERSION=(docker --version).split(" ")[2].Replace(",","")
+if ($LASTEXITCODE -ne 0) { throw 'Could not determine the Docker version.' }
 
 $PLUGINS_ENABLED=@()
 If ($Env:SECRETS_PLUGIN_ENABLED -eq "true") { $PLUGINS_ENABLED += "secrets" }
@@ -103,15 +204,13 @@ If ($Env:BUILDKITE_AGENT_RELEASE -eq "edge") {
   Write-Output "Downloading buildkite-agent edge..."
   Invoke-WebRequest -OutFile C:\buildkite-agent\bin\buildkite-agent-edge.exe -Uri "https://download.buildkite.com/agent/experimental/latest/buildkite-agent-windows-amd64.exe"
   buildkite-agent-edge.exe --version
-  If ($lastexitcode -ne 0) { Exit $lastexitcode }
+  If ($lastexitcode -ne 0) { throw "Agent version check failed ($lastexitcode)." }
 }
 
 # Check if the source agent executable exists before copying
 $sourceAgentPath = "C:\buildkite-agent\bin\buildkite-agent-${Env:BUILDKITE_AGENT_RELEASE}.exe"
 if (-not (Test-Path -Path $sourceAgentPath -PathType Leaf)) {
-  Write-Error "Source agent executable not found: $sourceAgentPath. Check AMI build logs or agent release parameter."
-  # The trap should handle signaling failure, but we explicitly exit just in case.
-  exit 1
+  throw "Source agent executable not found: $sourceAgentPath. Check AMI build logs or agent release parameter."
 }
 Copy-Item -Path $sourceAgentPath -Destination C:\buildkite-agent\bin\buildkite-agent.exe
 
@@ -135,6 +234,7 @@ If ($Env:BUILDKITE_AGENT_ENABLE_GIT_MIRRORS -eq "true") {
 # Get token from ssm param (if we have a path)
 If ($null -ne $Env:BUILDKITE_AGENT_TOKEN_PATH -and $Env:BUILDKITE_AGENT_TOKEN_PATH -ne "") {
   $Env:BUILDKITE_AGENT_TOKEN = $(aws ssm get-parameter --name $Env:BUILDKITE_AGENT_TOKEN_PATH --with-decryption --output text --query Parameter.Value --region $Env:AWS_REGION)
+  if ($LASTEXITCODE -ne 0) { throw 'Could not fetch the agent token.' }
 }
 
 If ([string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_OPENTELEMETRY_TRACING)) {
@@ -186,6 +286,7 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
     --with-decryption `
     --query Parameter.Value `
     --output text
+  if ($LASTEXITCODE -ne 0) { throw 'Could not fetch the signing key.' }
   [System.IO.File]::WriteAllText($keyfile, $signingJwks, (New-Object System.Text.UTF8Encoding $false))
 
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "signing-jwks-file=$keyfile"
@@ -206,13 +307,16 @@ if (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
     --with-decryption `
     --query Parameter.Value `
     --output text
+  if ($LASTEXITCODE -ne 0) { throw 'Could not fetch the verification key.' }
   [System.IO.File]::WriteAllText($keyfile, $verificationJwks, (New-Object System.Text.UTF8Encoding $false))
 
   Add-Content -Path C:\buildkite-agent\buildkite-agent.cfg -Value "verification-jwks-file=$keyfile"
 }
 
 nssm set lifecycled AppEnvironmentExtra +AWS_REGION=$Env:AWS_REGION
+if ($LASTEXITCODE -ne 0) { throw 'Could not configure lifecycled region.' }
 nssm set lifecycled AppEnvironmentExtra +LIFECYCLED_HANDLER="C:\buildkite-agent\bin\stop-agent-gracefully.ps1"
+if ($LASTEXITCODE -ne 0) { throw 'Could not configure lifecycled handler.' }
 Restart-Service lifecycled
 
 # wait for docker service and API to be ready
@@ -269,8 +373,7 @@ if ($docker_ready) {
   # Add more diagnostics if possible
   $dockerService = Get-Service docker -ErrorAction SilentlyContinue
   Write-Output "Final Docker Service Status: $($dockerService.Status)"
-  # Consider explicitly calling the error handler or ensuring exit code triggers trap
-  exit 1 # Ensure script exits on failure
+  throw 'Docker did not become ready.'
 }
 
 # prevent password from being revealed by debug tracing
@@ -317,61 +420,67 @@ If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_SIGNING_KEY_PATH)) {
   $keyfile = "C:\buildkite-agent\signing-key.json"
   Write-Output "Setting permissions for $keyfile..."
   icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "${UserName}:R"
+  if ($LASTEXITCODE -ne 0) { throw 'Could not protect the signing key.' }
 }
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH)) {
   $keyfile = "C:\buildkite-agent\verification-key.json"
   Write-Output "Setting permissions for $keyfile..."
   icacls "$keyfile" /inheritance:r /grant:r "Administrators:F" /grant:r "${UserName}:R"
+  if ($LASTEXITCODE -ne 0) { throw 'Could not protect the verification key.' }
 }
 
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT)) {
   Write-Output "Running the elastic bootstrap script"
+  $global:LASTEXITCODE = 0
   C:\buildkite-agent\bin\bk-fetch.ps1 -From "$Env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT" -To C:\buildkite-agent\elastic_bootstrap.ps1
+  if ($LASTEXITCODE -ne 0) { throw 'Could not fetch the elastic bootstrap script.' }
   C:\buildkite-agent\elastic_bootstrap.ps1
+  if ($LASTEXITCODE -ne 0) { throw "Elastic bootstrap script failed ($LASTEXITCODE)." }
   Remove-Item -Path C:\buildkite-agent\elastic_bootstrap.ps1
 }
 
 If (![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) {
+  $global:LASTEXITCODE = 0
   C:\buildkite-agent\bin\bk-fetch.ps1 -From "$Env:BUILDKITE_ENV_FILE_URL" -To C:\buildkite-agent\env
+  if ($LASTEXITCODE -ne 0) { throw 'Could not fetch the agent environment file.' }
 }
 
-Write-Output "Starting the Buildkite Agent"
+Write-Output "Configuring the Buildkite Agent service"
 
 nssm install buildkite-agent C:\buildkite-agent\bin\buildkite-agent.exe start
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
+If ($lastexitcode -ne 0) { throw "Agent service installation failed ($lastexitcode)." }
 
 nssm set buildkite-agent ObjectName .\$UserName $Password
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
+If ($lastexitcode -ne 0) { throw "Agent service account configuration failed ($lastexitcode)." }
 
 nssm set buildkite-agent AppStdout C:\buildkite-agent\buildkite-agent.log
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
+If ($lastexitcode -ne 0) { throw "Agent stdout configuration failed ($lastexitcode)." }
 
 nssm set buildkite-agent AppStderr C:\buildkite-agent\buildkite-agent.log
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
+If ($lastexitcode -ne 0) { throw "Agent stderr configuration failed ($lastexitcode)." }
 
 nssm set buildkite-agent AppEnvironmentExtra +HOME=C:\buildkite-agent
+if ($LASTEXITCODE -ne 0) { throw 'Agent HOME configuration failed.' }
 
 If ((![string]::IsNullOrEmpty($Env:BUILDKITE_ENV_FILE_URL)) -And (Test-Path -Path C:\buildkite-agent\env -PathType leaf)) {
   foreach ($var in Get-Content C:\buildkite-agent\env) {
     nssm set buildkite-agent AppEnvironmentExtra "+$var"
-    If ($lastexitcode -ne 0) { Exit $lastexitcode }
+    If ($lastexitcode -ne 0) { throw "Agent environment configuration failed ($lastexitcode)." }
   }
 }
 
 # also set in cfn so it's show in job logs
 nssm set buildkite-agent AppEnvironmentExtra +BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=$Env:BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
+If ($lastexitcode -ne 0) { throw "Agent termination configuration failed ($lastexitcode)." }
 
 # Don't restart the agent when it exits. NSSM runs the Exit/Post hook
 # asynchronously, so a restart can't wait for terminate-instance.ps1 and the
 # agent would accept jobs on an instance that is terminating (#753).
 nssm set buildkite-agent AppExit Default Exit
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
+If ($lastexitcode -ne 0) { throw "Agent exit policy configuration failed ($lastexitcode)." }
 
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
-If ($lastexitcode -ne 0) { Exit $lastexitcode }
-
-Restart-Service buildkite-agent
+If ($lastexitcode -ne 0) { throw "Agent exit hook configuration failed ($lastexitcode)." }
 
 Write-Output "Configuring CloudWatch agent log retention..."
 if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "true") {
@@ -386,7 +495,8 @@ if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "t
       .logs.logs_collected.files.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)}) |
       .logs.logs_collected.windows_events.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
     ' $configFile > $tempFile
-    Move-Item $tempFile $configFile
+    if ($LASTEXITCODE -ne 0) { throw 'Could not update CloudWatch log retention configuration.' }
+    Move-Item $tempFile $configFile -Force
 
     # Restart CloudWatch agent to pick up the new configuration
     try {
@@ -408,20 +518,13 @@ if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "t
 # renable debug tracing
 Set-PSDebug -Trace 2
 
-# let the stack know that this host has been initialized successfully
-if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
-  Write-Output "Signaling success to CloudFormation..."
-  cfn-signal `
-    --region "$Env:AWS_REGION" `
-    --stack "$Env:BUILDKITE_STACK_NAME" `
-    --resource "AgentAutoScaleGroup" `
-    --exit-code 0 ; if (-not $?) {
-      # This will fail if the stack has already completed, for instance if there is a min size
-      # of 1 and this is the 2nd instance. This is ok, so we just ignore the erro
-      Write-Output "Signal failed"
-    }
-} else {
-  Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
-}
+Start-Service AmazonCloudWatchAgent
+Write-Output "Starting the Buildkite Agent"
+Start-Service buildkite-agent
+$AgentStarted = $true
+Set-Content -Path $StatusFile -Value Completed
+$BootstrapCompleted = $true
+Complete-StackBootstrap
 
 Set-PSDebug -Off
+exit 0
