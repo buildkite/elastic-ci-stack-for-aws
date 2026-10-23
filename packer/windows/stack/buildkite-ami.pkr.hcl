@@ -83,10 +83,21 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_timeout  = "60m"
   winrm_username = "Administrator"
 
+  # Experiment: faster build storage, with baseline defaults on the resulting AMI.
   launch_block_device_mappings {
     volume_type           = "gp3"
     device_name           = "/dev/sda1"
     volume_size           = 30
+    iops                  = 6000
+    throughput            = 500
+    delete_on_termination = true
+  }
+
+  ami_block_device_mappings {
+    volume_type           = "gp3"
+    device_name           = "/dev/sda1"
+    iops                  = 3000
+    throughput            = 125
     delete_on_termination = true
   }
 
