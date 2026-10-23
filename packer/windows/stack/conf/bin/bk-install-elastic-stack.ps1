@@ -496,7 +496,7 @@ if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "t
       .logs.logs_collected.windows_events.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
     ' $configFile > $tempFile
     if ($LASTEXITCODE -ne 0) { throw 'Could not update CloudWatch log retention configuration.' }
-    Move-Item $tempFile $configFile
+    Move-Item $tempFile $configFile -Force
 
     # Restart CloudWatch agent to pick up the new configuration
     try {

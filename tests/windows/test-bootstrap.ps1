@@ -30,6 +30,13 @@ function Invoke-WebRequest {
 }
 function docker { $global:LASTEXITCODE=0; if ($args[0] -eq '--version') { 'Docker version 27.0.0, build test' } }
 function powershell { $testState.configured++; $global:LASTEXITCODE=0 }
+function jq {
+    # Resolve the harness's synthetic C: drive for the real native executable.
+    $arguments = @($args)
+    $arguments[-1] = Convert-Path $arguments[-1]
+    & (Get-Command jq -CommandType Application | Select-Object -First 1) @arguments
+    $global:LASTEXITCODE = $LASTEXITCODE
+}
 function nssm {
     $testState.configured++
     $global:LASTEXITCODE = if ($testState.case.NativeFails -and $args[0] -eq 'install') { 7 } else { 0 }
@@ -101,6 +108,8 @@ $env:BUILDKITE_AGENT_VERIFICATION_KEY_PATH=''
 $env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT=''
 $env:BUILDKITE_ENV_FILE_URL=''
 $env:EC2_LOG_RETENTION_DAYS=''
+$previousTemp = $env:TEMP
+$env:TEMP = $scratch
 
 $cases = @(
     @{Name='healthy bootstrap completes configuration and launch'},
@@ -121,7 +130,8 @@ $cases = @(
     @{Name='expired launch does not start a fresh retry budget'; Expired=$true; NoSignal=$true},
     @{Name='permanent describe denial does not consume the launch budget'; DescribeDenied=$true; NoSignal=$true; MaxSleep=1},
     @{Name='CONTINUE denial does not abandon a started agent'; ContinueFails=$true; NoSignal=$true},
-    @{Name='CloudFormation delivery failure leaves completed agent running'; SignalFails=$true}
+    @{Name='CloudFormation delivery failure leaves completed agent running'; SignalFails=$true},
+    @{Name='enabled log retention updates existing config and completes launch'; RetentionDays=14}
 )
 try {
     foreach ($case in $cases) {
@@ -136,6 +146,17 @@ try {
         Set-Content C:\buildkite-agent\bin\bk-user-rights.ps1 '# BkUserRights stub is defined in this harness'
         Set-Content C:\buildkite-agent\bin\bk-fetch.ps1 'param($From, $To) Set-Content -Path $To -Value "exit 9"'
         $env:BUILDKITE_ELASTIC_BOOTSTRAP_SCRIPT = if ($case.CustomerFails) { 'https://example.invalid/bootstrap.ps1' } else { '' }
+        $env:EC2_LOG_RETENTION_DAYS = $case.RetentionDays
+        $env:ENABLE_EC2_LOG_RETENTION_POLICY = 'true'
+        if ($case.RetentionDays) {
+            $configFile = 'C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json'
+            New-Item -ItemType Directory (Split-Path $configFile) -Force | Out-Null
+            Copy-Item (Join-Path $PSScriptRoot '../../packer/windows/stack/conf/cloudwatch-agent/amazon-cloudwatch-agent.json') $configFile
+            $originalConfig = Get-Content $configFile -Raw | ConvertFrom-Json
+            $controlScript = 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1'
+            New-Item -ItemType Directory (Split-Path $controlScript) -Force | Out-Null
+            Set-Content $controlScript '# CloudWatch service configuration is simulated.'
+        }
         Set-Content C:\buildkite-agent\buildkite-agent.cfg 'original configuration'
         if ($case.Marker) { Set-Content C:\buildkite-agent\elastic-stack-bootstrap-status $case.Marker }
         $global:LASTEXITCODE=0
@@ -147,6 +168,16 @@ try {
         if ($testState.abandoned -ne [bool]$case.Abandon -or $testState.unhealthy -ne [bool]$case.Unhealthy) { throw "Wrong instance recovery: $($case.Name)" }
         if ($case.Skip -and ($testState.configured -ne 0 -or (Get-Content C:\buildkite-agent\buildkite-agent.cfg -Raw).Trim() -ne 'original configuration')) { throw "Configuration changed: $($case.Name)" }
         if ($case.MarkerWriteFails -and (-not $testState.agentStarted -or $testState.continues -ne 0 -or (Get-Content C:\buildkite-agent\elastic-stack-bootstrap-status -Raw).Trim() -ne 'Started')) { throw 'Marker write failure did not preserve the started agent and incomplete status' }
+        if ($case.RetentionDays) {
+            $updatedConfig = Get-Content $configFile -Raw | ConvertFrom-Json
+            foreach ($type in @('files', 'windows_events')) {
+                $collectors = $updatedConfig.logs.logs_collected.$type.collect_list
+                if ($collectors.Count -ne $originalConfig.logs.logs_collected.$type.collect_list.Count) { throw "Log collectors lost: $type" }
+                foreach ($collector in $collectors) {
+                    if ($collector.retention_in_days -ne 14) { throw "Log retention not applied: $type" }
+                }
+            }
+        }
         if (-not $case.Fails) {
             if ((Get-Content C:\buildkite-agent\elastic-stack-bootstrap-status -Raw).Trim() -ne 'Completed') { throw "Configuration not completed: $($case.Name)" }
             if ($testState.signaled -eq [bool]$case.NoSignal) { throw "Wrong CloudFormation outcome: $($case.Name)" }
@@ -179,6 +210,7 @@ exit 7
     }
     Write-Host 'PASS: userdata preserves bootstrap stdout, warnings, stderr, UTF-8, and exit code'
 } finally {
+    $env:TEMP = $previousTemp
     Remove-PSDrive C
     Remove-Item $scratch -Recurse -Force
 }
