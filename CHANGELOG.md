@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.9.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.1) (2026-10-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.9.0...v7.9.1)
+
+### Changed
+- Update the stable Buildkite agent from v4.8.0 to v4.8.1 [#1963](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1963) (@renovate[bot]).
+
+### Internal
+- Update changelog for v7.9.0 [#1962](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1962) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v4.8.1)</h3></summary>
+
+### [v4.8.1](https://github.com/buildkite/agent/releases/tag/v4.8.1)
+
+#### What's Changed
+##### 🐛 Fixed
+* Report the terminating signal instead of exit status -1 in hook and command status records by @wolfeidau in https://github.com/buildkite/agent/pull/4563
+* Allow Kubernetes jobs with only the Kubernetes plugin to run when plugins are disabled by @pujitha24 in https://github.com/buildkite/agent/pull/4528
+* Remove outdated availability notices from `buildkite-agent cache save` and `cache restore` help by @buildkate in https://github.com/buildkite/agent/pull/4564
+
+#### New Contributors
+* @pujitha24 made their first contribution in https://github.com/buildkite/agent/pull/4528
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.8.0...v4.8.1
+
+</details>
+
+
 ## [v7.9.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.0) (2026-10-22)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.8.0...v7.9.0)
 
