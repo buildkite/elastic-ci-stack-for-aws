@@ -9,6 +9,13 @@ New-PSDrive -Name C -PSProvider FileSystem -Root $scratch | Out-Null
 class BkUserRights { static [void] Add([string]$sid, [string]$right) {} }
 
 function Set-PSDebug { param($Trace, [switch]$Off) }
+function Set-Content {
+    param([Parameter(Position=0)]$Path, [Parameter(Position=1)]$Value, $Encoding)
+    if ($testState.case.MarkerWriteFails -and $Path -eq 'C:\buildkite-agent\elastic-stack-bootstrap-status' -and $Value -eq 'Completed') {
+        throw 'Could not persist completed bootstrap status'
+    }
+    Microsoft.PowerShell.Management\Set-Content @PSBoundParameters
+}
 function Start-Sleep { param($Seconds) $testState.slept += $Seconds; $testState.now = $testState.now.AddSeconds($Seconds) }
 function Get-Date { $testState.now.LocalDateTime }
 function Invoke-WebRequest {
@@ -76,9 +83,9 @@ function aws {
     } elseif ($args[1] -eq 'set-instance-health') { $testState.unhealthy=$true }
 }
 function cfn-signal {
+    $testState.signaled=$true
     if ($args[[array]::IndexOf($args, '--exit-code') + 1] -ne '0') { throw 'Failure signal sent to CloudFormation' }
     if ($testState.state -ne 'InService') { throw 'Success signaled before launch was confirmed' }
-    $testState.signaled=$true
     $global:LASTEXITCODE = if ($testState.case.SignalFails) { 1 } else { 0 }
 }
 
@@ -106,6 +113,7 @@ $cases = @(
     @{Name='native configuration failure abandons launch'; NativeFails=$true; Abandon=$true; Fails=$true},
     @{Name='customer bootstrap nonzero exit abandons launch'; CustomerFails=$true; Abandon=$true; Fails=$true},
     @{Name='service startup failure abandons launch'; ServiceFails=$true; Abandon=$true; Fails=$true},
+    @{Name='completed marker write failure leaves started agent alone'; MarkerWriteFails=$true; Fails=$true},
     @{Name='metadata failure leaves configuration incomplete'; MetadataFails=$true; Fails=$true; Skip=$true},
     @{Name='ambiguous accepted CONTINUE is reconciled'; AmbiguousContinue=$true},
     @{Name='transient CONTINUE failure retries successfully'; TransientContinue=$true},
@@ -138,6 +146,7 @@ try {
         if ($case.Expired -and $testState.continues) { throw 'Expired launch attempted CONTINUE' }
         if ($testState.abandoned -ne [bool]$case.Abandon -or $testState.unhealthy -ne [bool]$case.Unhealthy) { throw "Wrong instance recovery: $($case.Name)" }
         if ($case.Skip -and ($testState.configured -ne 0 -or (Get-Content C:\buildkite-agent\buildkite-agent.cfg -Raw).Trim() -ne 'original configuration')) { throw "Configuration changed: $($case.Name)" }
+        if ($case.MarkerWriteFails -and (-not $testState.agentStarted -or $testState.continues -ne 0 -or (Get-Content C:\buildkite-agent\elastic-stack-bootstrap-status -Raw).Trim() -ne 'Started')) { throw 'Marker write failure did not preserve the started agent and incomplete status' }
         if (-not $case.Fails) {
             if ((Get-Content C:\buildkite-agent\elastic-stack-bootstrap-status -Raw).Trim() -ne 'Completed') { throw "Configuration not completed: $($case.Name)" }
             if ($testState.signaled -eq [bool]$case.NoSignal) { throw "Wrong CloudFormation outcome: $($case.Name)" }
