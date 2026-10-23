@@ -1498,6 +1498,14 @@ Conditions:
     HasVariableSize:
       !Not [ !Equals [ !Ref MaxSize, !Ref MinSize ] ]
 
+    IsExperimentalElasticCIMode:
+      !Equals [ !Ref ScalerEnableExperimentalElasticCIMode, "true" ]
+
+    ShouldDeployScaler:
+      !Or
+        - !Condition HasVariableSize
+        - !Condition IsExperimentalElasticCIMode
+
     UseCostAllocationTags:
       !Equals [ !Ref EnableCostAllocationTags, "true" ]
 
@@ -1639,6 +1647,16 @@ Conditions:
     HasVariableSizeAndX8664:
       !And
         - !Condition HasVariableSize
+        - !Not [ !Condition IsLambdaArchitectureArm64 ]
+
+    ShouldDeployScalerAndArm64:
+      !And
+        - !Condition ShouldDeployScaler
+        - !Condition IsLambdaArchitectureArm64
+
+    ShouldDeployScalerAndX8664:
+      !And
+        - !Condition ShouldDeployScaler
         - !Not [ !Condition IsLambdaArchitectureArm64 ]
 
 Mappings:
@@ -2998,7 +3016,7 @@ Resources:
 
   Autoscaling:
     Type: AWS::Serverless::Application
-    Condition: HasVariableSizeAndX8664
+    Condition: ShouldDeployScalerAndX8664
     Properties:
       Location:
         ApplicationId: !FindInMap
@@ -3033,7 +3051,7 @@ Resources:
 
   AutoscalingArm64:
     Type: AWS::Serverless::Application
-    Condition: HasVariableSizeAndArm64
+    Condition: ShouldDeployScalerAndArm64
     Properties:
       Location:
         ApplicationId: !FindInMap

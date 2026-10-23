@@ -19,6 +19,22 @@ Write-Output "$(Get-Date) terminate-instance: requesting instance termination...
 # Other errors, such as the ValidationError at minSize, fall through
 # immediately. Stop retrying after 15s to leave time for the fallbacks below.
 $Backoff = 1
+
+# Retrieve ASG details to check if it's fixed-size (MinSize == MaxSize)
+$AsgName = (aws ec2 describe-tags -region "$Region" --filters "Name=resource-id,Values=$InstanceID" "Name=key,Key=aws:autoscaling:groupName" --query "Tags[0].Value" --output text @AwsTimeouts)
+$DecrementFlag = "--should-decrement-desired-capacity"
+
+if ($AsgName -and $AsgName -ne "None") {
+  $AsgInfo = (aws autoscaling describe-auto-scaling-groups --region "$Region" --auto-scaling-group-namees "$AsgName" --query "AutoScalingGroups[0].[MinSize, MaxSize]" --output text @AwsTimeouts)
+  if ($AsgInfo) {
+      $Sizes = $AsgInfo -split "`t"
+      if ($Sizes.Count -eq 2 -and $Sizes[0] -eq $Sizes[1]) {
+        Write-Output "$(Get-Date) terminate-instance: Detected fixed-size ASG (MinSize == MaxSize = $($Sizes[0])). Skipping capacity decrement."
+        $DecrementFlag = "--no-should-decrement-desired-capacity"
+      }
+  }
+}
+
 while ($true) {
   # Windows PowerShell wraps each stderr line in an ErrorRecord, which renders a
   # blank line as "System.Management.Automation.RemoteException", so use the
