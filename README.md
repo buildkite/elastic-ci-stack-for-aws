@@ -237,6 +237,25 @@ make packer-base-ubuntu2404-arm64.output packer-ubuntu2404-arm64.output
 
 **Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
+### Windows image build access
+
+To attach an existing instance profile to the temporary Windows build instances, export
+`PKR_VAR_iam_instance_profile` before running the Windows Makefile targets:
+
+```bash
+export PKR_VAR_iam_instance_profile=your-ssm-instance-profile
+make packer-base-windows-amd64.output packer-windows-amd64.output
+```
+
+For Session Manager access, the profile's role must trust EC2 and grant SSM permissions
+(for example, using `AmazonSSMManagedInstanceCore`). The Packer caller needs
+`iam:GetInstanceProfile` on the profile and `iam:PassRole` on its role. The instance
+also needs a running SSM Agent and network access to the SSM endpoints. Packer still
+uses WinRM; the profile is not part of the resulting AMI.
+
+The profile is optional for local builds. Windows CI builds use `packer-ssm`, which
+must exist in the build account before the builds run.
+
 ### Release builds
 
 Branch and PR builds use `if_changed` to select affected AMI builds and tests.
