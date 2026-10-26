@@ -110,6 +110,9 @@ $env:BUILDKITE_ENV_FILE_URL=''
 $env:EC2_LOG_RETENTION_DAYS=''
 $previousTemp = $env:TEMP
 $env:TEMP = $scratch
+$previousOutFileEncoding = $PSDefaultParameterValues['Out-File:Encoding']
+# Exercise Windows PowerShell 5.1's redirection default even when running on pwsh.
+$PSDefaultParameterValues['Out-File:Encoding'] = 'unicode'
 
 $cases = @(
     @{Name='healthy bootstrap completes configuration and launch'},
@@ -169,7 +172,11 @@ try {
         if ($case.Skip -and ($testState.configured -ne 0 -or (Get-Content C:\buildkite-agent\buildkite-agent.cfg -Raw).Trim() -ne 'original configuration')) { throw "Configuration changed: $($case.Name)" }
         if ($case.MarkerWriteFails -and (-not $testState.agentStarted -or $testState.continues -ne 0 -or (Get-Content C:\buildkite-agent\elastic-stack-bootstrap-status -Raw).Trim() -ne 'Started')) { throw 'Marker write failure did not preserve the started agent and incomplete status' }
         if ($case.RetentionDays) {
-            $updatedConfig = Get-Content $configFile -Raw | ConvertFrom-Json
+            # CloudWatch consumes raw UTF-8 JSON, not PowerShell's BOM-aware text decoding.
+            $configBytes = [IO.File]::ReadAllBytes((Convert-Path $configFile))
+            $configJson = (New-Object System.Text.UTF8Encoding $false, $true).GetString($configBytes)
+            if ($configJson.StartsWith([string][char]0xFEFF, [StringComparison]::Ordinal)) { throw 'CloudWatch configuration contains a byte-order mark' }
+            $updatedConfig = $configJson | ConvertFrom-Json
             foreach ($type in @('files', 'windows_events')) {
                 $collectors = $updatedConfig.logs.logs_collected.$type.collect_list
                 if ($collectors.Count -ne $originalConfig.logs.logs_collected.$type.collect_list.Count) { throw "Log collectors lost: $type" }
@@ -210,6 +217,11 @@ exit 7
     }
     Write-Host 'PASS: userdata preserves bootstrap stdout, warnings, stderr, UTF-8, and exit code'
 } finally {
+    if ($null -eq $previousOutFileEncoding) {
+        $PSDefaultParameterValues.Remove('Out-File:Encoding')
+    } else {
+        $PSDefaultParameterValues['Out-File:Encoding'] = $previousOutFileEncoding
+    }
     $env:TEMP = $previousTemp
     Remove-PSDrive C
     Remove-Item $scratch -Recurse -Force

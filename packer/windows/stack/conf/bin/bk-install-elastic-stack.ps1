@@ -490,12 +490,14 @@ if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "t
   $configFile = "C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json"
   if (Test-Path $configFile) {
     # Add retention_in_days to all collect_list items using jq
-    $tempFile = "$env:TEMP\cloudwatch_config.json"
-    & jq --arg retention $Env:EC2_LOG_RETENTION_DAYS '
+    $tempFile = Join-Path $env:TEMP 'cloudwatch_config.json'
+    $cloudWatchConfig = & jq --arg retention $Env:EC2_LOG_RETENTION_DAYS '
       .logs.logs_collected.files.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)}) |
       .logs.logs_collected.windows_events.collect_list |= map(. + {"retention_in_days": ($retention | tonumber)})
-    ' $configFile > $tempFile
+    ' $configFile
     if ($LASTEXITCODE -ne 0) { throw 'Could not update CloudWatch log retention configuration.' }
+    # CloudWatch's JSON parser requires UTF-8 without BOM, not PS 5.1's UTF-16 redirection.
+    [System.IO.File]::WriteAllText($tempFile, ($cloudWatchConfig -join "`n"), (New-Object System.Text.UTF8Encoding $false))
     Move-Item $tempFile $configFile -Force
 
     # Restart CloudWatch agent to pick up the new configuration
