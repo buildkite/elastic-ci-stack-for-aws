@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Update the bundled Linux and Windows agents from v3.137.2 to [v3.138.0](https://github.com/buildkite/agent/releases/tag/v3.138.0), the latest stable Agent v3 release. Stack v6's default `stable` agent uses the pinned v3 binary from the upstream `oldstable` download channel.
 
 ### Fixed
+- Keep Linux instances running when an ordinary agent exit cannot reduce desired capacity because the Auto Scaling group is at `MinSize`. The agent service restarts on the existing instance instead of replacing otherwise healthy minimum capacity.
 - Update buildkite-agent-scaler to [v1.14.0](https://github.com/buildkite/buildkite-agent-scaler/releases/tag/v1.14.0) for both Lambda architectures. This fixes double-decrementing desired capacity during Linux Elastic CI graceful scale-in, which could strand stopped agents at `MinSize` or prematurely terminate instances with running jobs when scale-in protection was disabled.
 
 ### Internal

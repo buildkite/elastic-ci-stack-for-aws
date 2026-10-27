@@ -101,12 +101,22 @@ if ! region=$(fetch_metadata "http://169.254.169.254/latest/meta-data/placement/
 fi
 
 echo "requesting instance termination..."
-# Try to terminate with capacity decrement first
-if terminate "$region" "$instance_id"; then
+if termination_output=$(terminate "$region" "$instance_id" 2>&1); then
+  printf '%s\n' "$termination_output"
   echo "Successfully terminated instance with desired capacity decremented"
+# At MinSize, an ordinary clean exit should fail ExecStopPost so Restart=on-failure
+# restarts the agent on the existing instance. SERVICE_RESULT is provided by systemd;
+# when this script is called directly or the service failed, we deliberately fall
+# through to replacement. Instances that must be replaced do the same.
+elif [[ "${SERVICE_RESULT:-}" == "success" &&
+  "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" != "true" &&
+  "$termination_output" == *"(ValidationError)"* &&
+  "$termination_output" == *"Currently, desiredSize equals minSize"* ]]; then
+  printf '%s\n' "$termination_output" >&2
+  echo "Auto Scaling group is at MinSize; keeping instance so systemd can restart the agent."
+  exit 1
 else
-  # If that fails (e.g., desired == min), try without decrementing
-  # This allows the ASG to replace the instance
+  printf '%s\n' "$termination_output" >&2
   echo "Termination with capacity decrement failed, attempting without decrement..."
   if terminate_without_decrement "$region" "$instance_id"; then
     echo "Successfully terminated instance (ASG will launch replacement)"
