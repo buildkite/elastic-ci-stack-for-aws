@@ -1,6 +1,7 @@
 x-if-changed-patterns:
   - &if_changed_stack_linux
     include:
+      - "packer/trust/**"
       - "packer/linux/**"
       - "plugins/**"
       - ".buildkite/steps/packer.sh"
@@ -15,6 +16,7 @@ x-if-changed-patterns:
 
   - &if_changed_stack_windows
     include:
+      - "packer/trust/**"
       - "packer/windows/**"
       - "plugins/**"
       - ".buildkite/steps/packer.sh"
@@ -25,6 +27,7 @@ x-if-changed-patterns:
   # Packer keeps its narrower filter so template-only changes reuse an AMI.
   - &if_changed_test_linux
     include:
+      - "packer/trust/**"
       - "packer/linux/**"
       - "plugins/**"
       - ".buildkite/**"
@@ -38,6 +41,7 @@ x-if-changed-patterns:
 
   - &if_changed_test_windows
     include:
+      - "packer/trust/**"
       - "packer/windows/**"
       - "plugins/**"
       - ".buildkite/**"
@@ -67,7 +71,7 @@ steps:
     if_changed: *if_changed_stack
     plugins:
       - &aws_role_plugin
-        aws-assume-role-with-web-identity#v1.8.0:
+        aws-assume-role-with-web-identity#v1.8.1:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
           session-tags:
             - organization_slug
@@ -114,8 +118,12 @@ steps:
           - jq --version
           - git --version
           - buildkite-agent --version
+          - '& C:\ProgramData\Buildkite\trust\check-trust.ps1'
+          - 'if ((buildkite-agent-stable.exe --version) -notmatch "version (\d+\.\d+\.\d+)" -or [version]$$Matches[1] -lt [version]"4.7.0") { throw "Stable agent must be 4.7.0 or newer" }'
           - docker info
           - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
+          # terminate-instance.ps1 needs this right for its shutdown fallback
+          - '. C:\buildkite-agent\bin\bk-user-rights.ps1; if ([BkUserRights]::Get((Get-LocalUser buildkite-agent).SID.Value) -notcontains "SeShutdownPrivilege") { Write-Output "buildkite-agent is missing SeShutdownPrivilege"; exit 1 }'
         timeout_in_minutes: 5
         agents:
           stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"

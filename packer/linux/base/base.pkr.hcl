@@ -181,6 +181,18 @@ build {
     source      = "../shared/scripts/distro.sh"
   }
 
+  provisioner "file" {
+    destination = "/tmp"
+    source      = "../../trust"
+  }
+
+  # Establish trust before any third-party HTTPS dependency downloads.
+  provisioner "shell" {
+    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    script           = "scripts/remediate-trust.sh"
+    remote_folder    = "/var/tmp"
+  }
+
   # Essential utilities & updates
   provisioner "shell" {
     environment_vars = ["OS_DISTRO=${var.os_distro}"]

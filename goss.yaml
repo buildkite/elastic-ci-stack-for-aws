@@ -120,6 +120,15 @@ process:
     running: true
 
 command:
+  python3 /usr/local/share/buildkite-trust/check-trust.py:
+    exit-status: 0
+
+  python3 /usr/local/share/buildkite-trust/check-trust.py /usr/local/aws-cli/v2/current/dist/awscli/botocore/cacert.pem:
+    exit-status: 0
+
+  "test $(printf '%s\\n' 4.7.0 $(buildkite-agent-stable --version | awk '{print $3}') | sort -V | head -n1) = 4.7.0":
+    exit-status: 0
+
   aws --version:
     exit-status: 0
 

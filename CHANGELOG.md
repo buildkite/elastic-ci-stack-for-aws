@@ -4,6 +4,287 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.9.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.1) (2026-10-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.9.0...v7.9.1)
+
+### Changed
+- Update the stable Buildkite agent from v4.8.0 to v4.8.1 [#1963](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1963) (@renovate[bot]).
+
+### Internal
+- Update changelog for v7.9.0 [#1962](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1962) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v4.8.1)</h3></summary>
+
+### [v4.8.1](https://github.com/buildkite/agent/releases/tag/v4.8.1)
+
+#### What's Changed
+##### 🐛 Fixed
+* Report the terminating signal instead of exit status -1 in hook and command status records by @wolfeidau in https://github.com/buildkite/agent/pull/4563
+* Allow Kubernetes jobs with only the Kubernetes plugin to run when plugins are disabled by @pujitha24 in https://github.com/buildkite/agent/pull/4528
+* Remove outdated availability notices from `buildkite-agent cache save` and `cache restore` help by @buildkate in https://github.com/buildkite/agent/pull/4564
+
+#### New Contributors
+* @pujitha24 made their first contribution in https://github.com/buildkite/agent/pull/4528
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.8.0...v4.8.1
+
+</details>
+
+
+## [v7.9.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.0) (2026-10-22)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.8.0...v7.9.0)
+
+### Changed
+- Update the stable Buildkite agent from v4.7.0 to v4.8.0 [#1940](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1940) (@renovate[bot]).
+- Update the Buildkite agent scaler from v1.16.0 to v1.16.1 [#1948](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1948) (@renovate[bot]).
+- Update AWS CLI to v2.38.4 and Session Manager plugin to v1.2.896.0 [#1952](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1952), [#1951](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1951) (@renovate[bot]).
+- Update Docker Compose to v5.6.1 and Buildx to v0.38.1 [#1953](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1953), [#1955](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1955) (@renovate[bot]).
+- Update Linux binfmt emulation to qemu-v10.2.3-68 [#1957](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1957) (@renovate[bot]).
+- Update lifecycled to v3.7.0 [#1954](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1954) (@renovate[bot]).
+- Update Git for Windows to v2.56.0 [#1956](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1956) (@renovate[bot]).
+- Update bundled S3 secrets hooks and helper to v2.9.1 [#1958](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1958) (@scadu).
+- Update bundled ECR plugin to v2.12.0 and Docker login plugin to v3.1.0 [#1961](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1961), [#1960](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1960) (@renovate[bot]).
+
+### Fixed
+- Fix Windows CA bundle sanitization and checks for Git 2.56's native layout, check the separate MSYS CA bundle, and discover Git's native binary directory for PATH [#1959](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1959) (@scadu).
+
+### Internal
+- Automate bundled plugin updates with Renovate and document manual S3 secrets updates [#1958](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1958) (@scadu).
+- Update the Go toolchain to v1.27.3 [#1950](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1950) (@renovate[bot]).
+- Update CI plugins aws-assume-role-with-web-identity to v1.8.1 and docker-compose to v5.16.0 [#1947](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1947), [#1953](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1953) (@renovate[bot]).
+- Update changelogs for v7.8.0 and v6.71.8 [#1945](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1945), [#1946](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1946) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v4.8.0)</h3></summary>
+
+### [v4.8.0](https://github.com/buildkite/agent/releases/tag/v4.8.0)
+
+#### What's Changed
+##### ✨ Added
+* Add the `program-status` experiment to show program status in job logs and report job and upload progress by @wolfeidau in https://github.com/buildkite/agent/pull/4534
+##### 🔧 Changed
+* Upgrade to Go 1.27.3: macOS binaries now require macOS 13 or later; big-endian Linux `ppc64` binaries require ELFv2 support (kernel 3.13 or a compatible backport). `ppc64le` is unaffected by @isaacsu in https://github.com/buildkite/agent/pull/4559
+##### 🏠 Internal
+* Check cancellation results in integration tests by @isaacsu in https://github.com/buildkite/agent/pull/4558
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4557
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.7.0...v4.8.0
+
+</details>
+
+
+## [v6.71.8](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.8) (2026-10-21)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.7...v6.71.8)
+
+### Security
+- Remediate compromised eMudhra certificate chains in Linux and Windows image trust stores, including the separate AWS CLI and Git for Windows CA bundles [#1944](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1944) (@scadu).
+
+### Changed
+- Update the stable Buildkite agent from v3.138.1 to v3.138.2 [#1944](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1944) (@scadu).
+
+### Fixed
+- Fix Windows image reboot and WinRM provisioning races, and validate Docker before publishing the base image [#1944](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1944) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v3.138.2)</h3></summary>
+
+### [v3.138.2](https://github.com/buildkite/agent/releases/tag/v3.138.2)
+
+#### Important security update
+
+**Upgrade to v3.138.2 promptly.** This release addresses [compromised eMudhra certificate chains](https://emudhra.we-have-a-problem.com/) (CVE-2026-111943) by building the agent with Go 1.26.10, which rejects the affected chains, including alternate cross-signed paths.
+
+Installing the updated agent is required to receive this protection. It doesn't update OS, container or custom trust stores, or protect external tools run by jobs; remediate those separately.
+
+#### What's Changed
+##### 🔒 Security
+* Reject compromised eMudhra certificate chains (CVE-2026-111943) by building with Go 1.26.10 by @moskyb in https://github.com/buildkite/agent/pull/4551
+* Prevent artifact downloads escaping their destination through directory symlinks, unless the `allow-artifact-path-traversal` experiment is enabled by @isaacsu in https://github.com/buildkite/agent/pull/4548
+* Update `github.com/lestrrat-go/jwx/v3` to 3.3.0 to fix JSON member-name escaping (GHSA-4cf7-xm37-g63h) by @dependabot[bot] in https://github.com/buildkite/agent/pull/4366
+* Update `github.com/klauspost/compress` to fix a zstd decoder crash on crafted input ([GHSA-fpmh-frq8-7rj8](https://github.com/klauspost/compress/security/advisories/GHSA-fpmh-frq8-7rj8)) by @dependabot[bot] in https://github.com/buildkite/agent/pull/4345
+##### 🏠 Internal
+* Replace deprecated HTTP/2 transport configuration to unblock dependency upgrades by @isaacsu in https://github.com/buildkite/agent/pull/4547
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4301, https://github.com/buildkite/agent/pull/4392, https://github.com/buildkite/agent/pull/4391, https://github.com/buildkite/agent/pull/4365, https://github.com/buildkite/agent/pull/4543, https://github.com/buildkite/agent/pull/4393 and https://github.com/buildkite/agent/pull/4549
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.138.1...v3.138.2
+
+</details>
+
+## [v7.8.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.8.0) (2026-10-21)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.7.0...v7.8.0)
+
+### Security
+- Remediate compromised eMudhra certificate chains in Linux and Windows image trust stores, including the separate AWS CLI and Git for Windows CA bundles [#1939](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1939) (@omehegan).
+
+### Changed
+- Update the stable Buildkite agent from v4.6.0 to v4.7.0 [#1939](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1939) (@omehegan).
+
+### Fixed
+- Fix Windows image reboot and WinRM provisioning races, and validate Docker before publishing the base image [#1941](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1941) (@omehegan).
+
+### Internal
+- Update changelogs for v7.7.0 and v6.71.7 [#1933](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1933), [#1934](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1934) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v4.7.0)</h3></summary>
+
+### [v4.7.0](https://github.com/buildkite/agent/releases/tag/v4.7.0)
+
+#### Important security update
+
+**Upgrade to v4.7.0 promptly.** This release addresses [compromised eMudhra certificate chains](https://emudhra.we-have-a-problem.com/) (CVE-2026-111943) by building the agent with Go 1.26.10, which rejects the affected chains, including alternate cross-signed paths.
+
+Installing the updated agent is required to receive this protection. It doesn't update OS, container or custom trust stores, or protect external tools run by jobs; remediate those separately.
+
+#### What's Changed
+##### 🔒 Security
+* Reject compromised eMudhra certificate chains (CVE-2026-111943) by building with Go 1.26.10 by @duckalini in https://github.com/buildkite/agent/pull/4550
+* Prevent artifact downloads escaping their destination through directory symlinks by @isaacsu in https://github.com/buildkite/agent/pull/4541
+* Add opt-in `--git-commit-verification=fail-closed` to reject checkouts when commit verification can't succeed by @dahtey-bk in https://github.com/buildkite/agent/pull/4530
+* Protect `GIT_ALLOW_PROTOCOL` when `--protect-dangerous-git-environment-variables` is enabled and list the protected variables in help by @moskyb in https://github.com/buildkite/agent/pull/4527
+##### 🐛 Fixed
+* Redact secrets containing apostrophes in `buildkite-agent secret get --format env` output in build logs by @isaacsu in https://github.com/buildkite/agent/pull/4531
+* Honour the agent's `BUILDKITE_CAPTURE_AGENT_ERRORS` setting when it's protected from job overrides by @123sarahj123 in https://github.com/buildkite/agent/pull/4524
+##### 🔧 Changed
+* Show the `cache` command in `buildkite-agent --help` by @ss1909 in https://github.com/buildkite/agent/pull/4482
+##### 🏠 Internal
+* Replace deprecated HTTP/2 transport configuration by @isaacsu in https://github.com/buildkite/agent/pull/4542
+* Add a pipeline to close stale issues and PRs by @moskyb in https://github.com/buildkite/agent/pull/4544
+* Run stale issue and PR cleanup on elastic runners by @moskyb in https://github.com/buildkite/agent/pull/4546
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4536, https://github.com/buildkite/agent/pull/4535, https://github.com/buildkite/agent/pull/4419, https://github.com/buildkite/agent/pull/4537, https://github.com/buildkite/agent/pull/4447, https://github.com/buildkite/agent/pull/4545, https://github.com/buildkite/agent/pull/4504, https://github.com/buildkite/agent/pull/4505, https://github.com/buildkite/agent/pull/4540 and https://github.com/buildkite/agent/pull/4416
+
+#### New Contributors
+* @dahtey-bk made their first contribution in https://github.com/buildkite/agent/pull/4530
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.6.0...v4.7.0
+
+</details>
+
+
+## [v6.71.7](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.7) (2026-10-16)
+
+### What's Changed
+* Update v6 default agent to v3.138.1 by @scadu in https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1932
+
+
+**Full Changelog**: https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.6...v6.71.7
+
+<details>
+<summary><h3>Agent Changelog (v3.138.1)</h3></summary>
+
+### [v3.138.1](https://github.com/buildkite/agent/releases/tag/v3.138.1)
+
+#### What's Changed
+##### 🔒 Security
+* Stop running git hooks from shared mirrors when the agent updates them with `git-mirrors-path` set by @isaacsu in https://github.com/buildkite/agent/pull/4520
+##### 🐛 Fixed
+* Stop leaking `BUILDKITE_JOB_LOG_TMPFILE` between jobs when `--enable-job-log-tmpfile` is used with `--spawn` by @isaacsu in https://github.com/buildkite/agent/pull/4491
+* Prevent possible Windows agent crashes when a job is terminated more than once by @moskyb in https://github.com/buildkite/agent/pull/4431
+##### 🏠 Internal
+* Various internal CI and release tooling changes by @moskyb in https://github.com/buildkite/agent/pull/4431, https://github.com/buildkite/agent/pull/4430 and https://github.com/buildkite/agent/pull/4455
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4298, https://github.com/buildkite/agent/pull/4335, https://github.com/buildkite/agent/pull/4389, https://github.com/buildkite/agent/pull/4362, https://github.com/buildkite/agent/pull/4508 and https://github.com/buildkite/agent/pull/4509
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.138.0...v3.138.1
+
+</details>
+
+
+## [v7.7.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.7.0) (2026-10-16)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.6.0...v7.7.0)
+
+### Changed
+- Update buildkite-agent to v4.6.0 [#1931](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1931) (@renovate[bot])
+- Start the CloudWatch agent on boot on Windows [#1930](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1930) (@petetomasik)
+
+### Fixed
+- Stop restarting the Windows agent after it exits [#1924](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1924) (@petetomasik)
+- Retry transient errors before terminating without decrement [#1929](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1929) (@petetomasik)
+- Log the Windows shutdown fallback result and ship Windows instance logs to CloudWatch [#1930](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1930) (@petetomasik)
+
+### Internal
+- Update changelog for v7.6.0 [#1928](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1928) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.6.0)</h3></summary>
+
+### [v4.6.0](https://github.com/buildkite/agent/releases/tag/v4.6.0)
+
+#### What's Changed
+##### 🔒 Security
+* Stop running Git hooks from shared mirrors when `git-mirrors-path` is set, so anyone who can write to a mirror can't run code in the next job that updates it. Hooks put in a mirror on purpose no longer run by @isaacsu in https://github.com/buildkite/agent/pull/4501
+##### ✨ Added
+Job errors are an experimental feature that's only enabled for Buildkite's own pipelines. It isn't available to other organizations, and it may change or be removed.
+
+* Report failed local Git commands in the default checkout as job errors when a step sets `BUILDKITE_CAPTURE_GIT_ERRORS: "true"` by @pinzonjulian in https://github.com/buildkite/agent/pull/4486
+* Report failed Git fetches and clones as job errors, with codes for missing refs, rejected credentials and network failures by @pinzonjulian in https://github.com/buildkite/agent/pull/4487
+* Report checkout failures outside Git commands as job errors, such as checkout and lock timeouts, invalid refs and a missing `git-lfs` by @pinzonjulian in https://github.com/buildkite/agent/pull/4488
+* Add the experimental `BUILDKITE_CAPTURE_AGENT_ERRORS` opt-in for reporting failures the agent observes as job errors, and warn when the experimental `buildkite-agent job capture-error` is given a code starting with the reserved `buildkite.` prefix by @pinzonjulian in https://github.com/buildkite/agent/pull/4464
+* Report failed hooks as job errors, with the end of their output by @pinzonjulian in https://github.com/buildkite/agent/pull/4469
+* Report failed commands as job errors, with the end of their output by @pinzonjulian in https://github.com/buildkite/agent/pull/4470
+* Report secret and plugin failures as job errors by @pinzonjulian in https://github.com/buildkite/agent/pull/4471
+* Report failed pipeline uploads, secret and OIDC token requests, and Git credential lookups as job errors by @pinzonjulian in https://github.com/buildkite/agent/pull/4472
+* Report failed artifact uploads and downloads, and cache saves and restores, as job errors by @pinzonjulian in https://github.com/buildkite/agent/pull/4473
+* Report why the agent refused a job as a job error, such as a signature that doesn't verify or a value an allowlist refuses, and report Kubernetes containers that never connect or are lost by @pinzonjulian in https://github.com/buildkite/agent/pull/4474
+##### 🐛 Fixed
+* Correct the `--cancel-cleanup-timeout` help text: it gives a stopping agent time to upload the job log, not artifacts by @scadu in https://github.com/buildkite/agent/pull/4514
+##### 🔧 Changed
+* Stop sending experimental `buildkite-agent job capture-error` reports for a job once Buildkite refuses one because the job's error quota is full or error capture isn't available by @123sarahj123 in https://github.com/buildkite/agent/pull/4497
+##### 🏠 Internal
+* Treat breaking experimental surface as a minor release change by @moskyb in https://github.com/buildkite/agent/pull/4517
+
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.5.0...v4.6.0
+
+</details>
+
+
+## [v7.6.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.6.0) (2026-10-15)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.5.0...v7.6.0)
+
+### Changed
+- Update buildkite-agent to v4.5.0 [#1927](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1927) (@renovate[bot])
+- Update module golang.org/x/sync to v0.24.0 [#1919](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1919) (@renovate[bot])
+
+### Internal
+- Add missing v7.4.0 bundled-tool entries to changelog [#1926](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1926) (@scadu)
+- Add release notes for v7.5.0, backfill v7.4.0 [#1925](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1925) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.5.0)</h3></summary>
+
+### [v4.5.0](https://github.com/buildkite/agent/releases/tag/v4.5.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### 🔒 Security
+* Add `--protected-environment-variables` and `--protect-dangerous-git-environment-variables` to stop jobs from setting chosen environment variables, such as `GIT_SSH_COMMAND` by @moskyb in https://github.com/buildkite/agent/pull/4503
+* Check out plugins pinned to a full commit SHA at that commit, even when a branch has the same name by @jasonwbarnett in https://github.com/buildkite/agent/pull/4458
+* Apply plugin and repository allowlists to job environment variables regardless of case on Windows, and refuse jobs with names that only differ by case by @moskyb in https://github.com/buildkite/agent/pull/4498
+* Mask URL credentials and query strings in errors captured with `buildkite-agent job capture-error` by @pinzonjulian in https://github.com/buildkite/agent/pull/4485
+##### 🐛 Fixed
+* Always download `buildkite-agent cache restore` archives inside the restore's temporary directory by @jamiemonserrate in https://github.com/buildkite/agent/pull/4440
+* Check the repository against `--allowed-repositories` before checkout starts by @jamiemonserrate in https://github.com/buildkite/agent/pull/4439
+* Fix fetching branches with quotes in their names when `BUILDKITE_COMMIT` is `HEAD` by @isaacsu in https://github.com/buildkite/agent/pull/4512
+* Build the branch rather than a tag with the same name when `BUILDKITE_COMMIT` is `HEAD` by @isaacsu in https://github.com/buildkite/agent/pull/4513
+##### 🔧 Changed
+* Remove `--context` from `buildkite-agent job capture-error`; put all important details in `--message` instead by @pinzonjulian in https://github.com/buildkite/agent/pull/4478
+* Truncate messages captured with `buildkite-agent job capture-error` to 1,000 characters by @123sarahj123 in https://github.com/buildkite/agent/pull/4465
+##### 🏠 Internal
+* Tell robot reviewers how to check release PRs by @moskyb in https://github.com/buildkite/agent/pull/4461
+* Tell agents how to label PRs by @moskyb in https://github.com/buildkite/agent/pull/4499
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4506 and https://github.com/buildkite/agent/pull/4510
+
+#### New Contributors
+* @pinzonjulian made their first contribution in https://github.com/buildkite/agent/pull/4478
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.4.0...v4.5.0
+
+</details>
+
+
 ## [v7.5.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.5.0) (2026-10-13)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.4.0...v7.5.0)
 

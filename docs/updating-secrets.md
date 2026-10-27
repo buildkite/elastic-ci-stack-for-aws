@@ -1,30 +1,26 @@
 # Updating elastic-ci-stack-s3secrets-hooks
 
-The elastic-ci-stack-s3secrets-hooks are included in the AMIs by the Packer
-build. The hooks are copied in directly from the submodule, the binaries are
-downloaded from the GitHub release.
+Packer copies hooks from `plugins/secrets` into the AMIs and downloads helper
+binaries separately. Renovate groups the submodule and Linux/Windows helper
+updates in one `s3-secrets` PR on the monthly schedule. Check that they target
+the same release before merging.
 
-Once you have [released](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/blob/-/RELEASE.md)
-an updated version of the s3secrets-hooks, you can incorporate it into the
-Elastic CI Stack for AWS template.
+## Manual updates
 
-See https://github.com/buildkite/elastic-ci-stack-for-aws/pull/956 for an
-example of updating elastic-ci-stack-s3secrets-hooks.
+Confirm the [release](https://github.com/buildkite/elastic-ci-stack-s3-secrets-hooks/releases)
+includes `linux-amd64`, `linux-arm64`, and `windows-amd64` binaries, then:
 
-1. Create a new branch
-1. Update the `plugins/secrets` git submodule and `.gitmodules` file for the new tag
-	1. `git submodule init`
-	1. `cd plugins/secrets && git checkout v2.1.x`
-1. Commit the change to the submodule pin and `.gitmodules`
-1. Update and commit a change to the Packer install scripts for [Linux](#linux) and [Windows](#windows) to use the new version
-1. Push your branch and open a pull request
-1. Wait for CI to go green
-1. Merge
+1. Update the submodule tag and checkout (replace `v2.9.1` as needed):
 
-## Linux
+   ```sh
+   git submodule update --init plugins/secrets
+   git config -f .gitmodules submodule.plugins/secrets.branch v2.9.1
+   git -C plugins/secrets fetch origin tag v2.9.1
+   git -C plugins/secrets checkout --detach v2.9.1
+   ```
 
-Update `S3_SECRETS_HELPER_VERSION` in [`packer/linux/scripts/install-s3secrets-helper.sh`](packer/linux/scripts/install-s3secrets-helper.sh)
-
-## Windows
-
-Update `S3_SECRETS_HELPER_VERSION` in [`packer/windows/scripts/install-s3secrets-helper.ps1`](packer/windows/scripts/install-s3secrets-helper.ps1)
+1. Set `S3_SECRETS_HELPER_VERSION` to the same version without `v` in:
+   - [`packer/linux/base/scripts/versions.sh`](../packer/linux/base/scripts/versions.sh)
+   - [`packer/windows/base/scripts/versions.ps1`](../packer/windows/base/scripts/versions.ps1)
+1. Commit `.gitmodules`, `plugins/secrets`, and both version files together.
+   Open a PR and wait for CI before merging.

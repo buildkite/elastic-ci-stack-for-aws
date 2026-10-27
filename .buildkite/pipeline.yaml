@@ -1,6 +1,7 @@
 x-if-changed-patterns:
   - &if_changed_base_linux
     include:
+      - "packer/trust/**"
       - "packer/linux/base/**"
       - "packer/linux/shared/**"
       - ".buildkite/steps/packer.sh"
@@ -8,6 +9,7 @@ x-if-changed-patterns:
 
   - &if_changed_base_windows
     include:
+      - "packer/trust/**"
       - "packer/windows/base/**"
       - "packer/windows/shared/**"
       - ".buildkite/steps/packer.sh"
@@ -64,7 +66,7 @@ steps:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     if: build.source != "schedule"
     plugins:
-      - docker-compose#v5.15.0:
+      - docker-compose#v5.16.0:
           run: fixperms-tests
           config: .buildkite/docker-compose.yml
 
@@ -82,7 +84,7 @@ steps:
       - "fixperms-tests"
     plugins:
       - &aws_role_plugin
-        aws-assume-role-with-web-identity#v1.8.0:
+        aws-assume-role-with-web-identity#v1.8.1:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-aws-stack-buildkite-aws-stack
           session-tags:
             - organization_slug
