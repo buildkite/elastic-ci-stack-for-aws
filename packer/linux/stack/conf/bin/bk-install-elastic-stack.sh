@@ -68,33 +68,27 @@ fetch_metadata_with_retry() {
 
   echo "Fetching EC2 metadata with retry (max attempts: $max_attempts)..."
 
-  # Temporarily disable exit on error for retry logic
-  set +e
-
+  # NOTE: the curl calls must be guarded by `if` conditions rather than relying
+  # on `set +e`. With `set -E` (errtrace), the ERR trap still fires for a failed
+  # assignment using command substitution even when errexit is disabled, which
+  # would run on_error and exit the script on the first failed attempt instead
+  # of retrying.
   while [[ $attempt -le $max_attempts ]]; do
     echo "Attempt $attempt of $max_attempts to fetch metadata..."
 
     # Try to get the token
     local token
-    token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+    if token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
       --max-time "$timeout" \
       --fail --silent --show-error \
-      --location http://169.254.169.254/latest/api/token 2>&1)
-    local token_result=$?
-
-    if [[ $token_result -eq 0 ]]; then
+      --location http://169.254.169.254/latest/api/token 2>&1); then
       # Try to get the instance ID
-      INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" \
+      if INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" \
         --max-time "$timeout" \
         --fail --silent --show-error \
-        --location http://169.254.169.254/latest/meta-data/instance-id 2>&1)
-      local instance_id_result=$?
-
-      if [[ $instance_id_result -eq 0 ]]; then
+        --location http://169.254.169.254/latest/meta-data/instance-id 2>&1); then
         echo "Successfully fetched metadata on attempt $attempt"
         echo "Detected INSTANCE_ID=$INSTANCE_ID"
-        # Re-enable exit on error
-        set -e
         return 0
       else
         echo "Failed to fetch instance ID: $INSTANCE_ID"
@@ -115,9 +109,6 @@ fetch_metadata_with_retry() {
 
     attempt=$((attempt + 1))
   done
-
-  # Re-enable exit on error before returning failure
-  set -e
 
   echo "ERROR: Failed to fetch EC2 metadata after $max_attempts attempts"
   echo "This likely indicates the EC2 metadata service is unavailable or this instance has connectivity issues"
@@ -253,15 +244,8 @@ edge)
   chmod 0755 /usr/bin/buildkite-agent-edge
   buildkite-agent-edge --version
   ;;
-oldstable)
-  echo Downloading buildkite-agent oldstable...
-  curl -Lsf -o /usr/bin/buildkite-agent-oldstable \
-    "https://download.buildkite.com/agent/oldstable/latest/buildkite-agent-linux-${ARCH}"
-  chmod 0755 /usr/bin/buildkite-agent-oldstable
-  buildkite-agent-oldstable --version
-  ;;
 *)
-  echo Not using buildkite-agent edge or oldstable.
+  echo Not using buildkite-agent edge.
   ;;
 esac
 
@@ -329,8 +313,106 @@ if [[ "${BUILDKITE_AGENT_ENABLE_GIT_MIRRORS:-false}" == "true" ]]; then
     echo Not mounting git-mirrors to instance storage as instance storage is disabled.
   fi
 
+  if [[ -n "${BUILDKITE_GIT_MIRROR_SEED_BUCKET:-}" ]]; then
+    GIT_MIRROR_SEED_PREFIX="git-mirror-seeds"
+    echo "Seeding git-mirrors from s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${GIT_MIRROR_SEED_PREFIX}/..."
+
+    # Seeding is best-effort, it is only an optimisation. If listing or extraction fails, the
+    # agent falls back to cloning mirrors from scratch as usual, and the boot must not fail.
+    seed_keys=()
+    if seed_listing="$(
+      aws s3api list-objects-v2 \
+        --bucket "$BUILDKITE_GIT_MIRROR_SEED_BUCKET" \
+        --prefix "${GIT_MIRROR_SEED_PREFIX}/" \
+        --output json \
+        | jq -r '.Contents[]?.Key // empty'
+    )"; then
+      while IFS= read -r seed_key; do
+        if [[ "$seed_key" == *.tar || "$seed_key" == *.tar.gz || "$seed_key" == *.zip ]]; then
+          seed_keys+=("$seed_key")
+        fi
+      done <<<"$seed_listing"
+    else
+      echo "WARNING: Failed to list git mirror seeds in s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${GIT_MIRROR_SEED_PREFIX}/, continuing with empty git-mirrors..."
+    fi
+
+    if [[ ${#seed_keys[@]} -eq 0 ]]; then
+      echo "No git mirror seeds found."
+    fi
+
+    for seed_key in "${seed_keys[@]}"; do
+      seed_archive="${seed_key##*/}"
+      seed_uri="s3://${BUILDKITE_GIT_MIRROR_SEED_BUCKET}/${seed_key}"
+
+      case "$seed_archive" in
+      *.tar.gz) seed_mirror_dir="${seed_archive%.tar.gz}" ;;
+      *.tar) seed_mirror_dir="${seed_archive%.tar}" ;;
+      *.zip) seed_mirror_dir="${seed_archive%.zip}" ;;
+      esac
+
+      if [[ -z "$seed_mirror_dir" || "$seed_mirror_dir" == "." || "$seed_mirror_dir" == ".." ]]; then
+        echo "WARNING: Skipping seed ${seed_key} as its name does not contain a mirror directory name..."
+        continue
+      fi
+
+      if [[ -e "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${seed_mirror_dir}" ]]; then
+        echo "WARNING: Skipping seed ${seed_archive} as mirror ${seed_mirror_dir} already exists..."
+        continue
+      fi
+
+      # Extract each archive into its own staging directory and validate the contents before
+      # moving the mirror into the live mirrors path, so a bad archive can never overwrite or
+      # delete other mirrors. Staging lives on the mirrors volume rather than /tmp, because
+      # /tmp is a memory-backed tmpfs by default (MountTmpfsAtTmp) which large archives would
+      # exhaust, and so the final move is a rename on the same filesystem.
+      if ! seed_staging="$(mktemp -d "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/.git-mirror-seed-XXXXXX")" \
+        || ! mkdir "${seed_staging}/extract"; then
+        echo "WARNING: Failed to create staging directory for ${seed_archive}, skipping seed..."
+        continue
+      fi
+
+      extracted=false
+      echo "Extracting git mirror seed ${seed_archive}..."
+      case "$seed_archive" in
+      *.tar.gz)
+        if aws s3 cp "$seed_uri" - | tar -xzf - -C "${seed_staging}/extract"; then
+          extracted=true
+        fi
+        ;;
+      *.tar)
+        if aws s3 cp "$seed_uri" - | tar -xf - -C "${seed_staging}/extract"; then
+          extracted=true
+        fi
+        ;;
+      *.zip)
+        # zip cannot be streamed: its central directory is at the end of the file.
+        if aws s3 cp "$seed_uri" "${seed_staging}/download.zip" \
+          && unzip -oq "${seed_staging}/download.zip" -d "${seed_staging}/extract"; then
+          extracted=true
+        fi
+        ;;
+      esac
+
+      if [[ "$extracted" != "true" ]]; then
+        echo "WARNING: Failed to extract ${seed_archive}, continuing without it..."
+      elif [[ "$(find "${seed_staging}/extract" -mindepth 1 -maxdepth 1 | wc -l)" -ne 1 ]] \
+        || [[ ! -f "${seed_staging}/extract/${seed_mirror_dir}/HEAD" ]] \
+        || [[ ! -d "${seed_staging}/extract/${seed_mirror_dir}/objects" ]]; then
+        echo "WARNING: ${seed_archive} does not contain a single bare git mirror named ${seed_mirror_dir}, continuing without it..."
+      elif ! mv "${seed_staging}/extract/${seed_mirror_dir}" "${BUILDKITE_AGENT_GIT_MIRRORS_PATH}/${seed_mirror_dir}"; then
+        echo "WARNING: Failed to move mirror ${seed_mirror_dir} into place, continuing without it..."
+      else
+        echo "Seeded git mirror ${seed_mirror_dir}"
+      fi
+
+      rm -rf "$seed_staging" || true
+    done
+  else
+    echo No git mirror seed bucket configured.
+  fi
+
   echo Setting ownership of git-mirrors directory to buildkite-agent...
-  chown buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
+  chown -R buildkite-agent: "$BUILDKITE_AGENT_GIT_MIRRORS_PATH"
 else
   echo git-mirrors disabled.
 fi
@@ -365,21 +447,6 @@ fi
 echo Setting ownership of build path to buildkite-agent.
 chown buildkite-agent: "$BUILDKITE_AGENT_BUILD_PATH"
 
-# Either you can have timestamp-lines xor ansi-timestamps.
-# There's no technical reason you can't have both, it's a pragmatic decision to
-# simplify the avaliable parameters on the stack
-if [[ ${BUILDKITE_AGENT_TIMESTAMP_LINES:-"false"} == "true" ]]; then
-  BUILDKITE_AGENT_TIMESTAMPS_LINES="true"
-  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="true"
-else
-  BUILDKITE_AGENT_TIMESTAMPS_LINES="false"
-  BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS="false"
-fi
-
-echo Setting \$BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS to \$BUILDKITE_AGENT_TIMESTAMP_LINES
-echo "BUILDKITE_AGENT_TIMESTAMP_LINES is $BUILDKITE_AGENT_TIMESTAMPS_LINES"
-echo "BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS is $BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS"
-
 echo "Setting \$BUILDKITE_AGENT_TOKEN from SSM Parameter $BUILDKITE_AGENT_TOKEN_PATH"
 BUILDKITE_AGENT_TOKEN="$(
   aws ssm get-parameter \
@@ -399,8 +466,6 @@ tags=$(
 )
 endpoint=${BUILDKITE_AGENT_ENDPOINT:-"https://agent-edge.buildkite.com/v3"}
 tags-from-ec2-meta-data=true
-no-ansi-timestamps=${BUILDKITE_AGENT_NO_ANSI_TIMESTAMPS}
-timestamp-lines=${BUILDKITE_AGENT_TIMESTAMP_LINES}
 hooks-path=/etc/buildkite-agent/hooks
 build-path=${BUILDKITE_AGENT_BUILD_PATH}
 plugins-path=/var/lib/buildkite-agent/plugins
@@ -412,9 +477,9 @@ no-color=true
 disconnect-after-idle-timeout=${BUILDKITE_SCALE_IN_IDLE_PERIOD}
 disconnect-after-job=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}
 disconnect-after-uptime=${BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}
-tracing-backend=${BUILDKITE_AGENT_TRACING_BACKEND}
-cancel-grace-period=${BUILDKITE_AGENT_CANCEL_GRACE_PERIOD}
-signal-grace-period-seconds=${BUILDKITE_AGENT_SIGNAL_GRACE_PERIOD_SECONDS}
+opentelemetry-tracing=${BUILDKITE_AGENT_OPENTELEMETRY_TRACING:-false}
+cancel-signal-timeout=${BUILDKITE_AGENT_CANCEL_SIGNAL_TIMEOUT:-10s}
+cancel-cleanup-timeout=${BUILDKITE_AGENT_CANCEL_CLEANUP_TIMEOUT:-5s}
 signing-aws-kms-key=${BUILDKITE_AGENT_SIGNING_KMS_KEY}
 verification-failure-behavior=${BUILDKITE_AGENT_JOB_VERIFICATION_NO_SIGNATURE_BEHAVIOR}
 EOF
@@ -471,14 +536,27 @@ fi
 echo Setting ownership of /etc/buildkite-agent/buildkite-agent.cfg to buildkite-agent...
 chown buildkite-agent: /etc/buildkite-agent/buildkite-agent.cfg
 
+# The default login user (and its home) differs by distro: ec2-user on Amazon
+# Linux, ubuntu on Ubuntu. Resolve it at boot rather than hardcoding.
+LOGIN_USER=ec2-user
+if [[ -r /etc/os-release ]]; then
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  if [[ "${ID:-}" == "ubuntu" ]]; then
+    LOGIN_USER=ubuntu
+  fi
+fi
+LOGIN_HOME="$(getent passwd "${LOGIN_USER}" | cut -d: -f6)"
+LOGIN_HOME="${LOGIN_HOME:-/home/${LOGIN_USER}}"
+
 if [[ -n "$BUILDKITE_AUTHORIZED_USERS_URL" ]]; then
   echo Writing authorized user fetching script...
   cat <<-EOF | tee /usr/local/bin/refresh_authorized_keys
 		#!/usr/bin/env bash
 		/usr/local/bin/bk-fetch.sh "$BUILDKITE_AUTHORIZED_USERS_URL" /tmp/authorized_keys
-		mv /tmp/authorized_keys /home/ec2-user/.ssh/authorized_keys
-		chmod 600 /home/ec2-user/.ssh/authorized_keys
-		chown ec2-user: /home/ec2-user/.ssh/authorized_keys
+		mv /tmp/authorized_keys ${LOGIN_HOME}/.ssh/authorized_keys
+		chmod 600 ${LOGIN_HOME}/.ssh/authorized_keys
+		chown ${LOGIN_USER}: ${LOGIN_HOME}/.ssh/authorized_keys
 	EOF
 
   echo Setting ownership of /usr/local/bin/refresh_authorized_keys to root...

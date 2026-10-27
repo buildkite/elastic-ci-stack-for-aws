@@ -4,6 +4,7 @@ Documentation=https://buildkite.com/agent
 After=syslog.target
 After=network.target
 After=docker.service
+FailureAction=poweroff-force
 
 [Service]
 Type=simple
@@ -16,16 +17,15 @@ Environment="TMPDIR=/var/tmp"
 EnvironmentFile=-/var/lib/buildkite-agent/env
 ExecStart=/usr/bin/buildkite-agent start
 ExecStopPost=/usr/local/bin/terminate-instance
-RestartSec=5
-Restart=on-failure
-RestartForceExitStatus=SIGPIPE
+Restart=no
+WatchdogSec=180s
+WatchdogSignal=SIGKILL
+TimeoutAbortSec=10s
 TimeoutStartSec=10
+# Allow running jobs to finish during graceful shutdown.
 TimeoutStopSec=0
 KillMode=process
-# https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#OOMScoreAdjust=
-# Set to -1000 to disable OOM killing of processes of buildkite-agent service
-# managing EC2 instance lifecycle
-OOMScoreAdjust=-1000
+OOMPolicy=kill
 
 [Install]
 WantedBy=multi-user.target

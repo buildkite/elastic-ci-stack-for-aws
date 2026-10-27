@@ -134,7 +134,7 @@ compute_start_time() {
 collect_instance() {
   echo "Collecting logs for instance $instanceId..."
   local name safe file err
-  for name in buildkite-agent system lifecycled docker-daemon cloud-init cloud-init/output cfn-init elastic-stack auth EC2Launch/UserdataExecution; do
+  for name in buildkite-agent system lifecycled docker-daemon cloud-init cloud-init/output cfn-init elastic-stack auth EC2Launch/UserdataExecution terminate-instance; do
     safe="${name//\//-}"
     file="$dir/$safe-$instanceId.log"
     if ! aws_cli logs filter-log-events \

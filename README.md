@@ -1,5 +1,8 @@
 <h1><img alt="Elastic CI Stack for AWS" src="images/banner.png?raw=true"></h1>
 
+> [!WARNING]
+> Elastic CI Stack for AWS v7 is now available. New features will only be developed and released for v7, and will not be backported to v6. Security fixes will continue to be backported to v6. See the [v6 to v7 upgrade guide](https://buildkite.com/docs/agent/self-hosted/aws/elastic-ci-stack/ec2-linux-and-windows/v6-v7-upgrade-guide) for details on migrating.
+
 [![Build status](https://badge.buildkite.com/d178ab942e2f606a83e79847704648437d82a9c5fdb434b7ae.svg?branch=main)](https://buildkite.com/buildkite-aws-stack/buildkite-aws-stack/builds/latest?branch=main)
 
 ## Buildkite Elastic CI Stack for AWS
@@ -94,6 +97,12 @@ To enable resource limits with custom values, include these parameters in your C
 ### Notes
 - Resource limits are disabled by default
 - Values can be specified as percentages or absolute values (for memory-related parameters)
+
+## Agent watchdog
+
+Buildkite marks agents that stop sending heartbeats as lost and fails their running jobs. On Linux, a watchdog powers off the instance after three minutes without an agent health notification. The Auto Scaling group replaces it, maintaining desired capacity.
+
+Agent service failures and out-of-memory kills within the service also trigger instance replacement, interrupting all jobs on that instance. Normal graceful shutdown lets running jobs finish.
 
 ## Scheduled Scaling
 
@@ -202,9 +211,11 @@ This will create AMIs for the following platforms in your account's `us-east-1` 
 
 - Linux (64-bit x86)
 - Linux (64-bit Arm)
+- Ubuntu (64-bit x86)
+- Ubuntu (64-bit Arm)
 - Windows (64-bit x86)
 
-If you only need Linux AMIs, invoke the specific targets to skip the Windows build:
+If you only need a subset, invoke the specific targets to skip the rest:
 
 ```bash
 # Linux amd64 (x86_64)
@@ -216,6 +227,12 @@ make packer-base-linux-arm64.output packer-linux-arm64.output
 # Both Linux architectures
 make packer-base-linux-amd64.output packer-linux-amd64.output \
      packer-base-linux-arm64.output packer-linux-arm64.output
+
+# Ubuntu amd64 (x86_64)
+make packer-base-ubuntu2404-amd64.output packer-ubuntu2404-amd64.output
+
+# Ubuntu arm64
+make packer-base-ubuntu2404-arm64.output packer-ubuntu2404-arm64.output
 ```
 
 To test a Linux instance type with local NVMe instance storage, such as `c8id.xlarge`, set both `InstanceTypes` and `EnableInstanceStorage` in `config.json`:
@@ -241,9 +258,17 @@ When enabled on Linux, available NVMe instance storage is mounted at `/mnt/ephem
 
 **Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
+### Release builds
+
+Branch and PR builds use `if_changed` to select affected AMI builds and tests.
+Pushing a release tag builds and tests all final AMIs and publishes the
+CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
+
 ## Support Policy
 
-We provide support for security and bug fixes on the current major release only.
+We provide support for security and bug fixes on the current major release (v7) only.
+Security fixes will also be backported to v6. New features and non-security bug
+fixes will not be backported to v6.
 
 If there are any changes in the main branch since the last tagged release, we
 aim to publish a new tagged release of this template at the end of each month.
@@ -261,7 +286,12 @@ Buildkite builds and deploys the following AMIs to all our supported regions:
 
 - Amazon Linux 2023 (64-bit x86)
 - Amazon Linux 2023 (64-bit Arm)
+- Ubuntu 24.04 LTS (64-bit x86)
+- Ubuntu 24.04 LTS (64-bit Arm)
 - Windows Server 2022 (64-bit x86)
+
+Amazon Linux 2023 is the default for Linux instances. To run Ubuntu 24.04 LTS
+instead, set the `LinuxDistribution` parameter to `ubuntu2404`.
 
 ### Buildkite Agent
 
@@ -270,7 +300,7 @@ tracks the latest Buildkite Agent release.
 
 You may wish to preview any updates to your stack from this template
 [using a CloudFormation Stack Change Set](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
-to decide whether to apply it.
+to decide whether to apply it. See the [Elastic CI Stack v7 upgrade guide](docs/upgrading-to-v7.md) before upgrading from stack v6.
 
 ## Recommended reading
 

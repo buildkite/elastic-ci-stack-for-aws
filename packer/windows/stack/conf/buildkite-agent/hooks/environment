@@ -19,9 +19,12 @@ echo "~~~ :llama: Setting up elastic stack environment ($BUILDKITE_STACK_VERSION
 
 echo "Configuring built-in plugins"
 
-[[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/secrets/}
-[[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/docker-login/}
-[[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ecr/}
+# Pad with spaces so each substitution only removes a whole plugin name
+# ("ecr" is also a substring of "secrets")
+PLUGINS_ENABLED=" ${PLUGINS_ENABLED} "
+[[ ! ${SECRETS_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ secrets / }
+[[ ! ${DOCKER_LOGIN_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ docker-login / }
+[[ ! ${ECR_PLUGIN_ENABLED:-true} =~ (on|1|true) ]] && PLUGINS_ENABLED=${PLUGINS_ENABLED/ ecr / }
 
 SECRETS_PLUGIN_ENABLED=0
 DOCKER_LOGIN_PLUGIN_ENABLED=0
