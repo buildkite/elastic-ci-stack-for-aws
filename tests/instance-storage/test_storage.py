@@ -4,6 +4,7 @@ Real mdadm/filesystem behavior is covered separately on disposable EC2 stacks.
 These tests protect the script's preservation and persistence decisions in CI.
 """
 
+from fnmatch import fnmatch
 import os
 from pathlib import Path
 import subprocess
@@ -95,6 +96,16 @@ class StorageScriptTest(unittest.TestCase):
                     entries = [line.split() for line in (work / "fstab").read_text().splitlines()]
                     self.assertEqual(entries, [["/dev/md0", str(work / "mount"), "ext4",
                                                 "defaults,noatime", "0", "0"]] if success else [])
+                    if success and not mounted:
+                        config = (work / "mdadm.conf").read_text().splitlines()
+                        self.assertTrue(any(line.startswith("ARRAY ") for line in config))
+                        # EC2 can renumber a member after reboot. mdadm must
+                        # still discover it using the persisted configuration.
+                        patterns = [word for line in config if line.startswith("DEVICE ")
+                                    for word in line.split()[1:]]
+                        self.assertTrue(not patterns or "partitions" in patterns or
+                                        any(fnmatch("/dev/nvme3n1", p) for p in patterns),
+                                        "RAID discovery excludes a renumbered instance-store member")
 
 
 if __name__ == "__main__":

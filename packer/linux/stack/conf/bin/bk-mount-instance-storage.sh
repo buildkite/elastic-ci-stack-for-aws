@@ -109,12 +109,10 @@ else
       echo "Created $logicalname from ${devices[*]}."
     fi
 
-    echo "DEVICE ${devices[*]}" >/etc/mdadm.conf
+    # NVMe device numbers can change on reboot. Discover members by the
+    # array UUID rather than restricting assembly to today's device names.
+    mdadm --detail --scan >/etc/mdadm.conf
     echo Created /etc/mdadm.conf:
-    cat /etc/mdadm.conf
-
-    mdadm --detail --scan >>/etc/mdadm.conf
-    echo Updated /etc/mdadm.conf:
     cat /etc/mdadm.conf
 
     echo Setting readahead to 64k...
