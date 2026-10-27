@@ -61,7 +61,7 @@ systemctl() { :; }
 getent() { echo 'ec2-user:x:1000:1000::/home/ec2-user:/bin/bash'; }
 logger() { cat; }
 findmnt() {
-  [[ "$1" == --mountpoint ]]
+  [[ "$1" == --mountpoint ]] || exit 99
   awk -v path="$2" '$2 == path {found=1} END {exit !found}' "$STATE_DIR/mounts"
 }
 mount() {
