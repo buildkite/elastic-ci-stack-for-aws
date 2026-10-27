@@ -41,6 +41,7 @@ function nssm {
     $testState.configured++
     $global:LASTEXITCODE = if ($testState.case.NativeFails -and $args[0] -eq 'install') { 7 } else { 0 }
 }
+function sc.exe { $global:LASTEXITCODE=0 }
 function icacls { $global:LASTEXITCODE=0 }
 function Get-Service { param($Name,$ErrorAction) @{Status=[System.ServiceProcess.ServiceControllerStatus]::Running} }
 function Start-Service {
@@ -134,7 +135,7 @@ $cases = @(
     @{Name='permanent describe denial does not consume the launch budget'; DescribeDenied=$true; NoSignal=$true; MaxSleep=1},
     @{Name='CONTINUE denial does not abandon a started agent'; ContinueFails=$true; NoSignal=$true},
     @{Name='CloudFormation delivery failure leaves completed agent running'; SignalFails=$true},
-    @{Name='enabled log retention updates existing config and completes launch'; RetentionDays=14}
+    @{Name='log retention survives image configuration import and completes launch'; RetentionDays=14}
 )
 try {
     foreach ($case in $cases) {
@@ -152,13 +153,22 @@ try {
         $env:EC2_LOG_RETENTION_DAYS = $case.RetentionDays
         $env:ENABLE_EC2_LOG_RETENTION_POLICY = 'true'
         if ($case.RetentionDays) {
-            $configFile = 'C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json'
+            New-Item -ItemType Directory C:\packer-temp\conf\cloudwatch-agent -Force | Out-Null
+            $imageConfig = 'C:\packer-temp\conf\cloudwatch-agent\amazon-cloudwatch-agent.json'
+            Copy-Item (Join-Path $PSScriptRoot '../../packer/windows/stack/conf/cloudwatch-agent/amazon-cloudwatch-agent.json') $imageConfig
+            $originalConfig = Get-Content $imageConfig -Raw | ConvertFrom-Json
+            $configFile = 'C:\ProgramData\Amazon\AmazonCloudWatchAgent\Configs\loaded.json'
             New-Item -ItemType Directory (Split-Path $configFile) -Force | Out-Null
-            Copy-Item (Join-Path $PSScriptRoot '../../packer/windows/stack/conf/cloudwatch-agent/amazon-cloudwatch-agent.json') $configFile
-            $originalConfig = Get-Content $configFile -Raw | ConvertFrom-Json
             $controlScript = 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1'
             New-Item -ItemType Directory (Split-Path $controlScript) -Force | Out-Null
-            Set-Content $controlScript '# CloudWatch service configuration is simulated.'
+            # Model the installed controller's import: retain an active copy, then
+            # delete its reserved source filename after successful validation.
+            Set-Content $controlScript @'
+param($a, $m, $c, [switch]$s)
+Copy-Item $c.Substring(5) 'C:\ProgramData\Amazon\AmazonCloudWatchAgent\Configs\loaded.json' -Force
+Remove-Item 'C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json' -ErrorAction SilentlyContinue
+'@
+            & (Join-Path $PSScriptRoot '../../packer/windows/stack/scripts/configure-cloudwatch-agent.ps1') | Out-Null
         }
         Set-Content C:\buildkite-agent\buildkite-agent.cfg 'original configuration'
         if ($case.Marker) { Set-Content C:\buildkite-agent\elastic-stack-bootstrap-status $case.Marker }

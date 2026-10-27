@@ -487,7 +487,7 @@ if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "t
   Write-Output "Setting CloudWatch EC2 log retention to $($Env:EC2_LOG_RETENTION_DAYS) days"
   Write-Output "WARNING: This will delete EC2 logs older than $($Env:EC2_LOG_RETENTION_DAYS) days from existing log groups"
 
-  $configFile = "C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json"
+  $configFile = "C:\ProgramData\Amazon\AmazonCloudWatchAgent\buildkite-cloudwatch-agent.json"
   if (Test-Path $configFile) {
     # Add retention_in_days to all collect_list items using jq
     $tempFile = Join-Path $env:TEMP 'cloudwatch_config.json'
