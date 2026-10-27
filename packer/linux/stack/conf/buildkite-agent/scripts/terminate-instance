@@ -23,6 +23,49 @@ mark_as_unhealthy() {
     --health-status Unhealthy
 }
 
+agent_is_within_uptime_limit() {
+  local uptime_limit="${BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME:-0}"
+  local timestamps
+  local start_timestamp
+  local exit_timestamp
+  local elapsed_seconds
+
+  if [[ ! "$uptime_limit" =~ ^[0-9]+$ ]]; then
+    echo "Invalid agent uptime limit '$uptime_limit'; replacing instance." >&2
+    return 1
+  fi
+
+  uptime_limit=$((10#$uptime_limit))
+  if ((uptime_limit == 0)); then
+    return 0
+  fi
+
+  if ! timestamps=$(timeout 5 systemctl show buildkite-agent.service \
+    --property=ExecMainStartTimestampMonotonic \
+    --property=ExecMainExitTimestampMonotonic); then
+    echo "Could not read agent process timestamps; replacing instance." >&2
+    return 1
+  fi
+
+  start_timestamp=$(sed -n 's/^ExecMainStartTimestampMonotonic=//p' <<<"$timestamps")
+  exit_timestamp=$(sed -n 's/^ExecMainExitTimestampMonotonic=//p' <<<"$timestamps")
+
+  if [[ ! "$start_timestamp" =~ ^[0-9]+$ ||
+    ! "$exit_timestamp" =~ ^[0-9]+$ ]] \
+    || ((start_timestamp == 0 || exit_timestamp < start_timestamp)); then
+    echo "Could not determine agent process uptime; replacing instance." >&2
+    return 1
+  fi
+
+  elapsed_seconds=$(((exit_timestamp - start_timestamp) / 1000000))
+  if ((elapsed_seconds >= uptime_limit)); then
+    echo "Agent reached its maximum uptime; replacing instance." >&2
+    return 1
+  fi
+
+  return 0
+}
+
 fetch_metadata() {
   local endpoint="$1"
   local token="$2"
@@ -111,7 +154,8 @@ if termination_output=$(terminate "$region" "$instance_id" 2>&1); then
 elif [[ "${SERVICE_RESULT:-}" == "success" &&
   "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" != "true" &&
   "$termination_output" == *"(ValidationError)"* &&
-  "$termination_output" == *"Currently, desiredSize equals minSize"* ]]; then
+  "$termination_output" == *"Currently, desiredSize equals minSize"* ]] \
+  && agent_is_within_uptime_limit; then
   printf '%s\n' "$termination_output" >&2
   echo "Auto Scaling group is at MinSize; keeping instance so systemd can restart the agent."
   exit 1

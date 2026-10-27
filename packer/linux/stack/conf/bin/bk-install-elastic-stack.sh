@@ -216,6 +216,7 @@ set_always         "BUILDKITE_AGENTS_PER_INSTANCE" "$BUILDKITE_AGENTS_PER_INSTAN
 
 # also set via /etc/systemd/system/buildkite-agent.service.d/environment.conf
 set_always         "BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB" "$BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB"
+set_always         "BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME" "$BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME"
 set_always         "BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL" "$BUILDKITE_TERMINATE_INSTANCE_ON_DISK_FULL"
 set_always         "BUILDKITE_PURGE_BUILDS_ON_DISK_FULL" "$BUILDKITE_PURGE_BUILDS_ON_DISK_FULL"
 set_always         "BUILDKITE_ECR_POLICY" "${BUILDKITE_ECR_POLICY:-none}"
@@ -678,6 +679,7 @@ mkdir -p /etc/systemd/system/buildkite-agent.service.d
 cat <<EOF | tee /etc/systemd/system/buildkite-agent.service.d/environment.conf
 [Service]
 Environment="BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB}"
+Environment="BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME=${BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME}"
 EOF
 
 echo Reloading systemctl services...
