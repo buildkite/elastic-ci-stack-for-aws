@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="$ROOT/packer/linux/stack/conf/buildkite-agent/scripts/terminate-instance"
 TEST_TMP=$(mktemp -d)
-trap 'rm -rf "$TEST_TMP"' EXIT
+trap 'rm -rf "$TEST_TMP"; rm -f /tmp/buildkite-agent-termination-marker' EXIT
 
 mkdir -p "$TEST_TMP/bin"
 
@@ -120,6 +120,16 @@ assert_call_contains() {
 
 run_case() {
   : >"$AWS_CALL_LOG"
+  rm -f /tmp/buildkite-agent-termination-marker
+  set +e
+  output=$(env -i PATH="$PATH" AWS_CALL_LOG="$AWS_CALL_LOG" "$@" "$SCRIPT" 2>&1)
+  status=$?
+  set -e
+}
+
+run_scaler_drain_case() {
+  : >"$AWS_CALL_LOG"
+  touch /tmp/buildkite-agent-termination-marker
   set +e
   output=$(env -i PATH="$PATH" AWS_CALL_LOG="$AWS_CALL_LOG" "$@" "$SCRIPT" 2>&1)
   status=$?
@@ -172,6 +182,13 @@ run_case AWS_DECREMENT_RESULT=min-size BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=fa
   BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME=60 AGENT_START_TIMESTAMP=1000000 AGENT_EXIT_TIMESTAMP=60999999
 assert_status 1
 assert_calls 1
+
+echo "A scaler-requested drain is replaced at MinSize"
+run_scaler_drain_case AWS_DECREMENT_RESULT=min-size BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=false SERVICE_RESULT=success \
+  BUILDKITE_AGENT_DISCONNECT_AFTER_UPTIME=0
+assert_status 0
+assert_calls 2
+assert_call_contains 2 --no-should-decrement-desired-capacity
 
 echo "A zero-padded uptime is treated as decimal"
 run_case AWS_DECREMENT_RESULT=min-size BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB=false SERVICE_RESULT=success \

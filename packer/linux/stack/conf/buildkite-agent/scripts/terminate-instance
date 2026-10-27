@@ -151,8 +151,11 @@ if termination_output=$(terminate "$region" "$instance_id" 2>&1); then
 # restarts the agent on the existing instance. SERVICE_RESULT is provided by systemd;
 # when this script is called directly or the service failed, we deliberately fall
 # through to replacement. Instances that must be replaced do the same.
+# The Elastic CI scaler creates this marker before using systemctl stop. An explicit
+# stop suppresses Restart=on-failure, so scaler-requested drains must be replaced.
 elif [[ "${SERVICE_RESULT:-}" == "success" &&
   "${BUILDKITE_TERMINATE_INSTANCE_AFTER_JOB:-false}" != "true" &&
+  ! -f /tmp/buildkite-agent-termination-marker &&
   "$termination_output" == *"(ValidationError)"* &&
   "$termination_output" == *"Currently, desiredSize equals minSize"* ]] \
   && agent_is_within_uptime_limit; then
