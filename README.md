@@ -180,6 +180,13 @@ AWS_PROFILE="some-profile" make create-stack
 aws-vault exec some-profile -- make create-stack
 ```
 
+To deploy a published template without building a local template, set `TEMPLATE_URL` with either `create-stack` or `update-stack`. Both targets still read stack parameters from `config.json`. Quote the URL, especially when using a signed URL with `&` query separators:
+
+```bash
+make update-stack STACK_NAME=my-stack \
+  TEMPLATE_URL='https://s3.amazonaws.com/buildkite-aws-stack/main/aws-stack.yml'
+```
+
 If you need to build your own AMIs (because you've changed something in the
 `packer` directory), run `make packer` with AWS credentials in your shell environment.
 

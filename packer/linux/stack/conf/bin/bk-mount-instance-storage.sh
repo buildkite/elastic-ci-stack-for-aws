@@ -64,6 +64,12 @@ mkdir -p "$devicemount"
 if findmnt --mountpoint "$devicemount" >/dev/null; then
   echo "$devicemount is already mounted. Skipping instance storage setup."
   logicalname="$(findmnt -n -o SOURCE --mountpoint "$devicemount")"
+  existing_fs_type="$(findmnt -n -o FSTYPE --mountpoint "$devicemount")"
+  if [[ "$existing_fs_type" != "$fs_type" ]]; then
+    echo "$devicemount is mounted as $existing_fs_type, expected $fs_type."
+    echo "Refusing to persist an unexpected filesystem."
+    exit 1
+  fi
 else
 
   #shellcheck disable=SC2207
@@ -84,6 +90,12 @@ else
     logicalname=/dev/md0
 
     if mdadm --detail "$logicalname" >/dev/null 2>&1; then
+      array_devices=(/sys/block/"${logicalname##*/}"/slaves/*)
+      if [[ "$(printf '%s\n' "${array_devices[@]##*/}" | sort)" != "$(printf '%s\n' "${devices[@]##*/}" | sort)" ]]; then
+        echo "$logicalname does not contain the detected instance storage devices."
+        echo "Refusing to reuse an unrelated array."
+        exit 1
+      fi
       echo "$logicalname is already assembled."
     elif mdadm --examine "${devices[@]}" >/dev/null 2>&1; then
       echo "Assembling existing instance storage array at $logicalname..."
