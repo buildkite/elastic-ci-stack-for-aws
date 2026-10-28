@@ -1,88 +1,14 @@
-x-if-changed-patterns:
-  - &if_changed_base_linux
-    include:
-      - "packer/trust/**"
-      - "packer/linux/base/**"
-      - "packer/linux/shared/**"
-      - ".buildkite/steps/packer.sh"
-      - "Makefile"
-
-  - &if_changed_base_windows
-    include:
-      - "packer/trust/**"
-      - "packer/windows/base/**"
-      - "packer/windows/shared/**"
-      - ".buildkite/steps/packer.sh"
-      - "Makefile"
-
+# Test branch only: exercise the PR's real builders without publishing images.
 steps:
-  - group: ":lint-roller: Linting"
-    key: linting
-    if: build.source != "schedule"
-    steps:
-      - name: ":bash: Lint"
-        command: .buildkite/steps/lint.sh
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-
-      - name: ":mag: cfn-lint"
-        command: .buildkite/steps/cfn-lint.sh
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-        soft_fail:
-          # https://github.com/aws-cloudformation/cfn-lint#exit-codes
-          - exit_status: 4 # Warning
-          - exit_status: 8 # Informational
-          - exit_status: 12 # Warning and informational
-
-      - name: ":bash: shfmt"
-        command: .buildkite/steps/shfmt.sh
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-
-      - name: ":packer: packer fmt"
-        command: make packer-fmt
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-
-      - name: ":mag: goss sync"
-        command: .buildkite/steps/goss-sync-check.sh
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-
-      - name: ":broom: Cleanup tests"
-        command:
-          - .buildkite/steps/test-cleanup-scripts.sh
-        agents:
-          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-        plugins:
-          - docker-compose#v5.15.0:
-              run: ruby
-              config: .buildkite/docker-compose.yml
-
-  - id: "fixperms-tests"
-    name: ":go: fixperms tests"
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.source != "schedule"
-    plugins:
-      - docker-compose#v5.16.0:
-          run: fixperms-tests
-          config: .buildkite/docker-compose.yml
-
-  - id: "packer-base-windows-amd64"
-    name: ":packer: :windows: (base)"
-    command: ".buildkite/steps/packer.sh windows amd64 base"
-    timeout_in_minutes: 40
+  - key: packer-base-windows-amd64
+    label: ":packer: :windows: Base SSM connectivity test"
+    command: .buildkite/steps/packer.sh windows amd64 base
+    timeout_in_minutes: 45
     env:
       AMI_PUBLIC: false
       PKR_VAR_iam_instance_profile: "packer-ssm"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: *if_changed_base_windows
-    depends_on:
-      - "linting"
-      - "fixperms-tests"
     plugins:
       - &aws_role_plugin
         aws-assume-role-with-web-identity#v1.8.1:
@@ -92,107 +18,15 @@ steps:
             - organization_id
             - pipeline_slug
 
-  - id: "packer-base-linux-amd64"
-    name: ":packer: :linux: AMD64 (base)"
-    command: ".buildkite/steps/packer.sh linux amd64 base"
-    timeout_in_minutes: 40
+  - key: packer-windows-amd64
+    label: ":packer: :windows: Final-image SSM connectivity test"
+    command: .buildkite/steps/packer.sh windows
+    depends_on: packer-base-windows-amd64
+    timeout_in_minutes: 60
     env:
       AMI_PUBLIC: false
+      PKR_VAR_iam_instance_profile: "packer-ssm"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: *if_changed_base_linux
-    depends_on:
-      - "linting"
-      - "fixperms-tests"
     plugins:
       - *aws_role_plugin
-
-  - id: "packer-base-linux-arm64"
-    name: ":packer: :linux: ARM64 (base)"
-    command: ".buildkite/steps/packer.sh linux arm64 base"
-    timeout_in_minutes: 40
-    env:
-      AMI_PUBLIC: false
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: *if_changed_base_linux
-    depends_on:
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "packer-base-ubuntu2404-amd64"
-    name: ":packer: :ubuntu: AMD64 (base)"
-    command: ".buildkite/steps/packer.sh ubuntu2404 amd64 base"
-    timeout_in_minutes: 40
-    env:
-      AMI_PUBLIC: false
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: *if_changed_base_linux
-    depends_on:
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "packer-base-ubuntu2404-arm64"
-    name: ":packer: :ubuntu: ARM64 (base)"
-    command: ".buildkite/steps/packer.sh ubuntu2404 arm64 base"
-    timeout_in_minutes: 40
-    env:
-      AMI_PUBLIC: false
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: *if_changed_base_linux
-    depends_on:
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  - id: "packer-base-linux-amd64-cis"
-    name: ":packer: :linux: AMD64 CIS (base)"
-    command: ".buildkite/steps/packer.sh linux amd64 base-cis"
-    timeout_in_minutes: 40
-    env:
-      AMI_PUBLIC: false
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if_changed: *if_changed_base_linux
-    depends_on:
-      - "linting"
-      - "fixperms-tests"
-    plugins:
-      - *aws_role_plugin
-
-  # Only the stack pipeline bypasses change filtering on release tags. Its
-  # existing dependencies still wait for any base AMIs selected above.
-  - label: ":pipeline: Stack build"
-    key: upload-stack
-    if: build.source != "schedule" && build.tag == null
-    command: buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    depends_on:
-      - linting
-      - fixperms-tests
-
-  - label: ":pipeline: Release build"
-    key: upload-release
-    if: build.source != "schedule" && build.tag != null
-    command: |
-      set -euo pipefail
-      git check-ref-format "refs/tags/$${BUILDKITE_TAG}"
-      git fetch origin "refs/tags/$${BUILDKITE_TAG}:refs/tags/$${BUILDKITE_TAG}"
-      if [[ "$$(git rev-parse "refs/tags/$${BUILDKITE_TAG}^{commit}")" != "$$(git rev-parse HEAD)" ]]; then
-        echo "Release tag $${BUILDKITE_TAG} does not match the checked-out commit" >&2
-        exit 1
-      fi
-      buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml --apply-if-changed=false
-    agents:
-      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    depends_on:
-      - linting
-      - fixperms-tests

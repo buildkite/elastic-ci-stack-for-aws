@@ -162,6 +162,15 @@ build {
     ]
   }
 
+  # Test branch only: leave time for a real SSM session before Sysprep.
+  provisioner "powershell" {
+    inline = [
+      "Set-Content -Path C:/packer-temp/ssm-connectivity-ready -Value stack",
+      "Write-Output 'SSM_CONNECTIVITY_TEST_READY stack'",
+      "Start-Sleep -Seconds 300"
+    ]
+  }
+
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-create-win-sysprep.html
   provisioner "powershell" {
     inline = [

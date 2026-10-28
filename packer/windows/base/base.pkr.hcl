@@ -153,6 +153,15 @@ build {
     script = "scripts/validate-docker.ps1"
   }
 
+  # Test branch only: leave time for a real SSM session after the reboot.
+  provisioner "powershell" {
+    inline = [
+      "Set-Content -Path C:/packer-temp/ssm-connectivity-ready -Value base",
+      "Write-Output 'SSM_CONNECTIVITY_TEST_READY base'",
+      "Start-Sleep -Seconds 300"
+    ]
+  }
+
   # Cleanup and sysprep
   provisioner "powershell" {
     inline = [
