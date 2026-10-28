@@ -14,6 +14,7 @@ grep -rl '^#!/.*sh' . | while read -r file; do
 done
 
 tests/linux/test-terminate-instance.sh
+tests/linux/test-stop-agent-gracefully.sh
 
 # No network: validate committed certificate fixtures and configuration invariants.
 docker run --rm -v "$PWD:/src:ro" -w /src python:3.12-bookworm \
