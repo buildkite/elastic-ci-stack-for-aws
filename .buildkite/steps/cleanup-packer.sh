@@ -3,8 +3,9 @@ set -euo pipefail
 
 # Terminates Packer builder instances launched more than 24 hours ago, whatever
 # state their build is in, including stopped instances. Only instances carrying
-# every tag this repository's Packer templates set are considered. Volumes,
-# AMIs and snapshots are left alone.
+# every tag this repository's Packer templates set are considered. Volumes are not
+# swept separately; attached volumes follow their delete-on-termination settings.
+# Root disks are deleted. AMIs and snapshots are untouched.
 #
 # Like clean-old-amis, any set DRY_RUN value previews; unset it to terminate.
 
