@@ -14,7 +14,7 @@ variable "arch" {
 
 variable "instance_type" {
   type    = string
-  default = "m7i.xlarge"
+  default = "c8a.xlarge"
 }
 
 variable "region" {
@@ -87,6 +87,18 @@ source "amazon-ebs" "elastic-ci-stack" {
     volume_type           = "gp3"
     device_name           = "/dev/sda1"
     volume_size           = 30
+    iops                  = 6000
+    throughput            = 500
+    delete_on_termination = true
+  }
+
+  # Keep the faster builder storage settings out of the output AMI's launch defaults.
+  ami_block_device_mappings {
+    volume_type           = "gp3"
+    device_name           = "/dev/sda1"
+    volume_size           = 30
+    iops                  = 3000
+    throughput            = 125
     delete_on_termination = true
   }
 
