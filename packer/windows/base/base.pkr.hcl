@@ -14,7 +14,7 @@ variable "arch" {
 
 variable "instance_type" {
   type    = string
-  default = "m7i.xlarge"
+  default = "c8a.xlarge"
 }
 
 variable "region" {
