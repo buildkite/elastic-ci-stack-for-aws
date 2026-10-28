@@ -125,6 +125,8 @@ steps:
           - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2022 cmd.exe /c echo hello
           # terminate-instance.ps1 needs this right for its shutdown fallback
           - '. C:\buildkite-agent\bin\bk-user-rights.ps1; if ([BkUserRights]::Get((Get-LocalUser buildkite-agent).SID.Value) -notcontains "SeShutdownPrivilege") { Write-Output "buildkite-agent is missing SeShutdownPrivilege"; exit 1 }'
+          # Restarting after exit can accept another job while the instance is terminating.
+          - 'if (((nssm get buildkite-agent AppExit Default | Out-String) -replace "\x00", "").Trim() -ne "Exit") { Write-Output "buildkite-agent AppExit Default must be Exit"; exit 1 }'
         timeout_in_minutes: 5
         agents:
           stack: "buildkite-aws-stack-test-windows-amd64-${BUILDKITE_BUILD_NUMBER}"
