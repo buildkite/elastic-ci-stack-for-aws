@@ -55,70 +55,106 @@ fi
 
 echo Mounting instance storage...
 
-#shellcheck disable=SC2207
-devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -f1 -d' ' || true))
-if [[ -z "${devices[*]}" ]]; then
-  echo No NVMe drives to mount.
-  echo Please check that your instance type supports instance storage.
-  exit 0
-fi
-
-echo "Found NVMe devices: ${devices[*]}."
-
-if [[ "${#devices[@]}" -eq 1 ]]; then
-  echo Mounting instance storage device directly...
-  logicalname="${devices[0]}"
-elif [[ "${#devices[@]}" -gt 1 ]]; then
-  echo Mounting instance storage devices using software RAID...
-  logicalname=/dev/md0
-
-  mdadm \
-    --create "$logicalname" \
-    --level=0 \
-    -c256 \
-    --raid-devices="${#devices[@]}" "${devices[@]}"
-  echo "Mounted ${devices[*]} to $logicalname."
-
-  echo "DEVICE ${devices[*]}" >/etc/mdadm.conf
-  echo Created /etc/mdadm.conf:
-  cat /etc/mdadm.conf
-
-  mdadm --detail --scan >>/etc/mdadm.conf
-  echo Updated /etc/mdadm.conf:
-  cat /etc/mdadm.conf
-
-  echo Setting readahead to 64k...
-  blockdev --setra 65536 "$logicalname"
-else
-  echo Expected at least one nvme device, found: "${devices[*]}"
-  echo
-  echo This error is unexpected. Please contact support@buildkite.com.
-  exit 1
-fi
-
-echo "Formatting $logicalname as ext4..."
-# Make an ext4 file system, [-F]orce creation, don’t TRIM at fs creation time (-E nodiscard)
-mkfs.ext4 -F -E nodiscard "$logicalname" >/dev/null
-
 devicemount=/mnt/ephemeral
-echo "Mounting $logicalname to $devicemount..."
 fs_type="ext4"
 mount_options="defaults,noatime"
 
 mkdir -p "$devicemount"
-mount -t "$fs_type" -o "$mount_options" "$logicalname" "$devicemount"
+
+if findmnt --mountpoint "$devicemount" >/dev/null; then
+  echo "$devicemount is already mounted. Skipping instance storage setup."
+  logicalname="$(findmnt -n -o SOURCE --mountpoint "$devicemount")"
+  existing_fs_type="$(findmnt -n -o FSTYPE --mountpoint "$devicemount")"
+  if [[ "$existing_fs_type" != "$fs_type" ]]; then
+    echo "$devicemount is mounted as $existing_fs_type, expected $fs_type."
+    echo "Refusing to persist an unexpected filesystem."
+    exit 1
+  fi
+else
+
+  #shellcheck disable=SC2207
+  devices=($(nvme list | grep "Amazon EC2 NVMe Instance Storage" | cut -f1 -d' ' || true))
+  if [[ -z "${devices[*]}" ]]; then
+    echo No NVMe drives to mount.
+    echo Please check that your instance type supports instance storage.
+    exit 0
+  fi
+
+  echo "Found NVMe devices: ${devices[*]}."
+
+  if [[ "${#devices[@]}" -eq 1 ]]; then
+    echo Mounting instance storage device directly...
+    logicalname="${devices[0]}"
+  elif [[ "${#devices[@]}" -gt 1 ]]; then
+    echo Mounting instance storage devices using software RAID...
+    logicalname=/dev/md0
+
+    if mdadm --detail "$logicalname" >/dev/null 2>&1; then
+      array_devices=(/sys/block/"${logicalname##*/}"/slaves/*)
+      if [[ "$(printf '%s\n' "${array_devices[@]##*/}" | sort)" != "$(printf '%s\n' "${devices[@]##*/}" | sort)" ]]; then
+        echo "$logicalname does not contain the detected instance storage devices."
+        echo "Refusing to reuse an unrelated array."
+        exit 1
+      fi
+      echo "$logicalname is already assembled."
+    elif mdadm --examine "${devices[@]}" >/dev/null 2>&1; then
+      echo "Assembling existing instance storage array at $logicalname..."
+      mdadm --assemble --run "$logicalname" "${devices[@]}"
+    else
+      mdadm \
+        --create "$logicalname" \
+        --level=0 \
+        -c256 \
+        --raid-devices="${#devices[@]}" "${devices[@]}"
+      echo "Created $logicalname from ${devices[*]}."
+    fi
+
+    # NVMe device numbers can change on reboot. Discover members by the
+    # array UUID rather than restricting assembly to today's device names.
+    mdadm --detail --scan >/etc/mdadm.conf
+    echo Created /etc/mdadm.conf:
+    cat /etc/mdadm.conf
+
+    echo Setting readahead to 64k...
+    blockdev --setra 65536 "$logicalname"
+  else
+    echo Expected at least one nvme device, found: "${devices[*]}"
+    echo
+    echo This error is unexpected. Please contact support@buildkite.com.
+    exit 1
+  fi
+
+  existing_fs_type="$(blkid -o value -s TYPE "$logicalname" || true)"
+  if [[ "$existing_fs_type" == "$fs_type" ]]; then
+    echo "$logicalname is already formatted as $fs_type. Skipping format."
+  elif [[ -n "$existing_fs_type" ]]; then
+    echo "$logicalname already has filesystem type $existing_fs_type, expected $fs_type."
+    echo "Refusing to format an existing filesystem."
+    exit 1
+  else
+    echo "Formatting $logicalname as ext4..."
+    # Make an ext4 file system, [-F]orce creation, don’t TRIM at fs creation time (-E nodiscard)
+    mkfs.ext4 -F -E nodiscard "$logicalname" >/dev/null
+  fi
+
+  echo "Mounting $logicalname to $devicemount..."
+
+  mount -t "$fs_type" -o "$mount_options" "$logicalname" "$devicemount"
+fi
 
 if [[ ! -f /etc/fstab.backup ]]; then
   echo Backing up /etc/fstab to /etc/fstab.backup...
   cp -P /etc/fstab /etc/fstab.backup
+fi
 
-  fstab_line="$logicalname $devicemount    ${fs_type}  ${mount_options}  0 0"
+fstab_line="$logicalname $devicemount    ${fs_type}  ${mount_options}  0 0"
+if grep -q -E "[[:space:]]${devicemount}[[:space:]]" /etc/fstab; then
+  echo "$devicemount already exists in /etc/fstab. Not modifying /etc/fstab:"
+  cat /etc/fstab
+else
   echo "Appending $fstab_line to /etc/fstab..."
   echo "$fstab_line" >>/etc/fstab
 
-  echo Appened to /etc/fstab:
-  cat /etc/fstab
-else
-  echo /etc/fstab.backup already exists. Not modifying /etc/fstab:
+  echo Appended to /etc/fstab:
   cat /etc/fstab
 fi

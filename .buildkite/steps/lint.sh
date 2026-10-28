@@ -13,6 +13,6 @@ grep -rl '^#!/.*sh' . | while read -r file; do
   echo -e "Ok.\\n"
 done
 
-# No network: validate committed certificate fixtures and configuration invariants.
+# No network: validate certificate fixtures and local helper behavior.
 docker run --rm -v "$PWD:/src:ro" -w /src python:3.12-bookworm \
-  python3 -m unittest discover -s tests/trust -v
+  sh -c 'python3 -m unittest discover -s tests/trust -v && python3 -m unittest discover -s tests/instance-storage -v'

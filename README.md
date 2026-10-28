@@ -180,6 +180,13 @@ AWS_PROFILE="some-profile" make create-stack
 aws-vault exec some-profile -- make create-stack
 ```
 
+To deploy a published template without building a local template, set `TEMPLATE_URL` with either `create-stack` or `update-stack`. Both targets still read stack parameters from `config.json`. Quote the URL, especially when using a signed URL with `&` query separators:
+
+```bash
+make update-stack STACK_NAME=my-stack \
+  TEMPLATE_URL='https://s3.amazonaws.com/buildkite-aws-stack/main/aws-stack.yml'
+```
+
 If you need to build your own AMIs (because you've changed something in the
 `packer` directory), run `make packer` with AWS credentials in your shell environment.
 
@@ -234,6 +241,27 @@ make packer-base-ubuntu2404-amd64.output packer-ubuntu2404-amd64.output
 # Ubuntu arm64
 make packer-base-ubuntu2404-arm64.output packer-ubuntu2404-arm64.output
 ```
+
+To test a Linux instance type with local NVMe instance storage, such as `c8id.xlarge`, set both `InstanceTypes` and `EnableInstanceStorage` in `config.json`:
+
+```json
+[
+  {
+    "ParameterKey": "BuildkiteAgentToken",
+    "ParameterValue": "<insert-your-token>"
+  },
+  {
+    "ParameterKey": "InstanceTypes",
+    "ParameterValue": "c8id.xlarge"
+  },
+  {
+    "ParameterKey": "EnableInstanceStorage",
+    "ParameterValue": "true"
+  }
+]
+```
+
+When enabled on Linux, available NVMe instance storage is mounted at `/mnt/ephemeral`, and the Buildkite builds path is bind-mounted from `/mnt/ephemeral/builds` to `/var/lib/buildkite-agent/builds`. When git-mirrors are also enabled, the git-mirrors path is bind-mounted from `/mnt/ephemeral/git-mirrors` to `/var/lib/buildkite-agent/git-mirrors`.
 
 **Security Note:** Making AMIs public (`AMI_PUBLIC=true`) can expose any secrets accidentally baked into the image. The default private setting helps prevent accidental exposure of sensitive information.
 
