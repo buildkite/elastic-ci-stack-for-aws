@@ -1,10 +1,17 @@
 #!/bin/bash
 set -eu -o pipefail
 
+LIFECYCLE_TRANSITION=${1:-}
+TERMINATION_MARKER=${BUILDKITE_AGENT_TERMINATION_MARKER_PATH:-/tmp/buildkite-agent-termination-marker}
+
+# Lifecycle transitions require this instance to be replaced, even if the agent
+# exits cleanly while the Auto Scaling group is at MinSize.
+if ! touch "$TERMINATION_MARKER"; then
+  echo "Could not create the termination marker; continuing graceful shutdown." >&2
+fi
+
 # Import BUILDKITE_AGENTS_PER_INSTANCE
 eval "$(cat /var/lib/buildkite-agent/cfn-env)"
-
-LIFECYCLE_TRANSITION=${1:-}
 
 echo "Stopping buildkite-agent gracefully due to the lifecycle transition: ${LIFECYCLE_TRANSITION}"
 
