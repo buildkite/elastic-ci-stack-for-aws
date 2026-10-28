@@ -147,6 +147,14 @@ cat <<EOF >config.json
 ]
 EOF
 
+if [[ "$os" == "windows" ]]; then
+  jq '. + [
+    {"ParameterKey": "RootVolumeIops", "ParameterValue": "6000"},
+    {"ParameterKey": "RootVolumeThroughput", "ParameterValue": "500"}
+  ]' config.json >config.json.tmp
+  mv config.json.tmp config.json
+fi
+
 echo "--- Building templates"
 make "mappings-for-${os}-${arch}-image" build/aws-stack.yml "IMAGE_ID=$image_id"
 

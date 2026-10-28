@@ -100,7 +100,8 @@ steps:
       - id: "launch-windows-amd64"
         name: ":cloudformation: :windows: AMD64 Launch"
         command:
-          - .buildkite/steps/ensure_ami_metadata.py windows amd64
+          # Pin the AMI from build #7040 for the EBS performance comparison.
+          - buildkite-agent meta-data set windows_amd64_image_id ami-0009c194785ce3468
           - .buildkite/steps/launch.sh windows amd64
         timeout_in_minutes: 75
         agents:
