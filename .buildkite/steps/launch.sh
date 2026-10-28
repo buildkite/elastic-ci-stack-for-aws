@@ -47,7 +47,7 @@ instance_type="t3.small"
 instance_disk="${ROOT_VOLUME_SIZE:-10}"
 
 if [[ "$os" == "windows" ]]; then
-  instance_type="m5.large"
+  instance_type="c8a.xlarge"
   instance_disk="100"
 fi
 
