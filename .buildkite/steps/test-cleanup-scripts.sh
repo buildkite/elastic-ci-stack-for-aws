@@ -35,8 +35,10 @@ case "$*" in
   printf '%b' "${STUB_INSTANCES:-}"
   ;;
 "ec2 terminate-instances --region us-east-1 --instance-ids "*) ;;
-"s3api list-buckets --output text --query "*) ;;
-"logs describe-log-groups --log-group-name-prefix /aws/lambda/buildkite-aws-stack-test- "*) ;;
+"s3api list-buckets --output text --query "*) printf '%b' "${STUB_BUCKETS:-}" ;;
+"s3 rb s3://"*" --force") ;;
+"logs describe-log-groups --log-group-name-prefix /aws/lambda/buildkite-aws-stack-test- "*) printf '%b' "${STUB_LOG_GROUPS:-}" ;;
+"logs delete-log-group --log-group-name "*) ;;
 "cloudformation describe-stacks --output text --query Stacks[?CreationTime<"*) printf '%b' "${STUB_STACKS:-}" ;;
 "cloudformation describe-stacks --output text --query Stacks[].[StackName]") printf '%b' "${STUB_LIVE_STACKS:-}" ;;
 "cloudformation delete-stack --stack-name "*) ;;
@@ -123,18 +125,53 @@ expect_no_call 'terminate-instances'
 # --- cleanup.sh --------------------------------------------------------------
 
 stacks="buildkite-aws-stack-test-linux-amd64-10\nbuildkite-aws-stack-test-linux-amd64-cis-10\nbuildkite-elastic-ci-stack-service-role-10\n"
+buckets="buildkite-aws-stack-test-linux-amd64-10-managedsecretsbucket-abc\nbuildkite-aws-stack-test--managedsecretsloggingbuc-def\nunrelated-bucket\n"
+log_group="/aws/lambda/buildkite-aws-stack-test-linux-amd64-10-Scaler"
+
+for value in true false ""; do
+  check "cleanup: DRY_RUN=${value} previews without any deletes or waits" 0 cleanup.sh \
+    DRY_RUN="$value" STUB_INSTANCES="$instances" STUB_STACKS="$stacks" STUB_LIVE_STACKS="$stacks" \
+    STUB_BUCKETS="$buckets" STUB_LOG_GROUPS="$log_group"
+  expect_no_call 'terminate-instances|s3 rb|delete-log-group|delete-stack|cloudformation wait'
+  for candidate in i-old \
+    buildkite-aws-stack-test-linux-amd64-10-managedsecretsbucket-abc \
+    buildkite-aws-stack-test--managedsecretsloggingbuc-def "$log_group"; do
+    grep -q -F "$candidate" "$STUB_DIR/output" || fail "candidate missing from preview: ${candidate}"
+  done
+  for stack in buildkite-aws-stack-test-linux-amd64-10 buildkite-aws-stack-test-linux-amd64-cis-10 \
+    buildkite-elastic-ci-stack-service-role-10; do
+    grep -q -F -x "DRY_RUN: aws cloudformation delete-stack --stack-name ${stack}" "$STUB_DIR/output" || fail "stack deletion missing from preview: ${stack}"
+  done
+  grep -q -F 'Service-role deletions require all test stacks to be gone' "$STUB_DIR/output" || fail "role deletion condition missing from preview"
+done
+
+check "cleanup: DRY_RUN previews an unused service-role stack" 0 cleanup.sh DRY_RUN=true \
+  STUB_STACKS="buildkite-elastic-ci-stack-service-role-10\n"
+expect_no_call 'delete-stack|cloudformation wait'
+grep -q 'DRY_RUN:.*buildkite-elastic-ci-stack-service-role-10' "$STUB_DIR/output" || fail "role missing from preview"
 
 # After the waits, only the role and an unrelated stack are live.
 check "cleanup: builders first, then test stacks deleted and waited for before roles" 0 cleanup.sh \
   STUB_INSTANCES="$instances" STUB_STACKS="$stacks" \
+  STUB_BUCKETS="$buckets" STUB_LOG_GROUPS="$log_group" \
   STUB_LIVE_STACKS="buildkite-elastic-ci-stack-service-role-10\nbuildkite-aws-stack\n"
 expect_order '^ec2 terminate-instances' '^s3api list-buckets'
+expect_call '^s3 rb s3://buildkite-aws-stack-test-linux-amd64-10-managedsecretsbucket-abc --force$'
+expect_call '^s3 rb s3://buildkite-aws-stack-test--managedsecretsloggingbuc-def --force$'
+expect_call "^logs delete-log-group --log-group-name ${log_group}$"
+expect_no_call 's3 rb s3://unrelated-bucket'
 for stack in buildkite-aws-stack-test-linux-amd64-10 buildkite-aws-stack-test-linux-amd64-cis-10; do
   expect_order "^cloudformation wait stack-delete-complete --stack-name ${stack}$" \
     '^cloudformation describe-stacks --output text --query Stacks\[\]'
 done
 expect_order '^cloudformation describe-stacks --output text --query Stacks\[\]' \
   '^cloudformation delete-stack --stack-name buildkite-elastic-ci-stack-service-role-10$'
+
+for failing in 's3api list-buckets' 's3 rb' 'logs describe-log-groups' 'logs delete-log-group'; do
+  check "cleanup: ${failing} failure fails the run without blocking stack cleanup" 1 cleanup.sh \
+    STUB_STACKS="$stacks" STUB_BUCKETS="$buckets" STUB_LOG_GROUPS="$log_group" STUB_FAIL="^${failing}"
+  expect_call '^cloudformation delete-stack --stack-name buildkite-aws-stack-test-linux-amd64-10$'
+done
 
 # The old role's build has a test stack younger than the cutoff, so it only
 # shows up in the unfiltered listing.
