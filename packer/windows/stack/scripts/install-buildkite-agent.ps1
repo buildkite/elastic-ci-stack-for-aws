@@ -44,5 +44,17 @@ Copy-Item -Path C:\packer-temp\conf\buildkite-agent\scripts\terminate-instance.p
 Copy-Item -Path C:\packer-temp\conf\buildkite-agent\scripts\stop-agent-gracefully.ps1 -Destination C:\buildkite-agent\bin
 
 Write-Output "Copying built-in plugins..."
-if (-not (Test-Path "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins")) { New-Item -ItemType Directory -Path "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins" -Force }
-Copy-Item -Recurse -Path C:\packer-temp\plugins\* -Destination "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins\"
+$pluginsPath = "C:\Program Files\Git\usr\local\buildkite-aws-stack\plugins"
+if (-not (Test-Path $pluginsPath)) { New-Item -ItemType Directory -Path $pluginsPath -Force }
+Copy-Item -Recurse -Path C:\packer-temp\plugins\* -Destination $pluginsPath
+
+# Check the files sourced by the agent hooks, not just the plugin directories:
+# an incomplete upload or copy must fail the AMI build, not its first job.
+foreach ($hook in @('secrets\hooks\environment', 'secrets\hooks\pre-exit', 'ecr\hooks\environment', 'docker-login\hooks\pre-command')) {
+    $hookPath = Join-Path $pluginsPath $hook
+    if (-not (Test-Path -Path $hookPath -PathType Leaf)) {
+        $sourcePath = Join-Path C:\packer-temp\plugins $hook
+        $sourcePresent = Test-Path -Path $sourcePath -PathType Leaf
+        throw "Missing built-in plugin hook: $hookPath (source: $sourcePath; source file present: $sourcePresent)"
+    }
+}
