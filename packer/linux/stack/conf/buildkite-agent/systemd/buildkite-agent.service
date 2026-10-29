@@ -4,7 +4,7 @@ Documentation=https://buildkite.com/agent
 After=syslog.target
 After=network.target
 After=docker.service
-FailureAction=poweroff-force
+FailureAction=poweroff-immediate
 
 [Service]
 Type=simple
