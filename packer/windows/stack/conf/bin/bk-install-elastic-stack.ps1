@@ -371,7 +371,96 @@ If ($lastexitcode -ne 0) { Exit $lastexitcode }
 nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
-Restart-Service buildkite-agent
+# An instance headed for the warm pool must not take jobs while parked. On a stack with a
+# warm pool, which way this instance is headed is per-launch, so read it from IMDS rather
+# than assuming the pool: a cold start or an empty warm pool goes straight to InService and
+# must start now.
+#
+# AWS recommends polling this and retrying on errors, since a single transient failure that
+# fell back to InService would start an agent on a pool-bound instance and skip the hook.
+# See https://docs.aws.amazon.com/autoscaling/ec2/userguide/retrieving-target-lifecycle-state-through-imds.html
+# Logging inside this function uses Write-Host, not Write-Output: anything a function writes
+# to the output stream becomes part of its return value, so a logged line would be returned
+# alongside the state and make $TargetLifecycleState an array rather than a string.
+function Get-TargetLifecycleState {
+  $MaxAttempts = 5
+  $WaitSeconds = 1
+
+  for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
+    try {
+      $Token = (Invoke-WebRequest -UseBasicParsing -Method Put -TimeoutSec 5 `
+        -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} `
+        http://169.254.169.254/latest/api/token).content
+
+      return (Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 `
+        -Headers @{'X-aws-ec2-metadata-token' = $Token} `
+        http://169.254.169.254/latest/meta-data/autoscaling/target-lifecycle-state).content
+    } catch {
+      Write-Host "Attempt $Attempt of $MaxAttempts to fetch target-lifecycle-state failed: $($_.Exception.Message)"
+      if ($Attempt -lt $MaxAttempts) {
+        Start-Sleep -Seconds $WaitSeconds
+        $WaitSeconds = [Math]::Min($WaitSeconds * 2, 30)
+      }
+    }
+  }
+
+  # Failing closed: an unreadable state is treated as pool-bound rather than InService. Assuming
+  # InService on a pool-bound instance completes the Warmed:Pending:Wait action and starts the
+  # agent, which then takes jobs while parked on a Running pool, or starts before the hook
+  # completes on the boot that leaves a Stopped pool. The watcher path is safe either way: an
+  # instance actually headed into service is picked up on the watcher's first poll.
+  Write-Host "WARNING: Could not read target-lifecycle-state after $MaxAttempts attempts, deferring to the watcher."
+  return "Unknown"
+}
+
+# Set on the warm path, where the lifecycle action is completed at the end of this script
+# rather than here. See the end of this script.
+$CompleteLifecycleActionAfterBootstrap = $false
+
+# Without a warm pool there is no lifecycle hook and no pool-bound instance, so none of the
+# IMDS and Auto Scaling calls below have anything to do. Skipping them keeps every launch of
+# a default stack free of the retries and warnings their no-op responses would produce.
+if ($Env:WARM_POOL_ENABLED -ne "true") {
+  Restart-Service buildkite-agent
+} else {
+  $TargetLifecycleState = Get-TargetLifecycleState
+  Write-Output "Detected TargetLifecycleState=$TargetLifecycleState"
+
+  # The hook pauses the instance at Pending:Wait on the way into service and, for a pool-bound
+  # instance, again at Warmed:Pending:Wait. Both pauses are completed before the agent can take
+  # jobs, otherwise the hook times out and ABANDON terminates the instance mid-job.
+  if ($TargetLifecycleState -eq "InService") {
+    # The agent is not started when the hook could not be completed, so that the instance is
+    # abandoned at the hook timeout rather than terminated mid-job.
+    powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
+
+    if ($lastexitcode -ne 0) {
+      Write-Output "Could not complete lifecycle action, not starting the agent."
+      Exit 1
+    }
+
+    Restart-Service buildkite-agent
+  } else {
+    # nssm install defaults to automatic start, so the service is switched to manual here:
+    # a Stopped warm pool instance boots while still paused at Pending:Wait, and an
+    # automatic service would take jobs before the lifecycle hook completes.
+    Write-Output "Target lifecycle state is $TargetLifecycleState, deferring agent start to the InService transition."
+    nssm set buildkite-agent Start SERVICE_DEMAND_START
+
+    # Registered as a startup task, not just launched here: a Stopped warm pool instance is
+    # powered off and Windows user data has no <persist> tag, so nothing would re-run on the
+    # boot where the instance actually leaves the pool.
+    $WatcherAction = New-ScheduledTaskAction -Execute "powershell.exe" `
+      -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\buildkite-agent\bin\warm-pool-watcher.ps1"
+    $WatcherTrigger = New-ScheduledTaskTrigger -AtStartup
+    $WatcherPrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
+    Register-ScheduledTask -TaskName "BuildkiteWarmPoolWatcher" `
+      -Action $WatcherAction -Trigger $WatcherTrigger -Principal $WatcherPrincipal -Force
+    Start-ScheduledTask -TaskName "BuildkiteWarmPoolWatcher"
+
+    $CompleteLifecycleActionAfterBootstrap = $true
+  }
+}
 
 Write-Output "Configuring CloudWatch agent log retention..."
 if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "true") {
@@ -422,6 +511,21 @@ if ($Env:BUILDKITE_STACK_DEPLOYED_BY -eq "cloudformation") {
     }
 } else {
   Write-Output "Skipping cfn-signal (not deployed by CloudFormation)"
+}
+
+# Completing the Warmed:Pending:Wait action frees Auto Scaling to stop the instance, and it does
+# not wait for user data to finish. Completed here, last, because Windows user data never
+# re-runs: a stop landing earlier would mean the CloudWatch log retention above was never
+# applied on this instance, and with a warm pool most instances come from the pool. The watcher
+# is already running by now, so it picks up the InService transition on the next start.
+if ($CompleteLifecycleActionAfterBootstrap) {
+  powershell -file C:\buildkite-agent\bin\complete-warm-pool-lifecycle-action.ps1
+
+  # The agent is not started on this path in any case, so a failure here never leaves an agent
+  # taking jobs: the instance is abandoned at the hook timeout instead.
+  if ($lastexitcode -ne 0) {
+    Write-Output "WARNING: Could not complete the warm pool lifecycle action, instance will be abandoned."
+  }
 }
 
 Set-PSDebug -Off
