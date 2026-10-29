@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.9.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.2) (2026-10-28)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.9.1...v7.9.2)
+
+### Security
+- Refresh the Amazon Linux 2023 AMIs with `libbrotli-1.1.0-1.amzn2023.0.2`, fixing [CVE-2026-111497](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-3334.html) on AMD64 and ARM64.
+
+### Fixed
+- Fix instance-storage setup to preserve existing filesystems and RAID arrays, avoid duplicate mounts, and handle NVMe renumbering. Also fix stack-helper arguments and support published templates through `TEMPLATE_URL` [#1830](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1830) (@wolfeidau).
+- Fix disabling the ECR plugin also disabling the secrets plugin on Linux and Windows [#1936](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1936) (@RaphaelFakhri).
+
+### Internal
+- Clean up abandoned Packer builders during builds and weekly AMI cleanup, bound provisioning waits, and retain service roles until test stacks are deleted [#1914](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1914) (@scadu).
+- Use c8a builders for Windows AMIs and faster builder storage without changing the output AMI's storage defaults [#1967](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1967) (@scadu).
+- Update changelog for v7.9.1 [#1964](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1964) (@scadu).
+
+
 ## [v7.9.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.1) (2026-10-23)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.9.0...v7.9.1)
 
