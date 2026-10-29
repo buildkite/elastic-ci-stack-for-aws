@@ -520,6 +520,8 @@ if ($Env:EC2_LOG_RETENTION_DAYS -and $Env:ENABLE_EC2_LOG_RETENTION_POLICY -eq "t
 # renable debug tracing
 Set-PSDebug -Trace 2
 
+# Unlike the early best-effort logging start, this final start must succeed:
+# reject the launch before the agent can accept jobs without CloudWatch logging.
 Start-Service AmazonCloudWatchAgent
 Write-Output "Starting the Buildkite Agent"
 Start-Service buildkite-agent
