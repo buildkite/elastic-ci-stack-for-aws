@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.9](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.9) (2026-10-29)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.8...v6.71.9)
+
+### Security
+- Refresh the Amazon Linux 2023 AMIs with `libbrotli-1.1.0-1.amzn2023.0.2`, fixing [CVE-2026-111497](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-3334.html) on AMD64 and ARM64.
+
+### Fixed
+- Keep healthy Linux instances running at `MinSize` after an ordinary clean agent exit, restarting the agent on the existing instance instead of replacing it. Maximum-uptime, terminate-after-job, scaler-drain, and lifecycle-termination paths still replace instances [#1966](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1966) (@omehegan).
+
 ## [v7.9.2](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.9.2) (2026-10-28)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.9.1...v7.9.2)
 
