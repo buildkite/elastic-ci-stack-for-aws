@@ -2,10 +2,11 @@
 set -euo pipefail
 
 # Source centralized version definitions
+STAGING_DIR="${STAGING_DIR:?STAGING_DIR must be set by Packer}"
 # shellcheck disable=SC1091
-source "/tmp/versions.sh"
+source "${STAGING_DIR}/versions.sh"
 # shellcheck disable=SC1091
-source "/tmp/distro.sh"
+source "${STAGING_DIR}/distro.sh"
 MACHINE=$(uname -m)
 
 echo Installing docker...
@@ -25,11 +26,11 @@ sudo usermod -a -G docker "${LOGIN_USER}"
 
 echo Add docker config
 sudo mkdir -p /etc/docker
-sudo cp /tmp/conf/docker/daemon.json /etc/docker/daemon.json
+sudo cp "${STAGING_DIR}/conf/docker/daemon.json" /etc/docker/daemon.json
 
 echo "Adding docker systemd timers..."
-sudo cp /tmp/conf/docker/scripts/* /usr/local/bin
-sudo cp /tmp/conf/docker/systemd/docker-* /etc/systemd/system
+sudo cp "${STAGING_DIR}/conf/docker/scripts/"* /usr/local/bin
+sudo cp "${STAGING_DIR}/conf/docker/systemd/docker-"* /etc/systemd/system
 sudo chmod 755 /usr/local/bin/docker-*
 
 echo "Writing docker-binfmt environment..."
@@ -59,7 +60,7 @@ docker compose version
 
 echo "Making docker compose v2 compatible w/ docker-compose v1..."
 sudo ln -s "${DOCKER_CLI_DIR}/docker-compose" /usr/bin/docker-compose
-sudo cp /tmp/conf/bin/docker-compose /usr/local/bin/docker-compose
+sudo cp "${STAGING_DIR}/conf/bin/docker-compose" /usr/local/bin/docker-compose
 sudo chmod 755 /usr/local/bin/docker-compose
 docker-compose version
 

@@ -82,6 +82,9 @@ data "amazon-ami" "ubuntu" {
 }
 
 locals {
+  # Keep uploads visible if /tmp is mounted as tmpfs during provisioning.
+  staging_dir = "/var/tmp/packer"
+
   # CIS is a hardened AL2023 variant selected via cis_source_ami; when set it
   # overrides the standard per-distro AMI lookup and naming below.
   is_cis = var.cis_source_ami != ""
@@ -161,23 +164,30 @@ source "amazon-ebs" "buildkite-base-ami" {
 build {
   sources = ["source.amazon-ebs.buildkite-base-ami"]
 
+  # Create a private directory as the SSH user; fail rather than reuse an
+  # existing path (including a symlink) in the world-writable /var/tmp.
+  provisioner "shell" {
+    inline        = ["umask 077; mkdir -m 700 '${local.staging_dir}'"]
+    remote_folder = "/var/tmp"
+  }
+
   provisioner "file" {
-    destination = "/tmp"
+    destination = local.staging_dir
     source      = "conf"
   }
 
   provisioner "file" {
-    destination = "/tmp/conf/"
+    destination = "${local.staging_dir}/conf/"
     source      = "../shared/conf/"
   }
 
   provisioner "file" {
-    destination = "/tmp/"
+    destination = "${local.staging_dir}/"
     source      = "scripts/versions.sh"
   }
 
   provisioner "file" {
-    destination = "/tmp/"
+    destination = "${local.staging_dir}/"
     source      = "../shared/scripts/distro.sh"
   }
 
@@ -195,36 +205,43 @@ build {
 
   # Essential utilities & updates
   provisioner "shell" {
-    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    environment_vars = ["OS_DISTRO=${var.os_distro}", "STAGING_DIR=${local.staging_dir}"]
     script           = "scripts/install-utils.sh"
     remote_folder    = "/var/tmp"
   }
 
   # Docker engine
   provisioner "shell" {
-    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    environment_vars = ["OS_DISTRO=${var.os_distro}", "STAGING_DIR=${local.staging_dir}"]
     script           = "scripts/install-docker.sh"
     remote_folder    = "/var/tmp"
   }
 
   # CloudWatch agent
   provisioner "shell" {
-    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    environment_vars = ["OS_DISTRO=${var.os_distro}", "STAGING_DIR=${local.staging_dir}"]
     script           = "scripts/install-cloudwatch-agent.sh"
     remote_folder    = "/var/tmp"
   }
 
   # Session Manager plugin
   provisioner "shell" {
-    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    environment_vars = ["OS_DISTRO=${var.os_distro}", "STAGING_DIR=${local.staging_dir}"]
     script           = "scripts/install-session-manager-plugin.sh"
     remote_folder    = "/var/tmp"
   }
 
   # Clean up
   provisioner "shell" {
-    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    environment_vars = ["OS_DISTRO=${var.os_distro}", "STAGING_DIR=${local.staging_dir}"]
     script           = "../shared/scripts/cleanup.sh"
     remote_folder    = "/var/tmp"
+  }
+
+  # Remove uploaded assets before capturing the image. Shell scripts themselves
+  # stay in /var/tmp so Packer can remove its own remote scripts normally.
+  provisioner "shell" {
+    inline        = ["rm -rf -- '${local.staging_dir}'"]
+    remote_folder = "/var/tmp"
   }
 }
