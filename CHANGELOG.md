@@ -4,6 +4,53 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.10.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.10.0) (2026-10-30)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.9.2...v7.10.0)
+
+### Added
+- Gate Windows launches on successful bootstrap with `WindowsLaunchTimeout` (15 minutes); allow 30 minutes for stack creation [#1965](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1965) (@petetomasik).
+
+### Changed
+- Update Buildkite agent from v4.8.1 to v4.9.0 [#1982](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1982) (@renovate[bot]).
+
+### Fixed
+- Fix Windows log retention and improve bootstrap failure logs [#1965](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1965) (@petetomasik).
+- Allow CloudFormation service roles to manage tagged SSM parameters [#1968](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1968) (@scadu).
+
+### Internal
+- Enable SSM access during Windows AMI builds [#1942](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1942) (@wolfeidau).
+- Speed up Windows stack tests and check the agent's NSSM exit policy [#1970](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1970), [#1972](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1972) (@petetomasik).
+- Clean up abandoned test stacks weekly, with dry-run support and disposable-stack tags [#1968](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1968) (@scadu).
+- Update changelogs for v7.9.2 and v6.71.9 [#1969](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1969), [#1973](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1973) (@scadu).
+
+Windows upgrades require the matching AMI; custom instance roles need `autoscaling:CompleteLifecycleAction` for the stack's Auto Scaling group.
+
+<details>
+<summary><h3>Agent Changelog (v4.9.0)</h3></summary>
+
+### [v4.9.0](https://github.com/buildkite/agent/releases/tag/v4.9.0)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+#### What's Changed
+##### ✨ Added
+* Add `buildkite-agent cache restore --download-timeout` to limit download time across selected caches by @buildkate in https://github.com/buildkite/agent/pull/4533
+##### 🐛 Fixed
+* Embed fallback root certificates so the agent can verify TLS on hosts without system certificates by @zhming0 in https://github.com/buildkite/agent/pull/4571
+* Clean up temporary downloads when `buildkite-agent cache restore` receives SIGINT or SIGTERM by @buildkate in https://github.com/buildkite/agent/pull/4569
+* Honor `Retry-After` when `buildkite-agent oidc request-token` retries a request by @CerealBoy in https://github.com/buildkite/agent/pull/4590
+* Request JSON API responses to avoid parsing HTML error pages by @moskyb in https://github.com/buildkite/agent/pull/4593
+* Avoid slow checks for missing commits in partial clones when skipping fetches for existing commits or using Git mirrors by @zhming0 in https://github.com/buildkite/agent/pull/4594
+##### 🏠 Internal
+* Update osc7501 to v0.3.0 under the Buildkite organization by @wolfeidau in https://github.com/buildkite/agent/pull/4566
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4573 and https://github.com/buildkite/agent/pull/4574
+* Keep agent tracing from delaying stable release jobs by @lucaswilric in https://github.com/buildkite/agent/pull/4532
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.8.1...v4.9.0
+
+</details>
+
+
 ## [v6.71.9](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.9) (2026-10-29)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.8...v6.71.9)
 
