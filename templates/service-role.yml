@@ -230,8 +230,12 @@ Resources:
               "Effect": "Allow",
               "Action": [
                 "ssm:GetParameter",
+                "ssm:GetParameters",
                 "ssm:PutParameter",
-                "ssm:DeleteParameter"
+                "ssm:DeleteParameter",
+                "ssm:AddTagsToResource",
+                "ssm:ListTagsForResource",
+                "ssm:RemoveTagsFromResource"
               ],
               "Resource": "arn:aws:ssm:*:*:parameter/*"
             },
