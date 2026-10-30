@@ -4,10 +4,12 @@ $ErrorActionPreference = "Stop"
 Write-Output "Configuring CloudWatch agent..."
 
 Write-Output "Copying amazon cloudwatch agent config..."
-Copy-Item -Path C:\packer-temp\conf\cloudwatch-agent\amazon-cloudwatch-agent.json -Destination C:\ProgramData\Amazon\AmazonCloudWatchAgent
+# fetch-config deletes its reserved amazon-cloudwatch-agent.json input. Keep a
+# stack-owned source so bootstrap can apply log retention after image creation.
+Copy-Item -Path C:\packer-temp\conf\cloudwatch-agent\amazon-cloudwatch-agent.json -Destination C:\ProgramData\Amazon\AmazonCloudWatchAgent\buildkite-cloudwatch-agent.json
 
 Write-Output "Starting amazon cloudwatch agent..."
-& 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a fetch-config -m ec2 -c file:C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json -s
+& 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a fetch-config -m ec2 -c file:C:\ProgramData\Amazon\AmazonCloudWatchAgent\buildkite-cloudwatch-agent.json -s
 
 # The base AMI sets the agent to manual start, so it wouldn't start on boot.
 # Delay the start: during boot the agent can miss the 30s service start

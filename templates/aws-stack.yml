@@ -147,6 +147,7 @@ Metadata:
         - MaxDanglingInstancesToCheck
         - ScaleOutForWaitingJobs
         - InstanceCreationTimeout
+        - WindowsLaunchTimeout
         - ScalerEventSchedulePeriod
         - ScalerEventScheduleJitter
         - ScalerMinPollInterval
@@ -783,9 +784,19 @@ Parameters:
     Description: >
       Optional - Timeout period for Auto Scaling Group Creation Policy. Defaults to PT5M on
       Linux (PT15M when GitMirrorSeedBucket is set, to allow for downloading and extracting
-      seed archives at boot) and PT10M on Windows.
+      seed archives at boot) and PT30M on Windows.
     Type: String
     Default: ""
+
+  WindowsLaunchTimeout:
+    Description: >
+      Seconds a Windows instance may wait for bootstrap and agent service startup before
+      Auto Scaling abandons the launch. Includes Windows setup time. Does not affect Linux
+      or change InstanceCreationTimeout. Requires the matching release's Windows AMI.
+    Type: Number
+    Default: 900
+    MinValue: 30
+    MaxValue: 7200
 
   RootVolumeSize:
     Description: Size of each instance's root EBS volume (in GB).
@@ -2152,6 +2163,14 @@ Resources:
               - autoscaling:SetInstanceHealth
               - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
+          - !If
+            - UseWindowsAgents
+            - Sid: CompleteWindowsLaunch
+              Effect: Allow
+              Action:
+                - autoscaling:CompleteLifecycleAction
+              Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
+            - !Ref "AWS::NoValue"
           - Sid: Logging
             Effect: Allow
             Action:
@@ -2411,11 +2430,12 @@ Resources:
                   $Env:DOCKER_USERNS_REMAP="${EnableDockerUserNamespaceRemap}"
                   $Env:DOCKER_EXPERIMENTAL="${EnableDockerExperimental}"
                   $Env:DOCKER_NETWORKING_PROTOCOL="${DockerNetworkingProtocol}"
-                  powershell -file C:\buildkite-agent\bin\bk-configure-docker.ps1 >> C:\buildkite-agent\elastic-stack.log
 
                   $Env:BUILDKITE_STACK_NAME="${AWS::StackName}"
                   $Env:BUILDKITE_STACK_VERSION="%v"
                   $Env:BUILDKITE_STACK_DEPLOYED_BY="cloudformation"
+                  $Env:BUILDKITE_LAUNCH_HOOK_NAME="buildkite-agent-launch"
+                  $Env:BUILDKITE_LAUNCH_TIMEOUT="${WindowsLaunchTimeout}"
                   $Env:BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}"
                   $Env:BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}"
                   $Env:BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}"
@@ -2457,7 +2477,16 @@ Resources:
                   $Env:AWS_REGION="${AWS::Region}"
                   $Env:ENABLE_EC2_LOG_RETENTION_POLICY="${EnableEC2LogRetentionPolicy}"
                   $Env:EC2_LOG_RETENTION_DAYS="${EC2LogRetentionDays}"
-                  powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1 >> C:\buildkite-agent\elastic-stack.log
+                  & {
+                    # Do not wait until the end of bootstrap to start collecting failure logs.
+                    try {
+                      Start-Service AmazonCloudWatchAgent -ErrorAction Stop
+                    } catch {
+                      Write-Warning "Could not start CloudWatch logging before bootstrap: $_"
+                    }
+                    powershell -file C:\buildkite-agent\bin\bk-install-elastic-stack.ps1
+                  } *>&1 | Out-File -FilePath C:\buildkite-agent\elastic-stack.log -Append -Encoding utf8
+                  exit $LASTEXITCODE
                   </powershell>
                 - LocalSecretsBucket: !If
                     - CreateSecretsBucket
@@ -2609,6 +2638,13 @@ Resources:
       - VpcComplete
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
+      LifecycleHookSpecificationList: !If
+        - UseWindowsAgents
+        - - LifecycleHookName: buildkite-agent-launch
+            LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
+            DefaultResult: ABANDON
+            HeartbeatTimeout: !Ref WindowsLaunchTimeout
+        - !Ref "AWS::NoValue"
       MixedInstancesPolicy:
         InstancesDistribution:
           OnDemandBaseCapacity: !Ref OnDemandBaseCapacity
@@ -2742,7 +2778,7 @@ Resources:
           Value: !Ref AgentsPerInstance
     CreationPolicy:
       ResourceSignal:
-        Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT10M, !If [ HasGitMirrorSeedBucket, PT15M, PT5M ] ], !Ref InstanceCreationTimeout ]
+        Timeout: !If [ UseDefaultInstanceCreationTimeout, !If [ UseWindowsAgents, PT30M, !If [ HasGitMirrorSeedBucket, PT15M, PT5M ] ], !Ref InstanceCreationTimeout ]
         Count: !Ref MinSize
     UpdatePolicy:
       AutoScalingReplacingUpdate:

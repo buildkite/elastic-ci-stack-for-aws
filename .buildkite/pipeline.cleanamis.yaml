@@ -43,11 +43,10 @@ steps:
           propagate-aws-auth-tokens: true
           mount-buildkite-agent: true
 
-  # Tagged builders older than 24h only; AMIs and snapshots are untouched.
   # Runs on the host: Bash 4+, AWS CLI v2 and GNU date required.
-  - name: ":broom: Terminate abandoned Packer builders (us-east-1)"
-    command: .buildkite/steps/cleanup-packer.sh
-    timeout_in_minutes: 15
+  - name: ":broom: Clean up test stacks and Packer builders (us-east-1)"
+    command: .buildkite/steps/cleanup.sh
+    timeout_in_minutes: 150
     agents:
       queue: "oss-deploy"
     env:

@@ -1,7 +1,7 @@
 # CI cleanup
 
-The [AMI cleaner](https://buildkite.com/buildkite/elastic-stack-for-aws-ami-cleaner) runs every Thursday at 02:30 UTC. It removes old stack AMIs under existing retention rules and [tagged Packer builders](steps/cleanup-packer.sh) older than 24 hours in dist/us-east-1. Base AMIs are untouched. Normal builds run the same builder sweep; weekly cleanup catches leftovers.
+The [weekly cleaner](https://buildkite.com/buildkite/elastic-stack-for-aws-ami-cleaner) runs Thursdays at 02:30 UTC. It uses [cleanup.sh](steps/cleanup.sh) to remove old test stacks, secrets buckets, Lambda logs and tagged Packer builders in dist/us-east-1. AMI retention stays the same; base AMIs are untouched.
 
-For a manual run, select **New Build** on `main`, then unblock **Run AMI cleaning build?**. Set `DRY_RUN=true` to preview both cleaners; leave it unset to delete, as scheduled runs do. Any set value, including `false` or empty, means preview. Check job logs for candidates.
+To preview, start a build on the branch to test with `DRY_RUN=true`, then unblock **Run AMI cleaning build?**. Any set value, including `false` or empty, previews; unset deletes. Check the job logs for candidates.
 
-`DRY_RUN` does **not** make the rest of normal-build `cleanup.sh` read-only.
+Apply stack-cleanup and CI role-tagging permissions before enabling this step. Stack and execution-role deletions require `ManagedBy=elastic-ci-stack-for-aws` and `Purpose=disposable-ci`.

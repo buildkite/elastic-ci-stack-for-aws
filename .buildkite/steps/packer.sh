@@ -23,6 +23,19 @@ elif [[ "${variant}" == "base" ]]; then
   local_output="packer-base-${os}-${arch}.output"
   make "packer-base-${os}-${arch}.output"
 else
+  # Fail before building an image from an incomplete or mismatched plugin checkout.
+  # Base images do not package plugins. Leave untracked files and checkout state alone.
+  echo "Checking built-in plugin submodules..."
+  submodule_status="$(git submodule status --recursive -- plugins/)"
+  if grep -q '^[-+U]' <<<"$submodule_status"; then
+    printf 'ERROR: plugin submodules must be initialized at their pinned commits:\n%s\n' "$submodule_status" >&2
+    exit 1
+  fi
+  if ! git submodule foreach --recursive 'git diff --exit-code --name-status --ignore-submodules=untracked HEAD --'; then
+    echo "ERROR: plugin submodules contain missing or modified tracked files" >&2
+    exit 1
+  fi
+
   # Determine metadata key and file naming based on variant
   if [[ "${variant}" == "stack-cis" ]]; then
     meta_key="${os}-base-cis-${arch}-ami"
