@@ -181,6 +181,7 @@ aws cloudformation create-stack \
   --disable-rollback \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
   --parameters "$(cat config.json)" \
+  --tags Key=ManagedBy,Value=elastic-ci-stack-for-aws Key=Purpose,Value=disposable-ci \
   --role-arn "$service_role"
 
 echo "+++ ⌛️ Waiting for update to complete"

@@ -2,14 +2,9 @@
 # shellcheck disable=SC2016
 set -uo pipefail
 
-########################################################
-# We make an attempt to clean up the specific resources created during this pipeline elsewhere. However
-# sometimes that fails, are various CloudFormation Stacks, S3 Buckets and CloudWatch Log Groups can be
-# left around.
-#
-# This is a safety net at the end of the build that attempts to delete any resources created by this
-# pipeline more than a day ago, regardless of if they were created in the current build or not.
-########################################################
+# Reclaim test resources older than a day, including leftovers from canceled
+# builds. Called by normal builds and the scheduled cleaner. Any set DRY_RUN
+# value previews all deletions.
 
 if [[ $OSTYPE =~ ^darwin ]]; then
   cutoff_date=$(gdate --date='-1 days' +%Y-%m-%d)
@@ -21,37 +16,47 @@ fi
 
 failed=0
 
+delete_resource() {
+  if [[ -n "${DRY_RUN+set}" ]]; then
+    echo "DRY_RUN: $*"
+  else
+    "$@"
+  fi
+}
+
 # First, so failures in the cleanup below can't stop builders being reclaimed.
 "$(dirname "${BASH_SOURCE[0]}")/cleanup-packer.sh" || failed=1
 
 echo "--- Cleaning up resources older than ${cutoff_date}"
 
-echo "--- Deleting test managed secrets buckets created"
-aws s3api list-buckets \
+echo "--- Cleaning up test managed secrets and logging buckets"
+buckets="$(aws s3api list-buckets \
   --output text \
-  --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date")" \
-  | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test-.*-managedsecretsbucket' \
-  | xargs -t -I% aws s3 rb s3://% --force
-
-echo "--- Deleting test managed secrets logging buckets created"
-aws s3api list-buckets \
-  --output text \
-  --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date")" \
-  | xargs -n1 \
-  | grep -E 'buildkite-aws-stack-test--managedsecretsloggingbuc' \
-  | xargs -t -I% aws s3 rb s3://% --force
+  --query "$(printf 'Buckets[?CreationDate<`%s`].[Name]' "$cutoff_date")")" || {
+  buckets=""
+  failed=1
+}
+for bucket in $buckets; do
+  if [[ "$bucket" =~ ^buildkite-aws-stack-test-.*-(managedsecretsbucket|managedsecretsloggingbuc)[[:alnum:]-]*$ ]]; then
+    delete_resource aws s3 rb "s3://${bucket}" --force || failed=1
+  fi
+done
 
 # Do this before deleting the stacks so we don't race with stack-managed log
 # groups
-echo "--- Deleting Lambda log groups older than one day"
-aws logs describe-log-groups \
+echo "--- Cleaning up Lambda log groups older than one day"
+log_groups="$(aws logs describe-log-groups \
   --log-group-name-prefix "/aws/lambda/buildkite-aws-stack-test-" \
   --query "$(printf 'logGroups[?creationTime<`%s`].[logGroupName]' "$cutoff_date_milli")" \
-  --output text \
-  | xargs -t -I% aws logs delete-log-group --log-group-name "%"
+  --output text)" || {
+  log_groups=""
+  failed=1
+}
+for log_group in $log_groups; do
+  delete_resource aws logs delete-log-group --log-group-name "$log_group" || failed=1
+done
 
-echo "--- Deleting old cloudformation stacks for test stacks"
+echo "--- Cleaning up old CloudFormation test stacks"
 # Test stacks are deleted through their build's service role, so no role may be
 # deleted while any test stack exists. If a listing, deletion or wait fails, or
 # a test stack of any age is still live, keep all service roles until the next
@@ -66,19 +71,21 @@ stacks="$(aws cloudformation describe-stacks --output text --query "$aged_stacks
 
 deleting=()
 for stack in $(xargs -n1 <<<"$stacks" | grep -E "$test_stack_re"); do
-  if aws cloudformation delete-stack --stack-name "$stack"; then
+  if delete_resource aws cloudformation delete-stack --stack-name "$stack"; then
     deleting+=("$stack")
   else
     stacks_ok=false
     failed=1
   fi
 done
-for stack in "${deleting[@]}"; do
-  aws cloudformation wait stack-delete-complete --stack-name "$stack" || {
-    stacks_ok=false
-    failed=1
-  }
-done
+if [[ -z "${DRY_RUN+set}" ]]; then
+  for stack in "${deleting[@]}"; do
+    aws cloudformation wait stack-delete-complete --stack-name "$stack" || {
+      stacks_ok=false
+      failed=1
+    }
+  done
+fi
 
 # The listing above skips stacks younger than the cutoff, and a role can be
 # older than its build's test stacks, so check every live stack.
@@ -96,10 +103,13 @@ if [[ "$stacks_ok" == "true" ]]; then
   fi
 fi
 
-echo "--- Deleting old cloudformation stacks for test stack service roles"
-if [[ "$stacks_ok" == "true" ]]; then
-  for stack in $(xargs -n1 <<<"$stacks" | grep -E 'buildkite-elastic-ci-stack-service-role-[[:digit:]]+'); do
-    aws cloudformation delete-stack --stack-name "$stack" || failed=1
+echo "--- Cleaning up old CloudFormation service-role stacks"
+if [[ -n "${DRY_RUN+set}" ]]; then
+  echo "DRY_RUN: Service-role deletions require all test stacks to be gone"
+fi
+if [[ "$stacks_ok" == "true" || -n "${DRY_RUN+set}" ]]; then
+  for stack in $(xargs -n1 <<<"$stacks" | grep -E '^buildkite-elastic-ci-stack-service-role-[[:digit:]]+$'); do
+    delete_resource aws cloudformation delete-stack --stack-name "$stack" || failed=1
   done
 else
   echo "Keeping all service-role stacks: test stacks could not be listed or deleted, or some still exist" >&2
