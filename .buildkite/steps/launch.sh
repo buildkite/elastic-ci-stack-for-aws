@@ -176,7 +176,7 @@ if aws --no-cli-pager cloudformation wait stack-create-complete --stack-name "$s
   echo "--- Resources created by stack ${stack_name}"
   aws --no-cli-pager cloudformation list-stack-resources \
     --stack-name "$stack_name" \
-    --query 'StackResourceSummaries[].{KEY:LogicalResourceId,VALUE:PhysicalResourceId}' \
+    --query 'StackResourceSummaries[].{KEY:LogicalResourceId,TYPE:ResourceType}' \
     --output table
 else
   status=$?

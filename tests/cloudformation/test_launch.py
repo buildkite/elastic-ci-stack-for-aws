@@ -55,10 +55,10 @@ elif args[:2] in [
             if os.environ.get('INVENTORY_FAIL'):
                 sys.exit('Unable to retrieve stack resources')
             if args[args.index('--output') + 1] == 'table':
-                assert args[args.index('--query') + 1] == 'StackResourceSummaries[].{KEY:LogicalResourceId,VALUE:PhysicalResourceId}'
-                print('| KEY | VALUE |')
+                assert args[args.index('--query') + 1] == 'StackResourceSummaries[].{KEY:LogicalResourceId,TYPE:ResourceType}'
+                print('| KEY | TYPE |')
                 for resource in json.loads(os.environ['STACK_RESOURCES'])['StackResourceSummaries']:
-                    print('| ' + resource['LogicalResourceId'] + ' | ' + resource['PhysicalResourceId'] + ' |')
+                    print('| ' + resource['LogicalResourceId'] + ' | ' + resource['ResourceType'] + ' |')
             else:
                 print(os.environ['STACK_RESOURCES'])
 else:
@@ -88,23 +88,25 @@ class StackLaunchTest(unittest.TestCase):
 
     def setUp(self):
         self.resources = {"StackResourceSummaries": [
-            {"LogicalResourceId": "SecurityGroup", "PhysicalResourceId": "sg-test"},
-            {"LogicalResourceId": "AgentLaunchTemplate", "PhysicalResourceId": "lt-test"},
+            {"LogicalResourceId": "SecurityGroup", "PhysicalResourceId": "sg-test",
+             "ResourceType": "AWS::EC2::SecurityGroup"},
+            {"LogicalResourceId": "AgentLaunchTemplate", "PhysicalResourceId": "lt-test",
+             "ResourceType": "AWS::EC2::LaunchTemplate"},
         ]}
         self.events = {"StackEvents": [
             {"LogicalResourceId": "AgentLaunchTemplate", "ResourceStatus": "CREATE_FAILED",
              "ResourceStatusReason": "Instance type is unavailable"}
         ]}
 
-    def test_success_prints_every_resource_as_key_value_rows(self):
+    def test_success_prints_every_resource_as_key_type_rows(self):
         result = self.launch()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         rows = [tuple(column.strip() for column in line.split("|")[1:-1])
                 for line in result.stdout.splitlines() if line.startswith("|")]
         self.assertEqual(rows, [
-            ("KEY", "VALUE"),
-            ("SecurityGroup", "sg-test"),
-            ("AgentLaunchTemplate", "lt-test"),
+            ("KEY", "TYPE"),
+            ("SecurityGroup", "AWS::EC2::SecurityGroup"),
+            ("AgentLaunchTemplate", "AWS::EC2::LaunchTemplate"),
         ])
 
     def test_waiter_failure_or_timeout_prints_events_and_fails(self):
