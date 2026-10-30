@@ -15,4 +15,4 @@ done
 
 # No network: validate certificate fixtures and local helper behavior.
 docker run --rm -v "$PWD:/src:ro" -w /src python:3.12-bookworm \
-  sh -c 'python3 -m unittest discover -s tests/trust -v && python3 -m unittest discover -s tests/instance-storage -v && python3 -m unittest discover -s tests/plugins -v'
+  sh -c 'python3 -m unittest discover -s tests/trust -v && python3 -m unittest discover -s tests/instance-storage -v && python3 -m unittest discover -s tests/plugins -v && python3 -m unittest discover -s tests/cloudformation -v'

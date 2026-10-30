@@ -23,11 +23,6 @@ ubuntu2404)
   ;;
 esac
 
-# download parfait binary
-wget -N https://github.com/lox/parfait/releases/download/v1.1.3/parfait_linux_amd64
-mv parfait_linux_amd64 parfait
-chmod +x ./parfait
-
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text)
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)
 subnet_ids=$(awk '{print $1}' <<<"$subnets" | tr ' ' ',' | tr '\n' ',' | sed 's/,$//')
@@ -184,5 +179,19 @@ aws cloudformation create-stack \
   --tags Key=ManagedBy,Value=elastic-ci-stack-for-aws Key=Purpose,Value=disposable-ci \
   --role-arn "$service_role"
 
-echo "+++ ⌛️ Waiting for update to complete"
-./parfait watch-stack "${stack_name}"
+echo "+++ ⌛️ Waiting for stack creation to complete"
+# The native waiter polls every 30 seconds for up to roughly 60 minutes.
+if aws --no-cli-pager cloudformation wait stack-create-complete --stack-name "$stack_name"; then
+  echo "--- Resources created by stack ${stack_name}"
+  aws --no-cli-pager cloudformation list-stack-resources \
+    --stack-name "$stack_name" \
+    --query 'StackResourceSummaries[].{KEY:LogicalResourceId,TYPE:ResourceType,UPDATED_AT:LastUpdatedTimestamp}' \
+    --output table
+else
+  status=$?
+  echo "--- Stack creation failed or timed out: ${stack_name}"
+  aws --no-cli-pager cloudformation describe-stack-events \
+    --stack-name "$stack_name" \
+    --output json || true
+  exit "$status"
+fi
