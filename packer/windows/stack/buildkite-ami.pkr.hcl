@@ -14,7 +14,7 @@ variable "arch" {
 
 variable "instance_type" {
   type    = string
-  default = "m7i.xlarge"
+  default = "c8a.xlarge"
 }
 
 variable "region" {
@@ -55,6 +55,12 @@ variable "ami_users" {
   default     = []
 }
 
+variable "iam_instance_profile" {
+  type        = string
+  description = "Optional instance profile for the Windows image build instance."
+  default     = ""
+}
+
 data "amazon-ami" "windows-server-2022" {
   filters = {
     name                = "Windows_Server-2022-English-Full-Base-*"
@@ -80,18 +86,43 @@ source "amazon-ebs" "elastic-ci-stack" {
   winrm_insecure = true
   winrm_use_ssl  = true
   winrm_port     = 5986
-  winrm_timeout  = "60m"
+  winrm_timeout  = "20m"
   winrm_username = "Administrator"
+
+  iam_instance_profile = var.iam_instance_profile
 
   launch_block_device_mappings {
     volume_type           = "gp3"
     device_name           = "/dev/sda1"
     volume_size           = 30
+    iops                  = 6000
+    throughput            = 500
     delete_on_termination = true
+  }
+
+  # Keep the faster builder storage settings out of the output AMI's launch defaults.
+  ami_block_device_mappings {
+    volume_type           = "gp3"
+    device_name           = "/dev/sda1"
+    volume_size           = 30
+    iops                  = 3000
+    throughput            = 125
+    delete_on_termination = true
+  }
+
+  # The amazon plugin also copies run_tags to the AMI and its snapshots. `tags`
+  # below overwrites Name, BuildNumber and Purpose there, but ManagedBy stays,
+  # so never select builders by ManagedBy alone.
+  run_tags = {
+    Name        = "Packer Builder" // cleanup.sh and cleanup-packer.sh match builders on this
+    ManagedBy   = "elastic-ci-stack-for-aws"
+    Purpose     = "disposable-ci"
+    BuildNumber = var.build_number
   }
 
   tags = {
     Name         = "elastic-ci-stack-windows"
+    Purpose      = "ami"
     OSVersion    = "Windows Server 2022"
     BuildNumber  = var.build_number
     AgentVersion = var.agent_version

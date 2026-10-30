@@ -35,7 +35,7 @@ AWS_REGION ?= us-east-1
 
 ARM64_INSTANCE_TYPE ?= m7g.xlarge
 AMD64_INSTANCE_TYPE ?= m7a.xlarge
-WIN64_INSTANCE_TYPE ?= m7i.xlarge
+WIN64_INSTANCE_TYPE ?= c8a.xlarge
 
 BUILDKITE_BUILD_NUMBER ?= none
 BUILDKITE_PIPELINE_DEFAULT_BRANCH ?= main
@@ -272,6 +272,7 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_STACK_FILES) $(if $(strip $(BASE_A
 		-e AWS_SECRET_ACCESS_KEY \
 		-e AWS_SESSION_TOKEN \
 		-e PACKER_LOG \
+		-e PKR_VAR_iam_instance_profile \
 		-v ${HOME}/.aws:/root/.aws \
 		-v "$(PWD):/src" \
 		--rm \
@@ -428,6 +429,7 @@ packer-base-windows-amd64.output: $(PACKER_WINDOWS_BASE_FILES)
 		-e AWS_SECRET_ACCESS_KEY \
 		-e AWS_SESSION_TOKEN \
 		-e PACKER_LOG \
+		-e PKR_VAR_iam_instance_profile \
 		-v ${HOME}/.aws:/root/.aws \
 		-v "$(PWD):/src" \
 		--rm \
