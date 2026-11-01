@@ -52,7 +52,7 @@ steps:
     env:
       AWS_REGION: "us-east-1"
     plugins:
-      - aws-assume-role-with-web-identity#v1.8.0:
+      - aws-assume-role-with-web-identity#v1.8.1:
           role-arn: arn:aws:iam::172840064832:role/pipeline-buildkite-elastic-stack-for-aws-ami-cleaner
           session-tags:
             - organization_slug
