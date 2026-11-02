@@ -479,7 +479,7 @@ If ($lastexitcode -ne 0) { throw "Agent termination configuration failed ($laste
 nssm set buildkite-agent AppExit Default Exit
 If ($lastexitcode -ne 0) { throw "Agent exit policy configuration failed ($lastexitcode)." }
 
-nssm set buildkite-agent AppEvents Exit/Post "powershell C:\buildkite-agent\bin\terminate-instance.ps1"
+nssm set buildkite-agent AppEvents Exit/Post "powershell -NoProfile -NonInteractive -File C:\buildkite-agent\bin\terminate-instance.ps1"
 If ($lastexitcode -ne 0) { throw "Agent exit hook configuration failed ($lastexitcode)." }
 
 Write-Output "Configuring CloudWatch agent log retention..."

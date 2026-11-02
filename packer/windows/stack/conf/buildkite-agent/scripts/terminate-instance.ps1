@@ -1,11 +1,39 @@
 Start-Transcript -path C:\buildkite-agent\terminate-instance.log -append
 $Stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
-# NSSM kills this hook after 60s. Bound every network call so the fallbacks,
-# including the shutdown, still run if IMDS or Auto Scaling is unresponsive.
+# NSSM kills this hook after 60s. Bound metadata requests and whole AWS processes
+# (including startup and DNS), leaving time for the shutdown fallback.
 $Env:AWS_RETRY_MODE = "standard"
 $Env:AWS_MAX_ATTEMPTS = "2"
 $AwsTimeouts = @("--cli-connect-timeout", "2", "--cli-read-timeout", "3")
+
+function Invoke-AutoScaling {
+  param([string[]]$AwsArguments)
+
+  # Redirect to files so a full stdout/stderr pipe cannot block the process.
+  $Stdout = [IO.Path]::GetTempFileName()
+  $Stderr = [IO.Path]::GetTempFileName()
+  $Process = $null
+  try {
+    $Process = Start-Process -FilePath aws.exe `
+      -ArgumentList (@("autoscaling") + $AwsArguments + @("--region", $Region) + $AwsTimeouts) `
+      -RedirectStandardOutput $Stdout -RedirectStandardError $Stderr -NoNewWindow -PassThru -ErrorAction Stop
+    # Windows PowerShell 5.1 needs a cached handle to read ExitCode after waiting.
+    $null = $Process.Handle
+    if (-not $Process.WaitForExit(10000)) {
+      $Process.Kill()
+      $Process.WaitForExit()
+      return [pscustomobject]@{ ExitCode = 1; Output = "AWS command timed out after 10s: $($AwsArguments -join ' ')" }
+    }
+    $Output = ((Get-Content $Stdout -Raw), (Get-Content $Stderr -Raw)) -join "`n"
+    return [pscustomobject]@{ ExitCode = $Process.ExitCode; Output = $Output.Trim() }
+  } catch {
+    return [pscustomobject]@{ ExitCode = 1; Output = $_.Exception.Message }
+  } finally {
+    if ($Process) { $Process.Dispose() }
+    Remove-Item $Stdout, $Stderr -ErrorAction SilentlyContinue
+  }
+}
 
 $Token = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).content
 
@@ -20,13 +48,10 @@ Write-Output "$(Get-Date) terminate-instance: requesting instance termination...
 # immediately. Stop retrying after 15s to leave time for the fallbacks below.
 $Backoff = 1
 while ($true) {
-  # Windows PowerShell wraps each stderr line in an ErrorRecord, which renders a
-  # blank line as "System.Management.Automation.RemoteException", so use the
-  # exception message for those.
-  $Output = (aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--should-decrement-desired-capacity" @AwsTimeouts 2>&1 | ForEach-Object { if ($_ -is [Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } }) -join "`n"
-  if ($lastexitcode -eq 0) { break }
-  Write-Output "$(Get-Date) terminate-instance: termination with capacity decrement failed: $($Output.Trim())"
-  if ($Output -notmatch '\((Throttling|ResourceContention|ScalingActivityInProgress)\)' -or $Stopwatch.Elapsed.TotalSeconds + $Backoff -gt 15) { break }
+  $Result = Invoke-AutoScaling -AwsArguments @("terminate-instance-in-auto-scaling-group", "--instance-id", $InstanceId, "--should-decrement-desired-capacity")
+  if ($Result.ExitCode -eq 0) { break }
+  Write-Output "$(Get-Date) terminate-instance: termination with capacity decrement failed: $($Result.Output)"
+  if ($Result.Output -notmatch '\((Throttling|ResourceContention|ScalingActivityInProgress)\)' -or $Stopwatch.Elapsed.TotalSeconds + $Backoff -gt 15) { break }
   Write-Output "$(Get-Date) terminate-instance: retrying in ${Backoff}s..."
   Start-Sleep -Seconds $Backoff
   $Backoff *= 2
@@ -37,26 +62,24 @@ while ($true) {
 # we're already at minSize), terminate without decrementing so the ASG
 # launches a replacement. If that also fails, mark the instance unhealthy so
 # the ASG replaces it despite scale-in protection.
-if ($lastexitcode -eq 0) {
-  Write-Output $Output
+if ($Result.ExitCode -eq 0) {
+  Write-Output $Result.Output
   Write-Output "$(Get-Date) terminate-instance: terminating instance..."
 } else {
   Write-Output "$(Get-Date) terminate-instance: terminating without decrement..."
-  aws autoscaling terminate-instance-in-auto-scaling-group --region "$Region" --instance-id "$InstanceId" "--no-should-decrement-desired-capacity" @AwsTimeouts 2> $null
+  $Result = Invoke-AutoScaling -AwsArguments @("terminate-instance-in-auto-scaling-group", "--instance-id", $InstanceId, "--no-should-decrement-desired-capacity")
+  Write-Output $Result.Output
 
-  if ($lastexitcode -eq 0) {
+  if ($Result.ExitCode -eq 0) {
     Write-Output "$(Get-Date) terminate-instance: terminating instance (ASG will launch a replacement)..."
   } else {
     Write-Output "$(Get-Date) terminate-instance: termination failed, marking instance as unhealthy"
-    aws autoscaling set-instance-health `
-      --instance-id "$InstanceId" `
-      --region "$Region" `
-      --health-status Unhealthy `
-      @AwsTimeouts
+    $Result = Invoke-AutoScaling -AwsArguments @("set-instance-health", "--instance-id", $InstanceId, "--health-status", "Unhealthy")
+    Write-Output $Result.Output
 
     # Last resort: the agent won't restart, so shut down and let the ASG
     # replace the stopped instance despite scale-in protection.
-    if ($lastexitcode -ne 0) {
+    if ($Result.ExitCode -ne 0) {
       Write-Output "$(Get-Date) terminate-instance: could not mark instance unhealthy, shutting down"
       shutdown /s /f /t 0
       Write-Output "$(Get-Date) terminate-instance: shutdown exited with code $lastexitcode"
