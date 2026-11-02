@@ -13,8 +13,20 @@ $LaunchDeadline = $null
 
 function Initialize-InstanceIdentity {
   if ($script:InstanceIdentity) { return }
-  $Token = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).Content
-  $Identity = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/dynamic/instance-identity/document).Content | ConvertFrom-Json
+  # Match Linux's metadata retry policy, including a fresh token on each attempt.
+  $Backoff = 1
+  for ($Attempt = 1; $Attempt -le 5; $Attempt++) {
+    try {
+      $Token = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 -Method Put -Headers @{'X-aws-ec2-metadata-token-ttl-seconds' = '60'} http://169.254.169.254/latest/api/token).Content
+      $Identity = (Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 -Headers @{'X-aws-ec2-metadata-token' = $Token} http://169.254.169.254/latest/dynamic/instance-identity/document).Content | ConvertFrom-Json
+      break
+    } catch {
+      Write-Warning "EC2 metadata attempt $Attempt of 5 failed: $_"
+      if ($Attempt -eq 5) { throw }
+    }
+    Start-Sleep -Seconds $Backoff
+    $Backoff = [Math]::Min($Backoff * 2, 30)
+  }
   $Env:INSTANCE_ID = $Identity.instanceId
   # pendingTime precedes the launch hook: use a conservative deadline that includes
   # Windows setup, not a fresh timeout starting when this script runs.
