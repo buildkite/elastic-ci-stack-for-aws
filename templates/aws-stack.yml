@@ -1639,16 +1639,6 @@ Conditions:
     IsLambdaArchitectureArm64:
       !Equals [ !Ref LambdaArchitecture, "arm64" ]
 
-    HasVariableSizeAndArm64:
-      !And
-        - !Condition HasVariableSize
-        - !Condition IsLambdaArchitectureArm64
-
-    HasVariableSizeAndX8664:
-      !And
-        - !Condition HasVariableSize
-        - !Not [ !Condition IsLambdaArchitectureArm64 ]
-
     ShouldDeployScalerAndArm64:
       !And
         - !Condition ShouldDeployScaler
