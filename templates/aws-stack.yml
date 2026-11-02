@@ -2987,8 +2987,12 @@ Resources:
                   ],
                   DocumentName="AWS-RunShellScript",
                   Comment=f"Stopping BK agents in {stack_name}",
+                  # An instance with no running agent must not fail the command:
+                  # with the default MaxErrors of 0, one failure cancels every
+                  # invocation not yet started, leaving those agents running.
+                  MaxErrors="100%",
                   Parameters={
-                      "commands": ["sudo kill -s SIGTERM $(/bin/pidof buildkite-agent)"]
+                      "commands": ["sudo pkill -TERM -x buildkite-agent || true"]
                   }
               )
               logger.info(f"SSM command response: {response}")
