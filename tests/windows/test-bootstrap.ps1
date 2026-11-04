@@ -20,9 +20,18 @@ function Start-Sleep { param($Seconds) $testState.slept += $Seconds; $testState.
 function Get-Date { $testState.now.LocalDateTime }
 function Invoke-WebRequest {
     param([Parameter(Position=0)]$Uri, [switch]$UseBasicParsing, $Method, $Headers, $TimeoutSec)
-    if ($testState.case.MetadataFails) { throw 'IMDS unavailable' }
-    if ($Uri -like '*/api/token') { return @{Content='token'} }
+    if ($Uri -like 'http://169.254.169.254/*') {
+        $testState.metadataTimeouts += $TimeoutSec
+        if ($Uri -like '*/api/token') {
+            $testState.tokenRequests++
+            if ($testState.case.MetadataFails -or $testState.tokenRequests -le $testState.case.TokenFailures) { throw 'IMDS token unavailable' }
+            return @{Content="token-$($testState.tokenRequests)"}
+        }
+    }
     if ($Uri -like '*/dynamic/instance-identity/document') {
+        $testState.identityRequests++
+        if ($Headers['X-aws-ec2-metadata-token'] -ne "token-$($testState.tokenRequests)") { throw 'Incorrect IMDS token' }
+        if ($testState.identityRequests -le $testState.case.IdentityFailures) { throw 'IMDS identity unavailable' }
         $age = if ($testState.case.Expired) { 1000 } else { 30 }
         return @{Content=(@{instanceId='i-test'; region='us-east-1'; pendingTime=$testState.now.AddSeconds(-$age).ToString('o')} | ConvertTo-Json)}
     }
@@ -117,9 +126,13 @@ $PSDefaultParameterValues['Out-File:Encoding'] = 'unicode'
 
 $cases = @(
     @{Name='healthy bootstrap completes configuration and launch'},
+    # Successful fresh configuration also sleeps once while checking Docker readiness.
+    @{Name='transient token outage recovers on the last attempt'; TokenFailures=4; TokenRequests=5; IdentityRequests=1; Sleep=16},
+    @{Name='transient identity outage retries with fresh tokens'; IdentityFailures=4; TokenRequests=5; IdentityRequests=5; Sleep=16},
+    @{Name='failure recovery retries metadata before abandoning launch'; TokenFailures=7; TokenRequests=8; IdentityRequests=1; Sleep=28; Abandon=$true; Fails=$true; Skip=$true},
     @{Name='completed configuration is not recreated'; Marker='Completed'; State='InService'; Skip=$true},
     @{Name='completed configuration can finish a pending launch'; Marker='Completed'; Skip=$true},
-    @{Name='metadata outage does not invalidate completed configuration'; Marker='Completed'; MetadataFails=$true; NoSignal=$true; Skip=$true},
+    @{Name='metadata outage does not invalidate completed configuration'; Marker='Completed'; MetadataFails=$true; NoSignal=$true; Skip=$true; TokenRequests=5; IdentityRequests=0; Sleep=15},
     @{Name='incomplete pending launch is abandoned'; Marker='Started'; Abandon=$true; Fails=$true; Skip=$true},
     @{Name='invalid in-service configuration is replaced'; Marker='invalid'; State='InService'; Unhealthy=$true; Fails=$true; Skip=$true},
     @{Name='terminating incomplete instance is left alone'; Marker='Started'; State='Terminating:Wait'; Fails=$true; Skip=$true},
@@ -127,7 +140,7 @@ $cases = @(
     @{Name='customer bootstrap nonzero exit abandons launch'; CustomerFails=$true; Abandon=$true; Fails=$true},
     @{Name='service startup failure abandons launch'; ServiceFails=$true; Abandon=$true; Fails=$true},
     @{Name='completed marker write failure leaves started agent alone'; MarkerWriteFails=$true; Fails=$true},
-    @{Name='metadata failure leaves configuration incomplete'; MetadataFails=$true; Fails=$true; Skip=$true},
+    @{Name='metadata failure leaves configuration incomplete'; MetadataFails=$true; Fails=$true; Skip=$true; TokenRequests=10; IdentityRequests=0; Sleep=40},
     @{Name='ambiguous accepted CONTINUE is reconciled'; AmbiguousContinue=$true},
     @{Name='transient CONTINUE failure retries successfully'; TransientContinue=$true},
     @{Name='persistent throttling stops within the remaining launch budget'; AlwaysThrottled=$true; NoSignal=$true; MaxSleep=870},
@@ -143,6 +156,7 @@ try {
             case=$case; now=[DateTimeOffset]::UtcNow
             state=$(if ($case.State) { $case.State } else { 'Pending:Wait' })
             configured=0; continues=0; slept=0; agentStarted=$false; abandoned=$false; unhealthy=$false; signaled=$false
+            tokenRequests=0; identityRequests=0; metadataTimeouts=@()
         }
         Remove-Item C:\buildkite-agent -Recurse -Force -ErrorAction SilentlyContinue
         New-Item -ItemType Directory C:\buildkite-agent\bin -Force | Out-Null
@@ -176,6 +190,11 @@ Remove-Item 'C:\ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent
         & $program | Out-Null
         $exitCode=$LASTEXITCODE
         if (($exitCode -ne 0) -ne [bool]$case.Fails) { throw "Unexpected exit $exitCode for $($case.Name)" }
+        if ($case.ContainsKey('TokenRequests')) {
+            if ($testState.tokenRequests -ne $case.TokenRequests -or $testState.identityRequests -ne $case.IdentityRequests) { throw "Wrong metadata retry budget: $($case.Name)" }
+            if ($testState.slept -ne $case.Sleep) { throw "Wrong metadata backoff: $($case.Name)" }
+            if (@($testState.metadataTimeouts | Where-Object { $_ -ne 2 }).Count) { throw "Metadata requests must have a 2-second timeout: $($case.Name)" }
+        }
         if ($case.ContainsKey('MaxSleep') -and $testState.slept -gt $case.MaxSleep) { throw "Permanent failure retried for $($testState.slept) seconds: $($case.Name)" }
         if ($case.Expired -and $testState.continues) { throw 'Expired launch attempted CONTINUE' }
         if ($testState.abandoned -ne [bool]$case.Abandon -or $testState.unhealthy -ne [bool]$case.Unhealthy) { throw "Wrong instance recovery: $($case.Name)" }
