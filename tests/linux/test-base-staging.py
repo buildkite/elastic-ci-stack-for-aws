@@ -51,10 +51,17 @@ class BaseStagingTest(unittest.TestCase):
     def test_uploads_and_environment(self):
         self.assertIn('staging_dir = "/var/tmp/packer"', self.hcl)
         files = re.findall(r'provisioner "file" \{(.*?)\n  \}', self.hcl, re.S)
-        self.assertEqual(len(files), 4)
-        for block in files:
-            self.assertIn("local.staging_dir", block)
-            self.assertNotIn('"/tmp', block)
+        # Trailing slashes determine whether Packer copies a directory or its contents.
+        expected_uploads = [
+            ('"conf"', 'local.staging_dir'),
+            ('"../shared/conf/"', '"${local.staging_dir}/conf/"'),
+            ('"scripts/versions.sh"', '"${local.staging_dir}/"'),
+            ('"../shared/scripts/distro.sh"', '"${local.staging_dir}/"'),
+        ]
+        self.assertEqual(len(files), len(expected_uploads))
+        for block, (source, destination) in zip(files, expected_uploads):
+            self.assertRegex(block, rf'(?m)^\s*source\s*=\s*{re.escape(source)}\s*$')
+            self.assertRegex(block, rf'(?m)^\s*destination\s*=\s*{re.escape(destination)}\s*$')
         shells = re.findall(r'provisioner "shell" \{(.*?)\n  \}', self.hcl, re.S)
         for block in shells:
             self.assertIn('remote_folder = "/var/tmp"', re.sub(r" +", " ", block))
