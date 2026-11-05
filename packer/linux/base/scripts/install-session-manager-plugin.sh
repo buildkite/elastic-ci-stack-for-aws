@@ -2,10 +2,11 @@
 set -eu -o pipefail
 
 # Source centralized version definitions
+STAGING_DIR="${STAGING_DIR:?STAGING_DIR must be set by Packer}"
 # shellcheck disable=SC1091
-source "/tmp/versions.sh"
+source "${STAGING_DIR}/versions.sh"
 # shellcheck disable=SC1091
-source "/tmp/distro.sh"
+source "${STAGING_DIR}/distro.sh"
 
 MACHINE="$(uname -m)"
 

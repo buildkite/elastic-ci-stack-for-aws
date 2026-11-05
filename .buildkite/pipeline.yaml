@@ -45,6 +45,11 @@ steps:
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
+      - name: ":linux: Base staging regression"
+        command: python3.12 tests/linux/test-base-staging.py
+        agents:
+          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
       - name: ":mag: goss sync"
         command: .buildkite/steps/goss-sync-check.sh
         agents:
