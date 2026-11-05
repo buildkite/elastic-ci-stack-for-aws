@@ -33,6 +33,7 @@ class BaseStagingTest(unittest.TestCase):
         shutil.copytree(SHARED / "conf", self.staging / "conf", dirs_exist_ok=True)
         shutil.copy(BASE / "scripts/versions.sh", self.staging)
         shutil.copy(SHARED / "scripts/distro.sh", self.staging)
+        shutil.copytree(ROOT / "packer/trust", self.staging / "trust")
 
     def test_private_staging_and_cleanup(self):
         self.stage()
@@ -57,6 +58,7 @@ class BaseStagingTest(unittest.TestCase):
             ('"../shared/conf/"', '"${local.staging_dir}/conf/"'),
             ('"scripts/versions.sh"', '"${local.staging_dir}/"'),
             ('"../shared/scripts/distro.sh"', '"${local.staging_dir}/"'),
+            ('"../../trust"', 'local.staging_dir'),
         ]
         self.assertEqual(len(files), len(expected_uploads))
         for block, (source, destination) in zip(files, expected_uploads):
@@ -72,9 +74,11 @@ class BaseStagingTest(unittest.TestCase):
 
     def test_base_consumers_use_staged_files(self):
         self.stage()
-        for script in (BASE / "scripts").glob("install-*.sh"):
+        scripts = list((BASE / "scripts").glob("install-*.sh"))
+        scripts.append(BASE / "scripts/remediate-trust.sh")
+        for script in scripts:
             text = script.read_text()
-            self.assertNotRegex(text, r"/tmp/(conf|versions|distro)")
+            self.assertNotRegex(text, r"/tmp/(conf|versions|distro|trust)")
             # Execute the real source preamble, without installing anything.
             sources = list(re.finditer(r'^source .*$', text, re.M))
             self.assertTrue(sources, script)
@@ -86,6 +90,26 @@ class BaseStagingTest(unittest.TestCase):
             for path in paths:
                 command = 'for file in ' + path + '; do test -f "$file" || exit 1; done'
                 subprocess.run(["bash", "-eu", "-c", command], env={**os.environ, "STAGING_DIR": str(self.staging)}, check=True)
+
+    def test_trust_inputs_and_ordering(self):
+        self.stage()
+        text = (BASE / "scripts/remediate-trust.sh").read_text()
+        for command in [
+            'sudo cp "${STAGING_DIR}/trust/roots/"*.crt "${blocklist}/"',
+            'python3 "${STAGING_DIR}/trust/check-trust.py"',
+            'sudo cp -r "${STAGING_DIR}/trust/." /usr/local/share/buildkite-trust/',
+        ]:
+            self.assertIn(command, text)
+        # Expand the real input paths, including the root glob, without modifying trust.
+        paths = re.findall(r'("\$\{STAGING_DIR\}/trust/[^"\n]+"(?:\*\.crt)?)', text)
+        self.assertEqual(len(paths), 3)
+        for path in paths:
+            file_type = "-d" if path.endswith('/."') else "-f"
+            command = 'for input in ' + path + '; do test ' + file_type + ' "$input" || exit 1; done'
+            subprocess.run(["bash", "-eu", "-c", command], env={**os.environ, "STAGING_DIR": str(self.staging)}, check=True)
+        self.assertLess(self.hcl.index('source      = "../shared/scripts/distro.sh"'), self.hcl.index('script           = "scripts/remediate-trust.sh"'))
+        self.assertLess(self.hcl.index('source      = "../../trust"'), self.hcl.index('script           = "scripts/remediate-trust.sh"'))
+        self.assertLess(self.hcl.index('script           = "scripts/remediate-trust.sh"'), self.hcl.index('script           = "scripts/install-utils.sh"'))
 
     def test_shared_cleanup_preserves_stack_default(self):
         text = (SHARED / "scripts/cleanup.sh").read_text()

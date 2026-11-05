@@ -192,13 +192,13 @@ build {
   }
 
   provisioner "file" {
-    destination = "/tmp"
+    destination = local.staging_dir
     source      = "../../trust"
   }
 
   # Establish trust before any third-party HTTPS dependency downloads.
   provisioner "shell" {
-    environment_vars = ["OS_DISTRO=${var.os_distro}"]
+    environment_vars = ["OS_DISTRO=${var.os_distro}", "STAGING_DIR=${local.staging_dir}"]
     script           = "scripts/remediate-trust.sh"
     remote_folder    = "/var/tmp"
   }

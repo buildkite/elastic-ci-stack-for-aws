@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+STAGING_DIR="${STAGING_DIR:?STAGING_DIR must be set by Packer}"
 # shellcheck disable=SC1091
-source /tmp/distro.sh
+source "${STAGING_DIR}/distro.sh"
 
 # https://emudhra.we-have-a-problem.com/ (20 October 2026).
 # AL2023 repositories are release-locked, including on the fixed CIS source AMI.
@@ -17,7 +18,7 @@ amazonlinux2023)
     blocklist=/etc/pki/ca-trust/source/blocklist
   fi
   sudo mkdir -p "${blocklist}"
-  sudo cp /tmp/trust/roots/*.crt "${blocklist}/"
+  sudo cp "${STAGING_DIR}/trust/roots/"*.crt "${blocklist}/"
   sudo update-ca-trust extract
   ;;
 ubuntu2404)
@@ -37,6 +38,6 @@ ubuntu2404)
 esac
 
 # Fail closed if the effective TLS store still trusts any affected root.
-python3 /tmp/trust/check-trust.py
+python3 "${STAGING_DIR}/trust/check-trust.py"
 sudo mkdir -p /usr/local/share/buildkite-trust
-sudo cp -r /tmp/trust/. /usr/local/share/buildkite-trust/
+sudo cp -r "${STAGING_DIR}/trust/." /usr/local/share/buildkite-trust/
