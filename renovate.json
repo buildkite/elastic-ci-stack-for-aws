@@ -3,6 +3,10 @@
   "extends": [
     "config:recommended"
   ],
+  "baseBranchPatterns": [
+    "main",
+    "v6"
+  ],
   "schedule": [
     "monthly"
   ],
@@ -264,6 +268,17 @@
       "matchDepNames": ["buildkite/elastic-ci-stack-s3-secrets-hooks"],
       "groupName": "s3-secrets",
       "separateMajorMinor": false
+    },
+    {
+      "description": "v6 only tracks Buildkite Agent v3 releases",
+      "matchBaseBranches": ["v6"],
+      "matchPackageNames": ["!buildkite/agent"],
+      "enabled": false
+    },
+    {
+      "matchBaseBranches": ["v6"],
+      "matchPackageNames": ["buildkite/agent"],
+      "allowedVersions": "^3"
     }
   ]
 }
