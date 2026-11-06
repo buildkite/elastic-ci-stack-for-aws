@@ -152,6 +152,7 @@ packer-linux-amd64.output: $(PACKER_LINUX_STACK_FILES) build/fix-perms-linux-amd
 			-var 'instance_type=$(AMD64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
+			-var 'agent_version=$(CURRENT_AGENT_VERSION_LINUX)' \
 			-var 'ami_public=$(AMI_PUBLIC)' \
 			-var 'ami_users=$(AMI_USERS_LIST)' \
 			-var 'base_ami_id=$(if $(BASE_AMI_ID),$(BASE_AMI_ID),$(BASE_AMI_ID_LINUX_AMD64))' \
