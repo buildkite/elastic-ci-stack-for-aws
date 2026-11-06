@@ -1,6 +1,9 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
+# Use bounded retries for Chocolatey installs.
+Set-Alias choco-install 'C:\packer-temp\scripts\choco-install.ps1'
+
 # Source centralized version definitions
 . "C:\Windows\Temp\versions.ps1"
 
@@ -9,7 +12,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 Write-Output "Installing jq"
-choco install -y jq
+choco-install -y jq
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing AWS CLI v2 $AWS_CLI_WINDOWS_VERSION..."
@@ -22,14 +25,14 @@ Remove-Item -Recurse -Force $tempDir
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Git for Windows"
-choco install -y git --version=$GIT_VERSION
+choco-install -y git --version=$GIT_VERSION
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 # Git and AWS CLI use embedded PEM bundles, not the Windows certificate store.
 & 'C:\ProgramData\Buildkite\trust\check-trust.ps1' -Sanitize
 
 Write-Output "Installing nssm"
-choco install -y nssm
+choco-install -y nssm
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 # Make `Update-SessionEnvironment` available
