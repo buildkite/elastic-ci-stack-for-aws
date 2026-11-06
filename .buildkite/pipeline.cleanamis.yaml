@@ -1,7 +1,9 @@
 # Pipeline: https://buildkite.com/buildkite/elastic-stack-for-aws-ami-cleaner
+# CLEANUP_SCOPE selects amis or resources. See .buildkite/README.md.
 # Set DRY_RUN to preview; leave it unset to delete. See .buildkite/README.md.
 steps:
   - name: ":broom: Delete AMIs ({{matrix}})"
+    if: build.env("CLEANUP_SCOPE") == "amis"
     command: .buildkite/steps/clean-old-amis
     agents:
       queue: "oss-deploy"
@@ -45,6 +47,7 @@ steps:
 
   # Runs on the host: Bash 4+, AWS CLI v2 and GNU date required.
   - name: ":broom: Clean up test stacks and Packer builders (us-east-1)"
+    if: build.env("CLEANUP_SCOPE") == "resources"
     command: .buildkite/steps/cleanup.sh
     timeout_in_minutes: 150
     agents:
