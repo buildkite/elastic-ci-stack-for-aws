@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.11.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.11.0) (2026-11-06)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.10.0...v7.11.0)
+
+### Security
+- Include the Agent fix for plugin cache collisions that could run the wrong hooks [buildkite/agent#4610](https://github.com/buildkite/agent/pull/4610) (@ss1909).
+
+### Changed
+- Update Buildkite agent from v4.9.0 to v4.10.1 [#1989](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1989) (@renovate[bot]).
+- Update Git LFS from v3.8.0 to v3.8.1 [#1985](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1985) (@renovate[bot]).
+
+### Fixed
+- Keep graceful agent shutdown running across all instances when an instance has no running agent [#1986](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1986) (@darcylinktree).
+- Deploy the scaler for fixed-size stacks when experimental Elastic CI mode is enabled [#1937](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1937) (@nsuma8989).
+- Retry transient EC2 metadata failures during Windows bootstrap, with a fresh token on each attempt [#1987](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1987) (@petetomasik).
+- Bound stalled AWS commands during Windows termination so termination fallbacks can run before NSSM stops the exit hook [#1988](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1988) (@petetomasik).
+- Keep Linux base-image provisioning assets outside `/tmp` so mounting it as tmpfs does not hide uploaded files [#1943](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1943) (@omehegan).
+
+### Internal
+- Fail image builds when built-in plugin submodules are incomplete or modified, and verify installed Windows plugin hooks [#1980](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1980) (@petetomasik).
+- Replace Parfait with the AWS CLI stack-creation waiter and print resource inventory or failure events in CI [#1971](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1971) (@petetomasik).
+- Update the AMI cleanup pipeline's aws-assume-role-with-web-identity plugin to v1.8.1 [#1984](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1984) (@renovate[bot]).
+- Track Agent v3 updates on the v6 branch with Renovate [#1990](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1990) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v4.10.0–v4.10.1)</h3></summary>
+
+### [v4.10.1](https://github.com/buildkite/agent/releases/tag/v4.10.1)
+
+#### What's Changed
+##### 🐛 Fixed
+* Fix jobs hanging after a hidden command fails when debug logging is enabled by @olihou in https://github.com/buildkite/agent/pull/4589
+* Correct agent token setup instructions after Linux package installation when a configuration already exists by @omehegan in https://github.com/buildkite/agent/pull/4617
+
+#### New Contributors
+* @olihou made their first contribution in https://github.com/buildkite/agent/pull/4589
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.10.0...v4.10.1
+
+### [v4.10.0](https://github.com/buildkite/agent/releases/tag/v4.10.0)
+
+#### What's Changed
+
+This release supports longer-lived job-dispatch streams and application-level keepalives, reducing unnecessary reconnections.
+
+##### 🔒 Security
+* Prevent plugin cache collisions from running the wrong hooks by @ss1909 in https://github.com/buildkite/agent/pull/4610
+
+##### 🐛 Fixed
+* Fix shutdown hangs after failed job acceptance by @tomanagle in https://github.com/buildkite/agent/pull/4556
+* Reject `--append` fetches with `BUILDKITE_COMMIT=HEAD` by @ss1909 in https://github.com/buildkite/agent/pull/4608
+* Respect `BUILDKITE_SKIP_CHECKOUT` during pipeline upload by @CerealBoy in https://github.com/buildkite/agent/pull/4609
+
+##### 🔧 Changed
+* Let Buildkite control ping-stream lifetimes by @moskyb in https://github.com/buildkite/agent/pull/4614 + https://github.com/buildkite/agent/pull/4611
+* Spread registration retries with exponential backoff and jitter by @ss1909 in https://github.com/buildkite/agent/pull/4597
+* De-emphasise cache housekeeping logs by @wolfeidau in https://github.com/buildkite/agent/pull/4606
+
+##### 🏠 Internal
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4585, https://github.com/buildkite/agent/pull/4598, https://github.com/buildkite/agent/pull/4599 and https://github.com/buildkite/agent/pull/4600
+
+#### New Contributors
+* @tomanagle made their first contribution in https://github.com/buildkite/agent/pull/4556
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.9.0...v4.10.0
+
+</details>
+
+
 ## [v7.10.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.10.0) (2026-10-30)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.9.2...v7.10.0)
 
