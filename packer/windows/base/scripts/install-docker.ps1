@@ -1,6 +1,9 @@
 # Stop script execution when a non-terminating error occurs
 $ErrorActionPreference = "Stop"
 
+# Use bounded retries for Chocolatey installs.
+Set-Alias choco-install 'C:\packer-temp\scripts\choco-install.ps1'
+
 Write-Output "Installing docker..."
 Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/Windows-Containers/Main/helpful_tools/Install-DockerCE/install-docker-ce.ps1" -o install-docker-ce.ps1
 .\install-docker-ce.ps1
@@ -10,7 +13,7 @@ docker --version
 . "C:\Windows\Temp\versions.ps1"
 
 Write-Output "Installing docker-compose..."
-choco install -y docker-compose --version $docker_compose_version
+choco-install -y docker-compose --version $docker_compose_version
 If ($lastexitcode -ne 0) { Exit $lastexitcode }
 
 Write-Output "Installing Amazon ECR credential helper..."
