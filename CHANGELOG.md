@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v6.71.10](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.10) (2026-11-06)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.9...v6.71.10)
+
+### Security
+- Include the Agent fix preventing Windows environment-variable case variants from bypassing job signature verification and allowlist checks [buildkite/agent#4605](https://github.com/buildkite/agent/pull/4605) (@CerealBoy).
+- Include the Agent fix rejecting excessive YAML alias expansion during pipeline upload instead of exhausting memory [buildkite/agent#4579](https://github.com/buildkite/agent/pull/4579) (@dependabot[bot]).
+
+### Changed
+- Update the stable Buildkite agent from v3.138.2 to v3.138.3 on Linux and Windows [#1991](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1991) (@renovate[bot]).
+
+### Internal
+- Build and test all final AMIs on release tags so change filtering cannot skip release jobs [#1974](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1974) (@scadu).
+- Clean up tagged Packer builders older than 24 hours during normal builds and weekly AMI cleanup, and keep service roles until test stacks are deleted [#1975](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1975) (@scadu).
+- Allow an optional instance profile for Windows AMI builders and use `packer-ssm` for SSM access in CI. WinRM and runtime stack roles stay unchanged [#1976](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1976) (@scadu).
+- Speed up Windows AMI builds and stack tests with `c8a.xlarge` instances and faster gp3 storage. Output AMI storage and published stack defaults stay unchanged [#1977](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1977), [#1978](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1978) (@scadu).
+
+<details>
+<summary><h3>Agent Changelog (v3.138.3)</h3></summary>
+
+### [v3.138.3](https://github.com/buildkite/agent/releases/tag/v3.138.3)
+
+#### What's Changed
+##### 🔒 Security
+* Prevent case variants of Windows job environment variable names from bypassing signature verification and allowlist checks by @CerealBoy in https://github.com/buildkite/agent/pull/4605
+* Reject pipeline YAML with excessive alias expansion instead of exhausting memory during `buildkite-agent pipeline upload` by @dependabot[bot] in https://github.com/buildkite/agent/pull/4579
+##### 🐛 Fixed
+* Prevent unnecessary ping-stream reconnections and keep paused agents paused when receiving keepalives or unknown stream actions by @moskyb in https://github.com/buildkite/agent/pull/4616
+##### 🏠 Internal
+* Fix copying release binaries to the S3 latest directory in v3 release pipelines by @moskyb in https://github.com/buildkite/agent/pull/4561
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4575, https://github.com/buildkite/agent/pull/4577, https://github.com/buildkite/agent/pull/4578, https://github.com/buildkite/agent/pull/4584, https://github.com/buildkite/agent/pull/4581, https://github.com/buildkite/agent/pull/4580, https://github.com/buildkite/agent/pull/4582, https://github.com/buildkite/agent/pull/4601, https://github.com/buildkite/agent/pull/4603 and https://github.com/buildkite/agent/pull/4604
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v3.138.2...v3.138.3
+
+</details>
+
+
 ## [v7.11.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.11.0) (2026-11-06)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.10.0...v7.11.0)
 
