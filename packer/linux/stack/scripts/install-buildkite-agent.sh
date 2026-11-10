@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-AGENT_VERSION="4.10.1"
+AGENT_VERSION="4.10.2"
 
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
