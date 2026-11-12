@@ -729,10 +729,12 @@ Parameters:
 
   OnDemandPercentage:
     Description: >
-      Percentage of instances to launch as OnDemand vs Spot instances.
-      OnDemand instances provide guaranteed availability at higher cost.
-      Spot instances offer 60-90% cost savings but may be interrupted by AWS.
-      Use 100% for critical workloads, lower values when jobs can handle unexpected instance interruptions.
+      Percentage of instances above OnDemandBaseCapacity to launch as On-Demand rather than Spot instances.
+      The remaining capacity uses Spot instances, subject to availability.
+      If Spot capacity is unavailable, the Auto Scaling group keeps trying to launch Spot instances
+      and does not replace them with additional On-Demand instances.
+      Spot instances may be interrupted by AWS.
+      Use 100% for critical workloads, lower values when jobs can handle capacity shortages and unexpected instance interruptions.
     Type: Number
     Default: 100
     MinValue: 0
