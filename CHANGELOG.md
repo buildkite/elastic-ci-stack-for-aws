@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.11.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.11.1) (2026-11-12)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.11.0...v7.11.1)
+
+### Changed
+- Update Buildkite agent from v4.10.1 to v4.10.2 [#1999](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1999) (@renovate[bot])
+- Document that Spot shortages do not trigger On-Demand fallback [#2000](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2000) (@omehegan)
+
+### Fixed
+- Fix the agent version tag on Linux AMD64 AMIs [#1993](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1993) (@scadu)
+- Retry failed Chocolatey installs in Windows image builds [#1995](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1995) (@scadu)
+
+### Internal
+- Separate CI resource and AMI cleanup schedules [#1998](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/1998) (@scadu)
+
+<details>
+<summary><h3>Agent Changelog (v4.10.2)</h3></summary>
+
+### [v4.10.2](https://github.com/buildkite/agent/releases/tag/v4.10.2)
+
+#### What's Changed
+##### 🐛 Fixed
+* Stop `program-status` experiment reports from coming before section headers in the job log, and redact secrets in report messages by @wolfeidau in https://github.com/buildkite/agent/pull/4612
+* Flush buffered output after polyglot and binary hooks, so it no longer appears in a later log section or gets lost by @wolfeidau in https://github.com/buildkite/agent/pull/4628
+##### 🏠 Internal
+* Clarify PR rationale and context visibility guidance by @moskyb in https://github.com/buildkite/agent/pull/4627
+* Isolate coverage for process output test helpers by @mcncl in https://github.com/buildkite/agent/pull/4630
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.10.1...v4.10.2
+
+</details>
+
+
 ## [v6.71.10](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v6.71.10) (2026-11-06)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v6.71.9...v6.71.10)
 
