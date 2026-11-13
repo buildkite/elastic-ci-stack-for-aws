@@ -12,14 +12,20 @@ else
   stack_queue_name="testqueue-${os}-${arch}-${BUILDKITE_BUILD_NUMBER}"
 fi
 
-# The "os" argument may select a Linux distro (e.g. ubuntu2404); map it to the
-# CloudFormation InstanceOperatingSystem + LinuxDistribution parameters.
+# The "os" argument may select a Linux distro (e.g. ubuntu2404) or a Windows
+# Server version (e.g. windows2025); map it to the CloudFormation
+# InstanceOperatingSystem + LinuxDistribution/WindowsServerVersion parameters.
 instance_os="$os"
 linux_distribution="amazonlinux2023"
+windows_server_version="2022"
 case "$os" in
 ubuntu2404)
   instance_os="linux"
   linux_distribution="ubuntu2404"
+  ;;
+windows2025)
+  instance_os="windows"
+  windows_server_version="2025"
   ;;
 esac
 
@@ -41,7 +47,7 @@ echo "Using service role ${service_role}"
 instance_type="t3.small"
 instance_disk="${ROOT_VOLUME_SIZE:-10}"
 
-if [[ "$os" == "windows" ]]; then
+if [[ "$instance_os" == "windows" ]]; then
   instance_type="c8a.xlarge"
   instance_disk="100"
 fi
@@ -82,6 +88,10 @@ cat <<EOF >config.json
   {
     "ParameterKey": "LinuxDistribution",
     "ParameterValue": "${linux_distribution}"
+  },
+  {
+    "ParameterKey": "WindowsServerVersion",
+    "ParameterValue": "${windows_server_version}"
   },
   {
     "ParameterKey": "VpcId",
@@ -142,7 +152,7 @@ cat <<EOF >config.json
 ]
 EOF
 
-if [[ "$os" == "windows" ]]; then
+if [[ "$instance_os" == "windows" ]]; then
   jq '. + [
     {"ParameterKey": "RootVolumeIops", "ParameterValue": "6000"},
     {"ParameterKey": "RootVolumeThroughput", "ParameterValue": "500"}

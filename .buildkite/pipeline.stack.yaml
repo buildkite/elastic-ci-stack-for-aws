@@ -146,6 +146,74 @@ steps:
         plugins:
           - *aws_role_plugin
 
+  # Only release tags and builds started with WINDOWS_2025=true run this lane;
+  # copy.sh applies the same condition when it reads the 2025 image ID.
+  - group: ":windows: 2025 AMD64"
+    if: build.tag != null || build.env("WINDOWS_2025") == "true"
+    steps:
+      - id: "packer-windows2025-amd64"
+        name: ":packer: :windows: 2025"
+        command: .buildkite/steps/packer.sh windows2025
+        timeout_in_minutes: 60
+        env:
+          AMI_PUBLIC: true
+          PKR_VAR_iam_instance_profile: "packer-ssm"
+        retry: { automatic: { limit: 3 } }
+        agents:
+          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+        depends_on:
+          - "packer-base-windows2025-amd64"
+        plugins:
+          - *aws_role_plugin
+
+      - id: "launch-windows2025-amd64"
+        name: ":cloudformation: :windows: 2025 AMD64 Launch"
+        command: .buildkite/steps/launch.sh windows2025 amd64
+        timeout_in_minutes: 75
+        agents:
+          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+        artifact_paths: "build/aws-stack.yml"
+        depends_on:
+          - "packer-windows2025-amd64"
+          - "deploy-service-role-stack"
+        plugins:
+          - *aws_role_plugin
+
+      - id: "test-windows2025-amd64"
+        name: ":cloudformation: :windows: 2025 AMD64 Test"
+        command:
+          - 'if ([Environment]::OSVersion.Version.Build -ne 26100) { throw "Expected Windows Server 2025 (OS build 26100)" }'
+          - aws --version
+          - jq --version
+          - git --version
+          - buildkite-agent --version
+          - '& C:\ProgramData\Buildkite\trust\check-trust.ps1'
+          - 'if ((buildkite-agent-stable.exe --version) -notmatch "version (\d+\.\d+\.\d+)" -or [version]$$Matches[1] -lt [version]"4.7.0") { throw "Stable agent must be 4.7.0 or newer" }'
+          - docker info
+          - docker run --rm mcr.microsoft.com/windows/nanoserver:ltsc2025 cmd.exe /c echo hello
+          # terminate-instance.ps1 needs this right for its shutdown fallback
+          - '. C:\buildkite-agent\bin\bk-user-rights.ps1; if ([BkUserRights]::Get((Get-LocalUser buildkite-agent).SID.Value) -notcontains "SeShutdownPrivilege") { Write-Output "buildkite-agent is missing SeShutdownPrivilege"; exit 1 }'
+          # Restarting after exit can accept another job while the instance is terminating.
+          - 'if (((nssm get buildkite-agent AppExit Default | Out-String) -replace "\x00", "").Trim() -ne "Exit") { Write-Output "buildkite-agent AppExit Default must be Exit"; exit 1 }'
+        timeout_in_minutes: 5
+        agents:
+          stack: "buildkite-aws-stack-test-windows2025-amd64-${BUILDKITE_BUILD_NUMBER}"
+          queue: "testqueue-windows2025-amd64-${BUILDKITE_BUILD_NUMBER}"
+        depends_on:
+          - "launch-windows2025-amd64"
+
+      - id: "delete-windows2025-amd64"
+        name: ":cloudformation: :windows: 2025 AMD64 Delete"
+        command: .buildkite/steps/delete.sh windows2025 amd64
+        timeout_in_minutes: 75
+        allow_dependency_failure: true
+        agents:
+          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+        depends_on:
+          - "test-windows2025-amd64"
+        plugins:
+          - *aws_role_plugin
+
   - group: ":linux: AMD64"
     if_changed: *if_changed_test_linux
     steps:
@@ -468,6 +536,7 @@ steps:
     if_changed: *if_changed_stack
     depends_on:
       - "delete-windows-amd64"
+      - "delete-windows2025-amd64"
       - "delete-linux-amd64"
       - "delete-linux-arm64"
       - "delete-ubuntu2404-amd64"
@@ -493,6 +562,7 @@ steps:
       - "test-linux-amd64"
       - "test-linux-arm64"
       - "test-windows-amd64"
+      - "test-windows2025-amd64"
       - "test-ubuntu2404-amd64"
       - "test-ubuntu2404-arm64"
     plugins:

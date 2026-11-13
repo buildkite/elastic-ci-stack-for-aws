@@ -97,6 +97,25 @@ steps:
             - organization_id
             - pipeline_slug
 
+  # Windows Server 2025 is opt-in for stack users, so its AMIs are only built for
+  # release tags and for builds started with WINDOWS_2025=true. No main build
+  # leaves a latest base image to reuse, so each of those builds makes its own.
+  - id: "packer-base-windows2025-amd64"
+    name: ":packer: :windows: 2025 (base)"
+    command: ".buildkite/steps/packer.sh windows2025 amd64 base"
+    timeout_in_minutes: 40
+    env:
+      AMI_PUBLIC: false
+      PKR_VAR_iam_instance_profile: "packer-ssm"
+    agents:
+      queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+    if: build.tag != null || build.env("WINDOWS_2025") == "true"
+    depends_on:
+      - "linting"
+      - "fixperms-tests"
+    plugins:
+      - *aws_role_plugin
+
   - id: "packer-base-linux-amd64"
     name: ":packer: :linux: AMD64 (base)"
     command: ".buildkite/steps/packer.sh linux amd64 base"
