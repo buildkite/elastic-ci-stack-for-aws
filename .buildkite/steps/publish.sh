@@ -51,6 +51,29 @@ else
   echo "Skipping publishing latest, $BUILDKITE_TAG doesn't match $latest_tag"
 fi
 
+verify_release_templates() {
+  echo "--- :mag: Verifying published ${BUILDKITE_TAG} templates"
+  local file
+  for file in aws-stack.yml mappings.yml; do
+    # Anonymous HTTPS also proves the objects are public.
+    curl --fail --silent --show-error \
+      "https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${BUILDKITE_TAG}/${file}" \
+      | cmp - "build/${file}"
+  done
+
+  grep -Fqx "Description: \"Buildkite stack ${BUILDKITE_TAG}\"" build/aws-stack.yml
+
+  # Each region maps all five image variants, and the AMIs reached more than
+  # the build region.
+  awk '
+    / : \{/ {
+      regions++
+      if (gsub(/ami-[0-9a-f]+/, "&") != 5) { print "Incomplete mapping: " $0; bad = 1 }
+    }
+    END { if (regions < 2) { print "Mappings cover " regions + 0 " region(s)"; bad = 1 }; exit bad }
+  ' build/mappings.yml
+}
+
 publish_for_branch() {
   local branch="$1"
 
@@ -68,6 +91,9 @@ EOF
 # NOTE: in tag builds, $BUILDKITE_BRANCH == $BUILDKITE_TAG, so this will publish to the tag and exit
 if [[ "$BUILDKITE_BRANCH" != "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]]; then
   publish_for_branch "$BUILDKITE_BRANCH"
+  if [[ -n "${BUILDKITE_TAG:-}" ]]; then
+    verify_release_templates
+  fi
 
   exit 0
 fi
