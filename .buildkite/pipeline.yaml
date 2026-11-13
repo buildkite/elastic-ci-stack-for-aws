@@ -50,6 +50,11 @@ steps:
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
 
+      - name: ":memo: Release scripts"
+        command: .buildkite/scripts/test-release-scripts.sh
+        agents:
+          queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+
       - name: ":mag: goss sync"
         command: .buildkite/steps/goss-sync-check.sh
         agents:
