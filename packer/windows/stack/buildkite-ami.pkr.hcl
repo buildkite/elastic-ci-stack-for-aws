@@ -72,17 +72,6 @@ variable "iam_instance_profile" {
   default     = ""
 }
 
-data "amazon-ami" "windows-server-2022" {
-  filters = {
-    name                = "Windows_Server-2022-English-Full-Base-*"
-    virtualization-type = "hvm"
-  }
-  most_recent = true
-  owners      = ["amazon"]
-  region      = var.region
-}
-
-
 locals {
   # 2022 keeps its original unversioned names; later versions add a suffix.
   name_suffix = var.os_version == "2022" ? "" : "-${var.os_version}"
