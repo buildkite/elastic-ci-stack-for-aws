@@ -124,7 +124,7 @@ expect_no_call 'terminate-instances'
 
 # --- cleanup.sh --------------------------------------------------------------
 
-stacks="buildkite-aws-stack-test-linux-amd64-10\nbuildkite-aws-stack-test-linux-amd64-cis-10\nbuildkite-elastic-ci-stack-service-role-10\n"
+stacks="buildkite-aws-stack-test-linux-amd64-10\nbuildkite-aws-stack-test-linux-amd64-cis-10\nbuildkite-aws-stack-test-windows2025-amd64-10\nbuildkite-elastic-ci-stack-service-role-10\n"
 buckets="buildkite-aws-stack-test-linux-amd64-10-managedsecretsbucket-abc\nbuildkite-aws-stack-test--managedsecretsloggingbuc-def\nunrelated-bucket\n"
 log_group="/aws/lambda/buildkite-aws-stack-test-linux-amd64-10-Scaler"
 
@@ -139,7 +139,7 @@ for value in true false ""; do
     grep -q -F "$candidate" "$STUB_DIR/output" || fail "candidate missing from preview: ${candidate}"
   done
   for stack in buildkite-aws-stack-test-linux-amd64-10 buildkite-aws-stack-test-linux-amd64-cis-10 \
-    buildkite-elastic-ci-stack-service-role-10; do
+    buildkite-aws-stack-test-windows2025-amd64-10 buildkite-elastic-ci-stack-service-role-10; do
     grep -q -F -x "DRY_RUN: aws cloudformation delete-stack --stack-name ${stack}" "$STUB_DIR/output" || fail "stack deletion missing from preview: ${stack}"
   done
   grep -q -F 'Service-role deletions require all test stacks to be gone' "$STUB_DIR/output" || fail "role deletion condition missing from preview"
@@ -160,7 +160,8 @@ expect_call '^s3 rb s3://buildkite-aws-stack-test-linux-amd64-10-managedsecretsb
 expect_call '^s3 rb s3://buildkite-aws-stack-test--managedsecretsloggingbuc-def --force$'
 expect_call "^logs delete-log-group --log-group-name ${log_group}$"
 expect_no_call 's3 rb s3://unrelated-bucket'
-for stack in buildkite-aws-stack-test-linux-amd64-10 buildkite-aws-stack-test-linux-amd64-cis-10; do
+for stack in buildkite-aws-stack-test-linux-amd64-10 buildkite-aws-stack-test-linux-amd64-cis-10 \
+  buildkite-aws-stack-test-windows2025-amd64-10; do
   expect_order "^cloudformation wait stack-delete-complete --stack-name ${stack}$" \
     '^cloudformation describe-stacks --output text --query Stacks\[\]'
 done

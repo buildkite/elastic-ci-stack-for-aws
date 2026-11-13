@@ -87,6 +87,7 @@ Metadata:
         - ImageIdParameter
         - InstanceOperatingSystem
         - LinuxDistribution
+        - WindowsServerVersion
         - InstanceTypes
         - CpuCredits
         - NestedVirtualizationEnabled
@@ -929,6 +930,17 @@ Parameters:
       - ubuntu2404
     Default: "amazonlinux2023"
 
+  WindowsServerVersion:
+    Type: String
+    Description: >
+      The Windows Server version to run on the instances. Only applies when InstanceOperatingSystem is windows.
+      Windows Server 2025 boots in UEFI mode, so it requires a Nitro-based instance type that supports UEFI
+      (not Xen-based or bare metal instance types).
+    AllowedValues:
+      - "2022"
+      - "2025"
+    Default: "2022"
+
   ECRAccessPolicy:
     Type: String
     Description: >
@@ -1565,6 +1577,11 @@ Conditions:
         - !Equals [ !Ref InstanceOperatingSystem, "linux" ]
         - !Equals [ !Ref LinuxDistribution, "ubuntu2404" ]
 
+    UseWindows2025:
+      !And
+        - !Equals [ !Ref InstanceOperatingSystem, "windows" ]
+        - !Equals [ !Ref WindowsServerVersion, "2025" ]
+
     # Windows and Ubuntu AMIs root on /dev/sda1; Amazon Linux roots on /dev/xvda.
     # The root block device mapping must name the AMI's actual root device or the
     # RootVolumeSize override silently applies to a phantom device.
@@ -1676,7 +1693,7 @@ Mappings:
     arm64: { ARN: 'arn:aws:serverlessrepo:us-east-1:172840064832:applications/buildkite-agent-scaler-arm64' }
 
   # Generated from Makefile via build/mappings.yml
-  AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId, ubuntu2404amd64: !Ref ImageId, ubuntu2404arm64: !Ref ImageId }
+  AWSRegion2AMI: { linuxamd64: !Ref ImageId, linuxarm64: !Ref ImageId, windows: !Ref ImageId, ubuntu2404amd64: !Ref ImageId, ubuntu2404arm64: !Ref ImageId, windows2025: !Ref ImageId }
 
 Resources:
   Vpc:
@@ -2360,10 +2377,16 @@ Resources:
               - !GetAtt ImageIdParameterStack.Outputs.ImageId
               - !If
                 - UseWindowsAgents
-                - !FindInMap
-                  - AWSRegion2AMI
-                  - !Ref 'AWS::Region'
-                  - 'windows'
+                - !If
+                  - UseWindows2025
+                  - !FindInMap
+                    - AWSRegion2AMI
+                    - !Ref 'AWS::Region'
+                    - 'windows2025'
+                  - !FindInMap
+                    - AWSRegion2AMI
+                    - !Ref 'AWS::Region'
+                    - 'windows'
                 - !If
                   - UseUbuntu
                   - !If

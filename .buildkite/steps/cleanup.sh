@@ -61,7 +61,7 @@ echo "--- Cleaning up old CloudFormation test stacks"
 # deleted while any test stack exists. If a listing, deletion or wait fails, or
 # a test stack of any age is still live, keep all service roles until the next
 # run. Only AWS errors fail this script.
-test_stack_re='^buildkite-aws-stack-test-(linux|windows|ubuntu2404)-(amd64|arm64)-([[:alpha:]]+-)?[[:digit:]]+$'
+test_stack_re='^buildkite-aws-stack-test-(linux|windows|windows2025|ubuntu2404)-(amd64|arm64)-([[:alpha:]]+-)?[[:digit:]]+$'
 stacks_ok=true
 printf -v aged_stacks_query 'Stacks[?CreationTime<`%s`].[StackName]' "$cutoff_date"
 stacks="$(aws cloudformation describe-stacks --output text --query "$aged_stacks_query")" || {

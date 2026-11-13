@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Copies an AMI to all other regions and outputs a build/mappings.yml file
-# Local Usage: .buildkite/steps/copy.sh <linux_ami_id> <windows_ami_id>
+# Local Usage: .buildkite/steps/copy.sh <linux_ami_id> <windows_ami_id> [<ubuntu2404_ami_id> [<windows2025_ami_id>]]
 
 copy_ami_to_region() {
   local source_image_id="$1"
@@ -111,6 +111,7 @@ linux_arm64_source_image_id="${1:-}"
 windows_amd64_source_image_id="${2:-}"
 ubuntu2404_amd64_source_image_id="${3:-}"
 ubuntu2404_arm64_source_image_id="${3:-}"
+windows2025_amd64_source_image_id="${4:-}"
 
 source_region="${AWS_REGION}"
 mapping_file="build/mappings.yml"
@@ -122,6 +123,11 @@ if [ $# -eq 0 ]; then
   windows_amd64_source_image_id=$(buildkite-agent meta-data get "windows_amd64_image_id")
   ubuntu2404_amd64_source_image_id=$(buildkite-agent meta-data get "ubuntu2404_amd64_image_id")
   ubuntu2404_arm64_source_image_id=$(buildkite-agent meta-data get "ubuntu2404_arm64_image_id")
+  # The Windows Server 2025 lane only runs on release tags and opt-in builds
+  # (see .buildkite/pipeline.stack.yaml). Without it the mapping stays empty.
+  if [[ -n "${BUILDKITE_TAG:-}" || "${WINDOWS_2025:-false}" == "true" ]]; then
+    windows2025_amd64_source_image_id=$(buildkite-agent meta-data get "windows2025_amd64_image_id")
+  fi
 fi
 
 # If we're not on the main branch or a tag build skip the copy
@@ -131,7 +137,7 @@ if [[ $BUILDKITE_BRANCH != main && $BUILDKITE_TAG != "$BUILDKITE_BRANCH" && ${CO
   cat <<EOF >"$mapping_file"
 Mappings:
   AWSRegion2AMI:
-    ${AWS_REGION} : { linuxamd64: $linux_amd64_source_image_id, linuxarm64: $linux_arm64_source_image_id, windows: $windows_amd64_source_image_id, ubuntu2404amd64: $ubuntu2404_amd64_source_image_id, ubuntu2404arm64: $ubuntu2404_arm64_source_image_id }
+    ${AWS_REGION} : { linuxamd64: $linux_amd64_source_image_id, linuxarm64: $linux_arm64_source_image_id, windows: $windows_amd64_source_image_id, ubuntu2404amd64: $ubuntu2404_amd64_source_image_id, ubuntu2404arm64: $ubuntu2404_arm64_source_image_id, windows2025: ${windows2025_amd64_source_image_id:-''} }
 EOF
   exit 0
 fi
@@ -143,6 +149,9 @@ if [[ $BUILDKITE_BRANCH == main || $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TA
   tag-ami "$windows_amd64_source_image_id" "$source_region" IsReleased true
   tag-ami "$ubuntu2404_amd64_source_image_id" "$source_region" IsReleased true
   tag-ami "$ubuntu2404_arm64_source_image_id" "$source_region" IsReleased true
+  if [[ -n "$windows2025_amd64_source_image_id" ]]; then
+    tag-ami "$windows2025_amd64_source_image_id" "$source_region" IsReleased true
+  fi
 fi
 
 echo "--- Tagging elastic ci stack release version"
@@ -157,16 +166,22 @@ if [[ $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_VERSION:-false} == true ]];
   tag-ami "$windows_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
   tag-ami "$ubuntu2404_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
   tag-ami "$ubuntu2404_arm64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
+  if [[ -n "$windows2025_amd64_source_image_id" ]]; then
+    tag-ami "$windows2025_amd64_source_image_id" "$source_region" "Version:${BUILDKITE_TAG}" true
+  fi
 fi
 
 echo "--- Checking if there is a previously copy in the cache bucket"
-s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s-%s-%s.yml" \
+# The Windows Server 2025 image only joins the key when it was built, so builds
+# without it keep finding the copies cached under the five-image key.
+s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s-%s%s-%s.yml" \
   "${BUILDKITE_AWS_STACK_BUCKET}" \
   "${linux_amd64_source_image_id}" \
   "${linux_arm64_source_image_id}" \
   "${windows_amd64_source_image_id}" \
   "${ubuntu2404_amd64_source_image_id}" \
   "${ubuntu2404_arm64_source_image_id}" \
+  "${windows2025_amd64_source_image_id:+-$windows2025_amd64_source_image_id}" \
   "${BUILDKITE_BRANCH}")
 
 if aws s3 cp "${s3_mappings_cache}" "$mapping_file"; then
@@ -182,6 +197,9 @@ linux_arm64_source_image_name=$(get_image_name "$linux_arm64_source_image_id" "$
 windows_amd64_source_image_name=$(get_image_name "$windows_amd64_source_image_id" "$source_region")
 ubuntu2404_amd64_source_image_name=$(get_image_name "$ubuntu2404_amd64_source_image_id" "$source_region")
 ubuntu2404_arm64_source_image_name=$(get_image_name "$ubuntu2404_arm64_source_image_id" "$source_region")
+if [[ -n "$windows2025_amd64_source_image_id" ]]; then
+  windows2025_amd64_source_image_name=$(get_image_name "$windows2025_amd64_source_image_id" "$source_region")
+fi
 
 # Copy to all other regions
 for region in "${ALL_REGIONS[@]}"; do
@@ -200,8 +218,16 @@ for region in "${ALL_REGIONS[@]}"; do
 
     echo "--- :ubuntu: Copying Ubuntu ARM64 $ubuntu2404_arm64_source_image_id to $region" >&2
     IMAGES+=("$(copy_ami_to_region "$ubuntu2404_arm64_source_image_id" "$source_region" "$region" "${ubuntu2404_arm64_source_image_name}-${region}")")
+
+    # Each region takes six IMAGES slots; the Windows 2025 slot is empty when it was not built
+    if [[ -n "$windows2025_amd64_source_image_id" ]]; then
+      echo "--- :windows: Copying Windows 2025 AMD64 $windows2025_amd64_source_image_id to $region" >&2
+      IMAGES+=("$(copy_ami_to_region "$windows2025_amd64_source_image_id" "$source_region" "$region" "${windows2025_amd64_source_image_name}-${region}")")
+    else
+      IMAGES+=("")
+    fi
   else
-    IMAGES+=("$linux_amd64_source_image_id" "$linux_arm64_source_image_id" "$windows_amd64_source_image_id" "$ubuntu2404_amd64_source_image_id" "$ubuntu2404_arm64_source_image_id")
+    IMAGES+=("$linux_amd64_source_image_id" "$linux_arm64_source_image_id" "$windows_amd64_source_image_id" "$ubuntu2404_amd64_source_image_id" "$ubuntu2404_arm64_source_image_id" "$windows2025_amd64_source_image_id")
   fi
 done
 
@@ -219,6 +245,7 @@ for region in "${ALL_REGIONS[@]}"; do
   windows_amd64_image_id="${IMAGES[2]}"
   ubuntu2404_amd64_image_id="${IMAGES[3]}"
   ubuntu2404_arm64_image_id="${IMAGES[4]}"
+  windows2025_amd64_image_id="${IMAGES[5]}"
 
   wait_for_ami_to_be_available "$linux_amd64_image_id" "$region" >&2
 
@@ -260,11 +287,21 @@ for region in "${ALL_REGIONS[@]}"; do
     make_ami_public "$ubuntu2404_arm64_image_id" "$region"
   fi
 
+  if [[ -n "$windows2025_amd64_image_id" ]]; then
+    wait_for_ami_to_be_available "$windows2025_amd64_image_id" "$region" >&2
+
+    # Make the windows 2025 AMI public if it's not the source image
+    if [[ $windows2025_amd64_image_id != "$windows2025_amd64_source_image_id" ]]; then
+      echo ":windows: Making Windows 2025 AMD64 ${windows2025_amd64_image_id} public" >&2
+      make_ami_public "$windows2025_amd64_image_id" "$region"
+    fi
+  fi
+
   # Write yaml to file
-  echo "    $region : { linuxamd64: $linux_amd64_image_id, linuxarm64: $linux_arm64_image_id, windows: $windows_amd64_image_id, ubuntu2404amd64: $ubuntu2404_amd64_image_id, ubuntu2404arm64: $ubuntu2404_arm64_image_id }" >>"$mapping_file"
+  echo "    $region : { linuxamd64: $linux_amd64_image_id, linuxarm64: $linux_arm64_image_id, windows: $windows_amd64_image_id, ubuntu2404amd64: $ubuntu2404_amd64_image_id, ubuntu2404arm64: $ubuntu2404_arm64_image_id, windows2025: ${windows2025_amd64_image_id:-''} }" >>"$mapping_file"
 
   # Shift off the processed images
-  IMAGES=("${IMAGES[@]:5}")
+  IMAGES=("${IMAGES[@]:6}")
 done
 
 echo "--- Uploading mapping to s3 cache"
