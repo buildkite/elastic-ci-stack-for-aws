@@ -1,0 +1,20 @@
+# Groups GitHub's generated release notes, which generate-changelog.sh uses.
+# Category titles match CHANGELOG.md headings; sort unlabeled PRs by hand.
+changelog:
+  exclude:
+    labels:
+      - release-notes
+  categories:
+    - title: Added
+      labels:
+        - feature
+        - enhancement
+    - title: Fixed
+      labels:
+        - bug
+    - title: Changed
+      labels:
+        - dependencies
+    - title: Other changes
+      labels:
+        - "*"

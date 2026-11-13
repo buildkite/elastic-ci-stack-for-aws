@@ -301,6 +301,7 @@ must exist in the build account before the builds run.
 Branch and PR builds use `if_changed` to select affected AMI builds and tests.
 Pushing a release tag builds and tests all final AMIs and publishes the
 CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
+See [RELEASING.md](RELEASING.md) for the release steps.
 
 ## Support Policy
 
