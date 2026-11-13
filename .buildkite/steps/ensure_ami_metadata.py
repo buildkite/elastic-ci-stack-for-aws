@@ -91,7 +91,7 @@ def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
     else:
         key_name = "linuxamd64"
 
-    # Template format: "    us-east-1: { linuxamd64: ami-xxx, linuxarm64: ami-yyy, windows: ami-zzz, ubuntu2404amd64: ami-aaa, ubuntu2404arm64: ami-bbb }"
+    # Template format: "    us-east-1: { linuxamd64: ami-xxx, linuxarm64: ami-yyy, windows: ami-zzz, ubuntu2404amd64: ami-aaa, ubuntu2404arm64: ami-bbb, windows2025: ami-ccc }"
     pattern = rf"^\s+{re.escape(region)}\s*:.*{key_name}:\s*(ami-[a-z0-9]+)"
 
     for line in template_content.split("\n"):

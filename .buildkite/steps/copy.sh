@@ -131,7 +131,7 @@ if [[ $BUILDKITE_BRANCH != main && $BUILDKITE_TAG != "$BUILDKITE_BRANCH" && ${CO
   cat <<EOF >"$mapping_file"
 Mappings:
   AWSRegion2AMI:
-    ${AWS_REGION} : { linuxamd64: $linux_amd64_source_image_id, linuxarm64: $linux_arm64_source_image_id, windows: $windows_amd64_source_image_id, ubuntu2404amd64: $ubuntu2404_amd64_source_image_id, ubuntu2404arm64: $ubuntu2404_arm64_source_image_id }
+    ${AWS_REGION} : { linuxamd64: $linux_amd64_source_image_id, linuxarm64: $linux_arm64_source_image_id, windows: $windows_amd64_source_image_id, ubuntu2404amd64: $ubuntu2404_amd64_source_image_id, ubuntu2404arm64: $ubuntu2404_arm64_source_image_id, windows2025: '' }
 EOF
   exit 0
 fi
@@ -261,7 +261,7 @@ for region in "${ALL_REGIONS[@]}"; do
   fi
 
   # Write yaml to file
-  echo "    $region : { linuxamd64: $linux_amd64_image_id, linuxarm64: $linux_arm64_image_id, windows: $windows_amd64_image_id, ubuntu2404amd64: $ubuntu2404_amd64_image_id, ubuntu2404arm64: $ubuntu2404_arm64_image_id }" >>"$mapping_file"
+  echo "    $region : { linuxamd64: $linux_amd64_image_id, linuxarm64: $linux_arm64_image_id, windows: $windows_amd64_image_id, ubuntu2404amd64: $ubuntu2404_amd64_image_id, ubuntu2404arm64: $ubuntu2404_arm64_image_id, windows2025: '' }" >>"$mapping_file"
 
   # Shift off the processed images
   IMAGES=("${IMAGES[@]:5}")

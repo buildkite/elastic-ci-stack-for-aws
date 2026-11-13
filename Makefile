@@ -26,6 +26,7 @@ BASE_AMI_ID_LINUX_ARM64 ?= $(call base_ami_from_output,packer-base-linux-arm64.o
 BASE_AMI_ID_UBUNTU2404_AMD64 ?= $(call base_ami_from_output,packer-base-ubuntu2404-amd64.output)
 BASE_AMI_ID_UBUNTU2404_ARM64 ?= $(call base_ami_from_output,packer-base-ubuntu2404-arm64.output)
 BASE_AMI_ID_WINDOWS_AMD64 ?= $(call base_ami_from_output,packer-base-windows-amd64.output)
+BASE_AMI_ID_WINDOWS2025_AMD64 ?= $(call base_ami_from_output,packer-base-windows2025-amd64.output)
 
 GO_VERSION ?= 1.26.1
 
@@ -76,31 +77,37 @@ build: packer build/mappings.yml build/aws-stack.yml
 # Build a mapping file for a single region and image id pair
 mappings-for-linux-amd64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: %s, linuxarm64: '', windows: '', ubuntu2404amd64: '', ubuntu2404arm64: '' }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: %s, linuxarm64: '', windows: '', ubuntu2404amd64: '', ubuntu2404arm64: '', windows2025: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build a mapping file for a single region and image id pair
 mappings-for-linux-arm64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: %s, windows: '', ubuntu2404amd64: '', ubuntu2404arm64: '' }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: %s, windows: '', ubuntu2404amd64: '', ubuntu2404arm64: '', windows2025: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build an ubuntu2404 mapping file for a single region and image id pair
 mappings-for-ubuntu2404-amd64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: '', ubuntu2404amd64: %s, ubuntu2404arm64: '' }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: '', ubuntu2404amd64: %s, ubuntu2404arm64: '', windows2025: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build an ubuntu2404 mapping file for a single region and image id pair
 mappings-for-ubuntu2404-arm64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: '', ubuntu2404amd64: '', ubuntu2404arm64: %s }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: '', ubuntu2404amd64: '', ubuntu2404arm64: %s, windows2025: '' }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Build a windows mapping file for a single region and image id pair
 mappings-for-windows-amd64-image: env-AWS_REGION env-IMAGE_ID
 	mkdir -p build/
-	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: %s, ubuntu2404amd64: '', ubuntu2404arm64: '' }\n" \
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: %s, ubuntu2404amd64: '', ubuntu2404arm64: '', windows2025: '' }\n" \
+		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
+
+# Build a windows2025 mapping file for a single region and image id pair
+mappings-for-windows2025-amd64-image: env-AWS_REGION env-IMAGE_ID
+	mkdir -p build/
+	printf "Mappings:\n  AWSRegion2AMI:\n    %s: { linuxamd64: '', linuxarm64: '', windows: '', ubuntu2404amd64: '', ubuntu2404arm64: '', windows2025: %s }\n" \
 		"$(AWS_REGION)" $(IMAGE_ID) > build/mappings.yml
 
 # Takes the mappings files and copies them into a generated stack template
@@ -119,15 +126,15 @@ build/aws-stack.yml:
 
 
 # Full images depend on base images when available
-packer: packer-base-linux-amd64.output packer-base-linux-arm64.output packer-base-ubuntu2404-amd64.output packer-base-ubuntu2404-arm64.output packer-base-windows-amd64.output packer-linux-amd64.output packer-linux-arm64.output packer-ubuntu2404-amd64.output packer-ubuntu2404-arm64.output packer-windows-amd64.output
+packer: packer-base-linux-amd64.output packer-base-linux-arm64.output packer-base-ubuntu2404-amd64.output packer-base-ubuntu2404-arm64.output packer-base-windows-amd64.output packer-base-windows2025-amd64.output packer-linux-amd64.output packer-linux-arm64.output packer-ubuntu2404-amd64.output packer-ubuntu2404-arm64.output packer-windows-amd64.output packer-windows2025-amd64.output
 
 packer-fmt:
 	docker run --rm -v "$(PWD):/src" -w /src "hashicorp/packer:full-$(PACKER_VERSION)" fmt -check -recursive packer/
 
-build/mappings.yml: build/linux-amd64-ami.txt build/linux-arm64-ami.txt build/windows-amd64-ami.txt build/ubuntu2404-amd64-ami.txt build/ubuntu2404-arm64-ami.txt
+build/mappings.yml: build/linux-amd64-ami.txt build/linux-arm64-ami.txt build/windows-amd64-ami.txt build/ubuntu2404-amd64-ami.txt build/ubuntu2404-arm64-ami.txt build/windows2025-amd64-ami.txt
 	mkdir -p build
-	printf "Mappings:\n  AWSRegion2AMI:\n    %q : { linuxamd64: %q, linuxarm64: %q, windows: %q, ubuntu2404amd64: %q, ubuntu2404arm64: %q }\n" \
-		"$(AWS_REGION)" $$(cat build/linux-amd64-ami.txt) $$(cat build/linux-arm64-ami.txt) $$(cat build/windows-amd64-ami.txt) $$(cat build/ubuntu2404-amd64-ami.txt) $$(cat build/ubuntu2404-arm64-ami.txt) > $@
+	printf "Mappings:\n  AWSRegion2AMI:\n    %q : { linuxamd64: %q, linuxarm64: %q, windows: %q, ubuntu2404amd64: %q, ubuntu2404arm64: %q, windows2025: %q }\n" \
+		"$(AWS_REGION)" $$(cat build/linux-amd64-ami.txt) $$(cat build/linux-arm64-ami.txt) $$(cat build/windows-amd64-ami.txt) $$(cat build/ubuntu2404-amd64-ami.txt) $$(cat build/ubuntu2404-arm64-ami.txt) $$(cat build/windows2025-amd64-ami.txt) > $@
 
 build/linux-amd64-ami.txt: packer-linux-amd64.output env-AWS_REGION
 	mkdir -p build
@@ -290,6 +297,38 @@ packer-windows-amd64.output: $(PACKER_WINDOWS_STACK_FILES) $(if $(strip $(BASE_A
 			-var 'base_ami_id=$(if $(BASE_AMI_ID),$(BASE_AMI_ID),$(BASE_AMI_ID_WINDOWS_AMD64))' \
 			buildkite-ami.pkr.hcl | tee $@
 
+build/windows2025-amd64-ami.txt: packer-windows2025-amd64.output env-AWS_REGION
+	mkdir -p build
+	grep -Eo "$(AWS_REGION): (ami-.+)" $< | cut -d' ' -f2 | xargs echo -n > $@
+
+# Build windows2025 packer image (reuses packer/windows/stack via os_version)
+packer-windows2025-amd64.output: $(PACKER_WINDOWS_STACK_FILES) $(if $(strip $(BASE_AMI_ID)),,packer-base-windows2025-amd64.output)
+	@echo Agent Version: $(CURRENT_AGENT_VERSION_WINDOWS)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-e PKR_VAR_iam_instance_profile \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/windows/stack \
+		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=x86_64' \
+			-var 'os_version=2025' \
+			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
+			-var 'agent_version=$(CURRENT_AGENT_VERSION_WINDOWS)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_LIST)' \
+			-var 'base_ami_id=$(if $(BASE_AMI_ID),$(BASE_AMI_ID),$(BASE_AMI_ID_WINDOWS2025_AMD64))' \
+			buildkite-ami.pkr.hcl | tee $@
+
 # -----------------------------------------
 # Base AMI creation
 
@@ -438,6 +477,31 @@ packer-base-windows-amd64.output: $(PACKER_WINDOWS_BASE_FILES)
 		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
 			-var 'region=$(AWS_REGION)' \
 			-var 'arch=x86_64' \
+			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
+			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
+			-var 'is_released=$(IS_RELEASED)' \
+			-var 'ami_public=$(AMI_PUBLIC)' \
+			-var 'ami_users=$(AMI_USERS_LIST)' \
+			base.pkr.hcl | tee $@
+
+# Build base AMI for windows2025 amd64 (reuses packer/windows/base via os_version)
+packer-base-windows2025-amd64.output: $(PACKER_WINDOWS_BASE_FILES)
+	docker run \
+		-e AWS_DEFAULT_REGION  \
+		-e AWS_PROFILE \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e AWS_SESSION_TOKEN \
+		-e PACKER_LOG \
+		-e PKR_VAR_iam_instance_profile \
+		-v ${HOME}/.aws:/root/.aws \
+		-v "$(PWD):/src" \
+		--rm \
+		-w /src/packer/windows/base \
+		hashicorp/packer:full-$(PACKER_VERSION) build -timestamp-ui \
+			-var 'region=$(AWS_REGION)' \
+			-var 'arch=x86_64' \
+			-var 'os_version=2025' \
 			-var 'instance_type=$(WIN64_INSTANCE_TYPE)' \
 			-var 'build_number=$(BUILDKITE_BUILD_NUMBER)' \
 			-var 'is_released=$(IS_RELEASED)' \
