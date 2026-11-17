@@ -232,7 +232,8 @@ This will create AMIs for the following platforms in your account's `us-east-1` 
 - Linux (64-bit Arm)
 - Ubuntu (64-bit x86)
 - Ubuntu (64-bit Arm)
-- Windows (64-bit x86)
+- Windows Server 2022 (64-bit x86)
+- Windows Server 2025 (64-bit x86)
 
 If you only need a subset, invoke the specific targets to skip the rest:
 
@@ -252,6 +253,12 @@ make packer-base-ubuntu2404-amd64.output packer-ubuntu2404-amd64.output
 
 # Ubuntu arm64
 make packer-base-ubuntu2404-arm64.output packer-ubuntu2404-arm64.output
+
+# Windows Server 2022
+make packer-base-windows-amd64.output packer-windows-amd64.output
+
+# Windows Server 2025
+make packer-base-windows2025-amd64.output packer-windows2025-amd64.output
 ```
 
 To test a Linux instance type with local NVMe instance storage, such as `c8id.xlarge`, set both `InstanceTypes` and `EnableInstanceStorage` in `config.json`:
@@ -302,6 +309,12 @@ Branch and PR builds use `if_changed` to select affected AMI builds and tests.
 Pushing a release tag builds and tests all final AMIs and publishes the
 CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
 
+Windows Server 2025 AMIs are built and tested only by release tags and by builds
+started with the environment variable `WINDOWS_2025=true`. Like a release tag, such
+a build also builds and tests all the other final AMIs. Templates published from
+`main` and from other branch builds have no Windows Server 2025 AMI, so set `ImageId`
+or `ImageIdParameter` to use `WindowsServerVersion=2025` with them.
+
 ## Support Policy
 
 We provide support for security and bug fixes on the current major release (v7) only.
@@ -327,9 +340,17 @@ Buildkite builds and deploys the following AMIs to all our supported regions:
 - Ubuntu 24.04 LTS (64-bit x86)
 - Ubuntu 24.04 LTS (64-bit Arm)
 - Windows Server 2022 (64-bit x86)
+- Windows Server 2025 (64-bit x86)
 
 Amazon Linux 2023 is the default for Linux instances. To run Ubuntu 24.04 LTS
 instead, set the `LinuxDistribution` parameter to `ubuntu2404`.
+
+Windows Server 2022 is the default for Windows instances. To run Windows Server 2025
+instead, set the `WindowsServerVersion` parameter to `2025`. The Windows Server 2025
+AMIs boot in UEFI mode, so they need a Nitro-based instance type that supports UEFI.
+Xen-based and bare metal instance types are not supported. A Windows Server 2025
+instance runs both `ltsc2025` and `ltsc2022` container images with process isolation
+(see Microsoft's [Windows container version compatibility](https://learn.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility)).
 
 ### Buildkite Agent
 
