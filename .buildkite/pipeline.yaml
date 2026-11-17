@@ -61,7 +61,7 @@ steps:
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
         plugins:
-          - docker-compose#v5.15.0:
+          - docker-compose#v5.16.0:
               run: ruby
               config: .buildkite/docker-compose.yml
 
