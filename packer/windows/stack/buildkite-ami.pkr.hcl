@@ -12,6 +12,17 @@ variable "arch" {
   default = "x86_64"
 }
 
+variable "os_version" {
+  type        = string
+  description = "Windows Server version the base AMI was built on: 2022 or 2025."
+  default     = "2022"
+
+  validation {
+    condition     = contains(["2022", "2025"], var.os_version)
+    error_message = "The os_version value must be 2022 or 2025."
+  }
+}
+
 variable "instance_type" {
   type    = string
   default = "c8a.xlarge"
@@ -61,22 +72,17 @@ variable "iam_instance_profile" {
   default     = ""
 }
 
-data "amazon-ami" "windows-server-2022" {
-  filters = {
-    name                = "Windows_Server-2022-English-Full-Base-*"
-    virtualization-type = "hvm"
-  }
-  most_recent = true
-  owners      = ["amazon"]
-  region      = var.region
+locals {
+  # 2022 keeps its original unversioned names; later versions add a suffix.
+  name_suffix = var.os_version == "2022" ? "" : "-${var.os_version}"
+  os_version  = "Windows Server ${var.os_version}"
 }
 
-
 source "amazon-ebs" "elastic-ci-stack" {
-  ami_description = "Buildkite Elastic Stack (Windows Server 2022 w/ docker)"
+  ami_description = "Buildkite Elastic Stack (${local.os_version} w/ docker)"
   ami_groups      = var.ami_public ? ["all"] : []
   ami_users       = var.ami_public ? [] : var.ami_users
-  ami_name        = "buildkite-stack-windows-${replace(timestamp(), ":", "-")}"
+  ami_name        = "buildkite-stack-windows${local.name_suffix}-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
   region          = var.region
@@ -121,9 +127,9 @@ source "amazon-ebs" "elastic-ci-stack" {
   }
 
   tags = {
-    Name         = "elastic-ci-stack-windows"
+    Name         = "elastic-ci-stack-windows${local.name_suffix}"
     Purpose      = "ami"
-    OSVersion    = "Windows Server 2022"
+    OSVersion    = local.os_version
     BuildNumber  = var.build_number
     AgentVersion = var.agent_version
     IsReleased   = var.is_released

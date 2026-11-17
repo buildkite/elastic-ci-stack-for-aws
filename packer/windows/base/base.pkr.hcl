@@ -12,6 +12,17 @@ variable "arch" {
   default = "x86_64"
 }
 
+variable "os_version" {
+  type        = string
+  description = "Windows Server version to build on: 2022 or 2025."
+  default     = "2022"
+
+  validation {
+    condition     = contains(["2022", "2025"], var.os_version)
+    error_message = "The os_version value must be 2022 or 2025."
+  }
+}
+
 variable "instance_type" {
   type    = string
   default = "c8a.xlarge"
@@ -50,10 +61,12 @@ variable "iam_instance_profile" {
   default     = ""
 }
 
-# Latest Windows Server 2022 AMI
-data "amazon-ami" "windows-server-2022" {
+# Latest Windows Server AMI for the given version. For 2025 this is AWS's
+# default image, which boots UEFI and so needs a Nitro instance type; the name
+# does not match the legacy "BIOS-" 2025 images.
+data "amazon-ami" "windows-server" {
   filters = {
-    name                = "Windows_Server-2022-English-Full-Base-*"
+    name                = "Windows_Server-${var.os_version}-English-Full-Base-*"
     virtualization-type = "hvm"
   }
   most_recent = true
@@ -61,15 +74,21 @@ data "amazon-ami" "windows-server-2022" {
   region      = var.region
 }
 
+locals {
+  # 2022 keeps its original unversioned names; later versions add a suffix.
+  name_suffix = var.os_version == "2022" ? "" : "-${var.os_version}"
+  os_version  = "Windows Server ${var.os_version}"
+}
+
 source "amazon-ebs" "buildkite-base" {
-  ami_description = "Buildkite Golden Base (Windows Server 2022 w/ docker)"
+  ami_description = "Buildkite Golden Base (${local.os_version} w/ docker)"
   ami_groups      = var.ami_public ? ["all"] : []
   ami_users       = var.ami_public ? [] : var.ami_users
-  ami_name        = "buildkite-base-windows-${replace(timestamp(), ":", "-")}"
+  ami_name        = "buildkite-base-windows${local.name_suffix}-${replace(timestamp(), ":", "-")}"
   communicator    = "winrm"
   instance_type   = var.instance_type
   region          = var.region
-  source_ami      = data.amazon-ami.windows-server-2022.id
+  source_ami      = data.amazon-ami.windows-server.id
   user_data_file  = "../shared/scripts/ec2-userdata.ps1"
   winrm_insecure  = true
   winrm_use_ssl   = true
@@ -97,12 +116,12 @@ source "amazon-ebs" "buildkite-base" {
   }
 
   tags = {
-    Name        = "buildkite-base-windows"
+    Name        = "buildkite-base-windows${local.name_suffix}"
     Purpose     = "ami"
-    OSVersion   = "Windows Server 2022"
+    OSVersion   = local.os_version
     BuildNumber = var.build_number
     IsReleased  = var.is_released
-    SourceAMIID = data.amazon-ami.windows-server-2022.id
+    SourceAMIID = data.amazon-ami.windows-server.id
     Component   = "buildkite-base"
   }
 }
