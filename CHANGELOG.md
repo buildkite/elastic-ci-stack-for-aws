@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.12.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.12.0) (2026-11-18)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.11.1...v7.12.0)
+
+### Security
+- Include the Agent fix preventing shell expansion of hook and temporary-directory paths in POSIX hook wrappers [buildkite/agent#4641](https://github.com/buildkite/agent/pull/4641) (@buildkate)
+- Include the Agent fix preventing job environment variables from overriding the agent executable used by hook wrappers [buildkite/agent#4645](https://github.com/buildkite/agent/pull/4645) (@swebb)
+- Include the Agent fix preventing repository URL normalization from bypassing `--allowed-repositories` [buildkite/agent#4643](https://github.com/buildkite/agent/pull/4643) (@buildkate)
+
+### Added
+- Add Windows Server 2025 as an opt-in Windows version through the new `WindowsServerVersion` parameter. It defaults to `2022`, so existing stacks are unaffected. Windows Server 2025 AMIs boot in UEFI mode and need a Nitro-based instance type that supports UEFI [#2002](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2002) (@dahtey-bk)
+
+### Changed
+- Update Buildkite agent from v4.10.2 to v4.11.0 [#2013](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2013) (@renovate[bot])
+- Update AWS CLI from v2.38.4 to v2.40.4 [#2008](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2008) (@renovate[bot])
+- Update Docker Compose from v5.6.1 to v5.8.0 and Buildx from v0.38.1 to v0.39.0 [#2009](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2009), [#2010](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2010) (@renovate[bot])
+- Update Git for Windows from v2.56.0 to v2.56.1 [#2006](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2006) (@renovate[bot])
+- Document Windows Server 2025 support in the README [#2014](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2014) (@dahtey-bk)
+
+### Internal
+- Build and test Windows Server 2025 AMIs on release tags and on builds started with `WINDOWS_2025=true` [#2002](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2002) (@dahtey-bk)
+- Update the Go toolchain to v1.27.4, golang.org/x/sync to v0.25.0 and golang.org/x/sys to v0.50.0 [#2007](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2007), [#2011](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2011), [#2012](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2012) (@renovate[bot])
+- Update CI plugins aws-assume-role-with-web-identity to v1.8.2 and docker-compose to v5.16.0 [#2005](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2005), [#2009](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2009) (@renovate[bot])
+
+<details>
+<summary><h3>Agent Changelog (v4.11.0)</h3></summary>
+
+### [v4.11.0](https://github.com/buildkite/agent/releases/tag/v4.11.0)
+
+#### What's Changed
+
+##### 🔒 Security
+* Prevent shell expansion of hook and temporary-directory paths in POSIX hook wrappers by @buildkate in https://github.com/buildkite/agent/pull/4641
+* Prevent job environment variables from overriding the agent executable used by hook wrappers by @swebb in https://github.com/buildkite/agent/pull/4645
+* Prevent repository URL normalization from bypassing `--allowed-repositories` by @buildkate in https://github.com/buildkite/agent/pull/4643
+
+##### ✨ Added
+* Add `buildkite.pull_request_draft` to job spans and OpenTelemetry resources by @jlisee in https://github.com/buildkite/agent/pull/4649
+* Add `buildkite.program_status.id` to hook and command spans when program-status reporting is active by @mcncl in https://github.com/buildkite/agent/pull/4667
+
+##### 🐛 Fixed
+* Resume polling when the streaming connection drops during job execution by @SarthakRawat-1 in https://github.com/buildkite/agent/pull/4626
+* Recover GitHub pull request checkouts when the head ref is missing but the build commit is available by @swebb in https://github.com/buildkite/agent/pull/4642
+
+##### 🏠 Internal
+* Isolate checksum files across concurrent E2E runs by @mcncl in https://github.com/buildkite/agent/pull/4632
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4633, https://github.com/buildkite/agent/pull/4634, https://github.com/buildkite/agent/pull/4635, https://github.com/buildkite/agent/pull/4638, https://github.com/buildkite/agent/pull/4652, https://github.com/buildkite/agent/pull/4651, https://github.com/buildkite/agent/pull/4653, https://github.com/buildkite/agent/pull/4658, https://github.com/buildkite/agent/pull/4660 and https://github.com/buildkite/agent/pull/4657
+
+#### New Contributors
+* @SarthakRawat-1 made their first contribution in https://github.com/buildkite/agent/pull/4626
+* @jlisee made their first contribution in https://github.com/buildkite/agent/pull/4649
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.10.2...v4.11.0
+
+</details>
+
+
 ## [v7.11.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.11.1) (2026-11-12)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.11.0...v7.11.1)
 
