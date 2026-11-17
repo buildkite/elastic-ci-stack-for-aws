@@ -191,12 +191,21 @@ steps:
     plugins:
       - *aws_role_plugin
 
-  # Only the stack pipeline bypasses change filtering on release tags. Its
-  # existing dependencies still wait for any base AMIs selected above.
+  # Only the stack pipeline bypasses change filtering, on release tags and on
+  # builds started with WINDOWS_2025=true. Its existing dependencies still wait
+  # for any base AMIs selected above.
   - label: ":pipeline: Stack build"
     key: upload-stack
     if: build.source != "schedule" && build.tag == null
-    command: buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml
+    command: |
+      set -euo pipefail
+      # The Windows Server 2025 lane needs the service-role steps, which
+      # if_changed skips on a commit that changes no stack files.
+      if [[ "$${WINDOWS_2025:-false}" == "true" ]]; then
+        buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml --apply-if-changed=false
+      else
+        buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml
+      fi
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:

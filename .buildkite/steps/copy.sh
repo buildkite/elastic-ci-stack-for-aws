@@ -185,6 +185,10 @@ s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s-%s%s-%s.yml" \
   "${BUILDKITE_BRANCH}")
 
 if aws s3 cp "${s3_mappings_cache}" "$mapping_file"; then
+  # A mapping cached before the windows2025 key existed lacks it, and the
+  # template looks the key up in every region. Add it empty.
+  sed "/windows2025:/! s/ }\$/, windows2025: '' }/" "$mapping_file" >"$mapping_file.tmp"
+  mv "$mapping_file.tmp" "$mapping_file"
   echo "--- Skipping AMI copy, was previously copied"
   exit 0
 fi
