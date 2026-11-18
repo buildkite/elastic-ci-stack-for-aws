@@ -4,11 +4,36 @@ set -Eeuo pipefail
 
 ## Installs the Buildkite Agent, run from the CloudFormation template
 
+LAUNCH_HOOK_ENABLED=false
+if [[ -n "${BUILDKITE_LAUNCH_HOOK_NAME:-}" && -n "${BUILDKITE_LAUNCH_TIMEOUT:-}" ]]; then
+  LAUNCH_HOOK_ENABLED=true
+fi
+AGENT_STARTED=false
+BOOTSTRAP_COMPLETED=false
+STATUS_FILE=/var/log/elastic-stack-bootstrap-status
+
 on_error() {
   local exit_code="$?"
   local error_line="$1"
+  trap - ERR
 
   echo "${BASH_SOURCE[0]} errored with exit code ${exit_code} on line ${error_line}."
+
+  if [[ "$LAUNCH_HOOK_ENABLED" == true ]]; then
+    # A nonzero exit also triggers cloud-final's OnFailure=poweroff.target.
+    # Never retire an agent that may already be processing a job.
+    if [[ "$AGENT_STARTED" == true || "$BOOTSTRAP_COMPLETED" == true ]]; then
+      echo "Configuration completed, but launch acknowledgment is unconfirmed. Leaving recovery to the launch hook timeout."
+      exit 0
+    fi
+    if [[ -n "${INSTANCE_ID:-}" ]] || fetch_metadata_with_retry; then
+      if ! complete_instance_launch ABANDON "$(($(date -u +%s) + 30))"; then
+        echo "Could not report bootstrap failure; a pending launch will time out."
+      fi
+    fi
+    # One failed launch must not fail the deployment: allow a replacement.
+    exit "$exit_code"
+  fi
 
   if [[ $exit_code != 0 ]]; then
     # Only try to set instance health if we have an instance ID
@@ -82,17 +107,30 @@ fetch_metadata_with_retry() {
       --max-time "$timeout" \
       --fail --silent --show-error \
       --location http://169.254.169.254/latest/api/token 2>&1); then
-      # Try to get the instance ID
-      if INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $token" \
+      # Protected launches also need pendingTime: the budget includes OS setup,
+      # storage, and Docker, not just the time spent in this installer.
+      local metadata_path=meta-data/instance-id
+      if [[ "$LAUNCH_HOOK_ENABLED" == true ]]; then
+        metadata_path=dynamic/instance-identity/document
+      fi
+      local identity pending_time pending_epoch
+      if identity=$(curl -H "X-aws-ec2-metadata-token: $token" \
         --max-time "$timeout" \
         --fail --silent --show-error \
-        --location http://169.254.169.254/latest/meta-data/instance-id 2>&1); then
-        echo "Successfully fetched metadata on attempt $attempt"
-        echo "Detected INSTANCE_ID=$INSTANCE_ID"
-        return 0
-      else
-        echo "Failed to fetch instance ID: $INSTANCE_ID"
+        --location "http://169.254.169.254/latest/$metadata_path" 2>&1); then
+        if [[ "$LAUNCH_HOOK_ENABLED" != true ]]; then
+          INSTANCE_ID=$identity
+          return 0
+        fi
+        if INSTANCE_ID=$(jq -er '.instanceId' <<<"$identity") \
+          && pending_time=$(jq -er '.pendingTime' <<<"$identity") \
+          && pending_epoch=$(date -u -d "$pending_time" +%s); then
+          LAUNCH_DEADLINE=$((pending_epoch + BUILDKITE_LAUNCH_TIMEOUT))
+          echo "Detected INSTANCE_ID=$INSTANCE_ID, launch deadline=$LAUNCH_DEADLINE"
+          return 0
+        fi
       fi
+      echo "Failed to fetch instance identity: $identity"
     else
       echo "Failed to fetch metadata token: $token"
     fi
@@ -117,20 +155,98 @@ fetch_metadata_with_retry() {
   return 1
 }
 
-# Fetch metadata or fail (which triggers on_error and poweroff)
-fetch_metadata_with_retry
+invoke_autoscaling() {
+  AWS_MAX_ATTEMPTS=1 aws autoscaling "$@" --region "$AWS_REGION" --output json \
+    --no-cli-pager --cli-connect-timeout 2 --cli-read-timeout 3
+}
+
+complete_instance_launch() {
+  local result="$1" deadline="$2" backoff=1 retry_mode=complete
+  local retryable='Throttl|ResourceContention|ScalingActivityInProgress|RequestTimeout|ServiceUnavailable|InternalError|[Tt]imed?[ ]?[Oo]ut|[Cc]onnect|[Ee]ndpoint'
+  local output state asg error
+  while true; do
+    # Reconcile even a permanent/missing-action error: AWS may have accepted
+    # CONTINUE but lost the response. Only InService confirms that ambiguity.
+    if output=$(invoke_autoscaling describe-auto-scaling-instances --instance-ids "$INSTANCE_ID" 2>&1); then
+      state=$(jq -er '.AutoScalingInstances[0].LifecycleState // "absent"' <<<"$output") || return 1
+      case "$state" in
+      absent | Terminating*) return 1 ;;
+      InService)
+        if [[ "$result" == ABANDON ]]; then
+          [[ "$retry_mode" == complete ]] || return 1
+          invoke_autoscaling set-instance-health --instance-id "$INSTANCE_ID" --health-status Unhealthy || return 1
+        fi
+        return 0
+        ;;
+      esac
+      [[ "$retry_mode" != stop ]] || return 1
+      # Reserve time for both the completion and a reconciliation request.
+      (($(date -u +%s) + 10 < deadline)) || return 1
+      error=""
+      if [[ "$state" == Pending:Wait && "$retry_mode" == complete ]]; then
+        asg=$(jq -er '.AutoScalingInstances[0].AutoScalingGroupName' <<<"$output") || return 1
+        if output=$(invoke_autoscaling complete-lifecycle-action --instance-id "$INSTANCE_ID" \
+          --auto-scaling-group-name "$asg" --lifecycle-hook-name "$BUILDKITE_LAUNCH_HOOK_NAME" \
+          --lifecycle-action-result "$result" 2>&1); then
+          return 0
+        fi
+        error=$output
+      fi
+    else
+      # Without a successful describe there is no ambiguous action to reconcile.
+      error=$output
+      if [[ ! "$error" =~ $retryable ]]; then
+        echo "Auto Scaling describe failed: $error"
+        return 1
+      fi
+    fi
+    if [[ -n "$error" ]]; then
+      echo "Auto Scaling launch $result failed: $error"
+      if [[ "$result" == CONTINUE && "$error" == *"No active Lifecycle Action"* ]]; then
+        # The action may be consumed before InService is visible. Stop writes,
+        # but keep reconciling through Pending:Proceed within the same budget.
+        retry_mode=reconcile
+      elif [[ ! "$error" =~ $retryable ]]; then
+        retry_mode=stop
+      fi
+    fi
+    (($(date -u +%s) + backoff + 10 < deadline)) || return 1
+    sleep "$backoff"
+    backoff=$((backoff * 2))
+    if ((backoff > 15)); then backoff=15; fi
+  done
+}
+
+complete_stack_bootstrap() {
+  # Called in a guarded context: every fallible command needs an explicit check.
+  if [[ -z "${LAUNCH_DEADLINE:-}" ]]; then
+    fetch_metadata_with_retry || return 1
+  fi
+  complete_instance_launch CONTINUE "$LAUNCH_DEADLINE" || return 1
+  if [[ "${BUILDKITE_STACK_DEPLOYED_BY:-}" == cloudformation ]]; then
+    cfn-signal --region "$AWS_REGION" --stack "$BUILDKITE_STACK_NAME" \
+      --resource AgentAutoScaleGroup --exit-code 0 || echo "CloudFormation success signal failed."
+  fi
+}
+
+# Older templates and non-hook consumers retain the existing metadata/signaling path.
+if [[ "$LAUNCH_HOOK_ENABLED" != true ]]; then
+  fetch_metadata_with_retry
+fi
 
 # This script is run on every boot so that we can gracefully recover from hard failures (eg. kernel panics) during
 # any previous attempts. If a previous run is detected as started but not complete then we will fail this run and mark
 # the instance as unhealthy.
-STATUS_FILE=/var/log/elastic-stack-bootstrap-status
-
 check_status() {
   echo "Checking status file $STATUS_FILE..."
 
   if [[ -f "$STATUS_FILE" ]]; then
     if [[ "$(<"$STATUS_FILE")" == "Completed" ]]; then
       echo Bootstrap already completed successfully.
+      BOOTSTRAP_COMPLETED=true
+      if [[ "$LAUNCH_HOOK_ENABLED" == true ]] && ! complete_stack_bootstrap; then
+        echo "Launch completion unconfirmed; leaving recovery to the launch hook timeout."
+      fi
       exit 0
     else
       echo Bootstrap previously failed, will not continue from unknown state.
@@ -142,6 +258,10 @@ check_status() {
 }
 
 check_status
+
+if [[ "$LAUNCH_HOOK_ENABLED" == true ]]; then
+  fetch_metadata_with_retry
+fi
 
 case $(uname -m) in
 x86_64) ARCH=amd64 ;;
@@ -667,9 +787,6 @@ EOF
 echo Reloading systemctl services...
 systemctl daemon-reload
 
-echo Starting buildkite-agent...
-systemctl enable --now buildkite-agent
-
 echo Configuring CloudWatch agent log retention...
 if [[ -n "${EC2_LOG_RETENTION_DAYS:-}" && "${ENABLE_EC2_LOG_RETENTION_POLICY:-false}" == "true" ]]; then
   echo "Setting CloudWatch EC2 log retention to ${EC2_LOG_RETENTION_DAYS} days"
@@ -694,6 +811,21 @@ elif [[ -n "${EC2_LOG_RETENTION_DAYS:-}" ]]; then
   echo "Skipping EC2 log retention configuration to protect existing logs"
 else
   echo "EC2 log retention not set, using CloudWatch agent defaults (never expire)"
+fi
+
+echo Starting buildkite-agent...
+systemctl enable --now buildkite-agent
+AGENT_STARTED=true
+
+if [[ "$LAUNCH_HOOK_ENABLED" == true ]]; then
+  # The marker must be durable before CONTINUE. Explicit guards keep callback
+  # errors from failing cloud-final and powering off a working agent.
+  if ! echo "Completed" >"$STATUS_FILE"; then
+    echo "Could not persist completed configuration; launch acknowledgment withheld."
+  elif ! complete_stack_bootstrap; then
+    echo "Launch completion unconfirmed; leaving recovery to the launch hook timeout."
+  fi
+  exit 0
 fi
 
 if [[ "${BUILDKITE_STACK_DEPLOYED_BY:-}" == "cloudformation" ]]; then
