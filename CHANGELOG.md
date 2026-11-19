@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.13.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.13.0) (2026-11-19)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.12.0...v7.13.0)
+
+### Security
+- Include the Agent change that signs and verifies artifact upload paths in signed jobs [buildkite/agent#4640](https://github.com/buildkite/agent/pull/4640) (@buildkate)
+
+  Upgrade verifying agents before using Agent v4.12.0 to sign pipelines. Older verifying agents may reject jobs signed by this version.
+
+### Changed
+- Update Buildkite Agent from v4.11.0 to v4.12.0 on Linux and Windows [#2016](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2016) (@mcncl)
+
+<details>
+<summary><h3>Agent Changelog (v4.12.0)</h3></summary>
+
+### [v4.12.0](https://github.com/buildkite/agent/releases/tag/v4.12.0)
+
+#### What's Changed
+##### 🔒 Security
+* Sign and verify artifact upload paths in signed jobs by @buildkate in https://github.com/buildkite/agent/pull/4640
+
+  Older verifying agents may reject jobs signed by this version. Upgrade verifying agents before using this version to sign pipelines.
+
+##### ✨ Added
+* Add OpenTelemetry span events for OSC 7501 reports with the `program-status` experiment enabled by @mcncl in https://github.com/buildkite/agent/pull/4669
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.11.0...v4.12.0
+
+</details>
+
 ## [v7.12.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.12.0) (2026-11-18)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.11.1...v7.12.0)
 
