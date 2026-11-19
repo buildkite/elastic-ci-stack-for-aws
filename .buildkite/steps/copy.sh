@@ -123,11 +123,7 @@ if [ $# -eq 0 ]; then
   windows_amd64_source_image_id=$(buildkite-agent meta-data get "windows_amd64_image_id")
   ubuntu2404_amd64_source_image_id=$(buildkite-agent meta-data get "ubuntu2404_amd64_image_id")
   ubuntu2404_arm64_source_image_id=$(buildkite-agent meta-data get "ubuntu2404_arm64_image_id")
-  # The Windows Server 2025 lane only runs on release tags and opt-in builds
-  # (see .buildkite/pipeline.stack.yaml). Without it the mapping stays empty.
-  if [[ -n "${BUILDKITE_TAG:-}" || "${WINDOWS_2025:-false}" == "true" ]]; then
-    windows2025_amd64_source_image_id=$(buildkite-agent meta-data get "windows2025_amd64_image_id")
-  fi
+  windows2025_amd64_source_image_id=$(buildkite-agent meta-data get "windows2025_amd64_image_id")
 fi
 
 # If we're not on the main branch or a tag build skip the copy
@@ -172,8 +168,7 @@ if [[ $BUILDKITE_TAG == "$BUILDKITE_BRANCH" || ${TAG_VERSION:-false} == true ]];
 fi
 
 echo "--- Checking if there is a previously copy in the cache bucket"
-# The Windows Server 2025 image only joins the key when it was built, so builds
-# without it keep finding the copies cached under the five-image key.
+# Local calls without a 2025 AMI can still reuse the five-image cache key.
 s3_mappings_cache=$(printf "s3://%s/mappings-%s-%s-%s-%s-%s%s-%s.yml" \
   "${BUILDKITE_AWS_STACK_BUCKET}" \
   "${linux_amd64_source_image_id}" \

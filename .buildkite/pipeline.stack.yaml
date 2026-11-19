@@ -146,10 +146,8 @@ steps:
         plugins:
           - *aws_role_plugin
 
-  # Only release tags and builds started with WINDOWS_2025=true run this lane;
-  # copy.sh applies the same condition when it reads the 2025 image ID.
   - group: ":windows: 2025 AMD64"
-    if: build.tag != null || build.env("WINDOWS_2025") == "true"
+    if_changed: *if_changed_test_windows
     steps:
       - id: "packer-windows2025-amd64"
         name: ":packer: :windows: 2025"
@@ -161,6 +159,7 @@ steps:
         retry: { automatic: { limit: 3 } }
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+        if_changed: *if_changed_stack_windows
         depends_on:
           - "packer-base-windows2025-amd64"
         plugins:
@@ -168,7 +167,9 @@ steps:
 
       - id: "launch-windows2025-amd64"
         name: ":cloudformation: :windows: 2025 AMD64 Launch"
-        command: .buildkite/steps/launch.sh windows2025 amd64
+        command:
+          - .buildkite/steps/ensure_ami_metadata.py windows2025 amd64
+          - .buildkite/steps/launch.sh windows2025 amd64
         timeout_in_minutes: 75
         agents:
           queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
@@ -551,6 +552,7 @@ steps:
       - .buildkite/steps/ensure_ami_metadata.py linux amd64
       - .buildkite/steps/ensure_ami_metadata.py linux arm64
       - .buildkite/steps/ensure_ami_metadata.py windows amd64
+      - .buildkite/steps/ensure_ami_metadata.py windows2025 amd64
       - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 amd64
       - .buildkite/steps/ensure_ami_metadata.py ubuntu2404 arm64
       - .buildkite/steps/copy.sh

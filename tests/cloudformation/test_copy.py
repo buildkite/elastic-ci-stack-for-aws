@@ -50,6 +50,23 @@ class CachedMappingTest(unittest.TestCase):
                            f"    eu-west-1 : {{ {FIVE_IMAGES}, windows2025: '' }}\n")
         self.assertEqual(self.copy(cached), cached)
 
+    def test_branch_mapping_includes_windows2025_without_an_opt_in(self):
+        with tempfile.TemporaryDirectory() as directory:
+            agent = Path(directory) / "buildkite-agent"
+            agent.write_text("#!/bin/bash\nprintf 'ami-%s\\n' \"${3%_image_id}\"\n")
+            agent.chmod(0o755)
+            env = dict(os.environ, PATH=f"{directory}:{os.environ['PATH']}", AWS_REGION="us-east-1",
+                       BUILDKITE_BRANCH="feature", BUILDKITE_TAG="", COPY_TO_ALL_REGIONS="false",
+                       BUILDKITE_AWS_STACK_BUCKET="test-bucket")
+            env.pop("WINDOWS_2025", None)
+            result = subprocess.run(
+                ["bash", str(ROOT / ".buildkite/steps/copy.sh")],
+                cwd=directory, env=env, capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            mapping = (Path(directory) / "build/mappings.yml").read_text()
+            self.assertIn("windows2025: ami-windows2025_amd64", mapping)
+
 
 if __name__ == "__main__":
     unittest.main()

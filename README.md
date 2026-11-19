@@ -309,11 +309,8 @@ Branch and PR builds use `if_changed` to select affected AMI builds and tests.
 Pushing a release tag builds and tests all final AMIs and publishes the
 CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
 
-The weekly `main` build refreshes the private Windows Server 2025 base AMI without
-building or publishing a 2025 stack AMI. Release tags and builds started with
-`WINDOWS_2025=true` still build a fresh 2025 base and build and test all final AMIs.
-Templates from ordinary `main` and branch builds have no Windows Server 2025 AMI,
-so set `ImageId` or `ImageIdParameter` to use `WindowsServerVersion=2025` with them.
+Windows Server 2022 and 2025 use the same change filters. The weekly `main` build
+refreshes both private base AMIs without building or publishing final AMIs.
 
 ## Support Policy
 

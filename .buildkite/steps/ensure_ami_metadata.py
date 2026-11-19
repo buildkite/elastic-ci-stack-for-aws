@@ -57,7 +57,7 @@ def set_metadata(key: str, value: str) -> None:
 
 def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
     """
-    Fetch AMI ID from the main branch CloudFormation template.
+    Fetch AMI ID from the published CloudFormation template.
 
     Args:
         os_type: Operating system (linux or windows)
@@ -70,20 +70,8 @@ def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
     Raises:
         RuntimeError: If AMI cannot be found
     """
-    template_url = "https://s3.amazonaws.com/buildkite-aws-stack/main/aws-stack.yml"
-
-    print(f"--- Fetching AMI ID from main branch template for {os_type}/{arch}")
-
-    try:
-        with urllib.request.urlopen(template_url) as response:
-            template_content = response.read().decode("utf-8")
-    except Exception as e:
-        raise RuntimeError(
-            f"Failed to download main branch template from {template_url}: {e}"
-        ) from e
-
-    if os_type == "windows":
-        key_name = "windows"
+    if os_type in ("windows", "windows2025"):
+        key_name = os_type
     elif os_type == "ubuntu2404":
         key_name = "ubuntu2404arm64" if arch == "arm64" else "ubuntu2404amd64"
     elif arch == "arm64":
@@ -94,15 +82,27 @@ def fetch_ami_from_template(os_type: str, arch: str, region: str) -> str:
     # Template format: "    us-east-1: { linuxamd64: ami-xxx, linuxarm64: ami-yyy, windows: ami-zzz, ubuntu2404amd64: ami-aaa, ubuntu2404arm64: ami-bbb, windows2025: ami-ccc }"
     pattern = rf"^\s+{re.escape(region)}\s*:.*{key_name}:\s*(ami-[a-z0-9]+)"
 
-    for line in template_content.split("\n"):
-        match = re.search(pattern, line)
+    # The release template already has a 2025 AMI, but main may not have one yet.
+    prefixes = ("main", "latest") if os_type == "windows2025" else ("main",)
+    for prefix in prefixes:
+        template_url = f"https://s3.amazonaws.com/buildkite-aws-stack/{prefix}/aws-stack.yml"
+        print(f"--- Fetching AMI ID from {prefix} template for {os_type}/{arch}")
+
+        try:
+            with urllib.request.urlopen(template_url) as response:
+                template_content = response.read().decode("utf-8")
+        except Exception as e:
+            raise RuntimeError(f"Failed to download template from {template_url}: {e}") from e
+
+        match = re.search(pattern, template_content, re.MULTILINE)
         if match:
             ami_id = match.group(1)
             print(f"Found AMI ID: {ami_id}")
             return ami_id
 
     raise RuntimeError(
-        f"Could not find AMI ID for region {region}, os {os_type}, arch {arch} in main template"
+        f"Could not find AMI ID for region {region}, os {os_type}, arch {arch} "
+        f"in {' or '.join(prefixes)} template"
     )
 
 
@@ -207,7 +207,7 @@ def main() -> int:
     """Main entry point."""
     if len(sys.argv) < 3 or len(sys.argv) > 4:
         print(f"Usage: {sys.argv[0]} <os> <arch> [variant]", file=sys.stderr)
-        print("  os:      linux, windows or ubuntu2404", file=sys.stderr)
+        print("  os:      linux, windows, windows2025 or ubuntu2404", file=sys.stderr)
         print("  arch:    amd64 or arm64", file=sys.stderr)
         print("  variant: optional build variant (e.g. cis)", file=sys.stderr)
         return 1
@@ -216,9 +216,9 @@ def main() -> int:
     arch = sys.argv[2]
     variant = sys.argv[3] if len(sys.argv) == 4 else None
 
-    if os_type not in ("linux", "windows", "ubuntu2404"):
+    if os_type not in ("linux", "windows", "windows2025", "ubuntu2404"):
         print(
-            f"ERROR: Invalid OS '{os_type}', must be 'linux', 'windows' or 'ubuntu2404'",
+            f"ERROR: Invalid OS '{os_type}', must be 'linux', 'windows', 'windows2025' or 'ubuntu2404'",
             file=sys.stderr,
         )
         return 1
