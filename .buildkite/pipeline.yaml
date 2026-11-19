@@ -97,9 +97,6 @@ steps:
             - organization_id
             - pipeline_slug
 
-  # Windows Server 2025 is opt-in for stack users, so its AMIs are only built for
-  # release tags and for builds started with WINDOWS_2025=true. No main build
-  # leaves a latest base image to reuse, so each of those builds makes its own.
   - id: "packer-base-windows2025-amd64"
     name: ":packer: :windows: 2025 (base)"
     command: ".buildkite/steps/packer.sh windows2025 amd64 base"
@@ -109,7 +106,7 @@ steps:
       PKR_VAR_iam_instance_profile: "packer-ssm"
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-    if: build.tag != null || build.env("WINDOWS_2025") == "true"
+    if_changed: *if_changed_base_windows
     depends_on:
       - "linting"
       - "fixperms-tests"
@@ -191,21 +188,10 @@ steps:
     plugins:
       - *aws_role_plugin
 
-  # Only the stack pipeline bypasses change filtering, on release tags and on
-  # builds started with WINDOWS_2025=true. Its existing dependencies still wait
-  # for any base AMIs selected above.
   - label: ":pipeline: Stack build"
     key: upload-stack
     if: build.source != "schedule" && build.tag == null
-    command: |
-      set -euo pipefail
-      # The Windows Server 2025 lane needs the service-role steps, which
-      # if_changed skips on a commit that changes no stack files.
-      if [[ "$${WINDOWS_2025:-false}" == "true" ]]; then
-        buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml --apply-if-changed=false
-      else
-        buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml
-      fi
+    command: buildkite-agent pipeline upload .buildkite/pipeline.stack.yaml
     agents:
       queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
     depends_on:
