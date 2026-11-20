@@ -256,6 +256,7 @@ steps:
           - jq --version
           - git --version
           - sudo goss validate --format documentation
+          - .buildkite/steps/save-package-list.sh linux amd64
         timeout_in_minutes: 5
         retry: { automatic: { limit: 3 } }
         agents:
@@ -316,6 +317,7 @@ steps:
           - jq --version
           - git --version
           - sudo goss validate --format documentation
+          - .buildkite/steps/save-package-list.sh linux arm64
         retry: { automatic: { limit: 3 } }
         timeout_in_minutes: 5
         agents:
