@@ -104,17 +104,21 @@ Buildkite marks agents that stop sending heartbeats as lost and fails their runn
 
 Agent service failures and out-of-memory kills within the service also trigger instance replacement, interrupting all jobs on that instance. Normal graceful shutdown lets running jobs finish.
 
-## Windows launch protection
+## Instance launch protection
 
-Windows instances remain in Auto Scaling's `Pending:Wait` state until bootstrap finishes configuration, starts the required services, and successfully starts the Buildkite Agent service. Bootstrap then completes the launch hook with `CONTINUE`. This checks service startup, not agent registration with the Buildkite API.
+Linux and Windows instances remain in Auto Scaling's `Pending:Wait` state until bootstrap finishes configuration, starts the required services, and successfully starts the Buildkite Agent service. Bootstrap then completes the launch hook with `CONTINUE`. This checks service startup, not agent registration with the Buildkite API or ongoing agent health.
 
-`WindowsLaunchTimeout` defaults to 900 seconds (15 minutes). If bootstrap never runs, hangs, or cannot complete the launch hook, Auto Scaling abandons the launch when the hook times out. Bootstrap also attempts to abandon failed launches explicitly. Use the template and Windows AMI from the same release; older Windows AMIs do not complete this hook.
+`LinuxLaunchTimeout` and `WindowsLaunchTimeout` each default to 900 seconds (15 minutes), with a range of 30–7200 seconds. The budget includes OS setup and bootstrap, including Linux storage, Docker, seed downloads, and customer bootstrap scripts. There are no automatic heartbeats to extend it. If bootstrap never runs, hangs, or cannot complete the launch hook, Auto Scaling abandons the launch when the hook times out. Bootstrap also attempts to abandon failed launches explicitly.
 
-The Windows CloudFormation creation timeout defaults to 30 minutes and can be overridden with `InstanceCreationTimeout`. A successful launch sends a CloudFormation success signal. An individual bootstrap failure does not send a failure signal, allowing a replacement to succeed while CloudFormation is still waiting. Persistent failures cause stack creation to fail through its timeout. Linux signaling and timeout defaults are unchanged.
+Use the template and AMI from the same release. This also applies to custom AMIs supplied through `ImageId` or `ImageIdParameter`: older Linux or Windows installers that do not acknowledge the hook will have their launches abandoned. A new Linux installer used without hook inputs retains the older template's signaling behavior.
 
-Bootstrap records configuration status in `C:\buildkite-agent\elastic-stack-bootstrap-status`. A repeated invocation skips completed configuration and rejects incomplete configuration rather than resuming it. This is not a reboot recovery mechanism: the existing NSSM exit hook requests instance termination when the agent exits or its service is stopped.
+The separate CloudFormation creation timeout defaults to five minutes on Linux (15 minutes with `GitMirrorSeedBucket`) and 30 minutes on Windows. Override it with `InstanceCreationTimeout`. A confirmed successful launch sends a CloudFormation success signal. A failed hook-protected launch does not send a failure signal, allowing a replacement to succeed while CloudFormation is still waiting. This changes Linux's previous per-instance failure signaling. Persistent failures eventually fail the deployment; these timeouts are not a wall-clock limit on creation or rollback.
 
-If supplying `InstanceRoleARN`, grant `autoscaling:CompleteLifecycleAction` for the stack's Auto Scaling group, in addition to the existing instance-role permissions. The stack-created role includes this permission.
+Bootstrap records configuration status in `/var/log/elastic-stack-bootstrap-status` on Linux and `C:\buildkite-agent\elastic-stack-bootstrap-status` on Windows. A repeated installer invocation skips completed configuration and reconciles launch acknowledgment; it rejects incomplete configuration rather than resuming it. Linux still runs storage and Docker preparation on each boot. This is not a reboot recovery mechanism: existing agent shutdown handling can request instance termination.
+
+After the agent starts, acknowledgment or success-signal errors do not explicitly retire it. An unacknowledged launch still times out, however, and can interrupt jobs the agent accepted while in `Pending:Wait`.
+
+If supplying `InstanceRoleARN`, grant `autoscaling:CompleteLifecycleAction` for the stack's Auto Scaling group, in addition to the existing instance-role permissions, including `autoscaling:DescribeAutoScalingInstances`. The stack-created role includes these permissions. Permissions boundaries and network access must also allow the Auto Scaling API calls; private subnets need appropriate outbound connectivity or an Auto Scaling VPC endpoint.
 
 ## Scheduled Scaling
 
