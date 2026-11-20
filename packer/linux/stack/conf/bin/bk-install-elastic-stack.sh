@@ -26,6 +26,9 @@ on_error() {
       echo "Configuration completed, but launch acknowledgment is unconfirmed. Leaving recovery to the launch hook timeout."
       exit 0
     fi
+    # Allow file collection and the default 5s CloudWatch flush interval before
+    # ABANDON can terminate this instance. This is best-effort, not delivery confirmation.
+    sleep 10
     if [[ -n "${INSTANCE_ID:-}" ]] || fetch_metadata_with_retry; then
       if ! complete_instance_launch ABANDON "$(($(date -u +%s) + 30))"; then
         echo "Could not report bootstrap failure; a pending launch will time out."

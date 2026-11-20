@@ -103,6 +103,7 @@ elif command == 'complete-lifecycle-action':
             state['lost_response'] = False
             error('Connection closed after accepting CONTINUE')
     else:
+        state['abandoned_at'] = int((p / 'now').read_text())
         state['lifecycle'] = 'Terminating:Wait'
 elif command == 'set-instance-health':
     state['unhealthy'] = True
@@ -201,6 +202,8 @@ class BootstrapTest(unittest.TestCase):
         self.assertEqual(marker, 'Started')
         self.assertEqual(state['lifecycle'], 'Terminating:Wait')
         self.assertEqual(state['signals'], [])
+        self.assertGreaterEqual(state['abandoned_at'], 1040,
+                                'Allow log collection before ABANDON can terminate the instance')
 
     def test_post_start_failures_do_not_fail_cloud_final(self):
         for failure in ({'denied': True}, {'marker_fails': True}, {'signal_fails': True}):
@@ -252,7 +255,9 @@ class BootstrapTest(unittest.TestCase):
                 self.assertEqual(running, completed)
                 self.assertEqual(config, 'existing configuration')
                 self.assertEqual(state['signals'], [])
-                self.assertLessEqual(now, 1060, 'Metadata retries must remain bounded')
+                deadline = 1060 if completed else 1070
+                self.assertLessEqual(now, deadline,
+                                     'Metadata retries plus the pre-start logging grace must remain bounded')
 
     def test_transient_and_lost_completion_responses_recover(self):
         for fault in ('transient', 'lost_response'):
