@@ -589,7 +589,10 @@ Parameters:
     Default: "false"
 
   ArtifactsBucket:
-    Description: Optional - Name of an existing S3 bucket for build artifact storage.
+    Description: >
+      Optional - Name of an existing S3 bucket for build artifact storage. Set ArtifactsConfigureDefaultDestination
+      to "true" or manually configure the `BUILDKITE_ARTIFACT_UPLOAD_DESTINATION` environment variable to
+      configure an agent-level default destination using the specified bucket.
     Type: String
     Default: ""
 
@@ -610,6 +613,17 @@ Parameters:
       - "bucket-owner-read"
       - "bucket-owner-full-control"
     Default: "private"
+
+  ArtifactsConfigureDefaultDestination:
+    Description: >
+      Optional - Whether to configure a default BUILDKITE_ARTIFACT_UPLOAD_DESTINATION based on the configured
+      ArtifactsBucket and Buildkite's recommended key prefix.
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+      - "false-and-suppress-warning"
+    Default: "false"
 
   BootstrapScriptUrl:
     Description: >
@@ -2476,6 +2490,7 @@ Resources:
                   $Env:BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}"
                   $Env:BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}"
                   $Env:BUILDKITE_S3_ACL="${ArtifactsS3ACL}"
+                  $Env:BUILDKITE_ARTIFACTS_CONFIGURE_DEFAULT_DESTINATION="${ArtifactsConfigureDefaultDestination}"
                   $Env:BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}"
                   $Env:BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}"
                   $Env:BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}"
@@ -2588,6 +2603,7 @@ Resources:
                   BUILDKITE_ARTIFACTS_BUCKET="${ArtifactsBucket}" \
                   BUILDKITE_S3_DEFAULT_REGION="${LocalArtifactsBucketRegion}" \
                   BUILDKITE_S3_ACL="${ArtifactsS3ACL}" \
+                  BUILDKITE_ARTIFACTS_CONFIGURE_DEFAULT_DESTINATION="${ArtifactsConfigureDefaultDestination}" \
                   BUILDKITE_AGENT_TOKEN_PATH="${AgentTokenPath}" \
                   BUILDKITE_AGENTS_PER_INSTANCE="${AgentsPerInstance}" \
                   BUILDKITE_AGENT_ENDPOINT="${AgentEndpoint}" \
