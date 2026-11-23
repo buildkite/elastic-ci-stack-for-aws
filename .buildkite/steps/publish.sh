@@ -21,6 +21,21 @@ s3_upload_security_fixes() {
   done
 }
 
+# Publishes the page release notes link for the fixes that are new since the previous
+# release. The notes are written before this build runs, so the link must not be left dead.
+s3_upload_new_security_fixes() {
+  local name="$1"
+
+  compgen -G "build/security-fixes-*.txt" >/dev/null || return
+  local previous_tag
+  previous_tag="$(git describe --tags --abbrev=0 --match='v*' --exclude="${BUILDKITE_TAG:-}" HEAD)" || return
+  local bucket_url="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}"
+  local page="build/security-fixes-linux-new.md"
+  # Reads this build's files from where s3_upload_security_fixes has just put them.
+  .buildkite/scripts/ami_security_notes.py --page --base-url "$bucket_url" "$previous_tag" "$name" >"$page" || return
+  aws s3 cp --content-type 'text/plain; charset=utf-8' "$page" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${name}/$(basename "$page")"
+}
+
 echo "--- :git: Checking and fetching git tags"
 # if BUILDKITE_TAG is set, fetch the tags, and check that it's a valid tag
 if [[ -n "${BUILDKITE_TAG:-}" ]]; then
@@ -80,6 +95,14 @@ publish_for_branch() {
 
   # Release notes read these by tag, so one copy per branch or tag is enough.
   s3_upload_security_fixes "${branch}/"
+  if ! s3_upload_new_security_fixes "$branch"; then
+    echo "Did not publish the page of new AMI security fixes for ${branch}"
+    if [[ -n "${BUILDKITE_TAG:-}" ]]; then
+      buildkite-agent annotate --style "warning" --context "security-fixes" \
+        "This build did not publish the AMI security fixes for ${branch}. Remove the links to them from its release notes." \
+        || true
+    fi
+  fi
 
   cat <<EOF | buildkite-agent annotate --style "info"
 Published template <a href="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${branch}/aws-stack.yml">${branch}/aws-stack.yml</a>

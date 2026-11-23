@@ -315,18 +315,22 @@ The publish step copies them next to the template as `security-fixes-linux-<arch
 a text file anyone can search for a CVE. The file is what Amazon Linux had published
 on that date: it also publishes advisories, and adds CVEs to them, after a package ships.
 
-`.buildkite/scripts/generate-changelog.sh` compares the files with the previous release's
-and adds a `### Security` section with:
+The publish step also compares the files with the previous release's and publishes the
+result beside them as `security-fixes-linux-new.md`:
 
 - the kernel change,
-- the CVEs fixed by the packages that were updated,
-- the CVEs Amazon Linux has published since the previous release for packages that
-  release already had, listed apart as already fixed in the previous release, and
-- links to the files.
+- the CVEs fixed by the packages that were updated, and
+- the CVEs Amazon Linux has published since the previous release for package versions
+  that release already had, listed apart as already fixed in the previous release.
 
-It adds nothing when the files list no new fix. Run the script after the release tag's
-build has passed: until then the release has no files, and the script says so and
-leaves the section out.
+Release notes are written before the release build runs, so
+`.buildkite/scripts/generate-changelog.sh` adds a `### Security` line that links that page
+and the files at the addresses the build will publish them to. Nothing needs filling in
+afterwards. If the release build does not publish them, it says so in a build annotation,
+and the links need removing from the release notes.
+
+Run after the release build has passed, the script lists the new fixes in the section
+itself, and adds nothing when there are none.
 
 Windows Server 2022 and 2025 use the same change filters. The weekly `main` build
 refreshes both private base AMIs without building or publishing final AMIs.

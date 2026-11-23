@@ -83,8 +83,7 @@ class SaveSecurityFixesTest(unittest.TestCase):
         previous = self.root / "published/v1.0.0"
         for directory in (release, previous):
             directory.mkdir(parents=True)
-        self.saved.rename(release / self.saved.name)
-        (previous / self.saved.name).write_text(textwrap.dedent("""\
+        previous_release = textwrap.dedent("""\
             captured 2026-07-01
             kernel 6.12.94-123.174.amzn2023.x86_64
             CVE-2024-33599 ALAS2023-2025-988 Medium glibc-2.34-181.amzn2023.0.1.x86_64
@@ -93,7 +92,11 @@ class SaveSecurityFixesTest(unittest.TestCase):
             package glibc 2.34-231.amzn2023.0.1
             package kernel6.12 6.12.94-123.174.amzn2023
             package krb5-libs 1.21.3-8.amzn2023.0.2
-            """))
+            """)
+        # The comparison needs both architectures, and reads a file the same way for either.
+        for name in (self.saved.name, "security-fixes-linux-arm64.txt"):
+            (release / name).write_text(self.saved.read_text())
+            (previous / name).write_text(previous_release)
         notes = subprocess.run(
             [sys.executable, str(NOTES), "v1.0.0", "v1.1.0", "--base-url", (self.root / "published").as_uri()],
             capture_output=True, text=True, check=True,
@@ -101,10 +104,10 @@ class SaveSecurityFixesTest(unittest.TestCase):
         self.assertEqual(
             notes[:-1],
             [
-                "- Update the Amazon Linux 2023 kernel from `6.12.94-123.174.amzn2023` to `6.12.111-136.204.amzn2023` (AMD64).",
+                "- Update the Amazon Linux 2023 kernel from `6.12.94-123.174.amzn2023` to `6.12.111-136.204.amzn2023` (AMD64 and ARM64).",
                 "- Published by Amazon Linux after v1.0.0 was built, for package versions v1.0.0 already had, "
                 "so already fixed in v1.0.0 and possibly earlier:",
-                "  - `kernel6.12` at `6.12.94-123.174.amzn2023` (AMD64): 2 CVEs "
+                "  - `kernel6.12` at `6.12.94-123.174.amzn2023` (AMD64 and ARM64): 2 CVEs "
                 "([ALAS2023-2026-1950](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-1950.html), "
                 "[ALAS2023-2026-1968](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-1968.html)):",
                 "    - CVE-2026-43303",

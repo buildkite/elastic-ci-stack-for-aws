@@ -15,11 +15,16 @@ files and prints the fixes that are new in the later one:
   package before the advisory that names its CVEs, so these are listed apart, as
   already fixed in the previous release.
 
-It prints nothing when there is no new fix, and when either release has no
-file. A release's file exists only once its tag build has published, so run
-this after that build passes.
+A release's files exist only once its tag build has published them, and
+release notes are usually written before that. Until then this prints one line
+that links the files and the page of new fixes the build will publish. Once both
+releases have their files it prints the new fixes themselves, or nothing when
+there are none.
 
-Usage: ami_security_notes.py PREVIOUS_TAG RELEASE_TAG
+With --page it prints that page for the release build to publish: the same
+lines under a heading, and a line saying so when nothing is new.
+
+Usage: ami_security_notes.py [--page] PREVIOUS_TAG RELEASE_TAG
 """
 
 import argparse
@@ -40,6 +45,8 @@ SEVERITIES = ["Critical", "Important", "Medium", "Low"]
 OPEN_CVE_LIMIT = 4
 # Stands in for the architectures a line applies to until both are compared.
 ARCHITECTURE_NAMES = "{architectures}"
+# The release build publishes this script's --page output under this name, beside the files.
+NEW_FIXES_PAGE = "security-fixes-linux-new.md"
 
 # kernel6.12-1:6.12.113-138.209.amzn2023.x86_64 -> kernel6.12, 6.12.113-138.209.amzn2023
 PACKAGE_BUILD = re.compile(r"^(?P<package>.+)-(?:\d+:)?(?P<version>[^-]+-[^-]+)\.[^.]+$")
@@ -195,48 +202,26 @@ def fix_groups(fixes: Iterable[Fix], versions: Callable[[str], str], indent: str
     return lines
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("previous_tag")
-    parser.add_argument("release_tag")
-    parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="where releases publish their security fixes")
-    args = parser.parse_args()
-
+def new_fix_lines(previous_tag: str, before: Dict[str, Fixes], after: Dict[str, Fixes]) -> List[str]:
+    """The lines for what is new in `after`; both map an architecture's name to its fixes."""
     # (order, line) -> the architectures it applies to, so identical lines print once
     kernel_lines: Dict[Tuple[int, str], List[str]] = collections.defaultdict(list)
     update_lines: Dict[Tuple[int, str], List[str]] = collections.defaultdict(list)
     late_lines: Dict[Tuple[int, str], List[str]] = collections.defaultdict(list)
-    published = {}  # architecture -> the release's published file
-    captured = []
-    for arch, label in ARCHITECTURES.items():
-        urls = [f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt" for tag in (args.previous_tag, args.release_tag)]
-        texts = [fetch(url) for url in urls]
-        for url, text in zip(urls, texts):
-            if text is None:
-                print(f"No security fixes at {url}; skipping {label}", file=sys.stderr)
-        if texts[1] is None:
-            print(
-                f"The {args.release_tag} release build publishes them when it passes. "
-                "Run this again after that to list the AMI security fixes.",
-                file=sys.stderr,
-            )
-        if None in texts:
-            continue
-        published[label] = urls[1]
-        before, after = map(parse_fixes, texts)
-        captured.append(after.captured)
-        line = kernel_line(before, after)
+    for label in after:
+        old, new = before[label], after[label]
+        line = kernel_line(old, new)
         if line:
             kernel_lines[(0, line)].append(label)
-        updated, already_fixed = new_fixes(before, after)
+        updated, already_fixed = new_fixes(old, new)
 
         def version_change(package: str) -> str:
-            old, current = only(before.packages[package]), only(after.packages[package])
-            return f" from `{old}` to `{current}`" if old and current else ""
+            was, now = only(old.packages[package]), only(new.packages[package])
+            return f" from `{was}` to `{now}`" if was and now else ""
 
         def previous_version(package: str) -> str:
-            old = only(before.packages[package])
-            return f" at `{old}`" if old else ""
+            was = only(old.packages[package])
+            return f" at `{was}`" if was else ""
 
         for severity, packages, fixed in fix_groups(updated, version_change):
             line = f"- Update {packages} in the Amazon Linux 2023 AMIs ({ARCHITECTURE_NAMES}), fixing {fixed}"
@@ -250,17 +235,61 @@ def main() -> int:
     output = for_architectures(kernel_lines) + for_architectures(update_lines)
     if late_lines:
         output.append(
-            f"- Published by Amazon Linux after {args.previous_tag} was built, for package versions {args.previous_tag} "
-            f"already had, so already fixed in {args.previous_tag} and possibly earlier:"
+            f"- Published by Amazon Linux after {previous_tag} was built, for package versions {previous_tag} "
+            f"already had, so already fixed in {previous_tag} and possibly earlier:"
         )
         output += for_architectures(late_lines)
-    if output:
-        links = ", ".join(f"[{label}]({url})" for label, url in published.items())
-        output.append(
-            f"- The CVEs Amazon Linux had published fixes for in these AMIs' Amazon Linux packages as of {min(captured)}, "
-            f"with advisory and package: {links}."
+    return output
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("previous_tag")
+    parser.add_argument("release_tag")
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="where releases publish their security fixes")
+    parser.add_argument("--page", action="store_true", help=f"print the page a release build publishes as {NEW_FIXES_PAGE}")
+    args = parser.parse_args()
+
+    urls = {
+        tag: {label: f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt" for arch, label in ARCHITECTURES.items()}
+        for tag in (args.previous_tag, args.release_tag)
+    }
+    all_fixes = ", ".join(f"[{label}]({url})" for label, url in urls[args.release_tag].items())
+    fixes: Dict[str, Dict[str, Fixes]] = {}  # tag -> architecture -> its fixes, for tags that published every file
+    for tag, by_label in urls.items():
+        texts = {label: fetch(url) for label, url in by_label.items()}
+        if None in texts.values():
+            print(f"{tag} has not published its security fixes for every architecture.", file=sys.stderr)
+        else:
+            fixes[tag] = {label: parse_fixes(text) for label, text in texts.items()}
+
+    if not args.page:
+        if len(fixes) < 2:
+            # The release build publishes the files and the page, so they can be linked before it runs.
+            print(
+                f"- Kernel and CVE fixes in this release's Amazon Linux 2023 AMIs: [new since {args.previous_tag}]"
+                f"({args.base_url}/{args.release_tag}/{NEW_FIXES_PAGE}). Every CVE Amazon Linux had published a fix "
+                f"for in their Amazon Linux packages: {all_fixes}."
+            )
+            return 0
+        lines = new_fix_lines(args.previous_tag, fixes[args.previous_tag], fixes[args.release_tag])
+    elif args.release_tag not in fixes:
+        return 1
+    else:
+        print(f"# Security fixes new in the Amazon Linux 2023 AMIs of Elastic CI Stack for AWS {args.release_tag}\n")
+        if args.previous_tag not in fixes:
+            lines = [f"- {args.previous_tag} published no security fixes, so there is nothing to compare with."]
+        else:
+            lines = new_fix_lines(args.previous_tag, fixes[args.previous_tag], fixes[args.release_tag]) or [
+                f"- No security fix is new since {args.previous_tag}."
+            ]
+    if lines:
+        captured = min(release.captured for release in fixes[args.release_tag].values())
+        lines.append(
+            f"- The CVEs Amazon Linux had published fixes for in these AMIs' Amazon Linux packages as of {captured}, "
+            f"with advisory and package: {all_fixes}."
         )
-        print("\n".join(output))
+        print("\n".join(lines))
     return 0
 
 
