@@ -3025,7 +3025,7 @@ Resources:
                   # invocation not yet started, leaving those agents running.
                   MaxErrors="100%",
                   Parameters={
-                      "commands": ["sudo pkill -TERM -x buildkite-agent || true"]
+                      "commands": ["sudo systemctl kill --kill-who=main --signal=SIGTERM buildkite-agent || true"]
                   }
               )
               logger.info(f"SSM command response: {response}")
