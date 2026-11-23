@@ -324,13 +324,18 @@ result beside them as `security-fixes-linux-new.md`:
   that release already had, listed apart as already fixed in the previous release.
 
 Release notes are written before the release build runs, so
-`.buildkite/scripts/generate-changelog.sh` adds a `### Security` line that links that page
-and the files at the addresses the build will publish them to. Nothing needs filling in
-afterwards. If the release build does not publish them, it says so in a build annotation,
-and the links need removing from the release notes.
+`.buildkite/scripts/generate-changelog.sh` compares the previous release with `main`,
+whose base AMIs the release takes its packages from. When `main` has new fixes it adds a
+`### Security` line that links the page and the files at the addresses the release build
+will publish them to, and nothing needs filling in afterwards. When `main` has none it
+adds nothing.
+
+The release build's annotation links the page it published. Check it when the notes have
+no Security line: Amazon Linux may have published fixes after `main` was last built. If
+the release build cannot publish the files, a warning annotation says to remove the links.
 
 Run after the release build has passed, the script lists the new fixes in the section
-itself, and adds nothing when there are none.
+itself.
 
 Windows Server 2022 and 2025 use the same change filters. The weekly `main` build
 refreshes both private base AMIs without building or publishing final AMIs.

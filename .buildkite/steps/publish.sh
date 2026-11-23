@@ -95,17 +95,21 @@ publish_for_branch() {
 
   # Release notes read these by tag, so one copy per branch or tag is enough.
   s3_upload_security_fixes "${branch}/"
-  if ! s3_upload_new_security_fixes "$branch"; then
+  local new_security_fixes=""
+  if s3_upload_new_security_fixes "$branch"; then
+    # Release notes written before a release build link this page only if the branch already had new fixes.
+    new_security_fixes="<br>AMI security fixes new since the previous release: <a href=\"https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${branch}/security-fixes-linux-new.md\">${branch}/security-fixes-linux-new.md</a>"
+  else
     echo "Did not publish the page of new AMI security fixes for ${branch}"
     if [[ -n "${BUILDKITE_TAG:-}" ]]; then
       buildkite-agent annotate --style "warning" --context "security-fixes" \
-        "This build did not publish the AMI security fixes for ${branch}. Remove the links to them from its release notes." \
+        "This build did not publish the AMI security fixes for ${branch}. Remove any links to them from its release notes." \
         || true
     fi
   fi
 
   cat <<EOF | buildkite-agent annotate --style "info"
-Published template <a href="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${branch}/aws-stack.yml">${branch}/aws-stack.yml</a>
+Published template <a href="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${branch}/aws-stack.yml">${branch}/aws-stack.yml</a>${new_security_fixes}
 EOF
 }
 

@@ -240,10 +240,14 @@ class AmiSecurityNotesTest(unittest.TestCase):
             ],
         )
 
-    def test_links_what_the_release_build_will_publish_until_every_file_exists(self):
+    def test_links_what_the_release_build_will_publish_when_the_branch_has_new_fixes(self):
         self.publish("v1.0.0")
         # Release notes are written before the release build runs. One architecture is not enough to list fixes from.
         self.publish("v1.1.0", ["amd64"], fixed=["ALAS2023-2026-0002", "ALAS2023-2026-0003"], libbrotli="1.1.0-1.amzn2023.0.10")
+        self.assertEqual(self.run_notes(), [], "nothing is known about the branch")
+        self.publish("main", jq="1.8.1-61.amzn2023")
+        self.assertEqual(self.run_notes(), [], "the branch has no new fix")
+        self.publish("main", fixed=["ALAS2023-2026-0002", "ALAS2023-2026-0003"], libbrotli="1.1.0-1.amzn2023.0.10")
         self.assertEqual(
             self.run_notes(),
             [

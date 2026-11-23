@@ -16,10 +16,11 @@ files and prints the fixes that are new in the later one:
   already fixed in the previous release.
 
 A release's files exist only once its tag build has published them, and
-release notes are usually written before that. Until then this prints one line
-that links the files and the page of new fixes the build will publish. Once both
-releases have their files it prints the new fixes themselves, or nothing when
-there are none.
+release notes are usually written before that. Until then this compares the
+previous release with the branch the release is tagged on. When the branch has
+new fixes it prints one line that links the files and the page of new fixes the
+release build will publish. Once both releases have their files it prints the
+new fixes themselves. Either way it prints nothing when nothing is new.
 
 With --page it prints that page for the release build to publish: the same
 lines under a heading, and a line saying so when nothing is new.
@@ -247,44 +248,50 @@ def main() -> int:
     parser.add_argument("previous_tag")
     parser.add_argument("release_tag")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="where releases publish their security fixes")
+    parser.add_argument("--branch", default="main", help="the branch the release is tagged on (default: %(default)s)")
     parser.add_argument("--page", action="store_true", help=f"print the page a release build publishes as {NEW_FIXES_PAGE}")
     args = parser.parse_args()
 
-    urls = {
-        tag: {label: f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt" for arch, label in ARCHITECTURES.items()}
-        for tag in (args.previous_tag, args.release_tag)
-    }
-    all_fixes = ", ".join(f"[{label}]({url})" for label, url in urls[args.release_tag].items())
-    fixes: Dict[str, Dict[str, Fixes]] = {}  # tag -> architecture -> its fixes, for tags that published every file
-    for tag, by_label in urls.items():
-        texts = {label: fetch(url) for label, url in by_label.items()}
-        if None in texts.values():
-            print(f"{tag} has not published its security fixes for every architecture.", file=sys.stderr)
-        else:
-            fixes[tag] = {label: parse_fixes(text) for label, text in texts.items()}
+    def urls(name: str) -> Dict[str, str]:
+        return {label: f"{args.base_url}/{name}/security-fixes-linux-{arch}.txt" for arch, label in ARCHITECTURES.items()}
 
-    if not args.page:
-        if len(fixes) < 2:
-            # The release build publishes the files and the page, so they can be linked before it runs.
+    def published(name: str) -> Optional[Dict[str, Fixes]]:
+        """A tag or branch's fixes for each architecture, when it has published them all."""
+        texts = {label: fetch(url) for label, url in urls(name).items()}
+        if None in texts.values():
+            print(f"{name} has not published its security fixes for every architecture.", file=sys.stderr)
+            return None
+        return {label: parse_fixes(text) for label, text in texts.items()}
+
+    all_fixes = ", ".join(f"[{label}]({url})" for label, url in urls(args.release_tag).items())
+    previous, release = published(args.previous_tag), published(args.release_tag)
+
+    if args.page:
+        if not release:
+            return 1
+        print(f"# Security fixes new in the Amazon Linux 2023 AMIs of Elastic CI Stack for AWS {args.release_tag}\n")
+        if previous:
+            lines = new_fix_lines(args.previous_tag, previous, release) or [f"- No security fix is new since {args.previous_tag}."]
+        else:
+            lines = [f"- {args.previous_tag} published no security fixes, so there is nothing to compare with."]
+    elif not previous:
+        return 0
+    elif release:
+        lines = new_fix_lines(args.previous_tag, previous, release)
+    else:
+        # Release notes are usually written before the release build runs. Its AMIs take their packages from
+        # the base AMIs built on the branch, so what is new on the branch is new in the release. The release
+        # build publishes the files and the page, so they can be linked now.
+        branch = published(args.branch)
+        if branch and new_fix_lines(args.previous_tag, previous, branch):
             print(
                 f"- Kernel and CVE fixes in this release's Amazon Linux 2023 AMIs: [new since {args.previous_tag}]"
                 f"({args.base_url}/{args.release_tag}/{NEW_FIXES_PAGE}). Every CVE Amazon Linux had published a fix "
                 f"for in their Amazon Linux packages: {all_fixes}."
             )
-            return 0
-        lines = new_fix_lines(args.previous_tag, fixes[args.previous_tag], fixes[args.release_tag])
-    elif args.release_tag not in fixes:
-        return 1
-    else:
-        print(f"# Security fixes new in the Amazon Linux 2023 AMIs of Elastic CI Stack for AWS {args.release_tag}\n")
-        if args.previous_tag not in fixes:
-            lines = [f"- {args.previous_tag} published no security fixes, so there is nothing to compare with."]
-        else:
-            lines = new_fix_lines(args.previous_tag, fixes[args.previous_tag], fixes[args.release_tag]) or [
-                f"- No security fix is new since {args.previous_tag}."
-            ]
+        return 0
     if lines:
-        captured = min(release.captured for release in fixes[args.release_tag].values())
+        captured = min(fixes.captured for fixes in release.values())
         lines.append(
             f"- The CVEs Amazon Linux had published fixes for in these AMIs' Amazon Linux packages as of {captured}, "
             f"with advisory and package: {all_fixes}."
