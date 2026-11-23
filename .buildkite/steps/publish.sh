@@ -7,12 +7,12 @@ s3_upload_templates() {
   aws s3 cp --content-type 'text/yaml' build/mappings.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}mappings.yml"
   aws s3 cp --content-type 'text/yaml' build/aws-stack.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}aws-stack.yml"
 
-  # The package lists only feed release notes, so a failed copy must not stop publishing.
-  local package_list
-  for package_list in build/packages-*.tsv; do
-    [[ -e "$package_list" ]] || continue
-    aws s3 cp --content-type 'text/tab-separated-values' "$package_list" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}$(basename "$package_list")" \
-      || echo "WARNING: could not publish ${package_list} to ${bucket_prefix:-the bucket root}"
+  # The security fixes only feed release notes, so a failed copy must not stop publishing.
+  local security_fixes
+  for security_fixes in build/security-fixes-*.txt; do
+    [[ -e "$security_fixes" ]] || continue
+    aws s3 cp --content-type 'text/plain' "$security_fixes" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}$(basename "$security_fixes")" \
+      || echo "WARNING: could not publish ${security_fixes} to ${bucket_prefix:-the bucket root}"
   done
 }
 
@@ -40,10 +40,10 @@ echo "--- Downloading mappings.yml artifact"
 mkdir -p build/
 buildkite-agent artifact download build/mappings.yml build/
 
-echo "--- Downloading AMI package lists"
+echo "--- Downloading AMI security fixes"
 # Saved by the Linux test steps; absent when a build reuses the AMIs from main.
-buildkite-agent artifact download "build/packages-*.tsv" build/ \
-  || echo "No AMI package lists in this build"
+buildkite-agent artifact download "build/security-fixes-*.txt" build/ \
+  || echo "No AMI security fixes in this build"
 
 echo "--- Building :cloudformation: CloudFormation templates"
 make build/aws-stack.yml

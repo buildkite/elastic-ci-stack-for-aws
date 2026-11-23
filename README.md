@@ -309,13 +309,14 @@ Branch and PR builds use `if_changed` to select affected AMI builds and tests.
 Pushing a release tag builds and tests all final AMIs and publishes the
 CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
 
-The Amazon Linux 2023 test steps save each AMI's installed packages, and the publish
-step copies them next to the template as `packages-linux-<arch>.tsv`.
+The Amazon Linux 2023 test steps save each AMI's booted kernel, its installed packages,
+and the advisories and CVEs `dnf updateinfo` reports those packages fix. The publish
+step copies them next to the template as `security-fixes-linux-<arch>.txt`.
 `.buildkite/scripts/generate-changelog.sh` compares them with the previous release's
-lists and adds a `### Security` section naming the Amazon Linux advisories and CVEs
-fixed by the packages that changed. It adds nothing when no package picked up a fix.
+files and adds a `### Security` section with the kernel change and the advisories and
+CVEs newly fixed by the packages that changed. It adds nothing when neither changed.
 Run the script after the release tag's build has passed: until then the release has
-no package lists, and the script says so and leaves the section out.
+no files, and the script says so and leaves the section out.
 
 Windows Server 2022 and 2025 use the same change filters. The weekly `main` build
 refreshes both private base AMIs without building or publishing final AMIs.

@@ -1,62 +1,60 @@
 #!/usr/bin/env python3
 """Offline checks for the AMI security lines added to release notes."""
-import gzip
-import importlib.util
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
 
-ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / ".buildkite/scripts/ami_security_notes.py"
+SCRIPT = Path(__file__).resolve().parents[2] / ".buildkite/scripts/ami_security_notes.py"
 
-spec = importlib.util.spec_from_file_location("ami_security_notes", SCRIPT)
-notes = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(notes)
+OLD_KERNEL = "6.12.111-136.204.amzn2023"
+NEW_KERNEL = "6.12.113-138.209.amzn2023"
+RPM_ARCH = {"amd64": "x86_64", "arm64": "aarch64"}
+
+# What `dnf updateinfo list --installed --security` knows: advisory, severity,
+# CVEs, and the package builds that carry the fix.
+ADVISORIES = {
+    "ALAS2023-2026-0001": ("Important", [f"CVE-2026-{n}" for n in range(1000, 1006)],
+                           {"kernel6.12": NEW_KERNEL, "kernel6.12-headers": NEW_KERNEL}),
+    "ALAS2023-2026-0002": ("Medium", ["CVE-2026-2000"], {"libbrotli": "1.1.0-1.amzn2023.0.10"}),
+    "ALAS2023-2026-0003": ("Critical", ["CVE-2026-3000"], {"openssl-libs": "3.5.7-2.amzn2023.0.1"}),
+    "ALAS2023-2026-0004": ("Important", ["CVE-2026-4000"], {"curl": "8.21.0-5.amzn2023.0.3"}),
+    "ALAS2023-2026-0005": ("Important", ["CVE-2026-5000"], {"kernel6.18": "6.18.56-125.164.amzn2023"}),
+    # Amazon publishes some advisories without naming a CVE.
+    "ALAS2023-2026-0006": ("Important", [], {"systemd-libs": "252.23-12.amzn2023"}),
+    # Two advisories fixed by the same build.
+    "ALAS2023-2026-0007": ("Low", ["CVE-2026-7000"], {"amazon-ssm-agent": "3.3.5226.0-1.amzn2023"}),
+    "ALAS2023-2026-0008": ("Low", ["CVE-2026-8000"], {"amazon-ssm-agent": "3.3.5226.0-1.amzn2023"}),
+}
+
+PREVIOUS_PACKAGES = {
+    "kernel6.12": OLD_KERNEL,
+    "kernel6.12-headers": OLD_KERNEL,
+    "libbrotli": "1.1.0-1.amzn2023.0.9",
+    "openssl-libs": "3.5.7-2.amzn2023.0.1",
+    "curl": "8.21.0-5.amzn2023.0.3",
+    "systemd-libs": "252.23-11.amzn2023",
+    "amazon-ssm-agent": "3.3.4624.0-1.amzn2023",
+    "jq": "1.8.1-60.amzn2023",
+}
 
 
-def advisory(advisory_id, severity, source, cves, packages):
-    references = "".join(f'<reference id="{cve}" type="cve"/>' for cve in cves)
-    entries = "".join(
-        f'<package name="{name}" epoch="{epoch}" version="{version}" release="{release}" arch="{arch}"/>'
-        for name, epoch, version, release in packages
-        for arch in ("x86_64", "aarch64")
-    )
-    return (
-        f'<update type="security"><id>{advisory_id}</id>'
-        f"<title>Amazon Linux 2023 - {advisory_id}: {severity} priority package update for {source}</title>"
-        f"<severity>{severity}</severity><references>{references}</references>"
-        f"<pkglist><collection>{entries}</collection></pkglist></update>"
-    )
+def security_fixes(arch, kernel, packages, fixed):
+    """A file as save-security-fixes.sh writes it, for an AMI where `fixed` advisories apply."""
+    lines = [f"kernel {kernel}.{RPM_ARCH[arch]}"]
+    lines += [f"package {name} {version}" for name, version in sorted(packages.items())]
+    for advisory in fixed:
+        severity, cves, builds = ADVISORIES[advisory]
+        for name, version in builds.items():
+            build = f"{name}-{version}.{RPM_ARCH[arch]}"
+            lines.append(f"{advisory}  {severity}/Sec. {build}")
+            lines += [f"{cve}  {severity}/Sec. {build}" for cve in cves]
+    return "\n".join(lines) + "\n"
 
 
-ADVISORIES = [
-    advisory("ALAS2023-2026-0001", "Important", "kernel6.12", [f"CVE-2026-{n}" for n in range(1000, 1006)],
-             [("kernel6.12", 1, "6.12.113", "138.209.amzn2023"), ("kernel6.12-headers", 1, "6.12.113", "138.209.amzn2023")]),
-    # Fixed in release .10, which sorts after .9 only when compared as numbers.
-    advisory("ALAS2023-2026-0002", "Medium", "brotli", ["CVE-2026-2000"], [("libbrotli", 0, "1.1.0", "1.amzn2023.0.10")]),
-    advisory("ALAS2023-2026-0003", "Critical", "openssl", ["CVE-2026-3000"], [("openssl-libs", 1, "3.5.7", "2.amzn2023.0.1")]),
-    advisory("ALAS2023-2026-0004", "Important", "curl", ["CVE-2026-4000"], [("curl", 0, "8.21.0", "5.amzn2023.0.3")]),
-    advisory("ALAS2023-2026-0005", "Important", "firefox", ["CVE-2026-5000"], [("firefox", 0, "153.6.0", "1.amzn2023")]),
-    advisory("ALAS2023-2026-0006", "Important", "kernel6.18", ["CVE-2026-6000"], [("kernel6.18", 1, "6.18.56", "125.164.amzn2023")]),
-]
-
-
-def package_list(arch, **overrides):
-    packages = {
-        "kernel6.12": (1, "6.12.111", "136.204.amzn2023"),
-        "kernel6.12-headers": (1, "6.12.111", "136.204.amzn2023"),
-        "libbrotli": (0, "1.1.0", "1.amzn2023.0.9"),
-        # Already has the openssl fix: the fixed version equals the old version.
-        "openssl-libs": (1, "3.5.7", "2.amzn2023.0.1"),
-        "curl": (0, "8.21.0", "5.amzn2023.0.1"),
-        "jq": (0, "1.8.1", "60.amzn2023"),
-    }
-    packages.update(overrides)
-    return "".join(
-        f"{name}\t{epoch}\t{version}\t{release}\t{arch}\n" for name, (epoch, version, release) in sorted(packages.items()) if version
-    )
+def link(advisory):
+    return f"[{advisory}](https://alas.aws.amazon.com/AL2023/{advisory}.html)"
 
 
 class AmiSecurityNotesTest(unittest.TestCase):
@@ -64,84 +62,103 @@ class AmiSecurityNotesTest(unittest.TestCase):
         temp = tempfile.TemporaryDirectory(prefix="ami-security-notes-")
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
-        self.updateinfo = self.root / "updateinfo.xml.gz"
-        self.updateinfo.write_bytes(gzip.compress(f"<updates>{''.join(ADVISORIES)}</updates>".encode()))
 
-    def publish(self, tag, amd64=None, arm64=None):
-        (self.root / tag).mkdir()
-        for arch, rpm_arch, overrides in (("amd64", "x86_64", amd64), ("arm64", "aarch64", arm64)):
-            if overrides is not None:
-                (self.root / tag / f"packages-linux-{arch}.tsv").write_text(package_list(rpm_arch, **overrides))
+    def publish(self, tag, arch, kernel=OLD_KERNEL, fixed=("ALAS2023-2026-0003",), **changed):
+        """Publish a release's file for one architecture; the defaults are the previous release."""
+        packages = {name: version for name, version in {**PREVIOUS_PACKAGES, **changed}.items() if version}
+        (self.root / tag).mkdir(exist_ok=True)
+        (self.root / tag / f"security-fixes-linux-{arch}.txt").write_text(security_fixes(arch, kernel, packages, fixed))
 
-    def run_notes(self, previous="v1.0.0", release="v1.1.0"):
+    def run_notes(self):
         result = subprocess.run(
-            [sys.executable, str(SCRIPT), previous, release, "--base-url", self.root.as_uri(), "--updateinfo", self.updateinfo.as_uri()],
+            [sys.executable, str(SCRIPT), "v1.0.0", "v1.1.0", "--base-url", self.root.as_uri()],
             capture_output=True, text=True, check=True,
         )
-        return result.stdout
+        return result.stdout.splitlines()
 
-    def test_lists_fixes_between_the_old_and_new_versions(self):
-        new_kernel = (1, "6.12.113", "138.209.amzn2023")
-        self.publish("v1.0.0", amd64={}, arm64={})
+    def all_fixes(self, *architectures):
+        links = ", ".join(
+            f"[{arch.upper()}]({self.root.as_uri()}/v1.1.0/security-fixes-linux-{arch}.txt)" for arch in architectures
+        )
+        return f"- Every advisory and CVE these AMIs include a fix for: {links}."
+
+    def test_lists_the_fixes_changed_packages_picked_up(self):
+        for arch in ("amd64", "arm64"):
+            self.publish("v1.0.0", arch)
         self.publish(
-            "v1.1.0",
-            # Lands exactly on the brotli fix, and stops one build short of the curl fix.
-            amd64={"kernel6.12": new_kernel, "kernel6.12-headers": new_kernel,
-                   "libbrotli": (0, "1.1.0", "1.amzn2023.0.10"), "curl": (0, "8.21.0", "5.amzn2023.0.2"),
-                   "openssl-libs": (1, "3.5.8", "1.amzn2023"), "jq": (0, "1.8.1", "61.amzn2023")},
-            arm64={"kernel6.12": new_kernel, "kernel6.12-headers": new_kernel},
+            "v1.1.0", "amd64", kernel=NEW_KERNEL,
+            # The curl advisory was published late for a build this AMI already had.
+            fixed=["ALAS2023-2026-0001", "ALAS2023-2026-0002", "ALAS2023-2026-0003", "ALAS2023-2026-0004"],
+            **{"kernel6.12": NEW_KERNEL, "kernel6.12-headers": NEW_KERNEL, "libbrotli": "1.1.0-1.amzn2023.0.10",
+               "jq": "1.8.1-61.amzn2023"},
+        )
+        self.publish(
+            "v1.1.0", "arm64", kernel=NEW_KERNEL, fixed=["ALAS2023-2026-0001", "ALAS2023-2026-0003"],
+            **{"kernel6.12": NEW_KERNEL, "kernel6.12-headers": NEW_KERNEL},
         )
         self.assertEqual(
-            self.run_notes().splitlines(),
+            self.run_notes(),
             [
-                "- Update `kernel6.12` and 1 related package from `6.12.111-136.204.amzn2023` to `6.12.113-138.209.amzn2023` "
-                "in the Amazon Linux 2023 AMIs (AMD64 and ARM64), fixing 6 CVEs "
-                "([ALAS2023-2026-0001](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-0001.html)).",
+                f"- Update the Amazon Linux 2023 kernel from `{OLD_KERNEL}` to `{NEW_KERNEL}` (AMD64 and ARM64).",
+                f"- Update `kernel6.12` and 1 related package from `{OLD_KERNEL}` to `{NEW_KERNEL}` "
+                f"in the Amazon Linux 2023 AMIs (AMD64 and ARM64), fixing 6 CVEs ({link('ALAS2023-2026-0001')}).",
                 "  <details><summary>CVEs fixed by ALAS2023-2026-0001</summary>",
                 "",
                 "  CVE-2026-1000, CVE-2026-1001, CVE-2026-1002, CVE-2026-1003, CVE-2026-1004, CVE-2026-1005",
                 "",
                 "  </details>",
                 "- Update `libbrotli` from `1.1.0-1.amzn2023.0.9` to `1.1.0-1.amzn2023.0.10` in the Amazon Linux 2023 AMIs "
-                "(AMD64), fixing CVE-2026-2000 ([ALAS2023-2026-0002](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-0002.html)).",
+                f"(AMD64), fixing CVE-2026-2000 ({link('ALAS2023-2026-0002')}).",
+                self.all_fixes("amd64", "arm64"),
+            ],
+        )
+
+    def test_names_the_advisory_when_it_lists_no_cve_and_joins_advisories_fixed_by_one_build(self):
+        self.publish("v1.0.0", "amd64")
+        self.publish(
+            "v1.1.0", "amd64",
+            fixed=["ALAS2023-2026-0003", "ALAS2023-2026-0006", "ALAS2023-2026-0007", "ALAS2023-2026-0008"],
+            **{"systemd-libs": "252.23-12.amzn2023", "amazon-ssm-agent": "3.3.5226.0-1.amzn2023"},
+        )
+        self.assertEqual(
+            self.run_notes(),
+            [
+                "- Update `systemd-libs` from `252.23-11.amzn2023` to `252.23-12.amzn2023` in the Amazon Linux 2023 AMIs "
+                f"(AMD64), fixing {link('ALAS2023-2026-0006')}.",
+                "- Update `amazon-ssm-agent` from `3.3.4624.0-1.amzn2023` to `3.3.5226.0-1.amzn2023` in the Amazon Linux "
+                f"2023 AMIs (AMD64), fixing CVE-2026-7000, CVE-2026-8000 ({link('ALAS2023-2026-0007')}, "
+                f"{link('ALAS2023-2026-0008')}).",
+                self.all_fixes("amd64"),
             ],
         )
 
     def test_prints_nothing_when_no_package_picked_up_a_fix(self):
-        self.publish("v1.0.0", amd64={}, arm64={})
-        # Same packages on AMD64; an upgrade with no advisory on ARM64.
-        self.publish("v1.1.0", amd64={}, arm64={"jq": (0, "1.8.1", "61.amzn2023")})
-        self.assertEqual(self.run_notes(), "")
+        for arch in ("amd64", "arm64"):
+            self.publish("v1.0.0", arch)
+        self.publish("v1.1.0", "amd64")
+        # An upgrade with no advisory.
+        self.publish("v1.1.0", "arm64", jq="1.8.1-61.amzn2023")
+        self.assertEqual(self.run_notes(), [])
 
-    def test_prints_nothing_when_a_release_has_no_package_list(self):
-        self.publish("v1.0.0")
-        self.publish("v1.1.0", amd64={"libbrotli": (0, "1.1.0", "1.amzn2023.0.10")}, arm64={})
-        self.assertEqual(self.run_notes(), "")
+    def test_prints_nothing_when_a_release_has_no_file(self):
+        self.publish("v1.1.0", "amd64", fixed=["ALAS2023-2026-0002", "ALAS2023-2026-0003"], libbrotli="1.1.0-1.amzn2023.0.10")
+        self.publish("v1.0.0", "arm64")
+        self.assertEqual(self.run_notes(), [])
 
-    def test_reports_a_kernel_line_change_without_fixes(self):
-        self.publish("v1.0.0", amd64={}, arm64={})
-        moved = {"kernel6.12": (0, "", ""), "kernel6.12-headers": (0, "", ""), "kernel6.18": (1, "6.18.56", "125.164.amzn2023")}
-        self.publish("v1.1.0", amd64=moved, arm64={})
+    def test_reports_a_kernel_line_change_without_the_new_line_s_past_fixes(self):
+        self.publish("v1.0.0", "amd64")
+        self.publish(
+            "v1.1.0", "amd64", kernel="6.18.56-125.164.amzn2023", fixed=["ALAS2023-2026-0003", "ALAS2023-2026-0005"],
+            **{"kernel6.12": None, "kernel6.12-headers": None, "kernel6.18": "6.18.56-125.164.amzn2023"},
+        )
         self.assertEqual(
-            self.run_notes().splitlines(),
+            self.run_notes(),
             [
-                "- Change the Amazon Linux 2023 kernel from `kernel6.12` `6.12.111-136.204.amzn2023` to `kernel6.18` "
-                "`6.18.56-125.164.amzn2023` (AMD64). Fixes are not listed across a change of kernel line."
+                f"- Change the Amazon Linux 2023 kernel from `{OLD_KERNEL}` to `6.18.56-125.164.amzn2023` (AMD64). "
+                "Fixes are not listed across a change of kernel line.",
+                self.all_fixes("amd64"),
             ],
         )
-
-    def test_rpm_version_comparison(self):
-        # Each expected result was checked against rpm 4.16 on Amazon Linux 2023 (rpm.vercmp).
-        cases = [
-            ("1.0", "1.0", 0), ("1.0", "2.0", -1), ("2.0.1", "2.0", 1), ("5.5p1", "5.5p2", -1), ("5.5p10", "5.5p1", 1),
-            ("10xyz", "10.1xyz", -1), ("xyz10", "xyz10.1", -1), ("fc4", "fc.4", 0), ("2a", "2.0", -1), ("1.0", "1.fc4", 1),
-            ("1.0~rc1", "1.0", -1), ("1.0~rc1", "1.0~rc2", -1), ("1.0^", "1.0", 1), ("1.0^git1", "1.01", -1),
-            ("1.0~rc1^git1", "1.0~rc1", 1), ("0.10", "0.9", 1), ("007", "7", 0),
-        ]
-        for a, b, expected in cases:
-            with self.subTest(a=a, b=b):
-                self.assertEqual(notes.rpmvercmp(a, b), expected)
-                self.assertEqual(notes.rpmvercmp(b, a), -expected)
 
 
 if __name__ == "__main__":
