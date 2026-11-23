@@ -801,6 +801,16 @@ Parameters:
     MinValue: 30
     MaxValue: 7200
 
+  LinuxLaunchTimeout:
+    Description: >
+      Seconds a Linux instance may wait for bootstrap and agent service startup before
+      Auto Scaling abandons the launch. Includes OS setup, storage, Docker, and customer
+      bootstrap. Does not change InstanceCreationTimeout. Requires the matching release's Linux AMI.
+    Type: Number
+    Default: 900
+    MinValue: 30
+    MaxValue: 7200
+
   RootVolumeSize:
     Description: Size of each instance's root EBS volume (in GB).
     Type: Number
@@ -2190,14 +2200,11 @@ Resources:
               - autoscaling:SetInstanceHealth
               - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
-          - !If
-            - UseWindowsAgents
-            - Sid: CompleteWindowsLaunch
-              Effect: Allow
-              Action:
-                - autoscaling:CompleteLifecycleAction
-              Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
-            - !Ref "AWS::NoValue"
+          - Sid: CompleteInstanceLaunch
+            Effect: Allow
+            Action:
+              - autoscaling:CompleteLifecycleAction
+            Resource: !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${AWS::StackName}-AgentAutoScaleGroup-*
           - Sid: Logging
             Effect: Allow
             Action:
@@ -2556,12 +2563,10 @@ Resources:
                   --==BOUNDARY==
                   Content-Type: text/x-shellscript; charset="us-ascii"
                   #!/bin/bash -v
+                  set -e
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                   BUILDKITE_MOUNT_TMPFS_AT_TMP="${MountTmpfsAtTmp}" \
                     /usr/local/bin/bk-mount-instance-storage.sh
-                  --==BOUNDARY==
-                  Content-Type: text/x-shellscript; charset="us-ascii"
-                  #!/bin/bash -v
                   DOCKER_USERNS_REMAP=${EnableDockerUserNamespaceRemap} \
                   DOCKER_EXPERIMENTAL=${EnableDockerExperimental} \
                   DOCKER_PRUNE_UNTIL=${DockerPruneUntil} \
@@ -2575,12 +2580,11 @@ Resources:
                   DOCKER_FIXED_CIDR_V6="${DockerFixedCidrV6}" \
                   BUILDKITE_ENABLE_INSTANCE_STORAGE="${EnableInstanceStorage}" \
                     /usr/local/bin/bk-configure-docker.sh
-                  --==BOUNDARY==
-                  Content-Type: text/x-shellscript; charset="us-ascii"
-                  #!/bin/bash -v
                   BUILDKITE_STACK_NAME="${AWS::StackName}" \
                   BUILDKITE_STACK_VERSION="%v" \
                   BUILDKITE_STACK_DEPLOYED_BY="cloudformation" \
+                  BUILDKITE_LAUNCH_HOOK_NAME="buildkite-agent-launch" \
+                  BUILDKITE_LAUNCH_TIMEOUT="${LinuxLaunchTimeout}" \
                   BUILDKITE_SCALE_IN_IDLE_PERIOD="${ScaleInIdlePeriod}" \
                   BUILDKITE_SECRETS_BUCKET="${LocalSecretsBucket}" \
                   BUILDKITE_SECRETS_BUCKET_REGION="${LocalSecretsBucketRegion}" \
@@ -2671,13 +2675,11 @@ Resources:
       - VpcComplete
     Properties:
       VPCZoneIdentifier: !If [ "CreateVpcResources", [ !Ref Subnet0, !Ref Subnet1 ], !Ref Subnets ]
-      LifecycleHookSpecificationList: !If
-        - UseWindowsAgents
-        - - LifecycleHookName: buildkite-agent-launch
-            LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
-            DefaultResult: ABANDON
-            HeartbeatTimeout: !Ref WindowsLaunchTimeout
-        - !Ref "AWS::NoValue"
+      LifecycleHookSpecificationList:
+        - LifecycleHookName: buildkite-agent-launch
+          LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
+          DefaultResult: ABANDON
+          HeartbeatTimeout: !If [ UseWindowsAgents, !Ref WindowsLaunchTimeout, !Ref LinuxLaunchTimeout ]
       MixedInstancesPolicy:
         InstancesDistribution:
           OnDemandBaseCapacity: !Ref OnDemandBaseCapacity
