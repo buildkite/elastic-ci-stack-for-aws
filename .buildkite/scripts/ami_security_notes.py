@@ -8,7 +8,7 @@ its AMIs booted, their installed packages, and the Amazon Linux advisories and
 CVEs those packages fix, as `dnf updateinfo` reports them (see
 .buildkite/steps/save-security-fixes.sh). This script compares two releases'
 files and prints the advisories that are new in the later one, for packages
-whose installed version changed.
+whose installed version changed, and links the later release's files.
 
 It prints nothing when no package picked up a fix, and when either release has
 no file. A release's file exists only once its tag build has published, so run
@@ -32,8 +32,8 @@ ADVISORY_URL = "https://alas.aws.amazon.com/AL2023/{}.html"
 # Stack architecture name, as used in file names and release notes.
 ARCHITECTURES = {"amd64": "AMD64", "arm64": "ARM64"}
 SEVERITIES = ["Critical", "Important", "Medium", "Low"]
-# More CVEs than this go in a collapsed list under the line.
-INLINE_CVE_LIMIT = 4
+# More CVEs than this are collapsed under the line.
+OPEN_CVE_LIMIT = 4
 # Stands in for the architectures a line applies to until both are compared.
 ARCHITECTURE_NAMES = "{architectures}"
 
@@ -50,19 +50,22 @@ def parse_fixes(text: str) -> Fixes:
     fixes = Fixes("", collections.defaultdict(set), collections.defaultdict(set), {}, collections.defaultdict(set))
     for line in text.splitlines():
         fields = line.split()
-        if not fields:
+        if not fields or fields[0].startswith("#"):
             continue
         if fields[0] == "kernel":
             # 6.12.115-140.210.amzn2023.x86_64
             fixes = fixes._replace(kernel=re.sub(r"\.(x86_64|aarch64)$", "", fields[1]))
         elif fields[0] == "package":
             fixes.packages[fields[1]].add(fields[2])
-        elif fields[0].startswith("ALAS"):
-            # ALAS2023-2026-3255  Important/Sec. libcap-2.73-1.amzn2023.0.8.x86_64
-            fixes.advisories[fields[0]].add(fields[2])
-            fixes.severities[fields[0]] = fields[1].split("/")[0]
-        elif fields[0].startswith("CVE-"):
-            fixes.cves[fields[2]].add(fields[0])
+        else:
+            # CVE-2026-78659 ALAS2023-2026-3255 Important libcap-2.73-1.amzn2023.0.8.x86_64
+            cve, advisories, severity, build = fields
+            # A build that fixes several advisories lists them all.
+            for advisory in advisories.split(","):
+                fixes.advisories[advisory].add(build)
+                fixes.severities[advisory] = severity
+            if cve != "-":
+                fixes.cves[build].add(cve)
     return fixes
 
 
@@ -76,7 +79,7 @@ def only(versions: Set[str]) -> Optional[str]:
 
 
 def fetch(url: str) -> Optional[str]:
-    """Return the text of the gzip file at url, or None when it does not exist."""
+    """Return the text at url, which is stored gzipped, or None when it does not exist."""
     try:
         with urllib.request.urlopen(url, timeout=60) as response:
             return gzip.decompress(response.read()).decode()
@@ -90,6 +93,11 @@ def fetch(url: str) -> Optional[str]:
         raise
 
 
+def cve_number(cve: str) -> List[int]:
+    # CVE-2026-98432 -> [2026, 98432], so CVE-2026-98432 sorts before CVE-2026-100072
+    return [int(part) for part in cve.split("-")[1:]]
+
+
 def kernel_line(before: Fixes, after: Fixes) -> Optional[str]:
     if not before.kernel or not after.kernel or before.kernel == after.kernel:
         return None
@@ -98,7 +106,7 @@ def kernel_line(before: Fixes, after: Fixes) -> Optional[str]:
     return (
         f"- {'Update' if same_line else 'Change'} the Amazon Linux 2023 kernel "
         f"from `{before.kernel}` to `{after.kernel}` ({ARCHITECTURE_NAMES})."
-        + ("" if same_line else " Fixes are not listed across a change of kernel line.")
+        + ("" if same_line else " Kernel fixes are not listed across a change of kernel line; the files linked below list every kernel CVE these AMIs include a fix for.")
     )
 
 
@@ -123,19 +131,22 @@ def advisory_lines(before: Fixes, after: Fixes) -> Dict[str, List[str]]:
         related = f" and {len(names) - 1} related package{'s' if len(names) > 2 else ''}" if len(names) > 1 else ""
         old, current = only(before.packages[names[0]]), only(after.packages[names[0]])
         versions = f" from `{old}` to `{current}`" if old and current else ""
-        cves = sorted(set().union(*(after.cves.get(build, set()) for build in builds)))
+        cves = sorted(set().union(*(after.cves.get(build, set()) for build in builds)), key=cve_number)
         links = ", ".join(f"[{advisory}]({ADVISORY_URL.format(advisory)})" for advisory in advisories)
         line = f"- Update `{names[0]}`{related}{versions} in the Amazon Linux 2023 AMIs ({ARCHITECTURE_NAMES}), fixing "
+        cve_list = "\n".join(f"  - {cve}" for cve in cves)
         if not cves:
             # Some advisories name no CVE, so there is only the advisory to point to.
             line += f"{links}."
-        elif len(cves) <= INLINE_CVE_LIMIT:
-            line += f"{', '.join(cves)} ({links})."
+        elif len(cves) == 1:
+            line += f"{cves[0]} ({links})."
+        elif len(cves) <= OPEN_CVE_LIMIT:
+            line += f"{len(cves)} CVEs ({links}):\n{cve_list}"
         else:
             line += (
                 f"{len(cves)} CVEs ({links}).\n"
                 f"  <details><summary>CVEs fixed by {', '.join(advisories)}</summary>\n\n"
-                f"  {', '.join(cves)}\n\n"
+                f"{cve_list}\n\n"
                 "  </details>"
             )
         lines[after.severities[advisories[0]]].append(line)
@@ -154,7 +165,7 @@ def main() -> int:
     fix_lines: Dict[str, Dict[str, List[str]]] = collections.defaultdict(lambda: collections.defaultdict(list))
     published = {}  # architecture -> the release's published file
     for arch, label in ARCHITECTURES.items():
-        urls = [f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt.gz" for tag in (args.previous_tag, args.release_tag)]
+        urls = [f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt" for tag in (args.previous_tag, args.release_tag)]
         texts = [fetch(url) for url in urls]
         for url, text in zip(urls, texts):
             if text is None:
@@ -183,7 +194,7 @@ def main() -> int:
         output += for_architectures(fix_lines.get(severity, {}))
     if output:
         links = ", ".join(f"[{label}]({url})" for label, url in published.items())
-        output.append(f"- Every advisory and CVE these AMIs include a fix for: {links}.")
+        output.append(f"- Every CVE these AMIs include a fix for, with its advisory and package: {links}.")
         print("\n".join(output))
     return 0
 

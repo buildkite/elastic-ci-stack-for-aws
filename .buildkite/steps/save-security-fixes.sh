@@ -1,9 +1,10 @@
 #!/bin/bash
-# Saves the kernel this instance booted, its installed packages, and the Amazon
-# Linux advisories and CVEs those packages already fix, as a build artifact. The
-# release notes compare two releases' files to list what a release newly fixes
-# (see .buildkite/scripts/ami_security_notes.py). Run it on an instance launched
-# from the Amazon Linux 2023 AMI under test.
+# Saves the CVEs this instance's packages already fix, as Amazon Linux reports
+# them, with the kernel it booted and its installed packages, as a build
+# artifact. Release notes link the published file, and compare two releases'
+# files to list what a release newly fixes (see
+# .buildkite/scripts/ami_security_notes.py). Run it on an instance launched from
+# the Amazon Linux 2023 AMI under test.
 #
 # The file only feeds release notes, so a failure here warns and never fails
 # the job.
@@ -13,22 +14,62 @@ os="${1:-linux}"
 arch="${2:-amd64}"
 fixes="build/security-fixes-${os}-${arch}.txt"
 
+scratch="$(mktemp -d)"
+trap 'rm -rf "$scratch"' EXIT
+
 # The AMI's repository is locked to the AMI's release; "latest" has every advisory
 # published so far. The time limit keeps a slow repository inside the job's timeout.
 fixed_advisories() {
   timeout 90 dnf --quiet --releasever=latest updateinfo list --installed --security "$@"
 }
 
+# dnf lists advisories and CVEs separately, each with the package build that
+# carries the fix. This puts each CVE beside the advisories for its build, oldest
+# CVE first and advisories without a CVE last.
+fixes_by_cve() {
+  # The first column only orders the two kinds of line, and is cut after sorting.
+  awk '
+    FNR == NR { advisories[$3] = ($3 in advisories ? advisories[$3] "," : "") $1; severity[$3] = $2; next }
+    { has_cve[$3] = 1; sub("/.*", "", $2); print 0, $1, advisories[$3], $2, $3 }
+    END {
+      for (build in advisories) {
+        if (build in has_cve) continue
+        sub("/.*", "", severity[build])
+        print 1, "-", advisories[build], severity[build], build
+      }
+    }
+  ' "$scratch/advisories" "$scratch/cves" | LC_ALL=C sort -k1,1n -k2,2V -k5,5 | cut -d' ' -f2-
+}
+
+header() {
+  cat <<EOF
+# Security fixes in this Elastic CI Stack for AWS AMI (Amazon Linux 2023, ${arch}).
+#
+# After the booted kernel, each line is a fixed CVE: the CVE, the Amazon Linux
+# advisory that fixed it, the advisory's severity, and the package build that
+# first carried the fix. The AMI has that build or a later one. A "-" in place
+# of the CVE is an advisory that names no CVE.
+#
+# Advisory pages: https://alas.aws.amazon.com/AL2023/<advisory>.html
+# The installed packages are at the end of the file.
+
+EOF
+}
+
 save_security_fixes() {
   mkdir -p build || return
-  {
-    echo "kernel $(uname -r)" \
-      && rpm -qa --qf 'package %{NAME} %{VERSION}-%{RELEASE}\n' | LC_ALL=C sort -u \
-      && fixed_advisories \
-      && fixed_advisories --with-cve
-  } >"$fixes" || return
+  fixed_advisories >"$scratch/advisories" || return
+  fixed_advisories --with-cve >"$scratch/cves" || return
   # Without advisories, the next release would look like it fixed all of them.
-  grep -q '^ALAS' "$fixes" || return
+  grep -q '^ALAS' "$scratch/advisories" || return
+  {
+    header \
+      && echo "kernel $(uname -r)" \
+      && echo \
+      && fixes_by_cve \
+      && echo \
+      && rpm -qa --qf 'package %{NAME} %{VERSION}-%{RELEASE}\n' | LC_ALL=C sort -u
+  } >"$fixes" || return
   # Over 1 MB of text per AMI, and under 100 KB compressed.
   gzip -9 --force "$fixes" || return
   buildkite-agent artifact upload "${fixes}.gz"

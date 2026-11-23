@@ -13,8 +13,8 @@ OLD_KERNEL = "6.12.111-136.204.amzn2023"
 NEW_KERNEL = "6.12.113-138.209.amzn2023"
 RPM_ARCH = {"amd64": "x86_64", "arm64": "aarch64"}
 
-# What `dnf updateinfo list --installed --security` knows: advisory, severity,
-# CVEs, and the package builds that carry the fix.
+# What Amazon Linux knows about each advisory: severity, CVEs, and the package
+# builds that carry the fix.
 ADVISORIES = {
     "ALAS2023-2026-0001": ("Important", [f"CVE-2026-{n}" for n in range(1000, 1006)],
                            {"kernel6.12": NEW_KERNEL, "kernel6.12-headers": NEW_KERNEL}),
@@ -24,8 +24,8 @@ ADVISORIES = {
     "ALAS2023-2026-0005": ("Important", ["CVE-2026-5000"], {"kernel6.18": "6.18.56-125.164.amzn2023"}),
     # Amazon publishes some advisories without naming a CVE.
     "ALAS2023-2026-0006": ("Important", [], {"systemd-libs": "252.23-12.amzn2023"}),
-    # Two advisories fixed by the same build.
-    "ALAS2023-2026-0007": ("Low", ["CVE-2026-7000"], {"amazon-ssm-agent": "3.3.5226.0-1.amzn2023"}),
+    # Two advisories fixed by the same build. Sorting their CVEs as text would put 10000 first.
+    "ALAS2023-2026-0007": ("Low", ["CVE-2026-10000", "CVE-2026-7000"], {"amazon-ssm-agent": "3.3.5226.0-1.amzn2023"}),
     "ALAS2023-2026-0008": ("Low", ["CVE-2026-8000"], {"amazon-ssm-agent": "3.3.5226.0-1.amzn2023"}),
 }
 
@@ -43,14 +43,17 @@ PREVIOUS_PACKAGES = {
 
 def security_fixes(arch, kernel, packages, fixed):
     """A file as save-security-fixes.sh writes it, for an AMI where `fixed` advisories apply."""
-    lines = [f"kernel {kernel}.{RPM_ARCH[arch]}"]
-    lines += [f"package {name} {version}" for name, version in sorted(packages.items())]
+    by_build = {}  # package build -> its advisories, severity and CVEs
     for advisory in fixed:
         severity, cves, builds = ADVISORIES[advisory]
         for name, version in builds.items():
-            build = f"{name}-{version}.{RPM_ARCH[arch]}"
-            lines.append(f"{advisory}  {severity}/Sec. {build}")
-            lines += [f"{cve}  {severity}/Sec. {build}" for cve in cves]
+            entry = by_build.setdefault(f"{name}-{version}.{RPM_ARCH[arch]}", ([], severity, []))
+            entry[0].append(advisory)
+            entry[2].extend(cves)
+    lines = ["# Security fixes in this Elastic CI Stack for AWS AMI.", "", f"kernel {kernel}.{RPM_ARCH[arch]}", ""]
+    for build, (advisories, severity, cves) in by_build.items():
+        lines += [f"{cve} {','.join(advisories)} {severity} {build}" for cve in cves or ["-"]]
+    lines += [""] + [f"package {name} {version}" for name, version in sorted(packages.items())]
     return "\n".join(lines) + "\n"
 
 
@@ -68,7 +71,8 @@ class AmiSecurityNotesTest(unittest.TestCase):
         """Publish a release's file for one architecture; the defaults are the previous release."""
         packages = {name: version for name, version in {**PREVIOUS_PACKAGES, **changed}.items() if version}
         (self.root / tag).mkdir(exist_ok=True)
-        published = self.root / tag / f"security-fixes-linux-{arch}.txt.gz"
+        # Published gzipped under a .txt name, as S3 serves it.
+        published = self.root / tag / f"security-fixes-linux-{arch}.txt"
         published.write_bytes(gzip.compress(security_fixes(arch, kernel, packages, fixed).encode()))
 
     def run_notes(self):
@@ -80,9 +84,9 @@ class AmiSecurityNotesTest(unittest.TestCase):
 
     def all_fixes(self, *architectures):
         links = ", ".join(
-            f"[{arch.upper()}]({self.root.as_uri()}/v1.1.0/security-fixes-linux-{arch}.txt.gz)" for arch in architectures
+            f"[{arch.upper()}]({self.root.as_uri()}/v1.1.0/security-fixes-linux-{arch}.txt)" for arch in architectures
         )
-        return f"- Every advisory and CVE these AMIs include a fix for: {links}."
+        return f"- Every CVE these AMIs include a fix for, with its advisory and package: {links}."
 
     def test_lists_the_fixes_changed_packages_picked_up(self):
         for arch in ("amd64", "arm64"):
@@ -106,7 +110,12 @@ class AmiSecurityNotesTest(unittest.TestCase):
                 f"in the Amazon Linux 2023 AMIs (AMD64 and ARM64), fixing 6 CVEs ({link('ALAS2023-2026-0001')}).",
                 "  <details><summary>CVEs fixed by ALAS2023-2026-0001</summary>",
                 "",
-                "  CVE-2026-1000, CVE-2026-1001, CVE-2026-1002, CVE-2026-1003, CVE-2026-1004, CVE-2026-1005",
+                "  - CVE-2026-1000",
+                "  - CVE-2026-1001",
+                "  - CVE-2026-1002",
+                "  - CVE-2026-1003",
+                "  - CVE-2026-1004",
+                "  - CVE-2026-1005",
                 "",
                 "  </details>",
                 "- Update `libbrotli` from `1.1.0-1.amzn2023.0.9` to `1.1.0-1.amzn2023.0.10` in the Amazon Linux 2023 AMIs "
@@ -128,8 +137,10 @@ class AmiSecurityNotesTest(unittest.TestCase):
                 "- Update `systemd-libs` from `252.23-11.amzn2023` to `252.23-12.amzn2023` in the Amazon Linux 2023 AMIs "
                 f"(AMD64), fixing {link('ALAS2023-2026-0006')}.",
                 "- Update `amazon-ssm-agent` from `3.3.4624.0-1.amzn2023` to `3.3.5226.0-1.amzn2023` in the Amazon Linux "
-                f"2023 AMIs (AMD64), fixing CVE-2026-7000, CVE-2026-8000 ({link('ALAS2023-2026-0007')}, "
-                f"{link('ALAS2023-2026-0008')}).",
+                f"2023 AMIs (AMD64), fixing 3 CVEs ({link('ALAS2023-2026-0007')}, {link('ALAS2023-2026-0008')}):",
+                "  - CVE-2026-7000",
+                "  - CVE-2026-8000",
+                "  - CVE-2026-10000",
                 self.all_fixes("amd64"),
             ],
         )
@@ -157,7 +168,8 @@ class AmiSecurityNotesTest(unittest.TestCase):
             self.run_notes(),
             [
                 f"- Change the Amazon Linux 2023 kernel from `{OLD_KERNEL}` to `6.18.56-125.164.amzn2023` (AMD64). "
-                "Fixes are not listed across a change of kernel line.",
+                "Kernel fixes are not listed across a change of kernel line; the files linked below list every kernel CVE "
+                "these AMIs include a fix for.",
                 self.all_fixes("amd64"),
             ],
         )

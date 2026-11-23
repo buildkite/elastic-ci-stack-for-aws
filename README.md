@@ -311,10 +311,12 @@ CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`
 
 The Amazon Linux 2023 test steps save each AMI's booted kernel, its installed packages,
 and the advisories and CVEs `dnf updateinfo` reports those packages fix. The publish
-step copies them next to the template as `security-fixes-linux-<arch>.txt.gz`.
+step copies them next to the template as `security-fixes-linux-<arch>.txt`, a text file
+anyone can search for a CVE.
 `.buildkite/scripts/generate-changelog.sh` compares them with the previous release's
-files and adds a `### Security` section with the kernel change and the advisories and
-CVEs newly fixed by the packages that changed. It adds nothing when neither changed.
+files and adds a `### Security` section with the kernel change, the advisories and CVEs
+newly fixed by the packages that changed, and links to the files. It adds nothing when
+neither changed.
 Run the script after the release tag's build has passed: until then the release has
 no files, and the script says so and leaves the section out.
 

@@ -15,7 +15,8 @@ s3_upload_security_fixes() {
   local security_fixes
   for security_fixes in build/security-fixes-*.txt.gz; do
     [[ -e "$security_fixes" ]] || continue
-    aws s3 cp --content-type 'application/gzip' "$security_fixes" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}$(basename "$security_fixes")" \
+    # Stored compressed and served as text, so the link in the release notes opens in a browser.
+    aws s3 cp --content-type 'text/plain; charset=utf-8' --content-encoding gzip "$security_fixes" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}$(basename "$security_fixes" .gz)" \
       || echo "WARNING: could not publish ${security_fixes} to ${bucket_prefix}"
   done
 }
