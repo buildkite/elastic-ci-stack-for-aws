@@ -19,6 +19,7 @@ Usage: ami_security_notes.py PREVIOUS_TAG RELEASE_TAG
 
 import argparse
 import collections
+import gzip
 import re
 import sys
 import urllib.error
@@ -75,13 +76,12 @@ def only(versions: Set[str]) -> Optional[str]:
 
 
 def fetch(url: str) -> Optional[str]:
-    """Return the text at url, or None when it does not exist."""
+    """Return the text of the gzip file at url, or None when it does not exist."""
     try:
         with urllib.request.urlopen(url, timeout=60) as response:
-            return response.read().decode()
+            return gzip.decompress(response.read()).decode()
     except urllib.error.HTTPError as error:
-        # S3 answers 403 for a missing key in a bucket that cannot be listed.
-        if error.code in (403, 404):
+        if error.code == 404:
             return None
         raise
     except urllib.error.URLError as error:
@@ -154,7 +154,7 @@ def main() -> int:
     fix_lines: Dict[str, Dict[str, List[str]]] = collections.defaultdict(lambda: collections.defaultdict(list))
     published = {}  # architecture -> the release's published file
     for arch, label in ARCHITECTURES.items():
-        urls = [f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt" for tag in (args.previous_tag, args.release_tag)]
+        urls = [f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt.gz" for tag in (args.previous_tag, args.release_tag)]
         texts = [fetch(url) for url in urls]
         for url, text in zip(urls, texts):
             if text is None:

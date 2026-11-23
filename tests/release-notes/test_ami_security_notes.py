@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline checks for the AMI security lines added to release notes."""
+import gzip
 from pathlib import Path
 import subprocess
 import sys
@@ -67,7 +68,8 @@ class AmiSecurityNotesTest(unittest.TestCase):
         """Publish a release's file for one architecture; the defaults are the previous release."""
         packages = {name: version for name, version in {**PREVIOUS_PACKAGES, **changed}.items() if version}
         (self.root / tag).mkdir(exist_ok=True)
-        (self.root / tag / f"security-fixes-linux-{arch}.txt").write_text(security_fixes(arch, kernel, packages, fixed))
+        published = self.root / tag / f"security-fixes-linux-{arch}.txt.gz"
+        published.write_bytes(gzip.compress(security_fixes(arch, kernel, packages, fixed).encode()))
 
     def run_notes(self):
         result = subprocess.run(
@@ -78,7 +80,7 @@ class AmiSecurityNotesTest(unittest.TestCase):
 
     def all_fixes(self, *architectures):
         links = ", ".join(
-            f"[{arch.upper()}]({self.root.as_uri()}/v1.1.0/security-fixes-linux-{arch}.txt)" for arch in architectures
+            f"[{arch.upper()}]({self.root.as_uri()}/v1.1.0/security-fixes-linux-{arch}.txt.gz)" for arch in architectures
         )
         return f"- Every advisory and CVE these AMIs include a fix for: {links}."
 

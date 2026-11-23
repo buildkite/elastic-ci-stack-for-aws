@@ -16,7 +16,7 @@ fixes="build/security-fixes-${os}-${arch}.txt"
 # The AMI's repository is locked to the AMI's release; "latest" has every advisory
 # published so far. The time limit keeps a slow repository inside the job's timeout.
 fixed_advisories() {
-  timeout 60 dnf --quiet --releasever=latest updateinfo list --installed --security "$@"
+  timeout 90 dnf --quiet --releasever=latest updateinfo list --installed --security "$@"
 }
 
 save_security_fixes() {
@@ -29,11 +29,13 @@ save_security_fixes() {
   } >"$fixes" || return
   # Without advisories, the next release would look like it fixed all of them.
   grep -q '^ALAS' "$fixes" || return
-  buildkite-agent artifact upload "$fixes"
+  # Over 1 MB of text per AMI, and under 100 KB compressed.
+  gzip -9 --force "$fixes" || return
+  buildkite-agent artifact upload "${fixes}.gz"
 }
 
 if save_security_fixes; then
-  echo "Saved $(grep -c '^ALAS' "$fixes") fixed advisories to ${fixes}"
+  echo "Saved the security fixes to ${fixes}.gz"
 else
   echo "^^^ +++"
   echo "WARNING: could not save the security fixes for ${os}/${arch}; release notes will not list them"
