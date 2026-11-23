@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.13.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.13.1) (2026-11-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.13.0...v7.13.1)
+
+### Fixed
+- With graceful shutdown enabled, Linux agents now let running jobs finish when a stack update replaces their Auto Scaling group [#2024](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2024) (@def-)
+
+### Internal
+- Run Windows Server 2025 CI without an opt-in flag and reuse its weekly base AMI for releases [#2019](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2019) [#2020](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2020) (@scadu)
+
 ## [v7.13.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.13.0) (2026-11-19)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.12.0...v7.13.0)
 
