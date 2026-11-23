@@ -310,15 +310,23 @@ Pushing a release tag builds and tests all final AMIs and publishes the
 CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
 
 The Amazon Linux 2023 test steps save each AMI's booted kernel, its installed packages,
-and the advisories and CVEs `dnf updateinfo` reports those packages fix. The publish
-step copies them next to the template as `security-fixes-linux-<arch>.txt`, a text file
-anyone can search for a CVE.
-`.buildkite/scripts/generate-changelog.sh` compares them with the previous release's
-files and adds a `### Security` section with the kernel change, the advisories and CVEs
-newly fixed by the packages that changed, and links to the files. It adds nothing when
-neither changed.
-Run the script after the release tag's build has passed: until then the release has
-no files, and the script says so and leaves the section out.
+and the advisories and CVEs `dnf updateinfo` reports those packages fix, with the date.
+The publish step copies them next to the template as `security-fixes-linux-<arch>.txt`,
+a text file anyone can search for a CVE. The file is what Amazon Linux had published
+on that date: it also publishes advisories, and adds CVEs to them, after a package ships.
+
+`.buildkite/scripts/generate-changelog.sh` compares the files with the previous release's
+and adds a `### Security` section with:
+
+- the kernel change,
+- the CVEs fixed by the packages that were updated,
+- the CVEs Amazon Linux has published since the previous release for packages that
+  release already had, listed apart as already fixed in the previous release, and
+- links to the files.
+
+It adds nothing when the files list no new fix. Run the script after the release tag's
+build has passed: until then the release has no files, and the script says so and
+leaves the section out.
 
 Windows Server 2022 and 2025 use the same change filters. The weekly `main` build
 refreshes both private base AMIs without building or publishing final AMIs.

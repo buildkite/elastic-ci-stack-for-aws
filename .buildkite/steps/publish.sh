@@ -13,10 +13,10 @@ s3_upload_security_fixes() {
   local bucket_prefix="$1"
 
   local security_fixes
-  for security_fixes in build/security-fixes-*.txt.gz; do
+  for security_fixes in build/security-fixes-*.txt; do
     [[ -e "$security_fixes" ]] || continue
-    # Stored compressed and served as text, so the link in the release notes opens in a browser.
-    aws s3 cp --content-type 'text/plain; charset=utf-8' --content-encoding gzip "$security_fixes" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}$(basename "$security_fixes" .gz)" \
+    # Served as text, so the link in the release notes opens in a browser.
+    aws s3 cp --content-type 'text/plain; charset=utf-8' "$security_fixes" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}$(basename "$security_fixes")" \
       || echo "WARNING: could not publish ${security_fixes} to ${bucket_prefix}"
   done
 }
@@ -47,7 +47,7 @@ buildkite-agent artifact download build/mappings.yml build/
 
 echo "--- Downloading AMI security fixes"
 # Saved by the Linux test steps; absent when a build reuses the AMIs from main.
-buildkite-agent artifact download "build/security-fixes-*.txt.gz" build/ \
+buildkite-agent artifact download "build/security-fixes-*.txt" build/ \
   || echo "No AMI security fixes in this build"
 
 echo "--- Building :cloudformation: CloudFormation templates"
