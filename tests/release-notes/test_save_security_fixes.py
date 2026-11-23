@@ -102,7 +102,7 @@ class SaveSecurityFixesTest(unittest.TestCase):
             notes[:-1],
             [
                 "- Update the Amazon Linux 2023 kernel from `6.12.94-123.174.amzn2023` to `6.12.111-136.204.amzn2023` (AMD64).",
-                "- Published by Amazon Linux after v1.0.0 was built, for packages v1.0.0 already had, "
+                "- Published by Amazon Linux after v1.0.0 was built, for package versions v1.0.0 already had, "
                 "so already fixed in v1.0.0 and possibly earlier:",
                 "  - `kernel6.12` at `6.12.94-123.174.amzn2023` (AMD64): 2 CVEs "
                 "([ALAS2023-2026-1950](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-1950.html), "

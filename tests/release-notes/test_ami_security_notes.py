@@ -19,7 +19,8 @@ ADVISORIES = {
                            {"kernel6.12": NEW_KERNEL, "kernel6.12-headers": NEW_KERNEL}),
     "ALAS2023-2026-0002": ("Medium", ["CVE-2026-2000"], {"libbrotli": "1.1.0-1.amzn2023.0.10"}),
     "ALAS2023-2026-0003": ("Critical", ["CVE-2026-3000"], {"openssl-libs": "3.5.7-2.amzn2023.0.1"}),
-    "ALAS2023-2026-0004": ("Important", ["CVE-2026-4000"], {"curl": "8.21.0-5.amzn2023.0.3"}),
+    # Fixed by a curl build older than the one the previous release had.
+    "ALAS2023-2026-0004": ("Important", ["CVE-2026-4000"], {"curl": "8.21.0-5.amzn2023.0.2"}),
     "ALAS2023-2026-0005": ("Important", ["CVE-2026-5000"], {"kernel6.18": "6.18.56-125.164.amzn2023"}),
     # Amazon publishes some advisories without naming a CVE.
     "ALAS2023-2026-0006": ("Important", [], {"systemd-libs": "252.23-12.amzn2023"}),
@@ -66,7 +67,7 @@ def security_fixes(arch, captured, kernel, packages, fixed):
 
 
 ALREADY_FIXED = (
-    "- Published by Amazon Linux after v1.0.0 was built, for packages v1.0.0 already had, "
+    "- Published by Amazon Linux after v1.0.0 was built, for package versions v1.0.0 already had, "
     "so already fixed in v1.0.0 and possibly earlier:"
 )
 
@@ -101,7 +102,7 @@ class AmiSecurityNotesTest(unittest.TestCase):
             f"[{arch.upper()}]({self.root.as_uri()}/v1.1.0/security-fixes-linux-{arch}.txt)" for arch in architectures
         )
         return (
-            "- The CVEs Amazon Linux had published fixes for in these AMIs' packages as of 2026-11-02, "
+            "- The CVEs Amazon Linux had published fixes for in these AMIs' Amazon Linux packages as of 2026-11-02, "
             f"with advisory and package: {links}."
         )
 
@@ -110,7 +111,7 @@ class AmiSecurityNotesTest(unittest.TestCase):
             self.publish("v1.0.0", arch)
         self.publish(
             "v1.1.0", "amd64", kernel=NEW_KERNEL,
-            # The curl advisory was published late for a build this AMI already had.
+            # The curl advisory was published late, for a build older than the unchanged curl.
             fixed=["ALAS2023-2026-0001", "ALAS2023-2026-0002", "ALAS2023-2026-0003", "ALAS2023-2026-0004"],
             **{"kernel6.12": NEW_KERNEL, "kernel6.12-headers": NEW_KERNEL, "libbrotli": "1.1.0-1.amzn2023.0.10",
                "jq": "1.8.1-61.amzn2023"},
@@ -203,8 +204,7 @@ class AmiSecurityNotesTest(unittest.TestCase):
                 "    - CVE-2026-9004",
                 "",
                 "    </details>",
-                "  - `libbrotli` at `1.1.0-1.amzn2023.0.9` (AMD64): CVE-2026-1101 "
-                f"({link('ALAS2023-2026-0010')}, {link('ALAS2023-2026-0011')}).",
+                f"  - `libbrotli` at `1.1.0-1.amzn2023.0.9` (AMD64): CVE-2026-1101 ({link('ALAS2023-2026-0011')}).",
                 self.all_fixes("amd64"),
             ],
         )
@@ -219,8 +219,7 @@ class AmiSecurityNotesTest(unittest.TestCase):
             self.run_notes(),
             [
                 ALREADY_FIXED,
-                "  - `amazon-ssm-agent` at `3.3.5226.0-1.amzn2023` (AMD64): CVE-2026-8000 "
-                f"({link('ALAS2023-2026-0007')}, {link('ALAS2023-2026-0008')}).",
+                f"  - `amazon-ssm-agent` at `3.3.5226.0-1.amzn2023` (AMD64): CVE-2026-8000 ({link('ALAS2023-2026-0008')}).",
                 self.all_fixes("amd64"),
             ],
         )

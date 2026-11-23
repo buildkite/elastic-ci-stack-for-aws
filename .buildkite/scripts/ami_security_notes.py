@@ -127,7 +127,9 @@ def kernel_line(before: Fixes, after: Fixes) -> Optional[str]:
 
 def new_fixes(before: Fixes, after: Fixes) -> Tuple[List[Fix], List[Fix]]:
     """The fixes only `after` lists: those a package update brought, and those the previous release already had."""
-    listed_builds = {(package, version) for package, version, _ in before.fixes}
+    listed: Dict[Tuple[str, str], Set[str]] = collections.defaultdict(set)  # build -> its advisories in `before`
+    for fix in before.fixes.values():
+        listed[(fix.package, fix.version)].update(fix.advisories)
     updated, already_fixed = [], []
     for key, fix in after.fixes.items():
         had = before.packages.get(fix.package)
@@ -137,8 +139,12 @@ def new_fixes(before: Fixes, after: Fixes) -> Tuple[List[Fix], List[Fix]]:
         # The previous release had this build or a later one when the package did not
         # change, when this is the version it had installed, or when it listed other
         # fixes for the build. Only then was the fix published late.
-        if had == after.packages.get(fix.package) or fix.version in had or (fix.package, fix.version) in listed_builds:
-            already_fixed.append(fix)
+        build = (fix.package, fix.version)
+        if had == after.packages.get(fix.package) or fix.version in had or build in listed:
+            # Every CVE of a build carries all the build's advisories. Link the ones that are
+            # new too, unless the CVE was added to an advisory the previous release listed.
+            new_advisories = tuple(advisory for advisory in fix.advisories if advisory not in listed.get(build, ()))
+            already_fixed.append(fix._replace(advisories=new_advisories or fix.advisories))
         else:
             updated.append(fix)
     return updated, already_fixed
@@ -244,14 +250,14 @@ def main() -> int:
     output = for_architectures(kernel_lines) + for_architectures(update_lines)
     if late_lines:
         output.append(
-            f"- Published by Amazon Linux after {args.previous_tag} was built, for packages {args.previous_tag} "
+            f"- Published by Amazon Linux after {args.previous_tag} was built, for package versions {args.previous_tag} "
             f"already had, so already fixed in {args.previous_tag} and possibly earlier:"
         )
         output += for_architectures(late_lines)
     if output:
         links = ", ".join(f"[{label}]({url})" for label, url in published.items())
         output.append(
-            f"- The CVEs Amazon Linux had published fixes for in these AMIs' packages as of {min(captured)}, "
+            f"- The CVEs Amazon Linux had published fixes for in these AMIs' Amazon Linux packages as of {min(captured)}, "
             f"with advisory and package: {links}."
         )
         print("\n".join(output))

@@ -45,13 +45,13 @@ header() {
   local today
   today="$(date -u +%F)"
   cat <<EOF
-# Security fixes in this Elastic CI Stack for AWS AMI (Amazon Linux 2023, ${arch}),
-# as Amazon Linux had published them on ${today}.
+# Security fixes in the Amazon Linux packages of this Elastic CI Stack for AWS
+# AMI (Amazon Linux 2023, ${arch}), as Amazon Linux had published them on ${today}.
 #
 # After the date and the booted kernel, each line is a fixed CVE: the CVE, the
-# Amazon Linux advisory that fixed it, the advisory's severity, and the package
-# build that first carried the fix. The AMI has that build or a later one. A "-"
-# in place of the CVE is an advisory that names no CVE.
+# Amazon Linux advisories for the package build that fixed it, the severity, and
+# the package build Amazon Linux names for the fix. The AMI has that build or a
+# later one. A "-" in place of the CVE is an advisory that names no CVE.
 #
 # Amazon Linux also publishes advisories, and adds CVEs to them, after a package
 # has shipped, so the AMI can include fixes this file does not list. For a CVE
