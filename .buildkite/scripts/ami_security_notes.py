@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 """
-Print release-note lines for the security fixes in an Elastic CI Stack
-release's Amazon Linux 2023 AMIs that the previous release's notes did not list.
+Print release-note lines for the Amazon Linux security advisories an Elastic CI
+Stack release's Amazon Linux 2023 AMIs newly include.
 
 Each release build publishes, next to the CloudFormation template, the date,
-the kernel its AMIs booted, their installed packages, and the CVEs Amazon Linux
-had published fixes for in those packages, as `dnf updateinfo` reports them (see
+the kernel its AMIs booted, their installed packages, and the Amazon Linux
+advisories those packages include, as `dnf updateinfo` reports them (see
 .buildkite/steps/save-security-fixes.sh). This script compares two releases'
-files and prints the fixes that are new in the later one:
+files and prints, with a link to each advisory:
 
-- fixes that came with a package update, and
-- fixes Amazon Linux published after the previous release was built, for a
-  package build the previous release already had. Amazon Linux often ships a
-  package before the advisory that names its CVEs, so these are listed apart, as
-  already fixed in the previous release.
+- the advisories that came with a package update, and
+- the advisories Amazon Linux published after the previous release was built,
+  for a package build the previous release already had. Amazon Linux often
+  ships a package before its advisory, so these are listed apart, as already
+  fixed in the previous release.
+
+The advisory pages list the CVEs, and Amazon Linux keeps them up to date.
 
 A release's files exist only once its tag build has published them, and
 release notes are usually written before that. Until then this compares the
 previous release with the branch the release is tagged on. When the branch has
-new fixes it prints one line that links the files and the page of new fixes the
-release build will publish. Once both releases have their files it prints the
-new fixes themselves. Either way it prints nothing when nothing is new.
+new advisories it prints one line that links the files and the page of new
+advisories the release build will publish. Once both releases have their files
+it prints the new advisories themselves. Either way it prints nothing when
+nothing is new.
 
 With --page it prints that page for the release build to publish: the same
 lines under a heading, and a line saying so when nothing is new.
@@ -34,7 +37,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
-from typing import Callable, Dict, FrozenSet, Iterable, List, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
 
 DEFAULT_BASE_URL = "https://s3.amazonaws.com/buildkite-aws-stack"
 ADVISORY_URL = "https://alas.aws.amazon.com/AL2023/{}.html"
@@ -42,8 +45,6 @@ ADVISORY_URL = "https://alas.aws.amazon.com/AL2023/{}.html"
 # Stack architecture name, as used in file names and release notes.
 ARCHITECTURES = {"amd64": "AMD64", "arm64": "ARM64"}
 SEVERITIES = ["Critical", "Important", "Medium", "Low"]
-# More CVEs than this are collapsed under the line.
-OPEN_CVE_LIMIT = 4
 # Stands in for the architectures a line applies to until both are compared.
 ARCHITECTURE_NAMES = "{architectures}"
 # The release build publishes this script's --page output under this name, beside the files.
@@ -55,9 +56,8 @@ PACKAGE_BUILD = re.compile(r"^(?P<package>.+)-(?:\d+:)?(?P<version>[^-]+-[^-]+)\
 
 class Fix(NamedTuple):
     package: str
-    version: str  # the build that first carried the fix, written as installed versions are
-    cve: str  # empty when the advisory names no CVE
-    advisories: Tuple[str, ...]
+    version: str  # the build the advisory names, written as installed versions are
+    advisory: str
     severity: str
 
 
@@ -65,15 +65,13 @@ class Fixes(NamedTuple):
     captured: str  # the date the file was saved
     kernel: str  # booted kernel, without the architecture
     packages: Dict[str, Set[str]]  # name -> installed versions
-    # (package, version, CVE or advisory without a CVE) -> the fix. Advisories only
-    # label a fix: a build can gain a second advisory for CVEs it already listed.
-    fixes: Dict[Tuple[str, str, str], Fix]
+    fixes: Set[Fix]
 
 
 def parse_fixes(text: str) -> Fixes:
     captured, kernel = "", ""
     packages: Dict[str, Set[str]] = collections.defaultdict(set)
-    fixes = {}
+    fixes = set()
     for line in text.splitlines():
         fields = line.split()
         if not fields or fields[0].startswith("#"):
@@ -85,15 +83,11 @@ def parse_fixes(text: str) -> Fixes:
             kernel = re.sub(r"\.(x86_64|aarch64)$", "", fields[1])
         elif fields[0] == "package":
             packages[fields[1]].add(fields[2])
-        else:
-            # CVE-2026-78659 ALAS2023-2026-3255 Important libcap-2.73-1.amzn2023.0.8.x86_64
-            cve, advisories, severity, build = fields
+        elif fields[0] == "advisory":
+            # advisory ALAS2023-2026-3255 Important libcap-2.73-1.amzn2023.0.8.x86_64
+            _, advisory, severity, build = fields
             package, version = PACKAGE_BUILD.match(build).group("package", "version")
-            if cve == "-":
-                for advisory in advisories.split(","):
-                    fixes[(package, version, advisory)] = Fix(package, version, "", (advisory,), severity)
-            else:
-                fixes[(package, version, cve)] = Fix(package, version, cve, tuple(advisories.split(",")), severity)
+            fixes.add(Fix(package, version, advisory, severity))
     return Fixes(captured, kernel, packages, fixes)
 
 
@@ -116,9 +110,9 @@ def fetch(url: str) -> Optional[str]:
         raise
 
 
-def number(identifier: str) -> List[int]:
-    # CVE-2026-98432 -> [2026, 98432], so CVE-2026-98432 sorts before CVE-2026-100072
-    return [int(part) for part in identifier.split("-")[1:]]
+def number(advisory: str) -> List[int]:
+    # ALAS2023-2026-998 -> [2026, 998], so it sorts before ALAS2023-2026-3335
+    return [int(part) for part in advisory.split("-")[1:]]
 
 
 def kernel_line(before: Fixes, after: Fixes) -> Optional[str]:
@@ -129,77 +123,49 @@ def kernel_line(before: Fixes, after: Fixes) -> Optional[str]:
     return (
         f"- {'Update' if same_line else 'Change'} the Amazon Linux 2023 kernel "
         f"from `{before.kernel}` to `{after.kernel}` ({ARCHITECTURE_NAMES})."
-        + ("" if same_line else " Kernel fixes are not listed across a change of kernel line; the files linked below list the kernel CVEs Amazon Linux had published fixes for.")
+        + ("" if same_line else " Advisories are not listed across a change of kernel line; the files linked below list the new kernel's.")
     )
 
 
 def new_fixes(before: Fixes, after: Fixes) -> Tuple[List[Fix], List[Fix]]:
-    """The fixes only `after` lists: those a package update brought, and those the previous release already had."""
-    listed: Dict[Tuple[str, str], Set[str]] = collections.defaultdict(set)  # build -> its advisories in `before`
-    for fix in before.fixes.values():
-        listed[(fix.package, fix.version)].update(fix.advisories)
+    """The advisories only `after` lists: those a package update brought, and those the previous release already had."""
+    listed_builds = {(fix.package, fix.version) for fix in before.fixes}
     updated, already_fixed = [], []
-    for key, fix in after.fixes.items():
+    for fix in after.fixes - before.fixes:
         had = before.packages.get(fix.package)
-        # A package that is new to the AMI brings every fix it ever had.
-        if key in before.fixes or had is None:
+        # A package that is new to the AMI brings every advisory it ever had.
+        if had is None:
             continue
         # The previous release had this build or a later one when the package did not
-        # change, when this is the version it had installed, or when it listed other
-        # fixes for the build. Only then was the fix published late.
-        build = (fix.package, fix.version)
-        if had == after.packages.get(fix.package) or fix.version in had or build in listed:
-            # Every CVE of a build carries all the build's advisories. Link the ones that are
-            # new too, unless the CVE was added to an advisory the previous release listed.
-            new_advisories = tuple(advisory for advisory in fix.advisories if advisory not in listed.get(build, ()))
-            already_fixed.append(fix._replace(advisories=new_advisories or fix.advisories))
+        # change, when this is the version it had installed, or when it listed another
+        # advisory for the build. Only then was the advisory published late.
+        if had == after.packages.get(fix.package) or fix.version in had or (fix.package, fix.version) in listed_builds:
+            already_fixed.append(fix)
         else:
             updated.append(fix)
     return updated, already_fixed
 
 
-def fixed_text(cves: FrozenSet[str], advisories: FrozenSet[str], indent: str) -> str:
-    """The CVEs and advisory links that end a line; `indent` is the line's list indentation."""
-    ids = sorted(advisories, key=number)
-    links = ", ".join(f"[{advisory}]({ADVISORY_URL.format(advisory)})" for advisory in ids)
-    ordered = sorted(cves, key=number)
-    cve_list = "\n".join(f"{indent}  - {cve}" for cve in ordered)
-    if not cves:
-        # Some advisories name no CVE, so there is only the advisory to point to.
-        return f"{links}."
-    if len(cves) == 1:
-        return f"{ordered[0]} ({links})."
-    if len(cves) <= OPEN_CVE_LIMIT:
-        return f"{len(cves)} CVEs ({links}):\n{cve_list}"
-    return (
-        f"{len(cves)} CVEs ({links}).\n"
-        f"{indent}  <details><summary>CVEs fixed by {', '.join(ids)}</summary>\n\n"
-        f"{cve_list}\n\n"
-        f"{indent}  </details>"
-    )
-
-
-def fix_groups(fixes: Iterable[Fix], versions: Callable[[str], str], indent: str = "") -> List[Tuple[int, str, str]]:
+def fix_groups(fixes: Iterable[Fix], versions: Callable[[str], str]) -> List[Tuple[int, str, str]]:
     """
-    What a line says for each package's fixes: the severity it sorts by, the
-    package and what was fixed. Packages with the same fixes and versions, such
-    as a kernel and its headers, share a line.
+    What a line says for each package's advisories: the severity it sorts by, the
+    package and links to the advisories. Packages with the same advisories and
+    versions, such as a kernel and its headers, share a line.
     """
-    by_package: Dict[str, List[Fix]] = collections.defaultdict(list)
+    by_package: Dict[str, Dict[str, str]] = collections.defaultdict(dict)  # package -> advisory -> severity
     for fix in fixes:
-        by_package[fix.package].append(fix)
+        by_package[fix.package][fix.advisory] = fix.severity
     groups = collections.defaultdict(list)  # what a line says about its packages -> the packages
-    for package, found in by_package.items():
-        cves = frozenset(fix.cve for fix in found if fix.cve)
-        advisories = frozenset(advisory for fix in found for advisory in fix.advisories)
-        severity = min(SEVERITIES.index(fix.severity) if fix.severity in SEVERITIES else len(SEVERITIES) for fix in found)
-        groups[(severity, versions(package), cves, advisories)].append(package)
+    for package, advisories in by_package.items():
+        groups[(versions(package), tuple(sorted(advisories.items(), key=lambda item: number(item[0]))))].append(package)
 
     lines = []
-    for (severity, version_text, cves, advisories), names in groups.items():
+    for (version_text, advisories), names in groups.items():
         names.sort(key=lambda name: (len(name), name))
         related = f" and {len(names) - 1} related package{'s' if len(names) > 2 else ''}" if len(names) > 1 else ""
-        lines.append((severity, f"`{names[0]}`{related}{version_text}", fixed_text(cves, advisories, indent)))
+        links = ", ".join(f"[{advisory}]({ADVISORY_URL.format(advisory)}) ({severity})" for advisory, severity in advisories)
+        most_severe = min(SEVERITIES.index(severity) if severity in SEVERITIES else len(SEVERITIES) for _, severity in advisories)
+        lines.append((most_severe, f"`{names[0]}`{related}{version_text}", links))
     return lines
 
 
@@ -224,11 +190,11 @@ def new_fix_lines(previous_tag: str, before: Dict[str, Fixes], after: Dict[str, 
             was = only(old.packages[package])
             return f" at `{was}`" if was else ""
 
-        for severity, packages, fixed in fix_groups(updated, version_change):
-            line = f"- Update {packages} in the Amazon Linux 2023 AMIs ({ARCHITECTURE_NAMES}), fixing {fixed}"
+        for severity, packages, links in fix_groups(updated, version_change):
+            line = f"- Update {packages} in the Amazon Linux 2023 AMIs ({ARCHITECTURE_NAMES}), fixing {links}."
             update_lines[(severity, line)].append(label)
-        for severity, packages, fixed in fix_groups(already_fixed, previous_version, indent="  "):
-            late_lines[(severity, f"  - {packages} ({ARCHITECTURE_NAMES}): {fixed}")].append(label)
+        for severity, packages, links in fix_groups(already_fixed, previous_version):
+            late_lines[(severity, f"  - {packages} ({ARCHITECTURE_NAMES}): {links}.")].append(label)
 
     def for_architectures(lines: Dict[Tuple[int, str], List[str]]) -> List[str]:
         return [line.replace(ARCHITECTURE_NAMES, " and ".join(labels)) for (_, line), labels in sorted(lines.items())]
@@ -263,7 +229,7 @@ def main() -> int:
             return None
         return {label: parse_fixes(text) for label, text in texts.items()}
 
-    all_fixes = ", ".join(f"[{label}]({url})" for label, url in urls(args.release_tag).items())
+    files = ", ".join(f"[{label}]({url})" for label, url in urls(args.release_tag).items())
     previous, release = published(args.previous_tag), published(args.release_tag)
 
     if args.page:
@@ -271,7 +237,7 @@ def main() -> int:
             return 1
         print(f"# Security fixes new in the Amazon Linux 2023 AMIs of Elastic CI Stack for AWS {args.release_tag}\n")
         if previous:
-            lines = new_fix_lines(args.previous_tag, previous, release) or [f"- No security fix is new since {args.previous_tag}."]
+            lines = new_fix_lines(args.previous_tag, previous, release) or [f"- No advisory is new since {args.previous_tag}."]
         else:
             lines = [f"- {args.previous_tag} published no security fixes, so there is nothing to compare with."]
     elif not previous:
@@ -285,16 +251,15 @@ def main() -> int:
         branch = published(args.branch)
         if branch and new_fix_lines(args.previous_tag, previous, branch):
             print(
-                f"- Kernel and CVE fixes in this release's Amazon Linux 2023 AMIs: [new since {args.previous_tag}]"
-                f"({args.base_url}/{args.release_tag}/{NEW_FIXES_PAGE}). Every CVE Amazon Linux had published a fix "
-                f"for in their Amazon Linux packages: {all_fixes}."
+                f"- Kernel and security updates in this release's Amazon Linux 2023 AMIs: [new since {args.previous_tag}]"
+                f"({args.base_url}/{args.release_tag}/{NEW_FIXES_PAGE}). Their kernel, package versions and "
+                f"Amazon Linux advisories: {files}."
             )
         return 0
     if lines:
         captured = min(fixes.captured for fixes in release.values())
         lines.append(
-            f"- The CVEs Amazon Linux had published fixes for in these AMIs' Amazon Linux packages as of {captured}, "
-            f"with advisory and package: {all_fixes}."
+            f"- The kernel, package versions and Amazon Linux advisories of these AMIs as of {captured}: {files}."
         )
         print("\n".join(lines))
     return 0
