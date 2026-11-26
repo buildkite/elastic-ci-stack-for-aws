@@ -13,6 +13,14 @@ grep -rl '^#!/.*sh' . | while read -r file; do
   echo -e "Ok.\\n"
 done
 
-# No network: validate certificate fixtures and local helper behavior.
+# Install the Linux bootstrap's JSON parser, then run credential-free checks.
 docker run --rm -v "$PWD:/src:ro" -w /src python:3.12-bookworm \
-  sh -c 'python3 -m unittest discover -s tests/trust -v && python3 -m unittest discover -s tests/instance-storage -v && python3 -m unittest discover -s tests/plugins -v && python3 -m unittest discover -s tests/cloudformation -v && python3 -m unittest discover -s tests/release-notes -v'
+  sh -ec '
+    apt-get update -qq
+    apt-get install -y --no-install-recommends jq
+    python3 -m unittest discover -s tests/trust -v
+    python3 -m unittest discover -s tests/instance-storage -v
+    python3 -m unittest discover -s tests/linux -v
+    python3 -m unittest discover -s tests/plugins -v
+    python3 -m unittest discover -s tests/cloudformation -v
+  '

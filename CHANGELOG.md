@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.14.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.14.0) (2026-11-25)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.13.1...v7.14.0)
+
+### Added
+- Linux instances now wait in `Pending:Wait` until bootstrap starts the agent service, so failed launches are replaced instead of running without an agent. Set the wait with the new `LinuxLaunchTimeout` parameter (default 900 seconds) [#2022](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2022) (@petetomasik)
+
+  Rebuild custom Linux AMIs (`ImageId` or `ImageIdParameter`) with this release before updating: older installers don't complete the launch hook, so their launches are abandoned. A failed Linux launch no longer sends a CloudFormation failure signal, so a replacement can still succeed
+
+### Fixed
+- Windows Spot agents now stop taking jobs after an interruption notice. Updates lifecycled from v3.7.0 to v3.7.1 on Linux and Windows [#2026](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2026) (@scadu)
+
+## [v7.13.1](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.13.1) (2026-11-23)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.13.0...v7.13.1)
+
+### Fixed
+- With graceful shutdown enabled, Linux agents now let running jobs finish when a stack update replaces their Auto Scaling group [#2024](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2024) (@def-)
+
+### Internal
+- Run Windows Server 2025 CI without an opt-in flag and reuse its weekly base AMI for releases [#2019](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2019) [#2020](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2020) (@scadu)
+
 ## [v7.13.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.13.0) (2026-11-19)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.12.0...v7.13.0)
 
