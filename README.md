@@ -322,9 +322,10 @@ proof the fix is missing.
 
 Run after the release build has passed, `.buildkite/scripts/generate-changelog.sh` adds a
 `### Security` line with both booted kernels and links to the files, and a collapsed list of
-the CVEs the files list that the previous release's did not. A release with no newly
-listed CVEs gets no line. A newly listed CVE can be one Amazon Linux published after the
-previous release was tested, so it does not mean this release introduced the fix.
+the CVEs the files list that the previous release's did not. A release with the previous
+release's kernels and no newly listed CVEs gets no line. A newly listed CVE can be one
+Amazon Linux published after the previous release was tested, so it does not mean this
+release introduced the fix.
 
 Windows Server 2022 and 2025 use the same change filters. The weekly `main` build
 refreshes both private base AMIs without building or publishing final AMIs.

@@ -10,8 +10,8 @@ includes CVEs Amazon Linux published after the previous release was tested, so
 it does not mean this release introduced the fix.
 
 Fails until the release build has published the files for both architectures.
-Prints nothing when no CVE is newly listed. Leaves the CVE list out when the
-previous release has no files.
+Prints nothing when the kernels are the previous release's and no CVE is newly
+listed. Leaves the CVE list out when the previous release has no files.
 
 Usage: ami_security_notes.py [--base-url URL] PREVIOUS_TAG RELEASE_TAG
 """
@@ -44,6 +44,12 @@ def fetch(url: str) -> Optional[str]:
         raise
 
 
+def kernel(text: str) -> Optional[str]:
+    """The kernel in the "kernel 6.12.115-140.210.amzn2023.x86_64" line."""
+    found = [line.split()[1] for line in text.splitlines() if line.startswith("kernel ")]
+    return found[0] if found else None
+
+
 def cves(text: str) -> Set[str]:
     """The CVEs in "cve CVE-2026-98432 ALAS2023-2026-3335" lines."""
     return {line.split()[1] for line in text.splitlines() if line.startswith("cve ")}
@@ -60,21 +66,18 @@ def main() -> int:
         return f"{args.base_url}/{tag}/security-fixes-linux-{arch}.txt"
 
     release = {arch: fetch(url(args.release_tag, arch)) or "" for arch in ARCHITECTURES}
-    kernels = {}
-    for arch, text in release.items():
-        # kernel 6.12.115-140.210.amzn2023.x86_64
-        found = [line.split()[1] for line in text.splitlines() if line.startswith("kernel ")]
-        if not found:
+    kernels = {arch: kernel(text) for arch, text in release.items()}
+    for arch, booted in kernels.items():
+        if not booted:
             print(f"{args.release_tag} has not published its security fixes for {arch}.", file=sys.stderr)
             return 1
-        kernels[arch] = found[0]
 
-    previous = [fetch(url(args.previous_tag, arch)) for arch in ARCHITECTURES]
+    previous = {arch: fetch(url(args.previous_tag, arch)) for arch in ARCHITECTURES}
     new: Set[str] = set()
-    if all(previous):
-        new = set().union(*map(cves, release.values())) - set().union(*map(cves, previous))
-        if not new:
-            print(f"No newly listed CVEs since {args.previous_tag}; leaving out the Security line.", file=sys.stderr)
+    if all(previous.values()):
+        new = set().union(*map(cves, release.values())) - set().union(*map(cves, previous.values()))
+        if not new and kernels == {arch: kernel(text) for arch, text in previous.items()}:
+            print(f"Same kernels and no newly listed CVEs since {args.previous_tag}; leaving out the Security line.", file=sys.stderr)
             return 0
     else:
         print(f"{args.previous_tag} has no security fixes to compare with; leaving out the CVE list.", file=sys.stderr)

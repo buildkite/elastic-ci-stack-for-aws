@@ -85,7 +85,11 @@ fi
 # 5. Update CHANGELOG.md, preserving the header
 echo "--- Updating CHANGELOG.md"
 CHANGELOG_HEADER=$(head -n 5 CHANGELOG.md)
-CHANGELOG_REST=$(tail -n +6 CHANGELOG.md)
+# A rerun replaces the entry an earlier run added for this release.
+CHANGELOG_REST=$(tail -n +6 CHANGELOG.md | awk -v heading="## [${RELEASE_VERSION}]" '
+  index($0, heading) == 1 { skip = 1; next }
+  skip && /^## \[/ { skip = 0 }
+  !skip')
 
 # Construct the new file content
 NEW_CHANGELOG_CONTENT="${CHANGELOG_HEADER}\n\n${CHANGELOG_BODY}\n\n${CHANGELOG_REST}"
