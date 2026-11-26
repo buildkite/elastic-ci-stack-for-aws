@@ -1,14 +1,14 @@
 #!/bin/bash
-# Saves this instance's kernel and installed packages, and the Amazon Linux
-# security advisories those packages include, with the date, as a build
-# artifact. Release notes link the published file, and compare two releases'
-# files to list the advisories that are new (see
-# .buildkite/scripts/ami_security_notes.py). Run it on an instance launched from
-# the Amazon Linux 2023 AMI under test.
+# Saves this instance's kernel, installed packages, and the CVEs the Amazon Linux
+# security advisories for those packages name, with the date, as a build
+# artifact. Release builds publish it next to the template, and release notes
+# link it (see .buildkite/scripts/ami_security_notes.py). Run it on an instance
+# launched from the Amazon Linux 2023 AMI under test.
 #
 # The file only feeds release notes, so a failure here warns and never fails
 # the job.
 set -uo pipefail
+export LC_ALL=C
 
 os="${1:-linux}"
 arch="${2:-amd64}"
@@ -16,46 +16,46 @@ fixes="build/security-fixes-${os}-${arch}.txt"
 
 # The AMI's repository is locked to the AMI's release; "latest" has every advisory
 # published so far. The time limit keeps a slow repository inside the job's timeout.
-# Prints an advisory, its severity and the package build it names on each line.
-fixed_advisories() {
-  timeout 90 dnf --quiet --releasever=latest updateinfo list --installed --security
+# `dnf updateinfo info --json` maps each advisory to its references; the CVEs are
+# the ones of type "cve". This prints "cve <CVE> <advisory>" for each.
+fixed_cves() {
+  timeout 90 dnf --quiet --releasever=latest updateinfo info --installed --security --json \
+    | jq -r 'to_entries[] | .key as $advisory | .value.references[]? | select(.Type == "cve") | "cve \(.Id) \($advisory)"' \
+    | sort -u -k2,2V -k3,3V
 }
 
 header() {
   local today
   today="$(date -u +%F)"
   cat <<EOF
-# The kernel, packages and security advisories of this Elastic CI Stack for AWS
-# AMI (Amazon Linux 2023, ${arch}), as of ${today}.
+# The kernel, packages and fixed CVEs of this Elastic CI Stack for AWS AMI
+# (Amazon Linux 2023, ${arch}), as of ${today}.
 #
-# An "advisory" line is an Amazon Linux security advisory this AMI includes the
-# fix for: the advisory, its severity, and the package build it names. The AMI
-# has that build or a later one. A "package" line is an installed package.
+# A "cve" line is a CVE this AMI has the fix for, and the Amazon Linux advisory
+# that names it: https://alas.aws.amazon.com/AL2023/<advisory>.html
+# A "package" line is an installed package.
 #
-# Advisory pages list the CVEs: https://alas.aws.amazon.com/AL2023/<advisory>.html
-# To find the advisory for a CVE: https://explore.alas.aws.amazon.com/<CVE>.html
-#
-# Amazon Linux also publishes advisories after a package has shipped. For one
-# that is not listed here, compare the package build on its page with the
-# packages below.
+# Amazon Linux also publishes advisories after a package has shipped, so a CVE
+# missing here is not proof the AMI lacks the fix. Compare the package build on
+# https://explore.alas.aws.amazon.com/<CVE>.html with the packages below.
 
 captured ${today}
 EOF
 }
 
 save_security_fixes() {
-  local advisories
+  local cves
   mkdir -p build || return
-  advisories="$(fixed_advisories)" || return
-  # Without advisories, the next release would look like it fixed all of them.
-  grep -q '^ALAS' <<<"$advisories" || return
+  cves="$(fixed_cves)" || return
+  # An empty answer would read as an AMI with no fixes.
+  grep -q '^cve ' <<<"$cves" || return
   {
     header \
       && echo "kernel $(uname -r)" \
       && echo \
-      && awk '{ sub("/.*", "", $2); print "advisory", $1, $2, $3 }' <<<"$advisories" | LC_ALL=C sort -k2,2V -k4,4 \
+      && echo "$cves" \
       && echo \
-      && rpm -qa --qf 'package %{NAME} %{VERSION}-%{RELEASE}\n' | LC_ALL=C sort -u
+      && rpm -qa --qf 'package %{NAME} %{VERSION}-%{RELEASE}\n' | sort -u
   } >"$fixes" || return
   buildkite-agent artifact upload "$fixes"
 }

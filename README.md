@@ -314,33 +314,17 @@ Pushing a release tag builds and tests all final AMIs and publishes the
 CloudFormation template. Unchanged base AMIs reuse the cached builds from `main`.
 
 The Amazon Linux 2023 test steps save each AMI's booted kernel, its installed packages,
-and the Amazon Linux security advisories `dnf updateinfo` reports those packages include,
-with the date. The publish step copies them next to the template as
-`security-fixes-linux-<arch>.txt`. The advisories are what Amazon Linux had published on
-that date: it also publishes advisories after a package ships. CVEs are not listed; each
-advisory's page lists them, and Amazon Linux keeps it up to date.
+and the CVEs `dnf updateinfo` reports fixed in those packages, with the advisory that lists
+each one. The publish step copies them next to the template as
+`security-fixes-linux-<arch>.txt`. The files list what Amazon Linux had published when the
+AMI was tested; it also publishes advisories after a package ships, so a missing CVE is not
+proof the fix is missing.
 
-The publish step also compares the files with the previous release's and publishes the
-result beside them as `security-fixes-linux-new.md`, with a link to each advisory:
-
-- the kernel change,
-- the advisories that came with the packages that were updated, and
-- the advisories Amazon Linux has published since the previous release for package
-  versions that release already had, listed apart as already fixed in the previous release.
-
-Release notes are written before the release build runs, so
-`.buildkite/scripts/generate-changelog.sh` compares the previous release with `main`,
-whose base AMIs the release takes its packages from. When `main` has new advisories it adds a
-`### Security` line that links the page and the files at the addresses the release build
-will publish them to, and nothing needs filling in afterwards. When `main` has none it
-adds nothing.
-
-The release build's annotation links the page it published. Check it when the notes have
-no Security line: Amazon Linux may have published advisories after `main` was last built. If
-the release build cannot publish the files, a warning annotation says to remove the links.
-
-Run after the release build has passed, the script lists the new advisories in the section
-itself.
+Run after the release build has passed, `.buildkite/scripts/generate-changelog.sh` adds a
+`### Security` line with both booted kernels and links to the files, and a collapsed list of
+the CVEs the files list that the previous release's did not. A newly listed CVE can be one
+Amazon Linux published after the previous release was tested, so it does not mean this
+release introduced the fix.
 
 Windows Server 2022 and 2025 use the same change filters. The weekly `main` build
 refreshes both private base AMIs without building or publishing final AMIs.

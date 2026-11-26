@@ -16,11 +16,10 @@ PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match='v*' --exclude="$RELEASE_V
 echo "--- Generating changelog from ${PREVIOUS_TAG} to ${RELEASE_VERSION}"
 CHANGELOG_BODY=$(ghch --format=markdown --from="$PREVIOUS_TAG" --next-version="$RELEASE_VERSION")
 
-# 3. Link the security fixes in the Amazon Linux 2023 AMIs, which the release build publishes,
-#    or list the new ones when it already has
-echo "--- Checking AMI security fixes from ${PREVIOUS_TAG} to ${RELEASE_VERSION}"
+# 3. List the Amazon Linux 2023 booted kernels and newly listed CVEs, once the release build has published them
+echo "--- Checking AMI kernels and CVEs from ${PREVIOUS_TAG} to ${RELEASE_VERSION}"
 AMI_SECURITY_NOTES=$("$(dirname "$0")/ami_security_notes.py" "$PREVIOUS_TAG" "$RELEASE_VERSION") || {
-  echo "WARNING: could not list AMI security fixes; continuing without them" >&2
+  echo "WARNING: the release build has not published the AMI kernels yet; rerun after it passes" >&2
   AMI_SECURITY_NOTES=""
 }
 if [[ -n "$AMI_SECURITY_NOTES" ]]; then
