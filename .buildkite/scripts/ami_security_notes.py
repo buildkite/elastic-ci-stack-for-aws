@@ -10,7 +10,8 @@ includes CVEs Amazon Linux published after the previous release was tested, so
 it does not mean this release introduced the fix.
 
 Fails until the release build has published the files for both architectures.
-Leaves the CVE list out when the previous release has no files.
+Prints nothing when no CVE is newly listed. Leaves the CVE list out when the
+previous release has no files.
 
 Usage: ami_security_notes.py [--base-url URL] PREVIOUS_TAG RELEASE_TAG
 """
@@ -68,16 +69,19 @@ def main() -> int:
             return 1
         kernels[arch] = found[0]
 
+    previous = [fetch(url(args.previous_tag, arch)) for arch in ARCHITECTURES]
+    new: Set[str] = set()
+    if all(previous):
+        new = set().union(*map(cves, release.values())) - set().union(*map(cves, previous))
+        if not new:
+            print(f"No newly listed CVEs since {args.previous_tag}; leaving out the Security line.", file=sys.stderr)
+            return 0
+    else:
+        print(f"{args.previous_tag} has no security fixes to compare with; leaving out the CVE list.", file=sys.stderr)
+
     booted = "; ".join(f"{label} `{kernels[arch]}`" for arch, label in ARCHITECTURES.items())
     files = ", ".join(f"[{label}]({url(args.release_tag, arch)})" for arch, label in ARCHITECTURES.items())
     print(f"- Amazon Linux 2023 booted kernels: {booted}. Packages and fixed CVEs: {files}.")
-
-    previous = [fetch(url(args.previous_tag, arch)) for arch in ARCHITECTURES]
-    if not all(previous):
-        print(f"{args.previous_tag} has no security fixes to compare with; leaving out the CVE list.", file=sys.stderr)
-        return 0
-
-    new = set().union(*map(cves, release.values())) - set().union(*map(cves, previous))
     if new:
         # CVE-2026-9999 sorts before CVE-2026-10000.
         listed = sorted(new, key=lambda cve: [int(n) for n in re.findall(r"\d+", cve)])
