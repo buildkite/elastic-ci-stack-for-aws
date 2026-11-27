@@ -76,3 +76,39 @@ if [[ "${BUILDKITE_ECR_POLICY:-}" != "none" && "${ECR_PLUGIN_ENABLED:-}" == "1" 
   # shellcheck source=/dev/null
   source /usr/local/buildkite-aws-stack/plugins/ecr/hooks/environment
 fi
+
+# Only configure BUILDKITE_ARTIFACT_UPLOAD_DESTINATION if BUILDKITE_ARTIFACT_UPLOAD_DESTINATION is unset,
+# BUILDKITE_ARTIFACTS_CONFIGURE_DEFAULT_DESTINATION is "true", and BUILDKITE_ARTIFACTS_BUCKET is configured
+# with a bucket name. Log warnings when the variables are configured in unlikely combinations.
+if [[ -n "$BUILDKITE_ARTIFACTS_BUCKET" ]]; then
+  echo "~~~ Checking artifacts bucket configuration"
+  case "${BUILDKITE_ARTIFACTS_CONFIGURE_DEFAULT_DESTINATION:-false}" in
+  true)
+    if [[ -z "${BUILDKITE_ARTIFACT_UPLOAD_DESTINATION+x}" ]]; then
+      # Use the Buildkite-recommended destination: https://buildkite.com/docs/agent/cli/reference/artifact#using-your-private-aws-s3-bucket
+      export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="s3://${BUILDKITE_ARTIFACTS_BUCKET}/${BUILDKITE_PIPELINE_ID}/${BUILDKITE_BUILD_ID}/${BUILDKITE_JOB_ID}"
+    else
+      echo "^^^ +++ :warning: BUILDKITE_ARTIFACT_UPLOAD_DESTINATION is already set to '$BUILDKITE_ARTIFACT_UPLOAD_DESTINATION'. Skipping default destination configuration."
+    fi
+    ;;
+
+  false)
+    if [[ -z "${BUILDKITE_ARTIFACT_UPLOAD_DESTINATION+x}" ]]; then
+      echo "^^^ +++ :warning: An artifacts bucket is configured while BUILDKITE_ARTIFACT_UPLOAD_DESTINATION is unset and BUILDKITE_ARTIFACTS_CONFIGURE_DEFAULT_DESTINATION is false."
+      echo "Skipping default artifact upload destination configuration. Artifacts will continue to upload to Buildkite's bucket unless pipeline, step-level, or agent-level configuration is changed."
+      echo "If this is intentional, set BUILDKITE_ARTIFACTS_CONFIGURE_DEFAULT_DESTINATION to 'false-and-suppress-warning' to suppress this warning."
+    else
+      echo "Preserving explicitly configured destination '$BUILDKITE_ARTIFACT_UPLOAD_DESTINATION'."
+    fi
+    ;;
+
+  false-and-suppress-warning)
+    if [[ -z "${BUILDKITE_ARTIFACT_UPLOAD_DESTINATION+x}" ]]; then
+      echo "Skipping default artifact upload destination configuration."
+    else
+      echo "Preserving explicitly configured destination '$BUILDKITE_ARTIFACT_UPLOAD_DESTINATION'."
+    fi
+    ;;
+
+  esac
+fi
