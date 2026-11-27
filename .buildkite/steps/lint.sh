@@ -22,5 +22,6 @@ docker run --rm -v "$PWD:/src:ro" -w /src python:3.12-bookworm \
     python3 -m unittest discover -s tests/instance-storage -v
     python3 -m unittest discover -s tests/linux -v
     python3 -m unittest discover -s tests/plugins -v
+    python3 -m unittest discover -s tests/release-notes -v
     python3 -m unittest discover -s tests/cloudformation -v
   '

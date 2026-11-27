@@ -16,7 +16,17 @@ PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match='v*' --exclude="$RELEASE_V
 echo "--- Generating changelog from ${PREVIOUS_TAG} to ${RELEASE_VERSION}"
 CHANGELOG_BODY=$(ghch --format=markdown --from="$PREVIOUS_TAG" --next-version="$RELEASE_VERSION")
 
-# 3. Check for Buildkite Agent updates
+# 3. List the Amazon Linux 2023 booted kernels and newly listed CVEs, once the release build has published them
+echo "--- Checking AMI kernels and CVEs from ${PREVIOUS_TAG} to ${RELEASE_VERSION}"
+AMI_SECURITY_NOTES=$("$(dirname "$0")/ami_security_notes.py" "$PREVIOUS_TAG" "$RELEASE_VERSION") || {
+  echo "WARNING: the release build has not published the AMI kernels yet; rerun after it passes" >&2
+  AMI_SECURITY_NOTES=""
+}
+if [[ -n "$AMI_SECURITY_NOTES" ]]; then
+  CHANGELOG_BODY+="\n\n### Security\n${AMI_SECURITY_NOTES}"
+fi
+
+# 4. Check for Buildkite Agent updates
 AGENT_INSTALL_SCRIPT_LINUX="packer/linux/stack/scripts/install-buildkite-agent.sh"
 
 extract_agent_version() {
@@ -72,10 +82,14 @@ if [[ "$PREVIOUS_AGENT_VERSION" != "$CURRENT_AGENT_VERSION" ]]; then
   CHANGELOG_BODY+="\n\n${AGENT_CHANGELOG_SECTION}"
 fi
 
-# 4. Update CHANGELOG.md, preserving the header
+# 5. Update CHANGELOG.md, preserving the header
 echo "--- Updating CHANGELOG.md"
 CHANGELOG_HEADER=$(head -n 5 CHANGELOG.md)
-CHANGELOG_REST=$(tail -n +6 CHANGELOG.md)
+# A rerun replaces the entry an earlier run added for this release.
+CHANGELOG_REST=$(tail -n +6 CHANGELOG.md | awk -v heading="## [${RELEASE_VERSION}]" '
+  index($0, heading) == 1 { skip = 1; next }
+  skip && /^## \[/ { skip = 0 }
+  !skip')
 
 # Construct the new file content
 NEW_CHANGELOG_CONTENT="${CHANGELOG_HEADER}\n\n${CHANGELOG_BODY}\n\n${CHANGELOG_REST}"

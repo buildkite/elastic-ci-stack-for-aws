@@ -8,6 +8,19 @@ s3_upload_templates() {
   aws s3 cp --content-type 'text/yaml' build/aws-stack.yml "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}aws-stack.yml"
 }
 
+# The security fixes only feed release notes, so a failed copy must not stop publishing.
+s3_upload_security_fixes() {
+  local bucket_prefix="$1"
+
+  local security_fixes
+  for security_fixes in build/security-fixes-*.txt; do
+    [[ -e "$security_fixes" ]] || continue
+    # Served as text, so the link in the release notes opens in a browser.
+    aws s3 cp --content-type 'text/plain; charset=utf-8' "$security_fixes" "s3://${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${bucket_prefix}$(basename "$security_fixes")" \
+      || echo "WARNING: could not publish ${security_fixes} to ${bucket_prefix}"
+  done
+}
+
 echo "--- :git: Checking and fetching git tags"
 # if BUILDKITE_TAG is set, fetch the tags, and check that it's a valid tag
 if [[ -n "${BUILDKITE_TAG:-}" ]]; then
@@ -31,6 +44,11 @@ fi
 echo "--- Downloading mappings.yml artifact"
 mkdir -p build/
 buildkite-agent artifact download build/mappings.yml build/
+
+echo "--- Downloading AMI security fixes"
+# Saved by the Linux test steps; absent when a build reuses the AMIs from main.
+buildkite-agent artifact download "build/security-fixes-*.txt" build/ \
+  || echo "No AMI security fixes in this build"
 
 echo "--- Building :cloudformation: CloudFormation templates"
 make build/aws-stack.yml
@@ -59,6 +77,9 @@ publish_for_branch() {
 
   # Publish each build to a unique URL, to let people roll back to old versions
   s3_upload_templates "${branch}/${BUILDKITE_COMMIT}."
+
+  # Release notes read these by tag, so one copy per branch or tag is enough.
+  s3_upload_security_fixes "${branch}/"
 
   cat <<EOF | buildkite-agent annotate --style "info"
 Published template <a href="https://s3.amazonaws.com/${BUILDKITE_AWS_STACK_TEMPLATE_BUCKET}/${branch}/aws-stack.yml">${branch}/aws-stack.yml</a>
