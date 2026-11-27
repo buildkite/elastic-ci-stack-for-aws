@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [v7.15.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.15.0) (2026-11-27)
+[Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.14.0...v7.15.0)
+
+### Security
+- Amazon Linux 2023 booted kernels: AMD64 `6.12.115-140.210.amzn2023.x86_64`; ARM64 `6.12.115-140.210.amzn2023.aarch64`. Packages and fixed CVEs: [AMD64](https://s3.amazonaws.com/buildkite-aws-stack/v7.15.0/security-fixes-linux-amd64.txt), [ARM64](https://s3.amazonaws.com/buildkite-aws-stack/v7.15.0/security-fixes-linux-arm64.txt).
+
+### Changed
+- Update Buildkite Agent from v4.12.0 to v4.13.0 on Linux and Windows [#2031](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2031) (@renovate[bot])
+- Update AWS CLI from v2.40.4 to v2.42.4 on Linux and Windows [#2029](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2029) (@renovate[bot])
+- Update Buildx from v0.39.0 to v0.39.1 on Linux [#2028](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2028) (@renovate[bot])
+
+### Internal
+- Release builds publish each Amazon Linux 2023 AMI's booted kernel, installed packages and fixed CVEs next to the template, and release notes link them [#2023](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2023) (@dahtey-bk)
+- Update the docker-compose plugin used in CI from v5.16.0 to v5.17.0 [#2030](https://github.com/buildkite/elastic-ci-stack-for-aws/pull/2030) (@renovate[bot])
+
+<details>
+<summary><h3>Agent Changelog (v4.13.0)</h3></summary>
+
+### [v4.13.0](https://github.com/buildkite/agent/releases/tag/v4.13.0)
+
+#### What's Changed
+##### 🔒 Security
+* Update Ruby packaging dependencies to Mustache 1.1.3 to fix [GHSA-5hrj-7fc3-cmx9](https://github.com/advisories/GHSA-5hrj-7fc3-cmx9), and pleaserun 0.0.35 by @dependabot[bot] in https://github.com/buildkite/agent/pull/4698
+##### ✨ Added
+* Add an experimental `post-bootstrap` agent hook that runs even if the bootstrap process is killed by @sj26 in https://github.com/buildkite/agent/pull/4673
+* Add an opt-in timeout for the `pre-bootstrap` agent hook that rejects the job on expiry by @lucaswilric in https://github.com/buildkite/agent/pull/4676
+* Run job bootstrap in Docker on Linux with `--experiment docker-executor` and `--executor docker` by @sj26 in https://github.com/buildkite/agent/pull/4686
+##### 🐛 Fixed
+* Fix signature verification for pipelines with top-level secrets signed by `buildkite-agent tool sign` or `buildkite-agent pipeline upload` by @lizrabuya in https://github.com/buildkite/agent/pull/4650
+* Fix AWS KMS signature verification with `--verification-jwks-file` (set the public key's `kid` to the KMS key ARN) by @scadu in https://github.com/buildkite/agent/pull/4688
+##### 🏠 Internal
+* Dependency updates by @dependabot[bot] in https://github.com/buildkite/agent/pull/4677, https://github.com/buildkite/agent/pull/4678, https://github.com/buildkite/agent/pull/4681, https://github.com/buildkite/agent/pull/4587 and https://github.com/buildkite/agent/pull/4661
+
+**Full Changelog**: https://github.com/buildkite/agent/compare/v4.12.0...v4.13.0
+
+</details>
+
 ## [v7.14.0](https://github.com/buildkite/elastic-ci-stack-for-aws/tree/v7.14.0) (2026-11-25)
 [Full Changelog](https://github.com/buildkite/elastic-ci-stack-for-aws/compare/v7.13.1...v7.14.0)
 
